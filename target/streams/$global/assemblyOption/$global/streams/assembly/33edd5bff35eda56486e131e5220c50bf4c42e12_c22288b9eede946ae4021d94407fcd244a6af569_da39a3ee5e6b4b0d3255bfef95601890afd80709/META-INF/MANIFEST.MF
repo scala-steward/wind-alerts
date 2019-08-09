@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Implementation-Title: scodec-bits
+Implementation-Version: 1.1.11
+Specification-Vendor: org.scodec
+Specification-Title: scodec-bits
+Implementation-Vendor-Id: org.scodec
+Specification-Version: 1.1.11
+Implementation-Vendor: org.scodec
+

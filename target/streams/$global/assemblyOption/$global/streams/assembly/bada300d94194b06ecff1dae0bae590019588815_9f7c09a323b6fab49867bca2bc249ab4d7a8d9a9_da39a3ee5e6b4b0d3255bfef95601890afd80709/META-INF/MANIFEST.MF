@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Implementation-Title: parboiled
+Implementation-Version: 1.0.1
+Specification-Vendor: org.http4s
+Specification-Title: parboiled
+Implementation-Vendor-Id: org.http4s
+Specification-Version: 1.0.1
+Implementation-URL: http://parboiled.org
+Implementation-Vendor: org.http4s
+

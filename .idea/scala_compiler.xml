@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ScalaCompilerConfiguration">
+    <profile name="sbt 1" modules="core,wind-alerts_4564" />
+    <profile name="sbt 2" modules="wind-alerts">
+      <option name="postfixOps" value="true" />
+      <option name="higherKinds" value="true" />
+      <option name="deprecationWarnings" value="true" />
+      <option name="featureWarnings" value="true" />
+      <parameters>
+        <parameter value="-encoding" />
+        <parameter value="UTF-8" />
+        <parameter value="-Ypartial-unification" />
+        <parameter value="-Xfatal-warnings" />
+      </parameters>
+      <plugins>
+        <plugin path="$USER_HOME$/.ivy2/cache/org.typelevel/kind-projector_2.12/jars/kind-projector_2.12-0.10.3.jar" />
+        <plugin path="$USER_HOME$/.ivy2/cache/com.olegpy/better-monadic-for_2.12/jars/better-monadic-for_2.12-0.3.0.jar" />
+      </plugins>
+    </profile>
+  </component>
+</project>
