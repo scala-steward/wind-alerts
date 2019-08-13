@@ -2,7 +2,7 @@ package com.uptech.windalerts
 
 import cats.Applicative
 import cats.effect.Sync
-import com.uptech.windalerts.Domain.{BeachStatus, SwellStatus, TideStatus, WindStatus}
+import com.uptech.windalerts.Domain.{BeachStatus, SwellStatus, TideHeightStatus, TideStatus, WindStatus}
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import org.http4s.{EntityDecoder, EntityEncoder}
@@ -48,5 +48,15 @@ object DomainCodec {
   lazy implicit val tideEncoder: Encoder[TideStatus] = deriveEncoder[TideStatus]
 
   implicit def tideEntityEncoder[F[_] : Applicative]: EntityEncoder[F, TideStatus] =
+    jsonEncoderOf
+
+  lazy implicit val tideHeightDecoder: Decoder[TideHeightStatus] = deriveDecoder[TideHeightStatus]
+
+  implicit def tideHeightEntityDecoder[F[_] : Sync]: EntityDecoder[F, TideHeightStatus] =
+    jsonOf
+
+  lazy implicit val tideHeightEncoder: Encoder[TideHeightStatus] = deriveEncoder[TideHeightStatus]
+
+  implicit def tideHeightEntityEncoder[F[_] : Applicative]: EntityEncoder[F, TideHeightStatus] =
     jsonEncoderOf
 }
