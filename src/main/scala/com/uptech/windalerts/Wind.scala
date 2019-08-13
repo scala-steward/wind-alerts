@@ -15,7 +15,7 @@ import org.http4s.circe._
 import java.util.{Calendar, Date, TimeZone}
 
 trait Winds[F[_]] {
-  def get(beachId: BeachId): F[Option[WindStatus]]
+  def get(beachId: BeachId): F[WindStatus]
 }
 
 object Winds {
@@ -56,13 +56,14 @@ object Winds {
         .withPath(s"/v2/ZjM0ZmY1Zjc5NDQ3N2IzNjE3MmRmYm/locations/$beachId/weather.json")
         .withQueryParam("observational", "true")
 
-    def get(beachId: BeachId): F[Option[WindStatus]] = C.expect[String](GET(windUri(beachId.id)))
+    def get(beachId: BeachId): F[WindStatus] = C.expect[String](GET(windUri(beachId.id)))
       .adaptError { case t => WindError(t) }
       .map(s => {
         val timeZoneStr = parser.parse(s).getOrElse(Json.Null).hcursor.downField("location").downField("timeZone").as[String]
         val timeZone = TimeZone.getTimeZone(timeZoneStr.getOrElse("Australia/Sydney"))
         parser.parse(s).getOrElse(Json.Null).hcursor.downField("observational").downField("observations")
-          .downField("wind").as[Wind].map(wind => new WindStatus(wind.direction, wind.speed)).toOption
+          .downField("wind").as[Wind].map(wind => new WindStatus(wind.direction, wind.speed))
+          .getOrElse(WindStatus(0.0, 0.0))
       })
   }
 }

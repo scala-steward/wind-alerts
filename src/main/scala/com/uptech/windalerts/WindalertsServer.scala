@@ -21,9 +21,10 @@ object WindalertsServer {
       client <- BlazeClientBuilder[F](global).stream
 
       windAlg = Winds.impl[F](client)
-      swell = Swells.impl[F](client)
+      swellAlg = Swells.impl[F](client)
+      tideAlg = Tides.impl[F](client)
 
-      httpApp = (WindalertsRoutes.windsRoutes[F](windAlg, swell)).orNotFound
+      httpApp = (WindalertsRoutes.windsRoutes[F](windAlg, swellAlg, tideAlg)).orNotFound
 
       finalHttpApp = Logger.httpApp(true, true)(httpApp)
 

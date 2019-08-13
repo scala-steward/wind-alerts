@@ -1,120 +1,15 @@
 {
-  "location": {
-    "id": 3216,
-    "name": "Lilyvale",
-    "region": "Illawarra",
-    "state": "NSW",
-    "postcode": "2508",
-    "timeZone": "Australia\/Sydney",
-    "lat": -34.196,
-    "lng": 151.012,
-    "typeId": 12
+  "windStatus": {
+    "direction": 259.0,
+    "speed": 7.4
   },
-  "observational": {
-    "observations": {
-      "temperature": {
-        "temperature": 15.5,
-        "apparentTemperature": 15.1,
-        "trend": 0
-      },
-      "delta-t": {
-        "temperature": 1.3,
-        "trend": 0
-      },
-      "cloud": {
-        "oktas": 0,
-        "trend": 0
-      },
-      "humidity": {
-        "percentage": 86,
-        "trend": 0
-      },
-      "dewPoint": {
-        "temperature": 13.1,
-        "trend": 0
-      },
-      "pressure": {
-        "pressure": 1020,
-        "trend": 0
-      },
-      "wind": {
-        "speed": 11.1,
-        "gustSpeed": 13,
-        "trend": 0,
-        "direction": 139,
-        "directionText": "SE"
-      },
-      "rainfall": {
-        "lastHourAmount": null,
-        "todayAmount": 0,
-        "since9AMAmount": 0
-      }
+  "tideStatus": {
+    "tideHeightStatus": {
+      "status": "high"
     },
-    "stations": {
-      "temperature": {
-        "id": 654,
-        "name": "Lucas Heights (ANTSO)",
-        "lat": -34.05,
-        "lng": 150.98,
-        "distance": 16.3
-      },
-      "delta-t": {
-        "id": 654,
-        "name": "Lucas Heights (ANTSO)",
-        "lat": -34.05,
-        "lng": 150.98,
-        "distance": 16.3
-      },
-      "cloud": {
-        "id": 740,
-        "name": "Holsworthy Airport",
-        "lat": -33.992,
-        "lng": 150.949,
-        "distance": 23.4
-      },
-      "humidity": {
-        "id": 654,
-        "name": "Lucas Heights (ANTSO)",
-        "lat": -34.05,
-        "lng": 150.98,
-        "distance": 16.3
-      },
-      "dewPoint": {
-        "id": 654,
-        "name": "Lucas Heights (ANTSO)",
-        "lat": -34.05,
-        "lng": 150.98,
-        "distance": 16.3
-      },
-      "pressure": {
-        "id": 654,
-        "name": "Lucas Heights (ANTSO)",
-        "lat": -34.05,
-        "lng": 150.98,
-        "distance": 16.3
-      },
-      "wind": {
-        "id": 355,
-        "name": "Wattamolla",
-        "lat": -34.14,
-        "lng": 151.12,
-        "distance": 11.6
-      },
-      "rainfall": {
-        "id": 654,
-        "name": "Lucas Heights (ANTSO)",
-        "lat": -34.05,
-        "lng": 150.98,
-        "distance": 16.3
-      }
-    },
-    "issueDateTime": "2019-08-13 16:33:00",
-    "units": {
-      "temperature": "c",
-      "amount": "mm",
-      "speed": "km\/h",
-      "distance": "km",
-      "pressure": "hPa"
+    "swellStatus": {
+      "height": 1.9,
+      "direction": 166.16
     }
   }
 }
