@@ -1,0 +1,7 @@
+dist/*
+target/
+.history
+.cache
+.lib/
+.idea
+graalvm-native-image

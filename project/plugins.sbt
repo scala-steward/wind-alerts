@@ -2,5 +2,5 @@
 addSbtPlugin("io.spray" % "sbt-revolver" % "0.9.1")
 addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.21")
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.10")
-enablePlugins(GraalVMNativeImagePlugin)
+addSbtPlugin("de.gccc.sbt" % "sbt-jib" % "0.2.3")
 

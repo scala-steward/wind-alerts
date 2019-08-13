@@ -7,28 +7,28 @@
 		revision="0.0.1-SNAPSHOT"
 		conf="test"
 		confs="compile, runtime, test, provided, optional, compile-internal, runtime-internal, test-internal, plugin, pom, scala-tool"
-		date="20190808160917"/>
+		date="20190813204405"/>
 	<dependencies>
 		<module organisation="io.circe" name="circe-parser_2.12">
-			<revision name="0.12.0-RC1" status="release" pubdate="20190807033559" resolver="public" artresolver="public" homepage="https://github.com/circe/circe" extra-info.apiURL="https://circe.github.io/circe/api/" downloaded="true" searched="true" default="false" conf="default, compile, runtime, default(compile), master" position="33">
+			<revision name="0.12.0-RC1" status="release" pubdate="20190807033559" resolver="sbt-chain" artresolver="sbt-chain" homepage="https://github.com/circe/circe" extra-info.apiURL="https://circe.github.io/circe/api/" downloaded="false" searched="false" default="false" conf="default, compile, runtime, default(compile), master" position="33">
 				<license name="Apache 2.0" url="http://www.apache.org/licenses/LICENSE-2.0"/>
-				<metadata-artifact status="successful" details="" size="1970" time="761" location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-parser_2.12/ivy-0.12.0-RC1.xml" searched="true" original-local-location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-parser_2.12/ivy-0.12.0-RC1.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/io/circe/circe-parser_2.12/0.12.0-RC1/circe-parser_2.12-0.12.0-RC1.pom"/>
+				<metadata-artifact status="no" details="" size="3094" time="0" location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-parser_2.12/ivy-0.12.0-RC1.xml" searched="false" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/io/circe/circe-parser_2.12/0.12.0-RC1/circe-parser_2.12-0.12.0-RC1.pom"/>
 				<caller organisation="com.uptech" name="wind-alerts_2.12" conf="test, compile, runtime" rev="0.12.0-RC1" rev-constraint-default="0.12.0-RC1" rev-constraint-dynamic="0.12.0-RC1" callerrev="0.0.1-SNAPSHOT"/>
 				<artifacts>
-					<artifact name="circe-parser_2.12" type="jar" ext="jar" status="successful" details="" size="2753" time="1638" location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-parser_2.12/jars/circe-parser_2.12-0.12.0-RC1.jar">
+					<artifact name="circe-parser_2.12" type="jar" ext="jar" status="no" details="" size="2753" time="0" location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-parser_2.12/jars/circe-parser_2.12-0.12.0-RC1.jar">
 						<origin-location is-local="false" location="https://repo1.maven.org/maven2/io/circe/circe-parser_2.12/0.12.0-RC1/circe-parser_2.12-0.12.0-RC1.jar"/>
 					</artifact>
 				</artifacts>
 			</revision>
 		</module>
 		<module organisation="io.circe" name="circe-jawn_2.12">
-			<revision name="0.12.0-RC1" status="release" pubdate="20190807033238" resolver="public" artresolver="public" homepage="https://github.com/circe/circe" extra-info.apiURL="https://circe.github.io/circe/api/" downloaded="true" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="34">
+			<revision name="0.12.0-RC1" status="release" pubdate="20190807033238" resolver="sbt-chain" artresolver="sbt-chain" homepage="https://github.com/circe/circe" extra-info.apiURL="https://circe.github.io/circe/api/" downloaded="false" searched="false" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="34">
 				<license name="Apache 2.0" url="http://www.apache.org/licenses/LICENSE-2.0"/>
-				<metadata-artifact status="successful" details="" size="1966" time="753" location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-jawn_2.12/ivy-0.12.0-RC1.xml" searched="true" original-local-location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-jawn_2.12/ivy-0.12.0-RC1.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/io/circe/circe-jawn_2.12/0.12.0-RC1/circe-jawn_2.12-0.12.0-RC1.pom"/>
+				<metadata-artifact status="no" details="" size="3090" time="0" location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-jawn_2.12/ivy-0.12.0-RC1.xml" searched="false" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/io/circe/circe-jawn_2.12/0.12.0-RC1/circe-jawn_2.12-0.12.0-RC1.pom"/>
 				<caller organisation="org.http4s" name="http4s-circe_2.12" conf="default, compile, runtime, master" rev="0.11.1" rev-constraint-default="0.11.1" rev-constraint-dynamic="0.11.1" callerrev="0.20.8"/>
 				<caller organisation="io.circe" name="circe-parser_2.12" conf="default, compile, runtime, master" rev="0.12.0-RC1" rev-constraint-default="0.12.0-RC1" rev-constraint-dynamic="0.12.0-RC1" callerrev="0.12.0-RC1"/>
 				<artifacts>
-					<artifact name="circe-jawn_2.12" type="jar" ext="jar" status="successful" details="" size="25337" time="979" location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-jawn_2.12/jars/circe-jawn_2.12-0.12.0-RC1.jar">
+					<artifact name="circe-jawn_2.12" type="jar" ext="jar" status="no" details="" size="25337" time="0" location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-jawn_2.12/jars/circe-jawn_2.12-0.12.0-RC1.jar">
 						<origin-location is-local="false" location="https://repo1.maven.org/maven2/io/circe/circe-jawn_2.12/0.12.0-RC1/circe-jawn_2.12-0.12.0-RC1.jar"/>
 					</artifact>
 				</artifacts>
@@ -43,14 +43,14 @@
 			</revision>
 		</module>
 		<module organisation="org.typelevel" name="jawn-parser_2.12">
-			<revision name="0.14.2" status="release" pubdate="20190427193057" resolver="public" artresolver="public" homepage="http://github.com/typelevel/jawn" downloaded="true" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="35">
+			<revision name="0.14.2" status="release" pubdate="20190427193057" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://github.com/typelevel/jawn" downloaded="false" searched="false" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="35">
 				<license name="MIT" url="http://opensource.org/licenses/MIT"/>
-				<metadata-artifact status="successful" details="" size="1897" time="1061" location="/Users/amanmanocha/.ivy2/cache/org.typelevel/jawn-parser_2.12/ivy-0.14.2.xml" searched="true" original-local-location="/Users/amanmanocha/.ivy2/cache/org.typelevel/jawn-parser_2.12/ivy-0.14.2.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/typelevel/jawn-parser_2.12/0.14.2/jawn-parser_2.12-0.14.2.pom"/>
+				<metadata-artifact status="no" details="" size="2883" time="0" location="/Users/amanmanocha/.ivy2/cache/org.typelevel/jawn-parser_2.12/ivy-0.14.2.xml" searched="false" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/typelevel/jawn-parser_2.12/0.14.2/jawn-parser_2.12-0.14.2.pom"/>
 				<caller organisation="io.circe" name="circe-jawn_2.12" conf="compile, runtime" rev="0.14.2" rev-constraint-default="0.14.2" rev-constraint-dynamic="0.14.2" callerrev="0.12.0-RC1"/>
 				<caller organisation="io.circe" name="circe-jawn_2.12" conf="compile, runtime" rev="0.14.1" rev-constraint-default="0.14.1" rev-constraint-dynamic="0.14.1" callerrev="0.11.1"/>
 				<caller organisation="org.http4s" name="jawn-fs2_2.12" conf="compile, runtime" rev="0.14.1" rev-constraint-default="0.14.1" rev-constraint-dynamic="0.14.1" callerrev="0.14.2"/>
 				<artifacts>
-					<artifact name="jawn-parser_2.12" type="jar" ext="jar" status="successful" details="" size="84952" time="1150" location="/Users/amanmanocha/.ivy2/cache/org.typelevel/jawn-parser_2.12/jars/jawn-parser_2.12-0.14.2.jar">
+					<artifact name="jawn-parser_2.12" type="jar" ext="jar" status="no" details="" size="84952" time="0" location="/Users/amanmanocha/.ivy2/cache/org.typelevel/jawn-parser_2.12/jars/jawn-parser_2.12-0.14.2.jar">
 						<origin-location is-local="false" location="https://repo1.maven.org/maven2/org/typelevel/jawn-parser_2.12/0.14.2/jawn-parser_2.12-0.14.2.jar"/>
 					</artifact>
 				</artifacts>
@@ -66,12 +66,12 @@
 			</revision>
 		</module>
 		<module organisation="io.circe" name="circe-generic_2.12">
-			<revision name="0.12.0-RC1" status="release" pubdate="20190807033603" resolver="public" artresolver="public" homepage="https://github.com/circe/circe" extra-info.apiURL="https://circe.github.io/circe/api/" downloaded="true" searched="true" default="false" conf="default, compile, runtime, default(compile), master" position="30">
+			<revision name="0.12.0-RC1" status="release" pubdate="20190807033603" resolver="sbt-chain" artresolver="sbt-chain" homepage="https://github.com/circe/circe" extra-info.apiURL="https://circe.github.io/circe/api/" downloaded="false" searched="false" default="false" conf="default, compile, runtime, default(compile), master" position="30">
 				<license name="Apache 2.0" url="http://www.apache.org/licenses/LICENSE-2.0"/>
-				<metadata-artifact status="successful" details="" size="2399" time="759" location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-generic_2.12/ivy-0.12.0-RC1.xml" searched="true" original-local-location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-generic_2.12/ivy-0.12.0-RC1.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/io/circe/circe-generic_2.12/0.12.0-RC1/circe-generic_2.12-0.12.0-RC1.pom"/>
+				<metadata-artifact status="no" details="" size="3397" time="0" location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-generic_2.12/ivy-0.12.0-RC1.xml" searched="false" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/io/circe/circe-generic_2.12/0.12.0-RC1/circe-generic_2.12-0.12.0-RC1.pom"/>
 				<caller organisation="com.uptech" name="wind-alerts_2.12" conf="test, compile, runtime" rev="0.12.0-RC1" rev-constraint-default="0.12.0-RC1" rev-constraint-dynamic="0.12.0-RC1" callerrev="0.0.1-SNAPSHOT"/>
 				<artifacts>
-					<artifact name="circe-generic_2.12" type="jar" ext="jar" status="successful" details="" size="173430" time="2179" location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-generic_2.12/jars/circe-generic_2.12-0.12.0-RC1.jar">
+					<artifact name="circe-generic_2.12" type="jar" ext="jar" status="no" details="" size="173430" time="0" location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-generic_2.12/jars/circe-generic_2.12-0.12.0-RC1.jar">
 						<origin-location is-local="false" location="https://repo1.maven.org/maven2/io/circe/circe-generic_2.12/0.12.0-RC1/circe-generic_2.12-0.12.0-RC1.jar"/>
 					</artifact>
 				</artifacts>
@@ -102,16 +102,16 @@
 			</revision>
 		</module>
 		<module organisation="io.circe" name="circe-core_2.12">
-			<revision name="0.12.0-RC1" status="release" pubdate="20190807033329" resolver="public" artresolver="public" homepage="https://github.com/circe/circe" extra-info.apiURL="https://circe.github.io/circe/api/" downloaded="true" searched="true" default="false" conf="default, compile, runtime(*), master(compile), runtime, default(compile), compile(*), master" position="24">
+			<revision name="0.12.0-RC1" status="release" pubdate="20190807033329" resolver="sbt-chain" artresolver="sbt-chain" homepage="https://github.com/circe/circe" extra-info.apiURL="https://circe.github.io/circe/api/" downloaded="false" searched="false" default="false" conf="default, compile, runtime(*), master(compile), runtime, default(compile), compile(*), master" position="24">
 				<license name="Apache 2.0" url="http://www.apache.org/licenses/LICENSE-2.0"/>
-				<metadata-artifact status="successful" details="" size="1970" time="754" location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-core_2.12/ivy-0.12.0-RC1.xml" searched="true" original-local-location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-core_2.12/ivy-0.12.0-RC1.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/io/circe/circe-core_2.12/0.12.0-RC1/circe-core_2.12-0.12.0-RC1.pom"/>
+				<metadata-artifact status="no" details="" size="3094" time="0" location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-core_2.12/ivy-0.12.0-RC1.xml" searched="false" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/io/circe/circe-core_2.12/0.12.0-RC1/circe-core_2.12-0.12.0-RC1.pom"/>
 				<caller organisation="io.circe" name="circe-generic_2.12" conf="default, compile, runtime, master" rev="0.12.0-RC1" rev-constraint-default="0.12.0-RC1" rev-constraint-dynamic="0.12.0-RC1" callerrev="0.12.0-RC1"/>
 				<caller organisation="io.circe" name="circe-parser_2.12" conf="default, compile, runtime, master" rev="0.12.0-RC1" rev-constraint-default="0.12.0-RC1" rev-constraint-dynamic="0.12.0-RC1" callerrev="0.12.0-RC1"/>
 				<caller organisation="io.circe" name="circe-jawn_2.12" conf="compile, runtime" rev="0.11.1" rev-constraint-default="0.11.1" rev-constraint-dynamic="0.11.1" callerrev="0.11.1"/>
 				<caller organisation="io.circe" name="circe-jawn_2.12" conf="compile, runtime" rev="0.12.0-RC1" rev-constraint-default="0.12.0-RC1" rev-constraint-dynamic="0.12.0-RC1" callerrev="0.12.0-RC1"/>
 				<caller organisation="com.uptech" name="wind-alerts_2.12" conf="test, compile, runtime" rev="0.12.0-RC1" rev-constraint-default="0.12.0-RC1" rev-constraint-dynamic="0.12.0-RC1" callerrev="0.0.1-SNAPSHOT"/>
 				<artifacts>
-					<artifact name="circe-core_2.12" type="jar" ext="jar" status="successful" details="" size="1059431" time="7561" location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-core_2.12/jars/circe-core_2.12-0.12.0-RC1.jar">
+					<artifact name="circe-core_2.12" type="jar" ext="jar" status="no" details="" size="1059431" time="0" location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-core_2.12/jars/circe-core_2.12-0.12.0-RC1.jar">
 						<origin-location is-local="false" location="https://repo1.maven.org/maven2/io/circe/circe-core_2.12/0.12.0-RC1/circe-core_2.12-0.12.0-RC1.jar"/>
 					</artifact>
 				</artifacts>
@@ -125,9 +125,9 @@
 			</revision>
 		</module>
 		<module organisation="org.typelevel" name="cats-core_2.12">
-			<revision name="2.0.0-RC1" status="release" pubdate="20190806032922" resolver="public" artresolver="public" homepage="https://github.com/typelevel/cats" extra-info.apiURL="http://typelevel.org/cats/api/" downloaded="true" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="26">
+			<revision name="2.0.0-RC1" status="release" pubdate="20190806032922" resolver="sbt-chain" artresolver="sbt-chain" homepage="https://github.com/typelevel/cats" extra-info.apiURL="http://typelevel.org/cats/api/" downloaded="false" searched="false" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="26">
 				<license name="MIT" url="http://opensource.org/licenses/MIT"/>
-				<metadata-artifact status="successful" details="" size="4620" time="753" location="/Users/amanmanocha/.ivy2/cache/org.typelevel/cats-core_2.12/ivy-2.0.0-RC1.xml" searched="true" original-local-location="/Users/amanmanocha/.ivy2/cache/org.typelevel/cats-core_2.12/ivy-2.0.0-RC1.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/typelevel/cats-core_2.12/2.0.0-RC1/cats-core_2.12-2.0.0-RC1.pom"/>
+				<metadata-artifact status="no" details="" size="3356" time="0" location="/Users/amanmanocha/.ivy2/cache/org.typelevel/cats-core_2.12/ivy-2.0.0-RC1.xml" searched="false" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/typelevel/cats-core_2.12/2.0.0-RC1/cats-core_2.12-2.0.0-RC1.pom"/>
 				<caller organisation="org.http4s" name="http4s-core_2.12" conf="compile, runtime" rev="1.6.1" rev-constraint-default="1.6.1" rev-constraint-dynamic="1.6.1" callerrev="0.20.8"/>
 				<caller organisation="co.fs2" name="fs2-core_2.12" conf="compile, runtime" rev="1.6.1" rev-constraint-default="1.6.1" rev-constraint-dynamic="1.6.1" callerrev="1.0.5"/>
 				<caller organisation="io.circe" name="circe-core_2.12" conf="compile, runtime" rev="2.0.0-RC1" rev-constraint-default="2.0.0-RC1" rev-constraint-dynamic="2.0.0-RC1" callerrev="0.12.0-RC1"/>
@@ -136,7 +136,7 @@
 				<caller organisation="co.fs2" name="fs2-io_2.12" conf="compile, runtime" rev="1.6.1" rev-constraint-default="1.6.1" rev-constraint-dynamic="1.6.1" callerrev="1.0.5"/>
 				<caller organisation="io.chrisdavenport" name="unique_2.12" conf="compile, runtime" rev="1.6.0" rev-constraint-default="1.6.0" rev-constraint-dynamic="1.6.0" callerrev="1.0.0"/>
 				<artifacts>
-					<artifact name="cats-core_2.12" type="jar" ext="jar" status="successful" details="" size="4638963" time="28632" location="/Users/amanmanocha/.ivy2/cache/org.typelevel/cats-core_2.12/jars/cats-core_2.12-2.0.0-RC1.jar">
+					<artifact name="cats-core_2.12" type="jar" ext="jar" status="no" details="" size="4638963" time="0" location="/Users/amanmanocha/.ivy2/cache/org.typelevel/cats-core_2.12/jars/cats-core_2.12-2.0.0-RC1.jar">
 						<origin-location is-local="false" location="https://repo1.maven.org/maven2/org/typelevel/cats-core_2.12/2.0.0-RC1/cats-core_2.12-2.0.0-RC1.jar"/>
 					</artifact>
 				</artifacts>
@@ -164,13 +164,13 @@
 			</revision>
 		</module>
 		<module organisation="org.typelevel" name="cats-kernel_2.12">
-			<revision name="2.0.0-RC1" status="release" pubdate="20190806032758" resolver="public" artresolver="public" homepage="https://github.com/typelevel/cats" extra-info.apiURL="http://typelevel.org/cats/api/" downloaded="true" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="28">
+			<revision name="2.0.0-RC1" status="release" pubdate="20190806032758" resolver="sbt-chain" artresolver="sbt-chain" homepage="https://github.com/typelevel/cats" extra-info.apiURL="http://typelevel.org/cats/api/" downloaded="false" searched="false" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="28">
 				<license name="MIT" url="http://opensource.org/licenses/MIT"/>
-				<metadata-artifact status="successful" details="" size="4046" time="766" location="/Users/amanmanocha/.ivy2/cache/org.typelevel/cats-kernel_2.12/ivy-2.0.0-RC1.xml" searched="true" original-local-location="/Users/amanmanocha/.ivy2/cache/org.typelevel/cats-kernel_2.12/ivy-2.0.0-RC1.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/typelevel/cats-kernel_2.12/2.0.0-RC1/cats-kernel_2.12-2.0.0-RC1.pom"/>
+				<metadata-artifact status="no" details="" size="2907" time="0" location="/Users/amanmanocha/.ivy2/cache/org.typelevel/cats-kernel_2.12/ivy-2.0.0-RC1.xml" searched="false" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/typelevel/cats-kernel_2.12/2.0.0-RC1/cats-kernel_2.12-2.0.0-RC1.pom"/>
 				<caller organisation="org.typelevel" name="cats-core_2.12" conf="compile, runtime" rev="2.0.0-RC1" rev-constraint-default="2.0.0-RC1" rev-constraint-dynamic="2.0.0-RC1" callerrev="2.0.0-RC1"/>
 				<caller organisation="org.typelevel" name="cats-core_2.12" conf="compile, runtime" rev="1.6.1" rev-constraint-default="1.6.1" rev-constraint-dynamic="1.6.1" callerrev="1.6.1"/>
 				<artifacts>
-					<artifact name="cats-kernel_2.12" type="jar" ext="jar" status="successful" details="" size="3302240" time="26285" location="/Users/amanmanocha/.ivy2/cache/org.typelevel/cats-kernel_2.12/jars/cats-kernel_2.12-2.0.0-RC1.jar">
+					<artifact name="cats-kernel_2.12" type="jar" ext="jar" status="no" details="" size="3302240" time="0" location="/Users/amanmanocha/.ivy2/cache/org.typelevel/cats-kernel_2.12/jars/cats-kernel_2.12-2.0.0-RC1.jar">
 						<origin-location is-local="false" location="https://repo1.maven.org/maven2/org/typelevel/cats-kernel_2.12/2.0.0-RC1/cats-kernel_2.12-2.0.0-RC1.jar"/>
 					</artifact>
 				</artifacts>
@@ -185,13 +185,13 @@
 			</revision>
 		</module>
 		<module organisation="org.typelevel" name="cats-macros_2.12">
-			<revision name="2.0.0-RC1" status="release" pubdate="20190806032717" resolver="public" artresolver="public" homepage="https://github.com/typelevel/cats" extra-info.apiURL="http://typelevel.org/cats/api/" downloaded="true" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="27">
+			<revision name="2.0.0-RC1" status="release" pubdate="20190806032717" resolver="sbt-chain" artresolver="sbt-chain" homepage="https://github.com/typelevel/cats" extra-info.apiURL="http://typelevel.org/cats/api/" downloaded="false" searched="false" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="27">
 				<license name="MIT" url="http://opensource.org/licenses/MIT"/>
-				<metadata-artifact status="successful" details="" size="4048" time="764" location="/Users/amanmanocha/.ivy2/cache/org.typelevel/cats-macros_2.12/ivy-2.0.0-RC1.xml" searched="true" original-local-location="/Users/amanmanocha/.ivy2/cache/org.typelevel/cats-macros_2.12/ivy-2.0.0-RC1.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/typelevel/cats-macros_2.12/2.0.0-RC1/cats-macros_2.12-2.0.0-RC1.pom"/>
+				<metadata-artifact status="no" details="" size="2932" time="0" location="/Users/amanmanocha/.ivy2/cache/org.typelevel/cats-macros_2.12/ivy-2.0.0-RC1.xml" searched="false" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/typelevel/cats-macros_2.12/2.0.0-RC1/cats-macros_2.12-2.0.0-RC1.pom"/>
 				<caller organisation="org.typelevel" name="cats-core_2.12" conf="compile, runtime" rev="2.0.0-RC1" rev-constraint-default="2.0.0-RC1" rev-constraint-dynamic="2.0.0-RC1" callerrev="2.0.0-RC1"/>
 				<caller organisation="org.typelevel" name="cats-core_2.12" conf="compile, runtime" rev="1.6.1" rev-constraint-default="1.6.1" rev-constraint-dynamic="1.6.1" callerrev="1.6.1"/>
 				<artifacts>
-					<artifact name="cats-macros_2.12" type="jar" ext="jar" status="successful" details="" size="310" time="1045" location="/Users/amanmanocha/.ivy2/cache/org.typelevel/cats-macros_2.12/jars/cats-macros_2.12-2.0.0-RC1.jar">
+					<artifact name="cats-macros_2.12" type="jar" ext="jar" status="no" details="" size="310" time="0" location="/Users/amanmanocha/.ivy2/cache/org.typelevel/cats-macros_2.12/jars/cats-macros_2.12-2.0.0-RC1.jar">
 						<origin-location is-local="false" location="https://repo1.maven.org/maven2/org/typelevel/cats-macros_2.12/2.0.0-RC1/cats-macros_2.12-2.0.0-RC1.jar"/>
 					</artifact>
 				</artifacts>
@@ -206,12 +206,12 @@
 			</revision>
 		</module>
 		<module organisation="io.circe" name="circe-numbers_2.12">
-			<revision name="0.12.0-RC1" status="release" pubdate="20190807033126" resolver="public" artresolver="public" homepage="https://github.com/circe/circe" extra-info.apiURL="https://circe.github.io/circe/api/" downloaded="true" searched="true" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="25">
+			<revision name="0.12.0-RC1" status="release" pubdate="20190807033126" resolver="sbt-chain" artresolver="sbt-chain" homepage="https://github.com/circe/circe" extra-info.apiURL="https://circe.github.io/circe/api/" downloaded="false" searched="false" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="25">
 				<license name="Apache 2.0" url="http://www.apache.org/licenses/LICENSE-2.0"/>
-				<metadata-artifact status="successful" details="" size="1617" time="778" location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-numbers_2.12/ivy-0.12.0-RC1.xml" searched="true" original-local-location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-numbers_2.12/ivy-0.12.0-RC1.xml.original" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/io/circe/circe-numbers_2.12/0.12.0-RC1/circe-numbers_2.12-0.12.0-RC1.pom"/>
+				<metadata-artifact status="no" details="" size="2803" time="0" location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-numbers_2.12/ivy-0.12.0-RC1.xml" searched="false" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/io/circe/circe-numbers_2.12/0.12.0-RC1/circe-numbers_2.12-0.12.0-RC1.pom"/>
 				<caller organisation="io.circe" name="circe-core_2.12" conf="compile, runtime" rev="0.12.0-RC1" rev-constraint-default="0.12.0-RC1" rev-constraint-dynamic="0.12.0-RC1" callerrev="0.12.0-RC1"/>
 				<artifacts>
-					<artifact name="circe-numbers_2.12" type="jar" ext="jar" status="successful" details="" size="13005" time="1811" location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-numbers_2.12/jars/circe-numbers_2.12-0.12.0-RC1.jar">
+					<artifact name="circe-numbers_2.12" type="jar" ext="jar" status="no" details="" size="13005" time="0" location="/Users/amanmanocha/.ivy2/cache/io.circe/circe-numbers_2.12/jars/circe-numbers_2.12-0.12.0-RC1.jar">
 						<origin-location is-local="false" location="https://repo1.maven.org/maven2/io/circe/circe-numbers_2.12/0.12.0-RC1/circe-numbers_2.12-0.12.0-RC1.jar"/>
 					</artifact>
 				</artifacts>
