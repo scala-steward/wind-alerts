@@ -1,5 +1,8 @@
 package com.uptech.windalerts
 
+import java.time.{LocalDateTime, ZoneId}
+import java.time.format.DateTimeFormatter
+
 import cats.Applicative
 import cats.effect.Sync
 import cats.implicits._
@@ -11,7 +14,9 @@ import org.http4s.client.Client
 import org.http4s.client.dsl.Http4sClientDsl
 import org.http4s.Method._
 import org.http4s.circe._
-import java.util.{Calendar, Date, TimeZone}
+import java.util.{Calendar, Date, Locale, TimeZone}
+
+import .sdf
 
 trait Tides[F[_]] {
   def get(beachId: BeachId): F[TideHeightStatus]
@@ -46,7 +51,6 @@ object Tides {
     import dsl._
     import java.text.SimpleDateFormat
 
-    val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     private def tideUri(beachId: Int): Uri = {
       val baseUri = Uri.uri("https://api.willyweather.com.au/")
       val withPath = baseUri.withPath(s"/v2/ZjM0ZmY1Zjc5NDQ3N2IzNjE3MmRmYm/locations/$beachId/weather.json")
@@ -59,6 +63,8 @@ object Tides {
       .map(s => {
         val timeZoneStr = parser.parse(s).getOrElse(Json.Null).hcursor.downField("location").downField("timeZone").as[String]
         val timeZone = TimeZone.getTimeZone(timeZoneStr.getOrElse("Australia/Sydney"))
+        val sdf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+
         parser.parse(s).getOrElse(Json.Null).hcursor
           .downField("forecasts")
           .downField("tides")
@@ -70,11 +76,10 @@ object Tides {
           .values
           .get.flatMap(j => j.as[Tide].toSeq).filter(s =>
           {
-            val cal = Calendar.getInstance()
-            cal.setTimeZone(timeZone)
-            val cal2 = Calendar.getInstance()
-            cal2.setTime(sdf.parse(s.dateTime))
-            cal2.before(cal)
+            val entry = LocalDateTime.parse(s.dateTime, sdf ).atZone( timeZone.toZoneId )
+
+            val currentTime = LocalDateTime.now()
+            entry.toLocalDateTime.isBefore(currentTime)
           })
           .maxBy(tide => tide.dateTime)
         }).map(tide => TideHeightStatus(tide.`type`))

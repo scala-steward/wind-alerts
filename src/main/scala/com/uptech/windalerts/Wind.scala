@@ -47,9 +47,6 @@ object Winds {
     val dsl = new Http4sClientDsl[F] {}
 
     import dsl._
-    import java.text.SimpleDateFormat
-
-    val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
     private def windUri(beachId: Int): Uri =
       Uri.uri("https://api.willyweather.com.au/")
@@ -59,8 +56,6 @@ object Winds {
     def get(beachId: BeachId): F[WindStatus] = C.expect[String](GET(windUri(beachId.id)))
       .adaptError { case t => WindError(t) }
       .map(s => {
-        val timeZoneStr = parser.parse(s).getOrElse(Json.Null).hcursor.downField("location").downField("timeZone").as[String]
-        val timeZone = TimeZone.getTimeZone(timeZoneStr.getOrElse("Australia/Sydney"))
         parser.parse(s).getOrElse(Json.Null).hcursor.downField("observational").downField("observations")
           .downField("wind").as[Wind].map(wind => new WindStatus(wind.direction, wind.speed))
           .getOrElse(WindStatus(0.0, 0.0))
