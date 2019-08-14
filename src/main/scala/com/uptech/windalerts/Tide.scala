@@ -16,8 +16,6 @@ import org.http4s.Method._
 import org.http4s.circe._
 import java.util.{Calendar, Date, Locale, TimeZone}
 
-import .sdf
-
 trait Tides[F[_]] {
   def get(beachId: BeachId): F[TideHeightStatus]
 }
