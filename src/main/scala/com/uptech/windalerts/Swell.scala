@@ -1,6 +1,9 @@
 package com.uptech.windalerts
 
 
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 import cats.Applicative
 import cats.effect.Sync
 import cats.implicits._
@@ -49,7 +52,7 @@ object Swells {
     import dsl._
     import java.text.SimpleDateFormat
 
-    val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    val sdf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     private def swellUri(beachId: Int): Uri = {
       val baseUri = Uri.uri("https://api.willyweather.com.au/")
       val withPath = baseUri.withPath(s"/v2/ZjM0ZmY1Zjc5NDQ3N2IzNjE3MmRmYm/locations/$beachId/weather.json")
@@ -71,11 +74,11 @@ object Swells {
           .values
           .get.flatMap(j => j.as[Swell].toSeq).filter(s =>
           {
-            val cal = Calendar.getInstance()
-            cal.setTimeZone(timeZone)
-            val cal2 = Calendar.getInstance()
-            cal2.setTime(sdf.parse(s.dateTime))
-            cal.get(Calendar.HOUR_OF_DAY) == cal2.get(Calendar.HOUR_OF_DAY)
+            val entry = LocalDateTime.parse(s.dateTime, sdf ).atZone( timeZone.toZoneId ).withZoneSameInstant(TimeZone.getDefault.toZoneId)
+
+            val currentTime = LocalDateTime.now()
+
+            entry.getHour == currentTime.getHour
           })
           .head
         }
