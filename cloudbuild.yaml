@@ -1,10 +1,10 @@
 steps:
   # build the container image
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/surf-alerts/wind-alerts', '.']
+  - name: 'sbt'
+    args: ['jibDockerBuild']
     # push the container image to Container Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/surf-alerts/wind-alerts']
+    args: ['push', 'com.uptech/wind-alerts:0.0.1-SNAPSHOT']
     # Deploy container image to Cloud Run
   - name: 'gcr.io/cloud-builders/gcloud'
     args: ['beta', 'run', 'deploy', 'wind-alerts', '--image', 'gcr.io/surf-alerts/wind-alerts', '--region', 'us-central1','--platform', 'managed', '--quiet']
