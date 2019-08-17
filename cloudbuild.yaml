@@ -1,4 +1,14 @@
 steps:
+  steps:
+    - name: 'gcr.io/cloud-builders/docker'
+      args:
+        - 'build'
+        - '--build-arg=BASE_IMAGE=gcr.io/cloud-builders/javac:8'
+        - '--build-arg=SBT_VERSION=1.2.8'
+        - '--build-arg=SHA=f4b9fde91482705a772384c9ba6cdbb84d1c4f7a278fd2bfb34961cd9ed8e1d7'
+        - '--tag=gcr.io/surf-alerts/scala-sbt:1.2.8-jdk-8'
+        - '.'
+      waitFor: ['-']
   # build the container image
   - name: 'gcr.io/surf-alerts/scala-sbt'
     args: ['jibDockerBuild']
