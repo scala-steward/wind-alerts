@@ -1,11 +1,10 @@
 steps:
-  steps:
-    - name: 'gcr.io/$PROJECT_ID/scala-sbt'
-        entrypoint: bash
-        args:
-          - -c
-          - |
-            ./build/sbt jibDockerBuild
-        timeout: 20m0s
+  - name: 'gcr.io/$PROJECT_ID/scala-sbt'
+      entrypoint: bash
+      args:
+        - -c
+        - |
+          ./build/sbt jibDockerBuild
+      timeout: 20m0s
 images:
   - gcr.io/surf-alerts/wind-alerts
