@@ -16,8 +16,6 @@ import org.http4s.Method._
 import org.http4s.circe._
 import java.util.{Calendar, Date, Locale, TimeZone}
 
-import .sdf
-
 trait Tides[F[_]] {
   def get(beachId: BeachId): F[TideHeightStatus]
 }
@@ -76,7 +74,7 @@ object Tides {
           .values
           .get.flatMap(j => j.as[Tide].toSeq).filter(s =>
           {
-            val entry = LocalDateTime.parse(s.dateTime, sdf ).atZone( timeZone.toZoneId )
+            val entry = LocalDateTime.parse(s.dateTime, sdf ).atZone( timeZone.toZoneId ).withZoneSameInstant(TimeZone.getDefault.toZoneId)
 
             val currentTime = LocalDateTime.now()
             entry.toLocalDateTime.isBefore(currentTime)
