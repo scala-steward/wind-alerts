@@ -1,6 +1,6 @@
 steps:
   # build the container image
-  - name: 'sbt'
+  - name: 'gcr.io/surf-alerts/scala-sbt'
     args: ['jibDockerBuild']
     # push the container image to Container Registry
   - name: 'gcr.io/cloud-builders/docker'
