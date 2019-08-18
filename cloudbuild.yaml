@@ -1,7 +1,7 @@
 steps:
   # build the container image
   - name: 'gcr.io/$PROJECT_ID/scala-sbt'
-      args: ['jibDockerBuild]
+      args: ['jibDockerBuild']
   - name: 'gcr.io/cloud-builders/docker'
       args: ['tag', 'com.uptech/wind-alerts:0.0.1-SNAPSHOT', 'gcr.io/surf-alerts/wind-alerts']
   - name: 'gcr.io/cloud-builders/docker'
