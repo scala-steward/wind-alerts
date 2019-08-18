@@ -10,8 +10,6 @@ lazy val core: Project = (project in file("core"))
     packageName in Docker := "docker-test"
   )
 
-
-
 lazy val root = (project in file("."))
   .settings(
     organization := "com.uptech",
@@ -33,7 +31,7 @@ lazy val root = (project in file("."))
     ),
     addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),
     addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.0")
-  ).enablePlugins( JibPlugin)
+  ).enablePlugins(JibPlugin)
 
 
 scalacOptions ++= Seq(

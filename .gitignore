@@ -5,3 +5,4 @@ target/
 .lib/
 .idea
 graalvm-native-image
+project/target
