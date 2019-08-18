@@ -1,10 +1,13 @@
 steps:
+  # build the container image
   - name: 'gcr.io/$PROJECT_ID/scala-sbt'
-      entrypoint: bash
-      args:
-        - -c
-        - |
-          ./build/sbt jibDockerBuild
-      timeout: 20m0s
+      args: ['jibDockerBuild]
+  - name: 'gcr.io/cloud-builders/docker'
+      args: ['tag', 'com.uptech/wind-alerts:0.0.1-SNAPSHOT', 'gcr.io/surf-alerts/wind-alerts']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/surf-alerts/wind-alerts']
+    # Deploy container image to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: ['beta', 'run', 'deploy', 'wind-alerts', '--image', 'gcr.io/surf-alerts/wind-alerts', '--region', 'us-central1','--platform', 'managed', '--quiet']
 images:
   - gcr.io/surf-alerts/wind-alerts
