@@ -7,7 +7,7 @@ import java.time.format.DateTimeFormatter
 import cats.Applicative
 import cats.effect.Sync
 import cats.implicits._
-import com.uptech.windalerts.Domain.{BeachId, SwellStatus}
+import com.uptech.windalerts.Domain.{BeachId, Swell}
 import io.circe.{Decoder, Encoder, Json, parser}
 import io.circe.generic.semiauto._
 import org.http4s._
@@ -16,9 +16,9 @@ import org.http4s.client.dsl.Http4sClientDsl
 import org.http4s.Method._
 import org.http4s.circe._
 import java.util.{Calendar, Date, TimeZone}
-
+import Domain._
 trait Swells[F[_]] {
-  def get(beachId: BeachId): F[SwellStatus]
+  def get(beachId: BeachId): F[Domain.Swell]
 }
 
 object Swells {
@@ -60,7 +60,7 @@ object Swells {
       withQuery
     }
 
-    def get(beachId: BeachId): F[SwellStatus] = C.expect[String](GET(swellUri(beachId.id)))
+    def get(beachId: BeachId): F[Domain.Swell] = C.expect[String](GET(swellUri(beachId.id)))
       .adaptError { case t => SwellError(t) }
       .map(s => {
         val timeZoneStr = parser.parse(s).getOrElse(Json.Null).hcursor.downField("location").downField("timeZone").as[String]
@@ -83,6 +83,6 @@ object Swells {
           .head
         }
       )
-      .map(swell => new SwellStatus(swell.height, swell.direction))
+      .map(swell => Domain.Swell(swell.height, swell.direction))
   }
 }

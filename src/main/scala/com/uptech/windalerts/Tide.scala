@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter
 import cats.Applicative
 import cats.effect.Sync
 import cats.implicits._
-import com.uptech.windalerts.Domain.{BeachId, TideHeightStatus, TideStatus}
+import com.uptech.windalerts.Domain.{BeachId, TideHeight, Tide}
 import io.circe.{Decoder, Encoder, Json, parser}
 import io.circe.generic.semiauto._
 import org.http4s._
@@ -17,7 +17,7 @@ import org.http4s.circe._
 import java.util.{Calendar, Date, Locale, TimeZone}
 
 trait Tides[F[_]] {
-  def get(beachId: BeachId): F[TideHeightStatus]
+  def get(beachId: BeachId): F[TideHeight]
 }
 
 object Tides {
@@ -56,7 +56,7 @@ object Tides {
       withQuery
     }
 
-    def get(beachId: BeachId): F[TideHeightStatus] = C.expect[String](GET(tideUri(beachId.id)))
+    def get(beachId: BeachId): F[TideHeight] = C.expect[String](GET(tideUri(beachId.id)))
       .adaptError { case t => TideError(t) }
       .map(s => {
         val timeZoneStr = parser.parse(s).getOrElse(Json.Null).hcursor.downField("location").downField("timeZone").as[String]
@@ -80,7 +80,7 @@ object Tides {
             entry.toLocalDateTime.isBefore(currentTime)
           })
           .maxBy(tide => tide.dateTime)
-        }).map(tide => TideHeightStatus(tide.`type`))
+        }).map(tide => TideHeight(tide.`type`))
 
   }
 }

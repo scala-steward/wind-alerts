@@ -1,7 +1,7 @@
 package com.uptech.windalerts
 
 import cats.implicits._
-import com.uptech.windalerts.Domain.{BeachId, BeachStatus, TideStatus}
+import com.uptech.windalerts.Domain.{BeachId, Beach, Tide}
 import org.http4s.dsl.Http4sDsl
 
 object WindalertsRoutes {
@@ -18,7 +18,7 @@ object WindalertsRoutes {
           wind  <- W.get(BeachId(beachId))
           swell <- S.get(BeachId(beachId))
           tide  <- T.get(BeachId(beachId))
-          resp  <- Ok(BeachStatus(wind, TideStatus(tide, swell)))
+          resp  <- Ok(Beach(wind, Tide(tide, swell)))
         } yield resp
     }
   }
