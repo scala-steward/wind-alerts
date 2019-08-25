@@ -6,3 +6,4 @@ target/
 .idea
 graalvm-native-image
 project/target
+.DS_Store

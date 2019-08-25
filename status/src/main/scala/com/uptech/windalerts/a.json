@@ -1,0 +1,120 @@
+{
+  "location": {
+    "id": 4988,
+    "name": "Bondi Beach",
+    "region": "Sydney",
+    "state": "NSW",
+    "postcode": "2026",
+    "timeZone": "Australia\/Sydney",
+    "lat": -33.891,
+    "lng": 151.275,
+    "typeId": 2
+  },
+  "observational": {
+    "observations": {
+      "temperature": {
+        "temperature": 14.7,
+        "apparentTemperature": null,
+        "trend": -1
+      },
+      "delta-t": {
+        "temperature": 5.9,
+        "trend": 0
+      },
+      "cloud": {
+        "oktas": 3,
+        "trend": -1
+      },
+      "humidity": {
+        "percentage": 39,
+        "trend": 0
+      },
+      "dewPoint": {
+        "temperature": 0.7,
+        "trend": -1
+      },
+      "pressure": {
+        "pressure": 1019.3,
+        "trend": 1
+      },
+      "wind": {
+        "speed": 55.5,
+        "gustSpeed": 61.1,
+        "trend": 1,
+        "direction": 191,
+        "directionText": "S"
+      },
+      "rainfall": {
+        "lastHourAmount": 0,
+        "todayAmount": 0,
+        "since9AMAmount": 0
+      }
+    },
+    "stations": {
+      "temperature": {
+        "id": 733,
+        "name": "Sydney Harbour (off Georges Head, Mosman)",
+        "lat": -33.84,
+        "lng": 151.26,
+        "distance": 5.6
+      },
+      "delta-t": {
+        "id": 349,
+        "name": "Sydney (Observatory Hill)",
+        "lat": -33.86,
+        "lng": 151.21,
+        "distance": 7.3
+      },
+      "cloud": {
+        "id": 345,
+        "name": "Sydney Airport",
+        "lat": -33.94,
+        "lng": 151.17,
+        "distance": 11.3
+      },
+      "humidity": {
+        "id": 349,
+        "name": "Sydney (Observatory Hill)",
+        "lat": -33.86,
+        "lng": 151.21,
+        "distance": 7.3
+      },
+      "dewPoint": {
+        "id": 349,
+        "name": "Sydney (Observatory Hill)",
+        "lat": -33.86,
+        "lng": 151.21,
+        "distance": 7.3
+      },
+      "pressure": {
+        "id": 349,
+        "name": "Sydney (Observatory Hill)",
+        "lat": -33.86,
+        "lng": 151.21,
+        "distance": 7.3
+      },
+      "wind": {
+        "id": 733,
+        "name": "Sydney Harbour (off Georges Head, Mosman)",
+        "lat": -33.84,
+        "lng": 151.26,
+        "distance": 5.6
+      },
+      "rainfall": {
+        "id": 349,
+        "name": "Sydney (Observatory Hill)",
+        "lat": -33.86,
+        "lng": 151.21,
+        "distance": 7.3
+      }
+    },
+    "issueDateTime": "2019-08-22 18:10:00",
+    "units": {
+      "temperature": "c",
+      "amount": "mm",
+      "speed": "km\/h",
+      "distance": "km",
+      "pressure": "hPa"
+    }
+  }
+}
