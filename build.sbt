@@ -1,6 +1,8 @@
-name := "wind-alerts"
-version := "0.0.1-SNAPSHOT"
-scalaVersion := "2.12.8"
+organization in ThisBuild := "com.uptech"
+
+name in ThisBuild := "wind-alerts"
+version in ThisBuild := "0.0.1-SNAPSHOT"
+scalaVersion in ThisBuild := "2.12.8"
 
 
 lazy val global = project
@@ -95,8 +97,8 @@ lazy val settings =
 lazy val assemblySettings = Seq(
   assemblyJarName in assembly := name.value + ".jar",
   assemblyMergeStrategy in assembly := {
-    case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-    case "application.conf"            => MergeStrategy.concat
+    case PathList("META-INF", xs@_*) => MergeStrategy.discard
+    case "application.conf" => MergeStrategy.concat
     case x =>
       val oldStrategy = (assemblyMergeStrategy in assembly).value
       oldStrategy(x)
