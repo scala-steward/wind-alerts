@@ -3,9 +3,9 @@ steps:
   - name: 'gcr.io/$PROJECT_ID/scala-sbt'
     args: ['jibDockerBuild']
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['tag', 'com.uptech/alerts:0.0.1-SNAPSHOT', 'gcr.io/wind-alerts/alerts']
+    args: ['tag', 'com.uptech/alerts:0.0.1-SNAPSHOT', 'gcr.io/surf-alerts/alerts']
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/wind-alerts/alerts']
+    args: ['push', 'gcr.io/surf-alerts/alerts']
     # Deploy container image to Cloud Run
   - name: 'gcr.io/cloud-builders/gcloud'
-    args: ['beta', 'run', 'deploy', 'wind-alerts', '--image', 'gcr.io/wind-alerts/alerts', '--region', 'us-central1','--platform', 'managed', '--quiet', '--memory', '512Mi']
+    args: ['beta', 'run', 'deploy', 'alerts', '--image', 'gcr.io/surf-alerts/alerts', '--region', 'us-central1','--platform', 'managed', '--quiet', '--memory', '512Mi']
