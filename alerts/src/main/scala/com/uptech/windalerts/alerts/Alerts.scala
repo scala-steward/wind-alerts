@@ -5,15 +5,13 @@ import java.util.Date
 
 import cats.effect.IO
 import com.google.auth.oauth2.GoogleCredentials
-import com.google.cloud.firestore.QuerySnapshot
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.uptech.windalerts.domain.Domain.Alert
-import com.uptech.windalerts.status.Beaches.ServiceImpl
 
 import scala.collection.JavaConverters
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
-import ExecutionContext.Implicits.global
 
 trait Alerts extends Serializable {
   val alerts: Alerts.Service
