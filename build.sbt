@@ -35,6 +35,7 @@ lazy val status = project
   )
 
 lazy val alerts = project
+  .enablePlugins(JibPlugin)
   .settings(
     name := "alerts",
     settings,
