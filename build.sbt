@@ -42,6 +42,7 @@ lazy val alerts = project
     libraryDependencies ++= alertsDependencies
   )
   .dependsOn(
+    domain,
     status
   )
 
@@ -60,8 +61,11 @@ lazy val dependencies =
     val circeGeneric = "io.circe" %% "circe-generic" % CirceVersion
     val circeParser = "io.circe" %% "circe-parser" % CirceVersion
     val circeCore = "io.circe" %% "circe-core" % CirceVersion
-    val specs2Core = "org.specs2" %% "specs2-core" % Specs2Version % "test"
     val logbackClassic = "ch.qos.logback" % "logback-classic" % LogbackVersion
+    val firebaseAdmin = "com.google.firebase" % "firebase-admin" % "6.9.0"
+    val firebase4s = "com.github.firebase4s" %% "firebase4s" % "0.0.4"
+    val sttp = "com.softwaremill.sttp" % "core_2.12" % "1.6.4"
+    val specs2Core = "org.specs2" %% "specs2-core" % Specs2Version % "test"
   }
 
 lazy val domainDependencies = Seq(
@@ -76,9 +80,11 @@ lazy val domainDependencies = Seq(
   dependencies.logbackClassic
 )
 
-lazy val statusDependencies = domainDependencies
+lazy val statusDependencies = domainDependencies ++ Seq(dependencies.sttp)
 
-lazy val alertsDependencies = domainDependencies
+lazy val alertsDependencies = statusDependencies ++ Seq(dependencies.firebaseAdmin, dependencies.firebase4s)
+
+
 
 lazy val domainSettings = Seq(
   scalacOptions ++= compilerOptions,
