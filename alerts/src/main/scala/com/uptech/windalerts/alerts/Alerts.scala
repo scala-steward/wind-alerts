@@ -25,7 +25,7 @@ object Alerts {
 
   object FireStoreBackedService extends Service {
     val credentials = GoogleCredentials.getApplicationDefault
-    val options = new FirebaseOptions.Builder().setCredentials(credentials).setProjectId("surf-alerts").build
+    val options = new FirebaseOptions.Builder().setCredentials(credentials).setProjectId("surf-alerts-staging").build
     FirebaseApp.initializeApp(options)
     val db = FirestoreClient.getFirestore
 
