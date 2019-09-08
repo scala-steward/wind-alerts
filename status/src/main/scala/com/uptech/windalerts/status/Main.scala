@@ -20,7 +20,7 @@ object Main extends IOApp {
   val beaches = Beaches.ServiceImpl(Winds.impl, Swells.impl, Tides.impl)
   def run(args: List[String]): IO[ExitCode] =
     BlazeServerBuilder[IO]
-      .bindHttp(sys.env("PORT").toInt, "localhost")
+      .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
       .withHttpApp(StatusRoutes(beaches))
       .serve
       .compile
