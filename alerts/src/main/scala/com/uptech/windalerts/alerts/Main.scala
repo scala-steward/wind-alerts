@@ -24,7 +24,7 @@ object Main extends IOApp {
   import com.uptech.windalerts.domain.DomainCodec._
 
   private val logger = getLogger
-  
+
   logger.error("Starting")
   val credentials = GoogleCredentials.fromStream(new FileInputStream("wind-alerts-staging.json"))
   logger.error("Credentials")
@@ -35,7 +35,6 @@ object Main extends IOApp {
   logger.error("auth")
 
   val db = FirestoreClient.getFirestore
-  val auth = FirebaseAuth.getInstance
 
   val beaches = Beaches.ServiceImpl(Winds.impl, Swells.impl, Tides.impl)
   val alerts = new Alerts.FireStoreBackedService(db)
