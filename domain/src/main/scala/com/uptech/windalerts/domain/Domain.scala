@@ -2,10 +2,14 @@ package com.uptech.windalerts.domain
 
 import java.util
 
+import scala.beans.BeanProperty
 import scala.collection.JavaConverters
 import scala.util.control.NonFatal
 
 object Domain {
+
+  final case class User(uid:String, email:String, password:String, token:String)
+
 
   final case class BeachId(id: Int) extends AnyVal
   final case class Wind(direction: Double = 0, speed: Double = 0, directionText:String)
@@ -29,16 +33,19 @@ object Domain {
     }
   }
 
+  case class Alerts(alerts:Seq[Alert])
+
+  @SerialVersionUID(100L)
   case class Alert(
                     owner: String,
-                    beachId: Int,
-                    days: Seq[Int],
+                    beachId: Long,
+                    days: Seq[Long],
                     swellDirections: Seq[String],
                     timeRanges: Seq[TimeRange],
                     waveHeightFrom: Double,
                     waveHeightTo: Double,
                     windDirections: Seq[String],
-                    timeZone: String ="Australia/Sydney") {
+                    timeZone: String ="Australia/Sydney") extends Serializable {
     def isToBeNotified(beach: Beach): Boolean = {
       swellDirections.contains(beach.tide.swell.directionText) &&
       waveHeightFrom <= beach.tide.swell.height && waveHeightTo >= beach.tide.swell.height &&
@@ -46,15 +53,40 @@ object Domain {
     }
 
     def isToBeAlertedAt(hour: Int) = timeRanges.exists(_.isWithinRange(hour))
+
+    def toBean: AlertBean = {
+      val alert = new AlertBean(
+        owner,
+        beachId,
+        days,
+        swellDirections,
+        timeRanges,
+        waveHeightFrom,
+        waveHeightTo,
+        windDirections,
+        timeZone)
+      alert
+    }
   }
+
+  class AlertBean(
+    @BeanProperty var owner: String,
+    @BeanProperty var beachId: Long,
+    @BeanProperty var days: Seq[Long],
+    @BeanProperty var swellDirections: Seq[String],
+    @BeanProperty var timeRanges: Seq[TimeRange],
+    @BeanProperty var waveHeightFrom: Double,
+    @BeanProperty var waveHeightTo: Double,
+    @BeanProperty var windDirections: Seq[String],
+    @BeanProperty var timeZone: String ="Australia/Sydney") {}
 
   object Alert {
 
     def unapply(values: Map[String, Any]) = try {
       Some(Alert(
         values("owner").asInstanceOf[String],
-        values("beachId").asInstanceOf[Long].toInt,
-        j2s(values("days").asInstanceOf[util.ArrayList[Int]]).asInstanceOf[Seq[Int]],
+        values("beachId").asInstanceOf[Long].toLong,
+        j2s(values("days").asInstanceOf[util.ArrayList[Long]]).asInstanceOf[Seq[Long]],
         j2s(values("swellDirections").asInstanceOf[util.ArrayList[String]]),
         {
           val ranges = j2s(values("timeRanges").asInstanceOf[util.ArrayList[util.HashMap[String, Long]]]).map(p => j2sm(p))
@@ -75,6 +107,7 @@ object Domain {
       }
     }
   }
+
 
   def j2s[A](inputList: util.List[A]) = JavaConverters.asScalaIteratorConverter(inputList.iterator).asScala.toSeq
 

@@ -7,3 +7,5 @@ target/
 graalvm-native-image
 project/target
 .DS_Store
+*.iml
+*.json

@@ -1,6 +1,5 @@
 package com.uptech.windalerts.status
 
-
 import cats.Applicative
 import cats.effect.{IO, Sync}
 import com.uptech.windalerts.domain.Domain.{Alert, BeachId, Wind}

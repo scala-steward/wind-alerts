@@ -1,9 +1,11 @@
 steps:
   # build the container image
-  - name: 'gcr.io/$PROJECT_ID/scala-sbt'
-    args: ['jibDockerBuild']
+  - name: 'gcr.io/cloud-builders/mvn'
+    args: ['-q', 'clean', 'install']
+  - name: 'gcr.io/cloud-builders/mvn'
+    args: ['-q', '-pl', 'status', 'com.google.cloud.tools:jib-maven-plugin:1.5.1:dockerBuild']
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['tag', 'com.uptech/status:0.0.1-SNAPSHOT', 'gcr.io/wind-alerts-staging/status']
+    args: ['tag', 'status', 'gcr.io/wind-alerts-staging/status']
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/wind-alerts-staging/status']
     # Deploy container image to Cloud Run
