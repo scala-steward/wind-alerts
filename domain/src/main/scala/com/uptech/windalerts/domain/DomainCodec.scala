@@ -65,4 +65,23 @@ object DomainCodec {
   lazy implicit val timeRangeEncoder: Encoder[TimeRange] = deriveEncoder[TimeRange]
 
   implicit def timeRangeEntityEncoder[F[_] : Applicative]: EntityEncoder[F, TimeRange] = jsonEncoderOf
+
+  lazy implicit val userDecoder: Decoder[User] = deriveDecoder[User]
+
+  implicit def userEntityDecoder[F[_] : Sync]: EntityDecoder[F, User] = jsonOf
+
+  lazy implicit val userEncoder: Encoder[User] = deriveEncoder[User]
+
+  implicit def userEntityEncoder[F[_] : Applicative]: EntityEncoder[F, User] = jsonEncoderOf
+
+
+
+
+  lazy implicit val salertDecoder: Decoder[Alerts] = deriveDecoder[Alerts]
+
+  implicit def salertEntityDecoder[F[_] : Sync]: EntityDecoder[F, Alerts] = jsonOf
+
+  lazy implicit val salertEncoder: Encoder[Alerts] = deriveEncoder[Alerts]
+
+  implicit def salertEntityEncoder[F[_] : Applicative]: EntityEncoder[F, Alerts] = jsonEncoderOf
 }

@@ -5,9 +5,11 @@ import java.util.Date
 
 import cats.effect.IO
 import com.google.auth.oauth2.GoogleCredentials
+import com.google.cloud.firestore.{DocumentReference, Firestore}
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
-import com.uptech.windalerts.domain.Domain.Alert
+import com.uptech.windalerts.domain.Domain.{Alert, AlertBean}
 
 import scala.collection.JavaConverters
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -20,17 +22,19 @@ trait Alerts extends Serializable {
 object Alerts {
 
   trait Service {
-    val getAllForDay: IO[Seq[Alert]]
+    def getAllForDay: IO[Seq[Alert]]
+
+    def save(alert: Alert):IO[String]
   }
 
-  object FireStoreBackedService extends Service {
-    val credentials = GoogleCredentials.getApplicationDefault
-    val options = new FirebaseOptions.Builder().setCredentials(credentials).setProjectId("wind-alerts-staging").build
-    FirebaseApp.initializeApp(options)
-    val db = FirestoreClient.getFirestore
+  class FireStoreBackedService(db:Firestore) extends Service {
 
-    override val getAllForDay: IO[Seq[Alert]] = {
+    override def save(alert: Alert): IO[String] = {
+      val eventualReference = j2s(db.collection("alerts").add(alert.toBean))
+      IO.fromFuture(IO(eventualReference.map(r=>r.getId)))
+    }
 
+    override def getAllForDay: IO[Seq[Alert]] = {
       for {
         date <- IO(new Date())
         collection <- IO.fromFuture(IO(j2s(db.collection("alerts").whereArrayContains("days", date.getDay).get())))
@@ -51,6 +55,7 @@ object Alerts {
     def j2s[A](javaFuture: util.concurrent.Future[A]): Future[A] = {
       Future(javaFuture.get())
     }
+
   }
 
 }
