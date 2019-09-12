@@ -13,8 +13,8 @@ steps:
     env:
       - 'PROJECT_ID=wind-alerts-staging'
   - name: 'gcr.io/cloud-builders/gcloud'
-    args: ['beta', 'run', 'deploy', 'status', '--image', 'gcr.io/wind-alerts-staging/status', '--region', 'us-central1','--platform', 'managed', '--quiet', '--memory', '512Mi']
+    args: ['beta', 'run', 'deploy', 'status', '--image', 'gcr.io/wind-alerts-staging/status:1.0-SNAPSHOT', '--region', 'us-central1','--platform', 'managed', '--quiet', '--memory', '512Mi']
   - name: 'gcr.io/cloud-builders/gcloud'
-    args: ['beta', 'run', 'deploy', 'alerts', '--image', 'gcr.io/wind-alerts-staging/alerts', '--region', 'us-central1','--platform', 'managed', '--quiet', '--memory', '512Mi']
+    args: ['beta', 'run', 'deploy', 'alerts', '--image', 'gcr.io/wind-alerts-staging/alerts:1.0-SNAPSHOT', '--region', 'us-central1','--platform', 'managed', '--quiet', '--memory', '512Mi']
   - name: 'gcr.io/cloud-builders/gcloud'
-    args: ['beta', 'run', 'deploy',  'users', '--image',  'gcr.io/wind-alerts-staging/users', '--region', 'us-central1','--platform', 'managed', '--quiet', '--memory', '512Mi']
+    args: ['beta', 'run', 'deploy',  'users', '--image',  'gcr.io/wind-alerts-staging/users:1.0-SNAPSHOT', '--region', 'us-central1','--platform', 'managed', '--quiet', '--memory', '512Mi']
