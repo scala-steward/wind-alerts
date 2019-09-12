@@ -1,5 +1,7 @@
 package com.uptech.windalerts.alerts
 
+import java.io.{File, FileInputStream, InputStream}
+
 import cats.effect.{IO, _}
 import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
@@ -23,7 +25,7 @@ object Main extends IOApp {
 
   private val logger = getLogger
 
-  val credentials = GoogleCredentials.getApplicationDefault
+  val credentials = GoogleCredentials.fromStream(new FileInputStream("wind-alerts-staging.json"))
   val options = new FirebaseOptions.Builder().setCredentials(credentials).setProjectId("wind-alerts-staging").build
   FirebaseApp.initializeApp(options)
   val db = FirestoreClient.getFirestore

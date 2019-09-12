@@ -22,6 +22,7 @@
         <scala.version>2.12.6</scala.version>
         <scala.compat.version>2.12</scala.compat.version>
         <spec2.version>4.2.0</spec2.version>
+        <image>gcr.io/${env.PROJECT_ID}/${project.artifactId}:${project.version}</image>
     </properties>
 
     <dependencies>
@@ -156,6 +157,11 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>1.5.1</version>
             </plugin>
         </plugins>
     </build>
