@@ -24,10 +24,16 @@ object Main extends IOApp {
   import com.uptech.windalerts.domain.DomainCodec._
 
   private val logger = getLogger
-
+  
+  logger.error("Starting")
   val credentials = GoogleCredentials.fromStream(new FileInputStream("wind-alerts-staging.json"))
+  logger.error("Credentials")
   val options = new FirebaseOptions.Builder().setCredentials(credentials).setProjectId("wind-alerts-staging").build
+  logger.error("Options")
   FirebaseApp.initializeApp(options)
+  val auth = FirebaseAuth.getInstance
+  logger.error("auth")
+
   val db = FirestoreClient.getFirestore
   val auth = FirebaseAuth.getInstance
 
