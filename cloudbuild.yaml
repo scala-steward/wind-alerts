@@ -17,4 +17,4 @@ steps:
   - name: 'gcr.io/cloud-builders/gcloud'
     args: ['beta', 'run', 'deploy', 'alerts', '--image', 'gcr.io/wind-alerts-staging/alerts', '--region', 'us-central1','--platform', 'managed', '--quiet', '--memory', '512Mi']
   - name: 'gcr.io/cloud-builders/gcloud'
-    args: ['beta', 'run', 'deploy', 'users', '--image', 'gcr.io/wind-alerts-staging/users', '--region', 'us-central1','--platform', 'managed', '--quiet', '--memory', '512Mi']
+    args: ['beta', 'run', 'deploy',  'users', '--image',  'gcr.io/wind-alerts-staging/users', '--region', 'us-central1','--platform', 'managed', '--quiet', '--memory', '512Mi']
