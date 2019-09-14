@@ -3,18 +3,12 @@ steps:
     args:
       - 'kms'
       - 'decrypt'
-      - '--ciphertext-file=wind-alerts-staging.json.enc'
-      - '--plaintext-file=wind-alerts-staging.json'
+      - '--ciphertext-file=src/main/resources/wind-alerts-staging.json.enc'
+      - '--plaintext-file=src/main/resources/wind-alerts-staging.json'
       - '--location=global'
       - '--keyring=alerts'
       - '--key=staging'
   - name: 'gcr.io/cloud-builders/mvn'
-    args: ['-q', '-Duser.home=/builder/home', 'compile', 'jib:build']
-    env:
-      - 'PROJECT_ID=wind-alerts-staging'
+    args: ['-q', 'compile', 'jib:build']
   - name: 'gcr.io/cloud-builders/gcloud'
-    args: ['beta', 'run', 'deploy', 'status', '--image', 'gcr.io/wind-alerts-staging/status:1.0-SNAPSHOT', '--region', 'us-central1','--platform', 'managed', '--quiet', '--memory', '512Mi']
-  - name: 'gcr.io/cloud-builders/gcloud'
-    args: ['beta', 'run', 'deploy', 'alerts', '--image', 'gcr.io/wind-alerts-staging/alerts:1.0-SNAPSHOT', '--region', 'us-central1','--platform', 'managed', '--quiet', '--memory', '512Mi']
-  - name: 'gcr.io/cloud-builders/gcloud'
-    args: ['beta', 'run', 'deploy',  'users', '--image',  'gcr.io/wind-alerts-staging/users:1.0-SNAPSHOT', '--region', 'us-central1','--platform', 'managed', '--quiet', '--memory', '512Mi']
+    args: ['beta', 'run', 'deploy', 'wind-alerts', '--image', 'gcr.io/wind-alerts-staging/wind-alerts:1.0-SNAPSHOT', '--region', 'us-central1','--platform', 'managed', '--quiet', '--memory', '512Mi']
