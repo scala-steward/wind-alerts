@@ -150,7 +150,7 @@ object Main extends IOApp {
   }
 
   def getParentList(dir: String):List[File] = {
-    val d = new File(dir).getParent
+    val d = new File(new File(dir).getParent)
     if (d.exists && d.isDirectory) {
       d.listFiles.filter(_.isFile).toList
     } else {
