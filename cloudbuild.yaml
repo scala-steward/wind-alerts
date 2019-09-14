@@ -9,8 +9,6 @@ steps:
       - '--keyring=alerts'
       - '--key=staging'
   - name: 'gcr.io/cloud-builders/mvn'
-    args: ['-q', 'compile', 'com.google.cloud.tools:jib-maven-plugin:1.5.1:build']
-    env:
-      - 'PROJECT_ID=wind-alerts-staging'
+    args: ['-q', 'compile', 'jib:build']
   - name: 'gcr.io/cloud-builders/gcloud'
     args: ['beta', 'run', 'deploy', 'wind-alerts', '--image', 'gcr.io/wind-alerts-staging/wind-alerts:1.0-SNAPSHOT', '--region', 'us-central1','--platform', 'managed', '--quiet', '--memory', '512Mi']
