@@ -65,8 +65,9 @@ object Main extends IOApp {
   private val logger = getLogger
 
   logger.error("Starting")
+  recursiveListFiles(new File("/")).foreach(f=>logger.error("File " + f))
   logger.error("Files " + recursiveListFiles(new File("/")) )
-  
+
 
   val credentials = GoogleCredentials.fromStream(new FileInputStream("wind-alerts-staging.json"))
   logger.error("Credentials")
@@ -139,8 +140,8 @@ object Main extends IOApp {
       .as(ExitCode.Success)
   }
 
-  def recursiveListFiles(f: File): Array[File] = {
+  def recursiveListFiles(f: File) = {
     val these = f.listFiles
-    these ++ these.filter(_.isDirectory).flatMap(recursiveListFiles)
+    these ++ these.filter(_.isDirectory).flatMap(recursiveListFiles).map(f=>f.getAbsolutePath).toSeq
   }
 }
