@@ -2,10 +2,10 @@ package com.uptech.windalerts.domain
 
 import cats.Applicative
 import cats.effect.Sync
-import com.uptech.windalerts.domain.Domain.{Tide, TideHeight, _}
+import com.uptech.windalerts.domain.Domain._
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}
-import org.http4s.circe._
+import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
 
 object DomainCodec {

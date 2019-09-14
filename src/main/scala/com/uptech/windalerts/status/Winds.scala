@@ -2,13 +2,13 @@ package com.uptech.windalerts.status
 
 import cats.Applicative
 import cats.effect.{IO, Sync}
-import com.uptech.windalerts.domain.Domain.{Alert, BeachId, Wind}
 import com.softwaremill.sttp._
 import com.uptech.windalerts.domain.Domain
+import com.uptech.windalerts.domain.Domain.BeachId
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder, Json, parser}
-import org.http4s.{EntityDecoder, EntityEncoder}
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
+import org.http4s.{EntityDecoder, EntityEncoder}
 
 
 

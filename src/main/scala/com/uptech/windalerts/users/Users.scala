@@ -1,13 +1,8 @@
 package com.uptech.windalerts.users
 
 import cats.effect.IO
-import com.google.auth.oauth2.GoogleCredentials
-import com.google.firebase.auth.{FirebaseAuth, FirebaseToken, SessionCookieOptions}
-import com.google.firebase.auth.UserRecord.CreateRequest
-import com.google.firebase.cloud.FirestoreClient
-import com.google.firebase.{FirebaseApp, FirebaseOptions}
+import com.google.firebase.auth.{FirebaseAuth, FirebaseToken}
 import com.uptech.windalerts.domain.Domain
-import org.http4s.Headers
 
 trait Users extends Serializable {
   val users: Users.Service

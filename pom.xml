@@ -4,15 +4,6 @@
     <groupId>com.uptech</groupId>
     <artifactId>wind-alerts</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>${project.artifactId}</name>
-    <packaging>pom</packaging>
-
-    <modules>
-        <module>domain</module>
-        <module>status</module>
-        <module>users</module>
-        <module>alerts</module>
-    </modules>
 
 
     <properties>
@@ -22,7 +13,7 @@
         <scala.version>2.12.6</scala.version>
         <scala.compat.version>2.12</scala.compat.version>
         <spec2.version>4.2.0</spec2.version>
-        <image>gcr.io/${env.PROJECT_ID}/${project.artifactId}:${project.version}</image>
+        <image>gcr.io/wind-alerts-staging/wind-alerts:${project.version}</image>
     </properties>
 
     <dependencies>
@@ -111,7 +102,6 @@
 
     <build>
         <sourceDirectory>src/main/scala</sourceDirectory>
-        <testSourceDirectory>src/test/scala</testSourceDirectory>
         <plugins>
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
@@ -162,6 +152,14 @@
                 <groupId>com.google.cloud.tools</groupId>
                 <artifactId>jib-maven-plugin</artifactId>
                 <version>1.5.1</version>
+                <configuration>
+                    <to>
+                        <image>status</image>
+                    </to>
+                    <container>
+                        <mainClass>com.uptech.windalerts.status.Main</mainClass>
+                    </container>
+                </configuration>
             </plugin>
         </plugins>
     </build>
