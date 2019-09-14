@@ -65,9 +65,8 @@ object Main extends IOApp {
   private val logger = getLogger
 
   logger.error("Starting")
-  logger.error("Files " + getListOfFiles(".") )
-  logger.error("Pwd  "  +  new java.io.File(".").getCanonicalPath)
-  logger.error("Files " + getParentList(".") )
+  logger.error("Files " + recursiveListFiles(new File("/")) )
+  
 
   val credentials = GoogleCredentials.fromStream(new FileInputStream("wind-alerts-staging.json"))
   logger.error("Credentials")
@@ -140,21 +139,8 @@ object Main extends IOApp {
       .as(ExitCode.Success)
   }
 
-  def getListOfFiles(dir: String):List[File] = {
-    val d = new File(dir)
-    if (d.exists && d.isDirectory) {
-      d.listFiles.filter(_.isFile).toList
-    } else {
-      List[File]()
-    }
-  }
-
-  def getParentList(dir: String):List[File] = {
-    val d = new File(new File(dir).getParent)
-    if (d.exists && d.isDirectory) {
-      d.listFiles.filter(_.isFile).toList
-    } else {
-      List[File]()
-    }
+  def recursiveListFiles(f: File): Array[File] = {
+    val these = f.listFiles
+    these ++ these.filter(_.isDirectory).flatMap(recursiveListFiles)
   }
 }
