@@ -31,7 +31,6 @@ import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.uptech.windalerts.domain.Domain
 import com.uptech.windalerts.domain.Domain.BeachId
-import com.uptech.windalerts.status.{Beaches, Swells, Tides, Winds}
 import org.http4s.HttpRoutes
 import org.http4s.dsl.impl.Root
 import org.http4s.dsl.io._
@@ -65,8 +64,7 @@ object Main extends IOApp {
   private val logger = getLogger
 
   logger.error("Starting")
-  recursiveListFiles(new File("/")).foreach(f=>logger.error("File " + f))
-  logger.error("Files " + recursiveListFiles(new File("/")) )
+  getRecursiveListOfFiles(new File("/")).foreach(f=>logger.error("File " + f.getAbsoluteFile.getPath))
 
 
   val credentials = GoogleCredentials.fromStream(new FileInputStream("wind-alerts-staging.json"))
@@ -140,8 +138,8 @@ object Main extends IOApp {
       .as(ExitCode.Success)
   }
 
-  def recursiveListFiles(f: File) = {
-    val these = f.listFiles
-    these ++ these.filter(_.isDirectory).flatMap(recursiveListFiles).map(f=>f.getAbsolutePath).toSeq
+  def getRecursiveListOfFiles(dir: File): Array[File] = {
+    val these = dir.listFiles
+    these ++ these.filter(_.isDirectory).flatMap(getRecursiveListOfFiles)
   }
 }
