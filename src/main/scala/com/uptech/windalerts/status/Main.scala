@@ -66,7 +66,7 @@ object Main extends IOApp {
   logger.error("Starting")
 
 
-  val credentials = GoogleCredentials.fromStream(getClass.getResourceAsStream("wind-alerts-staging.json"))
+  val credentials = GoogleCredentials.fromStream(getClass.getResourceAsStream("/app/resources/wind-alerts-staging.json"))
   logger.error("Credentials")
   val options = new FirebaseOptions.Builder().setCredentials(credentials).setProjectId("wind-alerts-staging").build
   logger.error("Options")
