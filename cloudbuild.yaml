@@ -3,8 +3,8 @@ steps:
     args:
       - 'kms'
       - 'decrypt'
-      - '--ciphertext-file=wind-alerts-staging.json.enc'
-      - '--plaintext-file=wind-alerts-staging.json'
+      - '--ciphertext-file=resources/wind-alerts-staging.json.enc'
+      - '--plaintext-file=resources/wind-alerts-staging.json'
       - '--location=global'
       - '--keyring=alerts'
       - '--key=staging'
