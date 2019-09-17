@@ -5,11 +5,13 @@ import java.util.Date
 
 import cats.effect.IO
 import com.google.cloud.firestore.Firestore
-import com.uptech.windalerts.domain.Domain.Alert
+import com.uptech.windalerts.domain.Domain.{Alert, AlertRequest}
 
 import scala.collection.JavaConverters
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import com.jmethods.catatumbo.{Entity, EntityManager}
+
 
 trait Alerts extends Serializable {
   val alerts: Alerts.Service
@@ -20,14 +22,29 @@ object Alerts {
   trait Service {
     def getAllForDay: IO[Seq[Alert]]
 
-    def save(alert: Alert):IO[String]
+    def save(alert: AlertRequest, user: String):IO[String]
+
+    def getAllForUser(user:String) : IO[com.uptech.windalerts.domain.Domain.Alerts]
   }
 
   class FireStoreBackedService(db:Firestore) extends Service {
 
-    override def save(alert: Alert): IO[String] = {
-      val eventualReference = j2s(db.collection("alerts").add(alert.toBean))
+    override def save(alert: AlertRequest, user:String): IO[String] = {
+      val eventualReference = j2s(db.collection("alerts").add(Alert(alert, user).toBean))
       IO.fromFuture(IO(eventualReference.map(r=>r.getId)))
+    }
+
+    override def getAllForUser(user:String): IO[com.uptech.windalerts.domain.Domain.Alerts] = {
+      for {
+        collection <- IO.fromFuture(IO(j2s(db.collection("alerts").whereEqualTo("owner", user).get())))
+        filtered <- IO(com.uptech.windalerts.domain.Domain.Alerts(
+          j2s(collection.getDocuments)
+            .map(document => {
+              val Alert(alert) = (document.getId, j2s(document.getData).asInstanceOf[Map[String, util.HashMap[String, String]]])
+              alert
+            })))
+      } yield filtered
+
     }
 
     override def getAllForDay: IO[Seq[Alert]] = {
@@ -37,7 +54,7 @@ object Alerts {
         filtered <- IO(
           j2s(collection.getDocuments)
             .map(document => {
-              val Alert(alert) = j2s(document.getData).asInstanceOf[Map[String, java.util.HashMap[String, String]]]
+              val Alert(alert) = (document.getId, j2s(document.getData).asInstanceOf[Map[String, util.HashMap[String, String]]])
               alert
             }).filter(_.isToBeAlertedAt(date.getHours)))
       } yield filtered

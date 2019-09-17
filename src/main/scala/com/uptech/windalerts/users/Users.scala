@@ -20,7 +20,6 @@ object Users {
   class FireStoreBackedService(auth:FirebaseAuth) extends Service {
     override def registerUser(email: String, password: String): IO[Domain.User] =
       for {
-
         token <- IO(auth.verifyIdToken(email))
         user <- IO(Domain.User(email, email, password, "token"))
       } yield user
