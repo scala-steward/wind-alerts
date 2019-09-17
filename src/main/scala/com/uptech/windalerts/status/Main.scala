@@ -1,6 +1,9 @@
 package com.uptech.windalerts.status
 
 import cats.implicits._
+import com.jmethods.catatumbo.EntityManagerFactory
+
+import scala.util.Try
 // import cats.implicits._
 
 import org.http4s.server.blaze._
@@ -66,22 +69,20 @@ object Main extends IOApp {
   logger.error("Starting")
 
 
-  val credentials = GoogleCredentials.fromStream(new FileInputStream("/app/resources/wind-alerts-staging.json"))
-  logger.error("Credentials")
-  val options = new FirebaseOptions.Builder().setCredentials(credentials).setProjectId("wind-alerts-staging").build
-  logger.error("Options")
-  FirebaseApp.initializeApp(options)
-  val auth = FirebaseAuth.getInstance
-  logger.error("auth")
+  val dbWithAuthIO = for {
+    credentials <- IO(Try(GoogleCredentials.fromStream(new FileInputStream("/app/resources/wind-alerts-staging.json")))
+      .getOrElse(GoogleCredentials.getApplicationDefault))
+    options <- IO(new FirebaseOptions.Builder().setCredentials(credentials).setProjectId("wind-alerts-staging").build)
+    _ <- IO(FirebaseApp.initializeApp(options))
+    db <- IO(FirestoreClient.getFirestore)
+    auth <- IO(FirebaseAuth.getInstance)
+  } yield (db, auth)
 
-  val db = FirestoreClient.getFirestore
+  val dbWithAuth = dbWithAuthIO.unsafeRunSync()
 
   val beaches = Beaches.ServiceImpl(Winds.impl, Swells.impl, Tides.impl)
-  val alerts = new Alerts.FireStoreBackedService(db)
-
-
-  val users = new Users.FireStoreBackedService(auth)
-
+  val alerts = new Alerts.FireStoreBackedService(dbWithAuth._1)
+  val users = new Users.FireStoreBackedService(dbWithAuth._2)
 
   def sendAlertsRoute(A: Alerts.Service, B: Beaches.Service, U : Users.Service) = HttpRoutes.of[IO] {
     case GET -> Root / "beaches" / IntVar(id) / "currentStatus" =>
@@ -100,14 +101,21 @@ object Main extends IOApp {
       } yield Domain.Alerts(alertsToBeNotified.values.flatMap(e=>e).toSeq)
       Ok(usersToBeNotified)
     }
+    case req@GET -> Root / "alerts" =>
+      val a = for {
+        header <- IO.fromEither(req.headers.get(Authorization).toRight(new RuntimeException("Couldn't find an Authorization header")))
+        u <- U.verify(header.value)
+        _ <- IO(println(u.getUid))
+        resp <- A.getAllForUser(u.getUid)
+      } yield (resp)
+      Ok(a)
     case req@POST -> Root / "alerts" =>
       val a = for {
         header <- IO.fromEither(req.headers.get(Authorization).toRight(new RuntimeException("Couldn't find an Authorization header")))
         u <- U.verify(header.value)
-        _ <- IO(println(header.value))
-        alert <- req.as[Domain.Alert]
-        resp <- A.save(alert)
-      } yield (u.getUid)
+        alert <- req.as[Domain.AlertRequest]
+        resp <- A.save(alert, u.getUid)
+      } yield (resp)
       Ok(a)
   }.orNotFound
 
