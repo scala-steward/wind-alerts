@@ -10,7 +10,6 @@ import com.uptech.windalerts.domain.Domain.{Alert, AlertRequest}
 import scala.collection.JavaConverters
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import com.jmethods.catatumbo.{Entity, EntityManager}
 
 
 trait Alerts extends Serializable {
@@ -22,16 +21,18 @@ object Alerts {
   trait Service {
     def getAllForDay: IO[Seq[Alert]]
 
-    def save(alert: AlertRequest, user: String):IO[Alert]
+    def save(alert: AlertRequest, user: String): IO[Alert]
 
-    def getAllForUser(user:String) : IO[com.uptech.windalerts.domain.Domain.Alerts]
+    def getAllForUser(user: String): IO[com.uptech.windalerts.domain.Domain.Alerts]
 
-    def delete(requester:String, alertId:String):IO[Either[RuntimeException, IO[WriteResult]]]
+    def delete(requester: String, alertId: String): IO[Either[RuntimeException, IO[WriteResult]]]
+
+    def update(requester: String, alertId: String, updateAlertRequest: AlertRequest): IO[Either[RuntimeException, IO[Alert]]]
   }
 
-  class FireStoreBackedService(db:Firestore) extends Service {
+  class FireStoreBackedService(db: Firestore) extends Service {
 
-    override def save(alertRequest: AlertRequest, user:String): IO[Alert] = {
+    override def save(alertRequest: AlertRequest, user: String): IO[Alert] = {
       for {
         document <- IO.fromFuture(IO(j2s(db.collection("alerts").add(Alert(alertRequest, user).toBean))))
         alert <- IO({
@@ -40,18 +41,29 @@ object Alerts {
       } yield alert
     }
 
-    override def delete(requester:String, alertId:String):IO[Either[RuntimeException, IO[WriteResult]]] = {
+    override def delete(requester: String, alertId: String): IO[Either[RuntimeException, IO[WriteResult]]] = {
       val alert = getById(alertId)
       alert.map(alert => {
         if (alert.owner == requester) Right(delete(alertId)) else Left(new RuntimeException("Fail"))
       })
     }
 
-    def delete(alertId:String): IO[WriteResult] = {
+    private def delete(alertId: String): IO[WriteResult] = {
       IO.fromFuture(IO(j2s(db.collection("alerts").document(alertId).delete())))
     }
 
-    def getById(id:String): IO[Alert] = {
+    override def update(requester: String, alertId: String, updateAlertRequest: AlertRequest): IO[Either[RuntimeException, IO[Alert]]] = {
+      val alert = getById(alertId)
+      alert.map(alert => {
+        if (alert.owner == requester) Right(update(alertId, Alert(updateAlertRequest, requester).copy(id = alertId))) else Left(new RuntimeException("Fail"))
+      })
+    }
+
+    private def update(alertId: String, alert: Alert): IO[Alert] = {
+      IO.fromFuture(IO(j2s(db.collection("alerts").document(alertId).set(alert.toBean)).map(_=>alert)))
+    }
+
+    private def getById(id: String): IO[Alert] = {
       for {
         document <- IO.fromFuture(IO(j2s(db.collection("alerts").document(id).get())))
         alert <- IO({
@@ -61,7 +73,7 @@ object Alerts {
       } yield alert
     }
 
-    override def getAllForUser(user:String): IO[com.uptech.windalerts.domain.Domain.Alerts] = {
+    override def getAllForUser(user: String): IO[com.uptech.windalerts.domain.Domain.Alerts] = {
       for {
         collection <- IO.fromFuture(IO(j2s(db.collection("alerts").whereEqualTo("owner", user).get())))
         filtered <- IO(com.uptech.windalerts.domain.Domain.Alerts(

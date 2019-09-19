@@ -1,7 +1,6 @@
 package com.uptech.windalerts.domain
 
 import java.util
-import java.util.UUID
 
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters
