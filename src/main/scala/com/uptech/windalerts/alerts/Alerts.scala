@@ -4,7 +4,7 @@ import java.util
 import java.util.Date
 
 import cats.effect.IO
-import com.google.cloud.firestore.Firestore
+import com.google.cloud.firestore.{Firestore, WriteResult}
 import com.uptech.windalerts.domain.Domain.{Alert, AlertRequest}
 
 import scala.collection.JavaConverters
@@ -22,16 +22,43 @@ object Alerts {
   trait Service {
     def getAllForDay: IO[Seq[Alert]]
 
-    def save(alert: AlertRequest, user: String):IO[String]
+    def save(alert: AlertRequest, user: String):IO[Alert]
 
     def getAllForUser(user:String) : IO[com.uptech.windalerts.domain.Domain.Alerts]
+
+    def delete(requester:String, alertId:String):IO[Either[RuntimeException, IO[WriteResult]]]
   }
 
   class FireStoreBackedService(db:Firestore) extends Service {
 
-    override def save(alert: AlertRequest, user:String): IO[String] = {
-      val eventualReference = j2s(db.collection("alerts").add(Alert(alert, user).toBean))
-      IO.fromFuture(IO(eventualReference.map(r=>r.getId)))
+    override def save(alertRequest: AlertRequest, user:String): IO[Alert] = {
+      for {
+        document <- IO.fromFuture(IO(j2s(db.collection("alerts").add(Alert(alertRequest, user).toBean))))
+        alert <- IO({
+          Alert(alertRequest, user).copy(id = document.getId)
+        })
+      } yield alert
+    }
+
+    override def delete(requester:String, alertId:String):IO[Either[RuntimeException, IO[WriteResult]]] = {
+      val alert = getById(alertId)
+      alert.map(alert => {
+        if (alert.owner == requester) Right(delete(alertId)) else Left(new RuntimeException("Fail"))
+      })
+    }
+
+    def delete(alertId:String): IO[WriteResult] = {
+      IO.fromFuture(IO(j2s(db.collection("alerts").document(alertId).delete())))
+    }
+
+    def getById(id:String): IO[Alert] = {
+      for {
+        document <- IO.fromFuture(IO(j2s(db.collection("alerts").document(id).get())))
+        alert <- IO({
+          val Alert(alert) = (document.getId, j2s(document.getData).asInstanceOf[Map[String, util.HashMap[String, String]]])
+          alert
+        })
+      } yield alert
     }
 
     override def getAllForUser(user:String): IO[com.uptech.windalerts.domain.Domain.Alerts] = {
@@ -44,7 +71,6 @@ object Alerts {
               alert
             })))
       } yield filtered
-
     }
 
     override def getAllForDay: IO[Seq[Alert]] = {
