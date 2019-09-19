@@ -92,6 +92,15 @@ object Main extends IOApp {
       val res = alert.unsafeRunSync()
       res.toOption.get.unsafeRunSync()
       NoContent()
+    case req@PUT -> Root / "alerts"/ alertId =>
+      val alert = for {
+        header <- IO.fromEither(req.headers.get(Authorization).toRight(new RuntimeException("Couldn't find an Authorization header")))
+        u <- U.verify(header.value)
+        alert <- req.as[Domain.AlertRequest]
+        resp <- A.update(u.getUid, alertId, alert)
+      } yield (resp)
+      val res = alert.unsafeRunSync()
+      Ok(res.toOption.get.unsafeRunSync())
   }.orNotFound
 
 
@@ -102,12 +111,6 @@ object Main extends IOApp {
       _.toMap
     }
   }
-
-  private def  toEither[T](ox: Option[T]) : Either[String, T] = {
-    if (ox.isDefined) Right(ox.get) else Left("No number")
-
-  }
-
 
   def run(args: List[String]): IO[ExitCode] = {
 
