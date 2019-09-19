@@ -1,30 +1,11 @@
 package com.uptech.windalerts.status
 
-import cats.implicits._
-import com.jmethods.catatumbo.EntityManagerFactory
-
 import scala.util.Try
 // import cats.implicits._
-
-import org.http4s.server.blaze._
 // import org.http4s.server.blaze._
-
-import org.http4s.implicits._
 // import org.http4s.implicits._
 
-import org.http4s.server.Router
-import cats.effect.{IO, _}
-import cats.implicits._
-import com.uptech.windalerts.domain.Domain.BeachId
-import org.http4s.HttpRoutes
-import org.http4s.dsl.impl.Root
-import org.http4s.dsl.io._
-import org.http4s.implicits._
-import org.http4s.server.blaze.BlazeServerBuilder
-import com.uptech.windalerts.domain.DomainCodec._
-import com.uptech.windalerts.domain.DomainCodec._
-import cats.implicits._
-import java.io.{File, FileInputStream, InputStream}
+import java.io.FileInputStream
 
 import cats.effect.{IO, _}
 import cats.implicits._
@@ -32,8 +13,10 @@ import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
+import com.uptech.windalerts.alerts.Alerts
 import com.uptech.windalerts.domain.Domain
 import com.uptech.windalerts.domain.Domain.BeachId
+import com.uptech.windalerts.users.Users
 import org.http4s.HttpRoutes
 import org.http4s.dsl.impl.Root
 import org.http4s.dsl.io._
@@ -41,27 +24,10 @@ import org.http4s.headers.Authorization
 import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
-import com.uptech.windalerts.users.Users
-import java.util
-import java.util.Date
-
-import cats.effect.IO
-import com.google.auth.oauth2.GoogleCredentials
-import com.google.cloud.firestore.{DocumentReference, Firestore}
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.cloud.FirestoreClient
-import com.google.firebase.{FirebaseApp, FirebaseOptions}
-import com.uptech.windalerts.alerts.Alerts
-import com.uptech.windalerts.domain.Domain.{Alert, AlertBean}
-
-import scala.collection.JavaConverters
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
 
 
 object Main extends IOApp {
 
-  import com.uptech.windalerts.domain.DomainCodec._
   import com.uptech.windalerts.domain.DomainCodec._
 
   private val logger = getLogger
@@ -84,7 +50,7 @@ object Main extends IOApp {
   val alerts = new Alerts.FireStoreBackedService(dbWithAuth._1)
   val users = new Users.FireStoreBackedService(dbWithAuth._2)
 
-  def sendAlertsRoute(A: Alerts.Service, B: Beaches.Service, U : Users.Service) = HttpRoutes.of[IO] {
+  def allRoutes(A: Alerts.Service, B: Beaches.Service, U : Users.Service) = HttpRoutes.of[IO] {
     case GET -> Root / "beaches" / IntVar(id) / "currentStatus" =>
       Ok(B.get(BeachId(id)))
     case GET -> Root / "notify" => {
@@ -102,21 +68,30 @@ object Main extends IOApp {
       Ok(usersToBeNotified)
     }
     case req@GET -> Root / "alerts" =>
-      val a = for {
+      val alerts = for {
         header <- IO.fromEither(req.headers.get(Authorization).toRight(new RuntimeException("Couldn't find an Authorization header")))
         u <- U.verify(header.value)
         _ <- IO(println(u.getUid))
         resp <- A.getAllForUser(u.getUid)
       } yield (resp)
-      Ok(a)
+      Ok(alerts)
     case req@POST -> Root / "alerts" =>
-      val a = for {
+      val alert = for {
         header <- IO.fromEither(req.headers.get(Authorization).toRight(new RuntimeException("Couldn't find an Authorization header")))
         u <- U.verify(header.value)
         alert <- req.as[Domain.AlertRequest]
         resp <- A.save(alert, u.getUid)
       } yield (resp)
-      Ok(a)
+      Created(alert)
+    case req@DELETE -> Root / "alerts" / alertId =>
+      val alert = for {
+        header <- IO.fromEither(req.headers.get(Authorization).toRight(new RuntimeException("Couldn't find an Authorization header")))
+        u <- U.verify(header.value)
+        resp <- A.delete(u.getUid, alertId)
+      } yield (resp)
+      val res = alert.unsafeRunSync()
+      res.toOption.get.unsafeRunSync()
+      NoContent()
   }.orNotFound
 
 
@@ -138,7 +113,7 @@ object Main extends IOApp {
 
     BlazeServerBuilder[IO]
       .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
-      .withHttpApp(sendAlertsRoute(alerts, beaches, users))
+      .withHttpApp(allRoutes(alerts, beaches, users))
       .serve
       .compile
       .drain

@@ -19,7 +19,7 @@ object Domain {
   final case class Tide(height: TideHeight, swell: Swell)
   final case class Beach(wind: Wind, tide: Tide)
 
-  case class TimeRange(from: Int, to: Int) {
+  case class TimeRange(@BeanProperty from: Int, @BeanProperty to: Int) {
     def isWithinRange(hour: Int) = from <= hour && to > hour
   }
 
