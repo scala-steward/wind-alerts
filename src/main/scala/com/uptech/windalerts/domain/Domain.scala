@@ -64,21 +64,6 @@ object Domain {
     }
 
     def isToBeAlertedAt(hour: Int) = timeRanges.exists(_.isWithinRange(hour))
-
-    def toBean: AlertBean = {
-      val alert = new AlertBean(
-        "",
-        owner,
-        beachId,
-        new java.util.ArrayList(JavaConverters.asJavaCollection(days)),
-        new java.util.ArrayList(JavaConverters.asJavaCollection(swellDirections)),
-        new java.util.ArrayList(JavaConverters.asJavaCollection(timeRanges)),
-        waveHeightFrom,
-        waveHeightTo,
-        new java.util.ArrayList(JavaConverters.asJavaCollection(windDirections)),
-        timeZone)
-      alert
-    }
   }
 
   object Alert {
@@ -126,22 +111,7 @@ object Domain {
       }
     }
 
-
   }
-
-  class AlertBean(
-                   @BeanProperty var id: String,
-                   @BeanProperty var owner: String,
-                   @BeanProperty var beachId: Long,
-                   @BeanProperty var days: java.util.List[Long],
-                   @BeanProperty var swellDirections: java.util.List[String],
-                   @BeanProperty var timeRanges: java.util.List[TimeRange],
-                   @BeanProperty var waveHeightFrom: Double,
-                   @BeanProperty var waveHeightTo: Double,
-                   @BeanProperty var windDirections: java.util.List[String],
-                   @BeanProperty var timeZone: String ="Australia/Sydney") {}
-
-
 
   def j2s[A](inputList: util.List[A]) = JavaConverters.asScalaIteratorConverter(inputList.iterator).asScala.toSeq
 

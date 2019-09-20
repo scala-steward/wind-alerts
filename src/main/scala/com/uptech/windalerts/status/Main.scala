@@ -1,5 +1,8 @@
 package com.uptech.windalerts.status
 
+import com.uptech.windalerts.alerts
+import com.uptech.windalerts.alerts.AlertsRepository
+
 import scala.util.Try
 // import cats.implicits._
 // import org.http4s.server.blaze._
@@ -47,7 +50,9 @@ object Main extends IOApp {
   val dbWithAuth = dbWithAuthIO.unsafeRunSync()
 
   val beaches = Beaches.ServiceImpl(Winds.impl, Swells.impl, Tides.impl)
-  val alerts = new Alerts.FireStoreBackedService(dbWithAuth._1)
+  val alertsRepo:AlertsRepository.Repository = new AlertsRepository.FirebaseBackedRepository(dbWithAuth._1)
+
+  val alerts = new Alerts.ServiceImpl(alertsRepo)
   val users = new Users.FireStoreBackedService(dbWithAuth._2)
 
   def allRoutes(A: Alerts.Service, B: Beaches.Service, U : Users.Service) = HttpRoutes.of[IO] {
