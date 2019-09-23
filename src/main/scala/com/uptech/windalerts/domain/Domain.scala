@@ -9,7 +9,8 @@ import scala.util.control.NonFatal
 object Domain {
 
   final case class User(uid:String, email:String, password:String, token:String)
-
+  final case class DeviceRequest(deviceId:String)
+  final case class UserDevice(deviceId:String, ownerId:String)
 
   final case class BeachId(id: Int) extends AnyVal
   final case class Wind(direction: Double = 0, speed: Double = 0, directionText:String)

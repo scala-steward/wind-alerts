@@ -1,7 +1,8 @@
 package com.uptech.windalerts.status
 
-import com.uptech.windalerts.alerts
+import com.uptech.windalerts.{alerts, users}
 import com.uptech.windalerts.alerts.AlertsRepository
+import com.uptech.windalerts.users.Devices
 
 import scala.util.Try
 // import cats.implicits._
@@ -54,8 +55,9 @@ object Main extends IOApp {
 
   val alerts = new Alerts.ServiceImpl(alertsRepo)
   val users = new Users.FireStoreBackedService(dbWithAuth._2)
+  val devices = new Devices.FireStoreBackedService(dbWithAuth._1)
 
-  def allRoutes(A: Alerts.Service, B: Beaches.Service, U : Users.Service) = HttpRoutes.of[IO] {
+  def allRoutes(A: Alerts.Service, B: Beaches.Service, U : Users.Service, D:Devices.Service) = HttpRoutes.of[IO] {
     case GET -> Root / "beaches" / IntVar(id) / "currentStatus" =>
       Ok(B.get(BeachId(id)))
     case GET -> Root / "notify" => {
@@ -106,6 +108,14 @@ object Main extends IOApp {
       } yield (resp)
       val res = alert.unsafeRunSync()
       Ok(res.toOption.get.unsafeRunSync())
+    case req@POST -> Root / "users" / "devices" =>
+      val alert = for {
+        header <- IO.fromEither(req.headers.get(Authorization).toRight(new RuntimeException("Couldn't find an Authorization header")))
+        u <- U.verify(header.value)
+        device <- req.as[Domain.DeviceRequest]
+        resp <- D.saveDevice(device, u.getUid)
+      } yield (resp)
+      Created(alert)
   }.orNotFound
 
 
@@ -121,7 +131,7 @@ object Main extends IOApp {
 
     BlazeServerBuilder[IO]
       .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
-      .withHttpApp(allRoutes(alerts, beaches, users))
+      .withHttpApp(allRoutes(alerts, beaches, users, devices))
       .serve
       .compile
       .drain
