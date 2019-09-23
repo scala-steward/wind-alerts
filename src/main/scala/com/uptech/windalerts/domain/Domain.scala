@@ -10,7 +10,23 @@ object Domain {
 
   final case class User(uid:String, email:String, password:String, token:String)
   final case class DeviceRequest(deviceId:String)
+  final case class UserDevices(devices:Seq[UserDevice])
   final case class UserDevice(deviceId:String, ownerId:String)
+  object UserDevice {
+    def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[UserDevice] = try {
+      val values = tuple._2
+      Some(UserDevice(
+        tuple._1,
+        values("owner").asInstanceOf[String]
+      ))
+    }
+    catch {
+      case NonFatal(ex) => {
+        println(ex)
+        None
+      }
+    }
+  }
 
   final case class BeachId(id: Int) extends AnyVal
   final case class Wind(direction: Double = 0, speed: Double = 0, directionText:String)
