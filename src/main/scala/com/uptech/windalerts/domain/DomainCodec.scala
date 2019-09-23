@@ -90,6 +90,14 @@ object DomainCodec {
 
   implicit def userDeviceEntityREncoder[F[_] : Applicative]: EntityEncoder[F, DeviceRequest] = jsonEncoderOf
 
+  lazy implicit val userDevicesDecoder: Decoder[UserDevices] = deriveDecoder[UserDevices]
+
+  implicit def userDevicesEntityLDecoder[F[_] : Sync]: EntityDecoder[F, UserDevices] = jsonOf
+
+  lazy implicit val userDevicesEncoder: Encoder[UserDevices] = deriveEncoder[UserDevices]
+
+  implicit def userDevicesEntityLEncoder[F[_] : Applicative]: EntityEncoder[F, UserDevices] = jsonEncoderOf
+
   lazy implicit val alertRDecoder: Decoder[AlertRequest] = deriveDecoder[AlertRequest]
 
   implicit def alertRntityDecoder[F[_] : Sync]: EntityDecoder[F, AlertRequest] = jsonOf

@@ -1,14 +1,5 @@
 package com.uptech.windalerts.status
 
-import com.uptech.windalerts.{alerts, users}
-import com.uptech.windalerts.alerts.AlertsRepository
-import com.uptech.windalerts.users.Devices
-
-import scala.util.Try
-// import cats.implicits._
-// import org.http4s.server.blaze._
-// import org.http4s.implicits._
-
 import java.io.FileInputStream
 
 import cats.effect.{IO, _}
@@ -17,10 +8,10 @@ import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
-import com.uptech.windalerts.alerts.Alerts
+import com.uptech.windalerts.alerts.{Alerts, AlertsRepository}
 import com.uptech.windalerts.domain.Domain
 import com.uptech.windalerts.domain.Domain.BeachId
-import com.uptech.windalerts.users.Users
+import com.uptech.windalerts.users.{Devices, Users}
 import org.http4s.HttpRoutes
 import org.http4s.dsl.impl.Root
 import org.http4s.dsl.io._
@@ -28,6 +19,8 @@ import org.http4s.headers.Authorization
 import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
+
+import scala.util.Try
 
 
 object Main extends IOApp {
@@ -116,6 +109,22 @@ object Main extends IOApp {
         resp <- D.saveDevice(device, u.getUid)
       } yield (resp)
       Created(alert)
+    case req@GET -> Root / "users" / "devices" =>
+      val devices = for {
+        header <- IO.fromEither(req.headers.get(Authorization).toRight(new RuntimeException("Couldn't find an Authorization header")))
+        u <- U.verify(header.value)
+        resp <- D.getAllForUser(u.getUid)
+      } yield (resp)
+      Ok(devices)
+    case req@DELETE -> Root / "users" / "devices" / deviceId =>
+      val device = for {
+        header <- IO.fromEither(req.headers.get(Authorization).toRight(new RuntimeException("Couldn't find an Authorization header")))
+        u <- U.verify(header.value)
+        resp <- D.delete(u.getUid, deviceId)
+      } yield (resp)
+      val res = device.unsafeRunSync()
+      res.toOption.get.unsafeRunSync()
+      NoContent()
   }.orNotFound
 
 
