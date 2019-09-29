@@ -1,6 +1,7 @@
 package com.uptech.windalerts.alerts
 
 import java.util
+import java.util.concurrent.TimeUnit
 
 import cats.effect.IO
 import com.google.cloud.firestore
@@ -17,14 +18,17 @@ trait AlertsRepository extends Serializable {
 }
 
 object AlertsRepository {
+
   trait Repository {
-    def getAllForDay(day:Int) : IO[Seq[Alert]]
+    def getById(id: String): IO[Option[Alert]]
+
+    def getAllForDay(day: Int): IO[Seq[Alert]]
 
     def getAllForUser(user: String): IO[com.uptech.windalerts.domain.Domain.Alerts]
 
     def save(alert: AlertRequest, user: String): IO[Alert]
 
-    def delete(requester: String, alertId: String): IO[Either[RuntimeException, IO[WriteResult]]]
+    def delete(alertId: String): IO[WriteResult]
 
     def update(requester: String, alertId: String, updateAlertRequest: AlertRequest): IO[Either[RuntimeException, IO[Alert]]]
   }
@@ -33,6 +37,22 @@ object AlertsRepository {
 
     private val alerts: CollectionReference = db.collection("alerts")
 
+    override def getById(id: String): IO[Option[Alert]] = {
+      for {
+        doc <- IO({
+          val snapshot = alerts.document(id).get().get(5, TimeUnit.SECONDS)
+          if (snapshot.exists()) Some(snapshot)
+          else None
+        })
+        alert <- IO(
+          doc.map(document => {
+            val Alert(alert) = (document.getId, j2s(document.getData).asInstanceOf[Map[String, util.HashMap[String, String]]])
+            alert
+          }
+          ))
+      } yield alert
+    }
+
     override def save(alertRequest: AlertRequest, user: String): IO[Alert] = {
       for {
         document <- IO.fromFuture(IO(j2s(alerts.add(toBean(Alert(alertRequest, user))))))
@@ -40,38 +60,25 @@ object AlertsRepository {
       } yield alert
     }
 
-    override def delete(requester: String, alertId: String): IO[Either[RuntimeException, IO[WriteResult]]] = {
-      val alert = getById(alertId)
-      alert.map(alert => if (alert.owner == requester) Right(delete(alertId)) else Left(new RuntimeException("Fail")))
-    }
-
-    private def delete(alertId: String): IO[WriteResult] = {
+    override def delete(alertId: String): IO[WriteResult] = {
       IO.fromFuture(IO(j2s(alerts.document(alertId).delete())))
     }
 
     override def update(requester: String, alertId: String, updateAlertRequest: AlertRequest): IO[Either[RuntimeException, IO[Alert]]] = {
-      val alert = getById(alertId)
+      val alert = getById2(alertId)
       alert.map(alert => {
         if (alert.owner == requester) Right(update(alertId, Alert(updateAlertRequest, requester).copy(id = alertId))) else Left(new RuntimeException("Fail"))
       })
     }
 
+
     private def update(alertId: String, alert: Alert): IO[Alert] = {
       IO.fromFuture(IO(j2s(alerts.document(alertId).set(toBean(alert))).map(_ => alert)))
     }
 
-    private def getById(id: String): IO[Alert] = {
-      for {
-        document <- IO.fromFuture(IO(j2s(alerts.document(id).get())))
-        alert <- IO({
-          val Alert(alert) = (document.getId, j2s(document.getData).asInstanceOf[Map[String, util.HashMap[String, String]]])
-          alert
-        })
-      } yield alert
-    }
 
     override def getAllForUser(user: String): IO[com.uptech.windalerts.domain.Domain.Alerts] = {
-      getAllByQuery(alerts.whereEqualTo("owner", user)).map(a=>com.uptech.windalerts.domain.Domain.Alerts(a))
+      getAllByQuery(alerts.whereEqualTo("owner", user)).map(a => com.uptech.windalerts.domain.Domain.Alerts(a))
     }
 
     override def getAllForDay(day: Int): IO[Seq[Alert]] = {
@@ -92,7 +99,7 @@ object AlertsRepository {
       } yield filtered
     }
 
-    def toBean(alert:Alert): AlertBean = {
+    def toBean(alert: Alert): AlertBean = {
       val alertBean = new AlertBean(
         "",
         alert.owner,
@@ -105,6 +112,16 @@ object AlertsRepository {
         new java.util.ArrayList(JavaConverters.asJavaCollection(alert.windDirections)),
         alert.timeZone)
       alertBean
+    }
+
+    private def getById2(id: String): IO[Alert] = {
+      for {
+        document <- IO.fromFuture(IO(j2s(alerts.document(id).get())))
+        alert <- IO({
+          val Alert(alert) = (document.getId, j2s(document.getData).asInstanceOf[Map[String, util.HashMap[String, String]]])
+          alert
+        })
+      } yield alert
     }
 
     def j2s[A](inputList: util.List[A]) = JavaConverters.asScalaIteratorConverter(inputList.iterator).asScala.toSeq
@@ -127,7 +144,7 @@ object AlertsRepository {
                    @BeanProperty var waveHeightFrom: Double,
                    @BeanProperty var waveHeightTo: Double,
                    @BeanProperty var windDirections: java.util.List[String],
-                   @BeanProperty var timeZone: String ="Australia/Sydney") {}
+                   @BeanProperty var timeZone: String = "Australia/Sydney") {}
 
 
 }
