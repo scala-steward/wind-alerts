@@ -8,10 +8,37 @@ import scala.util.control.NonFatal
 
 object Domain {
 
-  final case class User(uid:String, email:String, password:String, token:String)
-  final case class DeviceRequest(deviceId:String)
-  final case class UserDevices(devices:Seq[UserDevice])
-  final case class UserDevice(deviceId:String, ownerId:String)
+  final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String)
+
+  object User {
+    def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[User] = try {
+      val values = tuple._2
+      println(values)
+      Some(User(
+        tuple._1,
+        values("email").asInstanceOf[String],
+        values("name").asInstanceOf[String],
+        values("deviceId").asInstanceOf[String],
+        values("deviceToken").asInstanceOf[String],
+        values("deviceType").asInstanceOf[String]
+      ))
+    }
+    catch {
+      case NonFatal(ex) => {
+        println(ex)
+        None
+      }
+    }
+  }
+
+  final case class AlertWithUser(alert: Alert, user:User)
+
+  final case class DeviceRequest(deviceId: String)
+
+  final case class UserDevices(devices: Seq[UserDevice])
+
+  final case class UserDevice(deviceId: String, ownerId: String)
+
   object UserDevice {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[UserDevice] = try {
       val values = tuple._2
@@ -29,10 +56,15 @@ object Domain {
   }
 
   final case class BeachId(id: Int) extends AnyVal
-  final case class Wind(direction: Double = 0, speed: Double = 0, directionText:String)
-  final case class Swell(height: Double = 0, direction: Double = 0, directionText:String)
+
+  final case class Wind(direction: Double = 0, speed: Double = 0, directionText: String)
+
+  final case class Swell(height: Double = 0, direction: Double = 0, directionText: String)
+
   final case class TideHeight(status: String)
+
   final case class Tide(height: TideHeight, swell: Swell)
+
   final case class Beach(wind: Wind, tide: Tide)
 
   case class TimeRange(@BeanProperty from: Int, @BeanProperty to: Int) {
@@ -59,12 +91,12 @@ object Domain {
                            waveHeightFrom: Double,
                            waveHeightTo: Double,
                            windDirections: Seq[String],
-                           timeZone: String ="Australia/Sydney")
+                           timeZone: String = "Australia/Sydney")
 
-  case class Alerts(alerts:Seq[Alert])
+  case class Alerts(alerts: Seq[Alert])
 
   case class Alert(
-                    id : String,
+                    id: String,
                     owner: String,
                     beachId: Long,
                     days: Seq[Long],
@@ -73,11 +105,11 @@ object Domain {
                     waveHeightFrom: Double,
                     waveHeightTo: Double,
                     windDirections: Seq[String],
-                    timeZone: String ="Australia/Sydney") {
+                    timeZone: String = "Australia/Sydney") {
     def isToBeNotified(beach: Beach): Boolean = {
       swellDirections.contains(beach.tide.swell.directionText) &&
-      waveHeightFrom <= beach.tide.swell.height && waveHeightTo >= beach.tide.swell.height &&
-      windDirections.contains(beach.wind.directionText)
+        waveHeightFrom <= beach.tide.swell.height && waveHeightTo >= beach.tide.swell.height &&
+        windDirections.contains(beach.wind.directionText)
     }
 
     def isToBeAlertedAt(hour: Int) = timeRanges.exists(_.isWithinRange(hour))
@@ -85,7 +117,7 @@ object Domain {
 
   object Alert {
 
-    def apply(alertRequest: AlertRequest, user:String): Alert =
+    def apply(alertRequest: AlertRequest, user: String): Alert =
       new Alert(
         "",
         user,

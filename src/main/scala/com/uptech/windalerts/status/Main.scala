@@ -7,11 +7,12 @@ import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.cloud.FirestoreClient
+import com.google.firebase.messaging.{FirebaseMessaging, Message, Notification}
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.uptech.windalerts.alerts.{Alerts, AlertsRepository}
 import com.uptech.windalerts.domain.Domain
 import com.uptech.windalerts.domain.Domain.BeachId
-import com.uptech.windalerts.users.{Devices, Users}
+import com.uptech.windalerts.users.{Devices, Users, UsersRepository}
 import org.http4s.HttpRoutes
 import org.http4s.dsl.impl.Root
 import org.http4s.dsl.io._
@@ -25,8 +26,6 @@ import scala.util.Try
 
 object Main extends IOApp {
 
-  import com.uptech.windalerts.domain.DomainCodec._
-
   private val logger = getLogger
 
   logger.error("Starting")
@@ -39,7 +38,8 @@ object Main extends IOApp {
     _ <- IO(FirebaseApp.initializeApp(options))
     db <- IO(FirestoreClient.getFirestore)
     auth <- IO(FirebaseAuth.getInstance)
-  } yield (db, auth)
+    notifications <- IO(FirebaseMessaging.getInstance)
+  } yield (db, auth, notifications)
 
   val dbWithAuth = dbWithAuthIO.unsafeRunSync()
 
@@ -48,9 +48,11 @@ object Main extends IOApp {
 
   val alerts = new Alerts.ServiceImpl(alertsRepo)
   val users = new Users.FireStoreBackedService(dbWithAuth._2)
+  val usersRepo =  new UsersRepository.FirestoreBackedRepository(dbWithAuth._1)
+
   val devices = new Devices.FireStoreBackedService(dbWithAuth._1)
 
-  def allRoutes(A: Alerts.Service, B: Beaches.Service, U : Users.Service, D:Devices.Service) = HttpRoutes.of[IO] {
+  def allRoutes(A: Alerts.Service, B: Beaches.Service, U : Users.Service, D:Devices.Service, UR:UsersRepository.Repository, firebaseMessaging: FirebaseMessaging) = HttpRoutes.of[IO] {
     case GET -> Root / "beaches" / IntVar(id) / "currentStatus" =>
       Ok(B.get(BeachId(id)))
     case GET -> Root / "notify" => {
@@ -61,11 +63,28 @@ object Main extends IOApp {
             (B.get(BeachId(kv._1.toInt)), kv._2)
           }))
         asIOMap <- toIOMap(alertsByBeaches)
+        log <- IO(logger.info(s"alertsByBeaches $alertsByBeaches"))
         alertsToBeNotified <- IO(asIOMap.map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)))))
-        usersToBeNotified <- IO(alertsToBeNotified.values.flatMap(elem => elem).map(_.owner).toSeq)
-        printIO <- IO("" + usersToBeNotified)
-      } yield Domain.Alerts(alertsToBeNotified.values.flatMap(e=>e).toSeq)
-      Ok(usersToBeNotified)
+        usersToBeNotified <- IO(alertsToBeNotified.values.flatMap(elem => elem).map(alert =>  {
+          val maybeUser = UR.getById(alert.owner)
+          maybeUser.map(userIO=>userIO.map(user => Domain.AlertWithUser(alert, user)))
+        }).toList)
+
+        usersToBeNotifiedSeq <- usersToBeNotified.sequence
+        log <- IO(logger.info(s"usersToBeNotifiedSeq $usersToBeNotifiedSeq"))
+        usersToBeNotifiedFlattend <- IO(usersToBeNotifiedSeq.flatten)
+
+        sendNotifications <- IO(usersToBeNotifiedFlattend.foreach(u=>{
+          val msg = Message.builder()
+            .setNotification(new Notification(
+              s"Wind Alert on ${u.alert.beachId}",
+              "Surf Time."))
+            .setToken(u.user.deviceToken)
+            .build()
+          logger.info(s"notifying ${firebaseMessaging.send(msg)}")
+        }))
+      } yield sendNotifications
+      Ok(usersToBeNotified.unsafeRunSync())
     }
     case req@GET -> Root / "alerts" =>
       val alerts = for {
@@ -140,7 +159,7 @@ object Main extends IOApp {
 
     BlazeServerBuilder[IO]
       .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
-      .withHttpApp(allRoutes(alerts, beaches, users, devices))
+      .withHttpApp(allRoutes(alerts, beaches, users, devices, usersRepo, dbWithAuth._3))
       .serve
       .compile
       .drain
