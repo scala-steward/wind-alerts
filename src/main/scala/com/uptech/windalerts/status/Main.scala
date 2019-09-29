@@ -9,8 +9,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.messaging.{FirebaseMessaging, Message, Notification}
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
-import com.uptech.windalerts.alerts.{Alerts, AlertsRepository}
-import com.uptech.windalerts.domain.Domain
+import com.uptech.windalerts.alerts.{Alerts, AlertsRepository, Notifications}
+import com.uptech.windalerts.domain.{Domain, HttpErrorHandler}
 import com.uptech.windalerts.domain.Domain.BeachId
 import com.uptech.windalerts.users.{Devices, Users, UsersRepository}
 import org.http4s.HttpRoutes
@@ -20,6 +20,8 @@ import org.http4s.headers.Authorization
 import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
+import com.uptech.windalerts.domain.DomainCodec._
+import com.uptech.windalerts.domain.Errors.HeaderNotPresent
 
 import scala.util.Try
 
@@ -51,78 +53,72 @@ object Main extends IOApp {
   val usersRepo =  new UsersRepository.FirestoreBackedRepository(dbWithAuth._1)
 
   val devices = new Devices.FireStoreBackedService(dbWithAuth._1)
+  implicit val httpErrorHandler: HttpErrorHandler[IO] = new HttpErrorHandler[IO]
+  val notifications = new Notifications(alerts, beaches, users, devices, usersRepo, dbWithAuth._3, httpErrorHandler)
 
-  def allRoutes(A: Alerts.Service, B: Beaches.Service, U : Users.Service, D:Devices.Service, UR:UsersRepository.Repository, firebaseMessaging: FirebaseMessaging) = HttpRoutes.of[IO] {
+  def allRoutes(A: Alerts.Service, B: Beaches.Service, U : Users.Service, D:Devices.Service, UR:UsersRepository.Repository, firebaseMessaging: FirebaseMessaging, H:HttpErrorHandler[IO]) = HttpRoutes.of[IO] {
     case GET -> Root / "beaches" / IntVar(id) / "currentStatus" =>
       Ok(B.get(BeachId(id)))
     case GET -> Root / "notify" => {
-      val usersToBeNotified = for {
-        alerts <- A.getAllForDay
-        alertsByBeaches <- IO(alerts.groupBy(_.beachId).map(
-          kv => {
-            (B.get(BeachId(kv._1.toInt)), kv._2)
-          }))
-        asIOMap <- toIOMap(alertsByBeaches)
-        log <- IO(logger.info(s"alertsByBeaches $alertsByBeaches"))
-        alertsToBeNotified <- IO(asIOMap.map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)))))
-        usersToBeNotified <- IO(alertsToBeNotified.values.flatMap(elem => elem).map(alert =>  {
-          val maybeUser = UR.getById(alert.owner)
-          maybeUser.map(userIO=>userIO.map(user => Domain.AlertWithUser(alert, user)))
-        }).toList)
-
-        usersToBeNotifiedSeq <- usersToBeNotified.sequence
-        log <- IO(logger.info(s"usersToBeNotifiedSeq $usersToBeNotifiedSeq"))
-        usersToBeNotifiedFlattend <- IO(usersToBeNotifiedSeq.flatten)
-
-        sendNotifications <- IO(usersToBeNotifiedFlattend.foreach(u=>{
-          val msg = Message.builder()
-            .setNotification(new Notification(
-              s"Wind Alert on ${u.alert.beachId}",
-              "Surf Time."))
-            .setToken(u.user.deviceToken)
-            .build()
-          logger.info(s"notifying ${firebaseMessaging.send(msg)}")
-        }))
-      } yield sendNotifications
-      Ok(usersToBeNotified.unsafeRunSync())
+      val res = notifications.sendNotification
+      val either = res.attempt.unsafeRunSync()
+      either.fold(H.handleThrowable, _ => Ok(either.right.get))
     }
     case req@GET -> Root / "alerts" =>
       val alerts = for {
-        header <- IO.fromEither(req.headers.get(Authorization).toRight(new RuntimeException("Couldn't find an Authorization header")))
+        header <- IO.fromEither(req.headers.get(Authorization).toRight(HeaderNotPresent("Couldn't find an Authorization header")))
         u <- U.verify(header.value)
         _ <- IO(println(u.getUid))
         resp <- A.getAllForUser(u.getUid)
       } yield (resp)
-      Ok(alerts)
+      val either = alerts.attempt.unsafeRunSync()
+      either.fold(H.handleThrowable, _ => Ok(either.right.get))
     case req@POST -> Root / "alerts" =>
       val alert = for {
-        header <- IO.fromEither(req.headers.get(Authorization).toRight(new RuntimeException("Couldn't find an Authorization header")))
+        header <- IO.fromEither(req.headers.get(Authorization).toRight(HeaderNotPresent("Couldn't find an Authorization header")))
         u <- U.verify(header.value)
         alert <- req.as[Domain.AlertRequest]
         resp <- A.save(alert, u.getUid)
       } yield (resp)
-      Created(alert)
-    case req@DELETE -> Root / "alerts" / alertId =>
+      val either = alert.attempt.unsafeRunSync()
+      either.fold(H.handleThrowable, _ => Created(either.right.get))
+    case req@DELETE -> Root / "alerts" / alertId => {
       val alert = for {
-        header <- IO.fromEither(req.headers.get(Authorization).toRight(new RuntimeException("Couldn't find an Authorization header")))
+        header <- IO.fromEither(req.headers.get(Authorization).toRight(HeaderNotPresent("Couldn't find an Authorization header")))
         u <- U.verify(header.value)
         resp <- A.delete(u.getUid, alertId)
-      } yield (resp)
-      val res = alert.unsafeRunSync()
-      res.toOption.get.unsafeRunSync()
-      NoContent()
+      } yield resp
+      val res = alert.attempt.unsafeRunSync()
+      if (res.isLeft) {
+        H.handleThrowable(res.left.get)
+      } else {
+        res.right.get match {
+          case Left(value) => H.handleThrowable(value)
+          case Right(value) => {
+            val realRes = value.attempt.unsafeRunSync()
+            realRes match {
+              case Left(value) => H.handleThrowable(value)
+              case Right(_) => NoContent()
+            }
+          }
+        }
+      }
+    }
+
     case req@PUT -> Root / "alerts"/ alertId =>
       val alert = for {
-        header <- IO.fromEither(req.headers.get(Authorization).toRight(new RuntimeException("Couldn't find an Authorization header")))
+        header <- IO.fromEither(req.headers.get(Authorization).toRight(HeaderNotPresent("Couldn't find an Authorization header")))
         u <- U.verify(header.value)
         alert <- req.as[Domain.AlertRequest]
         resp <- A.update(u.getUid, alertId, alert)
       } yield (resp)
       val res = alert.unsafeRunSync()
       Ok(res.toOption.get.unsafeRunSync())
+
+
     case req@POST -> Root / "users" / "devices" =>
       val alert = for {
-        header <- IO.fromEither(req.headers.get(Authorization).toRight(new RuntimeException("Couldn't find an Authorization header")))
+        header <- IO.fromEither(req.headers.get(Authorization).toRight(HeaderNotPresent("Couldn't find an Authorization header")))
         u <- U.verify(header.value)
         device <- req.as[Domain.DeviceRequest]
         resp <- D.saveDevice(device, u.getUid)
@@ -130,14 +126,14 @@ object Main extends IOApp {
       Created(alert)
     case req@GET -> Root / "users" / "devices" =>
       val devices = for {
-        header <- IO.fromEither(req.headers.get(Authorization).toRight(new RuntimeException("Couldn't find an Authorization header")))
+        header <- IO.fromEither(req.headers.get(Authorization).toRight(HeaderNotPresent("Couldn't find an Authorization header")))
         u <- U.verify(header.value)
         resp <- D.getAllForUser(u.getUid)
       } yield (resp)
       Ok(devices)
     case req@DELETE -> Root / "users" / "devices" / deviceId =>
       val device = for {
-        header <- IO.fromEither(req.headers.get(Authorization).toRight(new RuntimeException("Couldn't find an Authorization header")))
+        header <- IO.fromEither(req.headers.get(Authorization).toRight(HeaderNotPresent("Couldn't find an Authorization header")))
         u <- U.verify(header.value)
         resp <- D.delete(u.getUid, deviceId)
       } yield (resp)
@@ -147,19 +143,11 @@ object Main extends IOApp {
   }.orNotFound
 
 
-  private def toIOMap(m: Map[IO[Domain.Beach], Seq[Domain.Alert]]) = {
-    m.toList.traverse {
-      case (io, s) => io.map(s2 => (s2, s))
-    }.map {
-      _.toMap
-    }
-  }
-
   def run(args: List[String]): IO[ExitCode] = {
 
     BlazeServerBuilder[IO]
       .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
-      .withHttpApp(allRoutes(alerts, beaches, users, devices, usersRepo, dbWithAuth._3))
+      .withHttpApp(allRoutes(alerts, beaches, users, devices, usersRepo, dbWithAuth._3, httpErrorHandler))
       .serve
       .compile
       .drain
