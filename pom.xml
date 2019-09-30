@@ -12,7 +12,6 @@
         <scala.version>2.12.6</scala.version>
         <scala.compat.version>2.12</scala.compat.version>
         <spec2.version>4.2.0</spec2.version>
-        <image>gcr.io/wind-alerts-staging/wind-alerts:${project.version}</image>
     </properties>
 
     <dependencies>
@@ -159,10 +158,34 @@
                 <version>1.5.1</version>
                 <configuration>
                     <container>
-                        <mainClass>com.uptech.windalerts.status.Main</mainClass>
+                        <mainClass>${profile.mainClass}</mainClass>
+<!--                        <image>${profile.image}</image>-->
                     </container>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>status</id>
+            <properties>
+                <profile.mainClass>com.uptech.windalerts.status.Main</profile.mainClass>
+                <image>gcr.io/wind-alerts-staging/wind-alerts-status:${project.version}</image>
+            </properties>
+        </profile>
+        <profile>
+            <id>notifications</id>
+            <properties>
+                <profile.mainClass>com.uptech.windalerts.alerts.SendNotifications</profile.mainClass>
+                <image>gcr.io/wind-alerts-staging/wind-alerts-send-notifications:${project.version}</image>
+            </properties>
+        </profile>
+        <profile>
+            <id>alerts</id>
+            <properties>
+                <profile.mainClass>com.uptech.windalerts.alerts.Main</profile.mainClass>
+                <image>gcr.io/wind-alerts-staging/wind-alerts-alerts:${project.version}</image>
+            </properties>
+        </profile>
+    </profiles>
 </project>
