@@ -94,13 +94,7 @@ object Main extends IOApp {
       } else {
         res.right.get match {
           case Left(value) => H.handleThrowable(value)
-          case Right(value) => {
-            val realRes = value.attempt.unsafeRunSync()
-            realRes match {
-              case Left(value) => H.handleThrowable(value)
-              case Right(_) => NoContent()
-            }
-          }
+          case Right(value) =>  NoContent()
         }
       }
     }
