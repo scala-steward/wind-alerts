@@ -43,17 +43,17 @@ object UsersRepository {
       } yield filtered.headOption
 
     }
-
-    def toBean(user: User): UserBean = {
-      new UserBean(
-        user.id,
-        user.email,
-        user.name,
-        user.deviceId,
-        user.deviceToken,
-        user.deviceType
-      )
-    }
+//
+//    def toBean(user: User): UserBean = {
+//      new UserBean(
+//        user.email,
+//        user.name,
+//        u
+//        user.deviceId,
+//        user.deviceToken,
+//        user.deviceType
+//      )
+//    }
 
     def j2s[A](inputList: util.List[A]) = JavaConverters.asScalaIteratorConverter(inputList.iterator).asScala.toSeq
 
@@ -65,13 +65,11 @@ object UsersRepository {
 
   }
 
+
   class UserBean(
-                  @BeanProperty var id: String,
                   @BeanProperty var email: String,
-                  @BeanProperty var name: String,
-                  @BeanProperty var deviceId: String,
-                  @BeanProperty var deviceToken: String,
-                  @BeanProperty var deviceType: String,
+                  @BeanProperty var password: String,
+                  @BeanProperty var deviceType: String
                 ) {}
 
 

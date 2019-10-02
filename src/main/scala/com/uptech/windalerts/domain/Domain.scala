@@ -11,13 +11,14 @@ object Domain {
   final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String)
 
   object User {
+    def apply(registerRequest: RegisterRequest): User = new User("", registerRequest.email, registerRequest.name, registerRequest.deviceId, registerRequest.deviceToken, registerRequest.deviceType)
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[User] = try {
       val values = tuple._2
       println(values)
       Some(User(
         tuple._1,
         values("email").asInstanceOf[String],
-        values("name").asInstanceOf[String],
+        values("password").asInstanceOf[String],
         values("deviceId").asInstanceOf[String],
         values("deviceToken").asInstanceOf[String],
         values("deviceType").asInstanceOf[String]
@@ -38,6 +39,8 @@ object Domain {
   final case class UserDevices(devices: Seq[UserDevice])
 
   final case class UserDevice(deviceId: String, ownerId: String)
+  case class RegisterRequest(email: String, name: String, password: String, deviceId:String, deviceType:String, deviceToken:String)
+  case class Credentials(email: String,  password: String, deviceType:String)
 
   object UserDevice {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[UserDevice] = try {

@@ -77,6 +77,12 @@
             <!-- Use the latest version or change it to the desired version -->
             <version>2.7.0</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.gaborpihaj/http4s-jwt-auth-middleware -->
+        <dependency>
+            <groupId>com.gaborpihaj</groupId>
+            <artifactId>http4s-jwt-auth-middleware_2.12</artifactId>
+            <version>0.1.0</version>
+        </dependency>
         <!-- Test -->
         <dependency>
             <groupId>junit</groupId>
@@ -159,7 +165,7 @@
                 <configuration>
                     <container>
                         <mainClass>${profile.mainClass}</mainClass>
-<!--                        <image>${profile.image}</image>-->
+                        <!--                        <image>${profile.image}</image>-->
                     </container>
                 </configuration>
             </plugin>

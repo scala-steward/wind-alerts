@@ -28,7 +28,6 @@ object Main extends IOApp {
       Ok(B.get(BeachId(id)))
   }.orNotFound
 
-
   def run(args: List[String]): IO[ExitCode] = {
 
     BlazeServerBuilder[IO]
