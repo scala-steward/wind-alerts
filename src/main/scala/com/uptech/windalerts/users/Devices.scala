@@ -3,11 +3,11 @@ package com.uptech.windalerts.users
 
 import java.util
 
-import cats.effect.IO
+import cats.effect.{ContextShift, IO}
 import com.google.cloud.firestore
 import com.google.cloud.firestore.{CollectionReference, Firestore, WriteResult}
-import com.uptech.windalerts.domain.Domain
-import com.uptech.windalerts.domain.Domain.{Alert, DeviceRequest, UserDevice, UserDevices}
+import com.uptech.windalerts.domain.domain
+import com.uptech.windalerts.domain.domain.{Alert, DeviceRequest, UserDevice, UserDevices}
 
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters
@@ -26,17 +26,17 @@ object Devices {
 
     def getAllForUser(user: String): IO[UserDevices]
 
-    def saveDevice(device: Domain.DeviceRequest, getUid: String):IO[UserDevice]
+    def saveDevice(device: domain.DeviceRequest, getUid: String):IO[UserDevice]
   }
 
-  class FireStoreBackedService(db:Firestore) extends Service {
+  class FireStoreBackedService(db:Firestore)(implicit cs: ContextShift[IO]) extends Service {
     private val devices: CollectionReference = db.collection("devices")
 
     override def getAllForUser(user: String): IO[UserDevices] = {
       getAllByQuery(devices.whereEqualTo("owner", user)).map(devices=>UserDevices(devices))
     }
 
-    override def saveDevice(device: Domain.DeviceRequest, getUid: String): IO[UserDevice] = {
+    override def saveDevice(device: domain.DeviceRequest, getUid: String): IO[UserDevice] = {
       for {
         _ <- IO.fromFuture(IO(j2s(devices.document(device.deviceId).create(toBean(device, getUid)))))
         saved <- IO(UserDevice(device.deviceId, getUid))

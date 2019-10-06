@@ -7,8 +7,8 @@ import java.util.TimeZone
 import cats.Applicative
 import cats.effect.{IO, Sync}
 import com.softwaremill.sttp._
-import com.uptech.windalerts.domain.Domain
-import com.uptech.windalerts.domain.Domain.{BeachId, TideHeight}
+import com.uptech.windalerts.domain.domain
+import com.uptech.windalerts.domain.domain.{BeachId, TideHeight}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder, Json, parser}
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
@@ -22,7 +22,7 @@ trait Tides extends Serializable {
 object Tides {
 
   trait Service {
-    def get(beachId: BeachId): IO[Domain.TideHeight]
+    def get(beachId: BeachId): IO[domain.TideHeight]
   }
 
   val impl: Service = (beachId: BeachId) => {

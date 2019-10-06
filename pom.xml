@@ -16,6 +16,21 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.typelevel</groupId>
+            <artifactId>cats-core_2.12</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.typelevel</groupId>
+            <artifactId>cats-effect_2.12</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>co.fs2</groupId>
+            <artifactId>fs2-core_2.12</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+        <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
             <version>${scala.version}</version>
@@ -24,37 +39,37 @@
         <dependency>
             <groupId>org.http4s</groupId>
             <artifactId>http4s-blaze-server_2.12</artifactId>
-            <version>0.20.8</version>
+            <version>0.21.0-M5</version>
         </dependency>
         <dependency>
             <groupId>org.http4s</groupId>
             <artifactId>http4s-blaze-client_2.12</artifactId>
-            <version>0.20.8</version>
+            <version>0.21.0-M5</version>
         </dependency>
         <dependency>
             <groupId>org.http4s</groupId>
             <artifactId>http4s-circe_2.12</artifactId>
-            <version>0.20.8</version>
+            <version>0.21.0-M5</version>
         </dependency>
         <dependency>
             <groupId>org.http4s</groupId>
             <artifactId>http4s-dsl_2.12</artifactId>
-            <version>0.20.8</version>
+            <version>0.21.0-M5</version>
         </dependency>
         <dependency>
             <groupId>io.circe</groupId>
             <artifactId>circe-core_2.12</artifactId>
-            <version>0.12.0-RC1</version>
+            <version>0.12.1</version>
         </dependency>
         <dependency>
             <groupId>io.circe</groupId>
             <artifactId>circe-parser_2.12</artifactId>
-            <version>0.12.0-RC1</version>
+            <version>0.12.1</version>
         </dependency>
         <dependency>
             <groupId>io.circe</groupId>
             <artifactId>circe-generic_2.12</artifactId>
-            <version>0.12.0-RC1</version>
+            <version>0.12.1</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -76,12 +91,6 @@
             <artifactId>catatumbo</artifactId>
             <!-- Use the latest version or change it to the desired version -->
             <version>2.7.0</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/com.gaborpihaj/http4s-jwt-auth-middleware -->
-        <dependency>
-            <groupId>com.gaborpihaj</groupId>
-            <artifactId>http4s-jwt-auth-middleware_2.12</artifactId>
-            <version>0.1.0</version>
         </dependency>
         <!-- Test -->
         <dependency>
@@ -108,6 +117,56 @@
             <version>${spec2.version}</version>
             <scope>test</scope>
         </dependency>
+
+
+        <dependency>
+            <groupId>com.pauldijou</groupId>
+            <artifactId>jwt-core_2.12</artifactId>
+            <version>4.1.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.olegpy</groupId>
+            <artifactId>better-monadic-for_2.12</artifactId>
+            <version>0.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.typelevel</groupId>
+            <artifactId>kind-projector_2.12</artifactId>
+            <version>0.10.3</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.profunktor</groupId>
+            <artifactId>http4s-jwt-auth_2.12</artifactId>
+            <version>0.0.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>io.circe</groupId>-->
+<!--            <artifactId>circe-core_2.12</artifactId>-->
+<!--            <version>0.12.0-RC1</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>io.circe</groupId>-->
+<!--            <artifactId>circe-parser_2.12</artifactId>-->
+<!--            <version>0.12.0-RC1</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>io.circe</groupId>-->
+<!--            <artifactId>circe-generic_2.12</artifactId>-->
+<!--            <version>0.12.0-RC1</version>-->
+<!--        </dependency>-->
     </dependencies>
 
     <build>
@@ -127,6 +186,7 @@
                             <args>
                                 <arg>-dependencyfile</arg>
                                 <arg>${project.build.directory}/.scala_dependencies</arg>
+                                <arg>-Ypartial-unification</arg>
                             </args>
                         </configuration>
                     </execution>

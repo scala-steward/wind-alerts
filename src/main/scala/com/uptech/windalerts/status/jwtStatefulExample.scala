@@ -8,7 +8,7 @@
 //import cats.implicits._
 //import com.google.cloud.firestore
 //import com.google.cloud.firestore.Firestore
-//import com.uptech.windalerts.domain.Domain.{Credentials, User}
+//import com.uptech.windalerts.domain.domain.{Credentials, User}
 //import com.uptech.windalerts.domain.Errors.{InvalidCredentials, UserAlreadyRegistered}
 //import com.uptech.windalerts.domain.HttpErrorHandler
 //import com.uptech.windalerts.users.UsersRepository.UserBean
@@ -22,7 +22,7 @@
 //import scala.concurrent.ExecutionContext.Implicits.global
 //import scala.concurrent.Future
 //import scala.util.{Failure, Success}
-//import com.uptech.windalerts.domain.DomainCodec._
+//import com.uptech.windalerts.domain.codecs._
 //
 //class jwtStatefulExample(db: Firestore, H: HttpErrorHandler[IO]) {
 //  val users = db.collection("users-jwt")

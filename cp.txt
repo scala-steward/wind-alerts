@@ -1,0 +1,33 @@
+<dependency>
+            <groupId>com.pauldijou</groupId>
+            <artifactId>jwt-core_2.12</artifactId>
+            <version>4.1.0</version>
+
+        </dependency>
+        <dependency>
+            <groupId>dev.profunktor</groupId>
+            <artifactId>http4s-jwt-auth_2.12</artifactId>
+            <version>0.0.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+         <dependency>
+                    <groupId>io.circe</groupId>
+                    <artifactId>circe-core_2.12</artifactId>
+                    <version>0.12.0-RC1</version>
+                </dependency>
+                <dependency>
+                    <groupId>io.circe</groupId>
+                    <artifactId>circe-parser_2.12</artifactId>
+                    <version>0.12.0-RC1</version>
+                </dependency>
+                <dependency>
+                    <groupId>io.circe</groupId>
+                    <artifactId>circe-generic_2.12</artifactId>
+                    <version>0.12.0-RC1</version>
+                </dependency>
