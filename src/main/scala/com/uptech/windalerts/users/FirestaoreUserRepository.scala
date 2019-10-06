@@ -23,10 +23,7 @@ class FirestaoreUserRepository(db:Firestore)(implicit cs: ContextShift[IO]) exte
 
   override def delete(userId: String): OptionT[IO, domain.User] = ???
 
-  override def findByUserName(userName: String): OptionT[IO, domain.User] = ???
-
   override def deleteByUserName(userName: String): OptionT[IO, domain.User] = ???
-
 
   private def toBean(user: domain.User) = {
     new UserBean(user.id, user.name, user.deviceId, user.deviceToken)

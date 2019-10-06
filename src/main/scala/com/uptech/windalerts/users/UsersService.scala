@@ -23,10 +23,10 @@ class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsR
   def getUser(userId: String): EitherT[IO, UserNotFoundError.type, User] =
     userRepo.get(userId).toRight(UserNotFoundError)
 
-  def getUserByName(
-                     userName: String,
-                   ): EitherT[IO, UserNotFoundError.type, User] =
-    userRepo.findByUserName(userName).toRight(UserNotFoundError)
+  def getByCredentials(
+                        credentials:Credentials,
+                   ): EitherT[IO, UserAuthenticationFailedError, Credentials] =
+    credentialsRepo.findByCreds(credentials.email, credentials.password, credentials.deviceType).toRight(UserAuthenticationFailedError(credentials.email))
 
   def deleteUser(userId: String): IO[Unit] =
     userRepo.delete(userId).value.void

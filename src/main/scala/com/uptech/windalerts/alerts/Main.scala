@@ -46,7 +46,7 @@ object Main extends IOApp {
   val authenticate: JwtClaim => IO[Option[AuthUser]] =
     claim => AuthUser("123L", "joe").some.pure[IO]
 
-  val jwtAuth = JwtAuth(JwtSecretKey("53cr3t"), JwtAlgorithm.HS256)
+  val jwtAuth = JwtAuth(JwtSecretKey("secretKey"), JwtAlgorithm.HS256)
   val middleware = JwtAuthMiddleware[IO, AuthUser](jwtAuth, authenticate)
 
   val dbWithAuthIO = for {
@@ -75,7 +75,6 @@ object Main extends IOApp {
   def authedService: AuthedRoutes[AuthUser, IO] =
     AuthedRoutes {
       case GET -> Root / "alerts" as user => {
-
         val resp = alertService.getAllForUser(user.id)
         val either = resp.attempt.unsafeRunSync()
         val response = either.fold(httpErrorHandler.handleThrowable, _ => Ok(either.right.get))
