@@ -1,14 +1,16 @@
 package com.uptech.windalerts.domain
 
+import java.util.Optional
+
 import cats.Applicative
 import cats.effect.Sync
-import com.uptech.windalerts.domain.Domain._
+import com.uptech.windalerts.domain.domain._
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
 
-object DomainCodec {
+object codecs {
 
   lazy implicit val beachDecoder: Decoder[Beach] = deriveDecoder[Beach]
 
@@ -113,4 +115,23 @@ object DomainCodec {
   lazy implicit val salertEncoder: Encoder[Alerts] = deriveEncoder[Alerts]
 
   implicit def salertEntityEncoder[F[_] : Applicative]: EntityEncoder[F, Alerts] = jsonEncoderOf
+
+
+  lazy implicit val rDecoder: Decoder[RegisterRequest] = deriveDecoder[RegisterRequest]
+
+  implicit def rEntityDecoder[F[_] : Sync]: EntityDecoder[F, RegisterRequest] = jsonOf
+
+  lazy implicit val rEncoder: Encoder[RegisterRequest] = deriveEncoder[RegisterRequest]
+
+  implicit def rEntityEncoder[F[_] : Applicative]: EntityEncoder[F, RegisterRequest] = jsonEncoderOf
+
+
+  lazy implicit val credentialDecoder: Decoder[Credentials] = deriveDecoder[Credentials]
+
+  implicit def credentialEntityDecoder[F[_] : Sync]: EntityDecoder[F, Credentials] = jsonOf
+
+  lazy implicit val credentialEncoder: Encoder[Credentials] = deriveEncoder[Credentials]
+
+  implicit def credentialEntityEncoder[F[_] : Applicative]: EntityEncoder[F, Credentials] = jsonEncoderOf
+
 }

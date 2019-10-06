@@ -3,17 +3,18 @@ package com.uptech.windalerts.alerts
 import java.util
 import java.util.concurrent.TimeUnit
 
-import cats.effect.IO
-import com.google.api.gax.rpc.ApiException
+import cats.effect.{ContextShift, IO}
 import com.google.cloud.firestore
 import com.google.cloud.firestore.{CollectionReference, Firestore, WriteResult}
-import com.uptech.windalerts.domain.Domain.{Alert, AlertRequest, TimeRange}
 import com.uptech.windalerts.domain.Errors.{RecordNotFound, WindAlertError}
+import com.uptech.windalerts.domain.domain
+import com.uptech.windalerts.domain.domain._
 
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+
 
 trait AlertsRepository extends Serializable {
   val alerts: AlertsRepository.Repository
@@ -26,7 +27,7 @@ object AlertsRepository {
 
     def getAllForDay(day: Int): IO[Seq[Alert]]
 
-    def getAllForUser(user: String): IO[com.uptech.windalerts.domain.Domain.Alerts]
+    def getAllForUser(user: String): IO[domain.Alerts]
 
     def save(alert: AlertRequest, user: String): IO[Alert]
 
@@ -37,7 +38,7 @@ object AlertsRepository {
     def update(requester: String, alertId: String, updateAlertRequest: AlertRequest): IO[Either[RuntimeException, IO[Alert]]]
   }
 
-  class FirebaseBackedRepository(db: Firestore) extends AlertsRepository.Repository {
+  class FirebaseBackedRepository(db: Firestore)(implicit cs: ContextShift[IO]) extends AlertsRepository.Repository {
 
     private val alerts: CollectionReference = db.collection("alerts")
 
@@ -91,8 +92,8 @@ object AlertsRepository {
     }
 
 
-    override def getAllForUser(user: String): IO[com.uptech.windalerts.domain.Domain.Alerts] = {
-      getAllByQuery(alerts.whereEqualTo("owner", user)).map(a => com.uptech.windalerts.domain.Domain.Alerts(a))
+    override def getAllForUser(user: String): IO[domain.Alerts] = {
+      getAllByQuery(alerts.whereEqualTo("owner", user)).map(a => domain.Alerts(a))
     }
 
     override def getAllForDay(day: Int): IO[Seq[Alert]] = {
@@ -104,6 +105,7 @@ object AlertsRepository {
     private def getAllByQuery(query: firestore.Query) = {
       for {
         collection <- IO.fromFuture(IO(j2s(query.get())))
+        _ <- IO(println("All " + collection))
         filtered <- IO(
           j2s(collection.getDocuments)
             .map(document => {

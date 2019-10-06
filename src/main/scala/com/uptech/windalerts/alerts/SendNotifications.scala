@@ -18,7 +18,7 @@ import org.http4s.dsl.io._
 import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
-import com.uptech.windalerts.domain.DomainCodec._
+import com.uptech.windalerts.domain.codecs._
 
 import scala.util.Try
 
@@ -45,7 +45,7 @@ object SendNotifications extends IOApp {
   val beaches = Beaches.ServiceImpl(Winds.impl, Swells.impl, Tides.impl)
   val alertsRepo:AlertsRepository.Repository = new AlertsRepository.FirebaseBackedRepository(dbWithAuth._1)
 
-  val alerts = new Alerts.ServiceImpl(alertsRepo)
+  val alerts = new AlertsService.ServiceImpl(alertsRepo)
   val users = new Users.FireStoreBackedService(dbWithAuth._2)
   val usersRepo =  new UsersRepository.FirestoreBackedRepository(dbWithAuth._1)
 
@@ -53,7 +53,7 @@ object SendNotifications extends IOApp {
   implicit val httpErrorHandler: HttpErrorHandler[IO] = new HttpErrorHandler[IO]
   val notifications = new Notifications(alerts, beaches, users, devices, usersRepo, dbWithAuth._3, httpErrorHandler)
 
-  def allRoutes(A: Alerts.Service, B: Beaches.Service,  UR:UsersRepository.Repository, firebaseMessaging: FirebaseMessaging, H:HttpErrorHandler[IO]) = HttpRoutes.of[IO] {
+  def allRoutes(A: AlertsService.Service, B: Beaches.Service, UR:UsersRepository.Repository, firebaseMessaging: FirebaseMessaging, H:HttpErrorHandler[IO]) = HttpRoutes.of[IO] {
     case GET -> Root / "notify" => {
       val res = notifications.sendNotification
       val either = res.attempt.unsafeRunSync()

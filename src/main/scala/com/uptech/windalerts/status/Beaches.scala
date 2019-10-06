@@ -1,8 +1,8 @@
 package com.uptech.windalerts.status
 
 import cats.effect.IO
-import com.uptech.windalerts.domain.Domain
-import com.uptech.windalerts.domain.Domain.{Beach, BeachId, Tide}
+import com.uptech.windalerts.domain.domain
+import com.uptech.windalerts.domain.domain.{Beach, BeachId, Tide}
 
 
 trait Beaches extends Serializable {
@@ -12,7 +12,7 @@ trait Beaches extends Serializable {
 object Beaches {
 
   trait Service extends Serializable {
-    def get(beachId: BeachId): IO[Domain.Beach]
+    def get(beachId: BeachId): IO[domain.Beach]
   }
 
   final case class ServiceImpl[R](W: Winds.Service, S: Swells.Service, T: Tides.Service) extends Service {

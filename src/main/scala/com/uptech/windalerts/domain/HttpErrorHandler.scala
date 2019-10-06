@@ -15,7 +15,7 @@ class HttpErrorHandler[F[_] : Monad] extends Http4sDsl[F] {
     case e: Errors.OperationNotPermitted => Forbidden(e.message)
     case e: Errors.RecordNotFound => NotFound(e.message)
     case e: Errors.HeaderNotPresent => BadRequest(e.message)
-
+    case e: Errors.UserAlreadyRegistered => Conflict(e.message)
     case everythingElse => InternalServerError(everythingElse.toString)
 
   }

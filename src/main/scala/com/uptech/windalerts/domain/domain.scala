@@ -1,33 +1,49 @@
 package com.uptech.windalerts.domain
 
 import java.util
+import java.util.Optional
 
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters
 import scala.util.control.NonFatal
 
-object Domain {
+object domain {
+
+  case class Credentials(id:Option[String], email: String,  password: String, deviceType:String)
+
+  object Credentials {
+    def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Credentials] = try {
+      val values = tuple._2
+      Some(Credentials(
+        Some(tuple._1),
+        values("email").asInstanceOf[String],
+        values("password").asInstanceOf[String],
+        values("deviceType").asInstanceOf[String]
+      ))
+    }
+    catch {
+      case NonFatal(_) =>
+        None
+    }
+  }
 
   final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String)
 
   object User {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[User] = try {
       val values = tuple._2
-      println(values)
       Some(User(
         tuple._1,
         values("email").asInstanceOf[String],
-        values("name").asInstanceOf[String],
+        values("password").asInstanceOf[String],
         values("deviceId").asInstanceOf[String],
         values("deviceToken").asInstanceOf[String],
         values("deviceType").asInstanceOf[String]
       ))
     }
     catch {
-      case NonFatal(ex) => {
-        println(ex)
+      case NonFatal(_) =>
         None
-      }
     }
   }
 
@@ -38,6 +54,7 @@ object Domain {
   final case class UserDevices(devices: Seq[UserDevice])
 
   final case class UserDevice(deviceId: String, ownerId: String)
+  case class RegisterRequest(email: String, name: String, password: String, deviceId:String, deviceType:String, deviceToken:String)
 
   object UserDevice {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[UserDevice] = try {
@@ -48,10 +65,7 @@ object Domain {
       ))
     }
     catch {
-      case NonFatal(ex) => {
-        println(ex)
-        None
-      }
+      case NonFatal(_) => None
     }
   }
 
@@ -68,18 +82,15 @@ object Domain {
   final case class Beach(wind: Wind, tide: Tide)
 
   case class TimeRange(@BeanProperty from: Int, @BeanProperty to: Int) {
-    def isWithinRange(hour: Int) = from <= hour && to > hour
+    def isWithinRange(hour: Int): Boolean = from <= hour && to > hour
   }
 
   object TimeRange {
-    def unapply(values: Map[String, Long]) = try {
+    def unapply(values: Map[String, Long]): Option[TimeRange] = try {
       Some(new TimeRange(values("from").toInt, values("to").toInt))
     }
     catch {
-      case NonFatal(ex) => {
-        ex.printStackTrace
-        None
-      }
+      case NonFatal(_) => None
     }
   }
 
@@ -112,7 +123,7 @@ object Domain {
         windDirections.contains(beach.wind.directionText)
     }
 
-    def isToBeAlertedAt(hour: Int) = timeRanges.exists(_.isWithinRange(hour))
+    def isToBeAlertedAt(hour: Int): Boolean = timeRanges.exists(_.isWithinRange(hour))
   }
 
   object Alert {
@@ -121,14 +132,14 @@ object Domain {
       new Alert(
         "",
         user,
-        alertRequest.beachId,
-        alertRequest.days,
-        alertRequest.swellDirections,
-        alertRequest.timeRanges,
-        alertRequest.waveHeightFrom,
-        alertRequest.waveHeightTo,
-        alertRequest.windDirections,
-        alertRequest.timeZone)
+        beachId = alertRequest.beachId,
+        days = alertRequest.days,
+        swellDirections = alertRequest.swellDirections,
+        timeRanges = alertRequest.timeRanges,
+        waveHeightFrom = alertRequest.waveHeightFrom,
+        waveHeightTo = alertRequest.waveHeightTo,
+        windDirections = alertRequest.windDirections,
+        timeZone = alertRequest.timeZone)
 
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Alert] = try {
       val values = tuple._2
@@ -136,8 +147,8 @@ object Domain {
       Some(Alert(
         tuple._1,
         values("owner").asInstanceOf[String],
-        values("beachId").asInstanceOf[Long].toLong,
-        j2s(values("days").asInstanceOf[util.ArrayList[Long]]).asInstanceOf[Seq[Long]],
+        values("beachId").asInstanceOf[Long],
+        j2s(values("days").asInstanceOf[util.ArrayList[Long]]),
         j2s(values("swellDirections").asInstanceOf[util.ArrayList[String]]),
         {
           val ranges = j2s(values("timeRanges").asInstanceOf[util.ArrayList[util.HashMap[String, Long]]]).map(p => j2sm(p))
@@ -154,16 +165,13 @@ object Domain {
       ))
     }
     catch {
-      case NonFatal(ex) => {
-        println(ex)
-        None
-      }
+      case NonFatal(_) => None
     }
 
   }
 
-  def j2s[A](inputList: util.List[A]) = JavaConverters.asScalaIteratorConverter(inputList.iterator).asScala.toSeq
+  def j2s[A](inputList: util.List[A]): Seq[A] = JavaConverters.asScalaIteratorConverter(inputList.iterator).asScala.toSeq
 
-  def j2sm[K, V](map: util.Map[K, V]) = JavaConverters.mapAsScalaMap(map).toMap
+  def j2sm[K, V](map: util.Map[K, V]): Map[K, V] = JavaConverters.mapAsScalaMap(map).toMap
 
 }

@@ -1,7 +1,12 @@
 package com.uptech.windalerts.alerts
 
 import java.io.FileInputStream
-
+import cats.effect._
+import cats.implicits._
+import org.http4s.server.{Router, Server => H4Server}
+import org.http4s.server.blaze.BlazeServerBuilder
+import org.http4s.implicits._
+import cats.data.OptionT
 import cats.effect.{IO, _}
 import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
@@ -10,17 +15,21 @@ import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.uptech.windalerts.domain.Errors.HeaderNotPresent
-import com.uptech.windalerts.domain.{Domain, HttpErrorHandler}
+import com.uptech.windalerts.domain.HttpErrorHandler
 import com.uptech.windalerts.status.{Beaches, Swells, Tides, Winds}
 import com.uptech.windalerts.users.{Devices, Users, UsersRepository}
-import org.http4s.HttpRoutes
+import org.http4s.{AuthedRoutes, HttpRoutes}
 import org.http4s.dsl.impl.Root
 import org.http4s.dsl.io._
 import org.http4s.headers.Authorization
 import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
-import com.uptech.windalerts.domain.DomainCodec._
+import com.uptech.windalerts.domain.domain._
+import com.uptech.windalerts.domain.codecs._
+import dev.profunktor.auth.JwtAuthMiddleware
+import dev.profunktor.auth.jwt.{JwtAuth, JwtSecretKey}
+import pdi.jwt.{JwtAlgorithm, JwtClaim}
 
 import scala.util.Try
 
@@ -31,6 +40,14 @@ object Main extends IOApp {
 
   logger.error("Starting")
 
+  case class AuthUser(id: String, name: String)
+
+  // i.e. retrieve user from database
+  val authenticate: JwtClaim => IO[Option[AuthUser]] =
+    claim => AuthUser("123L", "joe").some.pure[IO]
+
+  val jwtAuth = JwtAuth(JwtSecretKey("53cr3t"), JwtAlgorithm.HS256)
+  val middleware = JwtAuthMiddleware[IO, AuthUser](jwtAuth, authenticate)
 
   val dbWithAuthIO = for {
     credentials <- IO(Try(GoogleCredentials.fromStream(new FileInputStream("/app/resources/wind-alerts-staging.json")))
@@ -45,95 +62,72 @@ object Main extends IOApp {
   val dbWithAuth = dbWithAuthIO.unsafeRunSync()
 
   val beaches = Beaches.ServiceImpl(Winds.impl, Swells.impl, Tides.impl)
-  val alertsRepo:AlertsRepository.Repository = new AlertsRepository.FirebaseBackedRepository(dbWithAuth._1)
+  val alertsRepo: AlertsRepository.Repository = new AlertsRepository.FirebaseBackedRepository(dbWithAuth._1)
 
-  val alerts = new Alerts.ServiceImpl(alertsRepo)
-  val users = new Users.FireStoreBackedService(dbWithAuth._2)
-  val usersRepo =  new UsersRepository.FirestoreBackedRepository(dbWithAuth._1)
+  val alertService = new AlertsService.ServiceImpl(alertsRepo)
+  val userService = new Users.FireStoreBackedService(dbWithAuth._2)
+  val usersRepo = new UsersRepository.FirestoreBackedRepository(dbWithAuth._1)
 
   val devices = new Devices.FireStoreBackedService(dbWithAuth._1)
   implicit val httpErrorHandler: HttpErrorHandler[IO] = new HttpErrorHandler[IO]
 
-  def allRoutes(A: Alerts.Service, B: Beaches.Service, U : Users.Service, D:Devices.Service, UR:UsersRepository.Repository, H:HttpErrorHandler[IO]) = HttpRoutes.of[IO] {
 
-    case req@GET -> Root / "alerts" =>
-      val alerts = for {
-        header <- IO.fromEither(req.headers.get(Authorization).toRight(HeaderNotPresent("Couldn't find an Authorization header")))
-        u <- U.verify(header.value)
-        _ <- IO(println(u.getUid))
-        resp <- A.getAllForUser(u.getUid)
-      } yield (resp)
-      val either = alerts.attempt.unsafeRunSync()
-      either.fold(H.handleThrowable, _ => Ok(either.right.get))
-    case req@POST -> Root / "alerts" =>
-      val alert = for {
-        header <- IO.fromEither(req.headers.get(Authorization).toRight(HeaderNotPresent("Couldn't find an Authorization header")))
-        u <- U.verify(header.value)
-        alert <- req.as[Domain.AlertRequest]
-        resp <- A.save(alert, u.getUid)
-      } yield (resp)
-      val either = alert.attempt.unsafeRunSync()
-      either.fold(H.handleThrowable, _ => Created(either.right.get))
-    case req@DELETE -> Root / "alerts" / alertId => {
-      val alert = for {
-        header <- IO.fromEither(req.headers.get(Authorization).toRight(HeaderNotPresent("Couldn't find an Authorization header")))
-        u <- U.verify(header.value)
-        resp <- A.delete(u.getUid, alertId)
-      } yield resp
-      val res = alert.attempt.unsafeRunSync()
-      if (res.isLeft) {
-        H.handleThrowable(res.left.get)
-      } else {
-        res.right.get match {
-          case Left(value) => H.handleThrowable(value)
-          case Right(_) =>  NoContent()
-        }
+  def authedService: AuthedRoutes[AuthUser, IO] =
+    AuthedRoutes {
+      case GET -> Root / "alerts" as user => {
+
+        val resp = alertService.getAllForUser(user.id)
+        val either = resp.attempt.unsafeRunSync()
+        val response = either.fold(httpErrorHandler.handleThrowable, _ => Ok(either.right.get))
+        OptionT.liftF(response)
       }
+
+      case authReq@POST -> Root / "alerts" as user => {
+        val response = authReq.req.decode[AlertRequest] { alert =>
+          val saved = alertService.save(alert, user.id)
+          val either = saved.attempt.unsafeRunSync()
+          either.fold(httpErrorHandler.handleThrowable, _ => Created(either.right.get))
+        }
+        OptionT.liftF(response)
+      }
+
+      case DELETE -> Root / "alerts" / alertId as user => {
+        val eitherDeleted = alertService.delete(user.id, alertId)
+        val eitherDeletedUnsafe = eitherDeleted.attempt.unsafeRunSync()
+        val response = if (eitherDeletedUnsafe.isLeft) {
+          httpErrorHandler.handleThrowable(eitherDeletedUnsafe.left.get)
+        } else {
+          eitherDeletedUnsafe.right.get match {
+            case Left(value) => httpErrorHandler.handleThrowable(value)
+            case Right(_) => NoContent()
+          }
+        }
+
+        OptionT.liftF(response)
+      }
+
+      case authReq@PUT -> Root / "alerts" / alertId as user => {
+        val response = authReq.req.decode[AlertRequest] { alert =>
+          val updated = alertService.update(user.id, alertId, alert)
+          val resp = updated.unsafeRunSync()
+          Ok(resp.toOption.get.unsafeRunSync())
+        }
+        OptionT.liftF(response)
+      }
+
     }
 
-    case req@PUT -> Root / "alerts"/ alertId =>
-      val alert = for {
-        header <- IO.fromEither(req.headers.get(Authorization).toRight(HeaderNotPresent("Couldn't find an Authorization header")))
-        u <- U.verify(header.value)
-        alert <- req.as[Domain.AlertRequest]
-        resp <- A.update(u.getUid, alertId, alert)
-      } yield (resp)
-      val res = alert.unsafeRunSync()
-      Ok(res.toOption.get.unsafeRunSync())
+  def securedRoutes: HttpRoutes[IO] = middleware(authedService)
 
-
-    case req@POST -> Root / "users" / "devices" =>
-      val alert = for {
-        header <- IO.fromEither(req.headers.get(Authorization).toRight(HeaderNotPresent("Couldn't find an Authorization header")))
-        u <- U.verify(header.value)
-        device <- req.as[Domain.DeviceRequest]
-        resp <- D.saveDevice(device, u.getUid)
-      } yield (resp)
-      Created(alert)
-    case req@GET -> Root / "users" / "devices" =>
-      val devices = for {
-        header <- IO.fromEither(req.headers.get(Authorization).toRight(HeaderNotPresent("Couldn't find an Authorization header")))
-        u <- U.verify(header.value)
-        resp <- D.getAllForUser(u.getUid)
-      } yield (resp)
-      Ok(devices)
-    case req@DELETE -> Root / "users" / "devices" / deviceId =>
-      val device = for {
-        header <- IO.fromEither(req.headers.get(Authorization).toRight(HeaderNotPresent("Couldn't find an Authorization header")))
-        u <- U.verify(header.value)
-        resp <- D.delete(u.getUid, deviceId)
-      } yield (resp)
-      val res = device.unsafeRunSync()
-      res.toOption.get.unsafeRunSync()
-      NoContent()
-  }.orNotFound
+  val  httpApp = Router(
+    "/v1/users" -> securedRoutes
+  ).orNotFound
 
 
   def run(args: List[String]): IO[ExitCode] = {
-
     BlazeServerBuilder[IO]
       .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
-      .withHttpApp(allRoutes(alerts, beaches, users, devices, usersRepo,  httpErrorHandler))
+      .withHttpApp(httpApp)
       .serve
       .compile
       .drain

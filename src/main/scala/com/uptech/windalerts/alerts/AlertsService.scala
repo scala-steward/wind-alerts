@@ -1,26 +1,26 @@
 package com.uptech.windalerts.alerts
 
 import java.util.Calendar.{DAY_OF_WEEK, HOUR_OF_DAY}
-import java.util.{Calendar, Date, TimeZone}
+import java.util.{Calendar, TimeZone}
 
 import cats.effect.IO
 import com.google.cloud.firestore.WriteResult
-import com.uptech.windalerts.domain.Domain.{Alert, AlertRequest}
-import com.uptech.windalerts.domain.Errors.{OperationNotPermitted, RecordNotFound, WindAlertError}
+import com.uptech.windalerts.domain.Errors.WindAlertError
+import com.uptech.windalerts.domain.domain.{Alert, AlertRequest, Alerts}
 
 
-trait Alerts extends Serializable {
-  val alerts: Alerts.Service
+trait AlertsService extends Serializable {
+  val alerts: AlertsService.Service
 }
 
-object Alerts {
+object AlertsService {
 
   trait Service {
     def getAllForDay: IO[Seq[Alert]]
 
     def save(alert: AlertRequest, user: String): IO[Alert]
 
-    def getAllForUser(user: String): IO[com.uptech.windalerts.domain.Domain.Alerts]
+    def getAllForUser(user: String): IO[com.uptech.windalerts.domain.domain.Alerts]
 
     def delete(requester: String, alertId: String): IO[Either[WindAlertError, WriteResult]]
 
@@ -36,7 +36,7 @@ object Alerts {
 
     override def update(requester: String, alertId: String, updateAlertRequest: AlertRequest): IO[Either[RuntimeException, IO[Alert]]] = repo.update(requester, alertId, updateAlertRequest)
 
-    override def getAllForUser(user: String): IO[com.uptech.windalerts.domain.Domain.Alerts] = repo.getAllForUser(user)
+    override def getAllForUser(user: String): IO[Alerts] = repo.getAllForUser(user)
 
     override def getAllForDay: IO[Seq[Alert]] =
       for {

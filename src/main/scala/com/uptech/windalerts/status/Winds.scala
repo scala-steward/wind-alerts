@@ -3,8 +3,8 @@ package com.uptech.windalerts.status
 import cats.Applicative
 import cats.effect.{IO, Sync}
 import com.softwaremill.sttp._
-import com.uptech.windalerts.domain.Domain
-import com.uptech.windalerts.domain.Domain.BeachId
+import com.uptech.windalerts.domain.domain
+import com.uptech.windalerts.domain.domain.BeachId
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder, Json, parser}
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
@@ -19,7 +19,7 @@ trait Winds extends Serializable {
 object Winds {
 
   trait Service {
-    def get(beachId: BeachId): IO[Domain.Wind]
+    def get(beachId: BeachId): IO[domain.Wind]
   }
 
   val impl: Service = (beachId: BeachId) => {
@@ -30,8 +30,8 @@ object Winds {
 
     val eitherResponse = response.body.map(s => {
       parser.parse(s).getOrElse(Json.Null).hcursor.downField("observational").downField("observations")
-        .downField("wind").as[Wind].map(wind => Domain.Wind(wind.direction, wind.speed, wind.directionText))
-        .getOrElse(Domain.Wind(0.0, 0.0, ""))
+        .downField("wind").as[Wind].map(wind => domain.Wind(wind.direction, wind.speed, wind.directionText))
+        .getOrElse(domain.Wind(0.0, 0.0, ""))
     })
 
     val throwableEither = eitherResponse match {

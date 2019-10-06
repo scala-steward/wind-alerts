@@ -3,13 +3,13 @@ package com.uptech.windalerts.alerts
 import cats.effect.IO
 import cats.implicits._
 import com.google.firebase.messaging.{FirebaseMessaging, Message, Notification}
-import com.uptech.windalerts.domain.Domain.BeachId
-import com.uptech.windalerts.domain.{Domain, HttpErrorHandler}
+import com.uptech.windalerts.domain.domain.BeachId
+import com.uptech.windalerts.domain.{domain, HttpErrorHandler}
 import com.uptech.windalerts.status.Beaches
 import com.uptech.windalerts.users.{Devices, Users, UsersRepository}
 import org.log4s.getLogger
 
-class Notifications(A: Alerts.Service, B: Beaches.Service, U : Users.Service, D:Devices.Service, UR:UsersRepository.Repository, firebaseMessaging: FirebaseMessaging, H:HttpErrorHandler[IO]) {
+class Notifications(A: AlertsService.Service, B: Beaches.Service, U : Users.Service, D:Devices.Service, UR:UsersRepository.Repository, firebaseMessaging: FirebaseMessaging, H:HttpErrorHandler[IO]) {
   private val logger = getLogger
 
   def sendNotification = {
@@ -27,7 +27,7 @@ class Notifications(A: Alerts.Service, B: Beaches.Service, U : Users.Service, D:
       usersToBeNotified <- IO(alertsToBeNotified.values.flatMap(elem => elem).map(alert => {
         val maybeUser = UR.getById(alert.owner)
         logger.info(s"Maybeuser $maybeUser")
-        maybeUser.map(userIO => userIO.map(user => Domain.AlertWithUser(alert, user)))
+        maybeUser.map(userIO => userIO.map(user => domain.AlertWithUser(alert, user)))
       }).toList)
 
       usersToBeNotifiedSeq <- usersToBeNotified.sequence
@@ -47,7 +47,7 @@ class Notifications(A: Alerts.Service, B: Beaches.Service, U : Users.Service, D:
     usersToBeNotified
   }
 
-  private def toIOMap(m: Map[IO[Domain.Beach], Seq[Domain.Alert]]) = {
+  private def toIOMap(m: Map[IO[domain.Beach], Seq[domain.Alert]]) = {
     m.toList.traverse {
       case (io, s) => io.map(s2 => (s2, s))
     }.map {

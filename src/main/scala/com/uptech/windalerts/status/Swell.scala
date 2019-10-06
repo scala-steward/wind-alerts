@@ -7,8 +7,8 @@ import java.util.TimeZone
 import cats.Applicative
 import cats.effect.{IO, Sync}
 import com.softwaremill.sttp._
-import com.uptech.windalerts.domain.Domain
-import com.uptech.windalerts.domain.Domain.BeachId
+import com.uptech.windalerts.domain.domain
+import com.uptech.windalerts.domain.domain.BeachId
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder, Json, parser}
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
@@ -22,7 +22,7 @@ trait Swells extends Serializable {
 object Swells {
 
   trait Service {
-    def get(beachId: BeachId): IO[Domain.Swell]
+    def get(beachId: BeachId): IO[domain.Swell]
   }
 
   val impl: Service = (beachId: BeachId) => {
@@ -52,7 +52,7 @@ object Swells {
       })
         .head
     }
-    ).map(swell => Domain.Swell(swell.height, swell.direction, swell.directionText))
+    ).map(swell => domain.Swell(swell.height, swell.direction, swell.directionText))
 
     val throwableEither = eitherResponse match {
       case Left(s) => Left(new RuntimeException(s))
