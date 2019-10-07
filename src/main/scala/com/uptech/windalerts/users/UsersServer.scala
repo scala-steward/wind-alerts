@@ -27,6 +27,7 @@ object UsersServer extends IOApp {
   private val logger = getLogger
   private val REFRESH_TOKEN_EXPIRY = 7L * 24L * 60L * 60L * 1000L
 
+
   logger.error("Starting")
 
   val dbIO = for {
@@ -62,8 +63,8 @@ object UsersServer extends IOApp {
           credentials <- EitherT.liftF(req.as[Credentials])
           dbCredentials <- userService.getByCredentials(credentials)
           refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(generateRefreshToken(40), (System.currentTimeMillis() + REFRESH_TOKEN_EXPIRY), dbCredentials.id.get)))
-          token <- createToken(dbCredentials.id.get, 1)
-          tokens <- tokens(token, refreshToken)
+          token <- createToken(dbCredentials.id.get, 60)
+          tokens <- tokens(token.accessToken, refreshToken, token.expiredAt)
         } yield tokens
 
         action.value.flatMap {
@@ -86,8 +87,8 @@ object UsersServer extends IOApp {
             eitherT
           }
 
-          token <- createToken(validRefreshToken.userId, 1)
-          tokens <- tokens(token, dbRefreshToken)
+          token <- createToken(validRefreshToken.userId, 60)
+          tokens <- tokens(token.accessToken, dbRefreshToken, token.expiredAt)
         } yield tokens
 
         action.value.flatMap {
@@ -96,8 +97,8 @@ object UsersServer extends IOApp {
         }
     }
 
-  def tokens(accessToken: String, refreshToken: RefreshToken): EitherT[IO, ValidationError, Tokens] = {
-    val tokens = domain.Tokens(accessToken, refreshToken.refreshToken, System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(1))
+  def tokens(accessToken: String, refreshToken: RefreshToken, expiredAt:Long): EitherT[IO, ValidationError, Tokens] = {
+    val tokens = domain.Tokens(accessToken, refreshToken.refreshToken, expiredAt)
     EitherT.right(IO(tokens))
   }
 
@@ -108,16 +109,21 @@ object UsersServer extends IOApp {
     (1 to n).map(_ => alpha(Random.nextInt.abs % size)).mkString
   }
 
-  def createToken(userId: String, expirationInMinutes: Int): EitherT[IO, ValidationError, String] = {
+  def createToken(userId: String, expirationInMinutes: Int): EitherT[IO, ValidationError, AccessTokenWithExpiry] = {
+    val current = System.currentTimeMillis()
+    val expiry = current / 1000 + TimeUnit.MINUTES.toSeconds(expirationInMinutes)
     val claims = JwtClaim(
-      expiration = Some(System.currentTimeMillis() / 1000 + TimeUnit.MINUTES.toSeconds(expirationInMinutes)),
-      issuedAt = Some(System.currentTimeMillis() / 1000),
+      expiration = Some(expiry),
+      issuedAt = Some(current / 1000),
       issuer = Some("wind-alerts.com"),
       subject = Some(userId)
     )
 
-    EitherT.right(IO(Jwt.encode(claims, "secretKey", JwtAlgorithm.HS256)))
+    EitherT.right(IO(AccessTokenWithExpiry(Jwt.encode(claims, "secretKey", JwtAlgorithm.HS256), expiry)))
   }
+
+  case class AccessTokenWithExpiry(accessToken:String, expiredAt:Long)
+
 
   private val service = new UserService(new FirestoreUserRepository(db), new FirestoreCredentialsRepository(db))
   val httpApp = Router(
@@ -125,7 +131,6 @@ object UsersServer extends IOApp {
   ).orNotFound
 
   override def run(args: List[String]): IO[ExitCode] = {
-    println(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRY)
     BlazeServerBuilder[IO]
       .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
       .withHttpApp(httpApp)
@@ -133,6 +138,5 @@ object UsersServer extends IOApp {
       .compile
       .drain
       .as(ExitCode.Success)
-
   }
 }
