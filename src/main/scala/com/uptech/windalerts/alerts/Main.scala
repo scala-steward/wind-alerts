@@ -35,14 +35,10 @@ object Main extends IOApp {
 
   logger.error("Starting")
 
-  case class AuthUser(id: String, name: String)
+  case class UserId(id: String)
 
-  // i.e. retrieve user from database
-  val authenticate: JwtClaim => IO[Option[AuthUser]] =
-    claim => AuthUser("123L", "joe").some.pure[IO]
 
   val jwtAuth = JwtAuth(JwtSecretKey("secretKey"), JwtAlgorithm.HS256)
-  val middleware = JwtAuthMiddleware[IO, AuthUser](jwtAuth, authenticate)
 
   val dbWithAuthIO = for {
     credentials <- IO(Try(GoogleCredentials.fromStream(new FileInputStream("/app/resources/wind-alerts-staging.json")))
@@ -56,6 +52,11 @@ object Main extends IOApp {
 
   val dbWithAuth = dbWithAuthIO.unsafeRunSync()
 
+  val authenticate: JwtClaim => IO[Option[UserId]] =
+    claim => IO(Some(UserId(claim.subject.get)))
+  
+  val middleware = JwtAuthMiddleware[IO, UserId](jwtAuth, authenticate)
+
   val beaches = Beaches.ServiceImpl(Winds.impl, Swells.impl, Tides.impl)
   val alertsRepo: AlertsRepository.Repository = new AlertsRepository.FirebaseBackedRepository(dbWithAuth._1)
 
@@ -66,7 +67,7 @@ object Main extends IOApp {
   implicit val httpErrorHandler: HttpErrorHandler[IO] = new HttpErrorHandler[IO]
 
 
-  def authedService: AuthedRoutes[AuthUser, IO] =
+  def authedService: AuthedRoutes[UserId, IO] =
     AuthedRoutes {
       case GET -> Root / "alerts" as user => {
         val resp = alertService.getAllForUser(user.id)
