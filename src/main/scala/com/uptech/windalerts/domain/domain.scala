@@ -1,22 +1,19 @@
 package com.uptech.windalerts.domain
 
 import java.util
-import java.util.Optional
 
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters
 import scala.util.control.NonFatal
 
 object domain {
-
   case class UserSettings(userId:String)
   case class Tokens(accessToken:String, refreshToken: String, expiredAt:Long)
 
   case class AccessTokenRequest(refreshToken: String)
 
-  case class RefreshToken(refreshToken: String, expiry:Long, userId:String) {
+  case class RefreshToken(refreshToken: String, expiry:Long, userId:String, accessTokenId:String) {
     def isExpired() = System.currentTimeMillis() > expiry
-
   }
 
   object RefreshToken {
@@ -25,7 +22,8 @@ object domain {
       Some(RefreshToken(
         values("refreshToken").asInstanceOf[String],
         values("expiry").asInstanceOf[Long],
-        values("userId").asInstanceOf[String]
+        values("userId").asInstanceOf[String],
+        values("accessTokenId").asInstanceOf[String]
       ))
     }
     catch {
