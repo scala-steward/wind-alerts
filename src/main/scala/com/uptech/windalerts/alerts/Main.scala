@@ -2,6 +2,8 @@ package com.uptech.windalerts.alerts
 
 import java.io.FileInputStream
 
+import io.circe._
+import io.circe.parser._
 import cats.data.OptionT
 import cats.effect.{IO, _}
 import cats.implicits._
@@ -14,7 +16,7 @@ import com.uptech.windalerts.domain.HttpErrorHandler
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.status.{Beaches, Swells, Tides, Winds}
-import com.uptech.windalerts.users.{Devices, FirestoreUserRepository}
+import com.uptech.windalerts.users.{Devices, FirestoreRefreshTokenRepository, FirestoreUserRepository, RefreshTokenRepositoryAlgebra}
 import dev.profunktor.auth.JwtAuthMiddleware
 import dev.profunktor.auth.jwt.{JwtAuth, JwtSecretKey}
 import org.http4s.dsl.impl.Root
@@ -52,10 +54,7 @@ object Main extends IOApp {
 
   val dbWithAuth = dbWithAuthIO.unsafeRunSync()
 
-  val authenticate: JwtClaim => IO[Option[UserId]] =
-    claim => IO(Some(UserId(claim.subject.get)))
 
-  val middleware = JwtAuthMiddleware[IO, UserId](jwtAuth, authenticate)
 
   val beaches = Beaches.ServiceImpl(Winds.impl, Swells.impl, Tides.impl)
   val alertsRepo: AlertsRepository.Repository = new AlertsRepository.FirebaseBackedRepository(dbWithAuth._1)
@@ -64,7 +63,24 @@ object Main extends IOApp {
   val usersRepo = new FirestoreUserRepository(dbWithAuth._1)
 
   val devices = new Devices.FireStoreBackedService(dbWithAuth._1)
+  val refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra = new FirestoreRefreshTokenRepository(dbWithAuth._1)
   implicit val httpErrorHandler: HttpErrorHandler[IO] = new HttpErrorHandler[IO]
+
+
+  val authenticate: JwtClaim => IO[Option[UserId]] = {
+    claim => {
+      val r = for {
+        parseResult <- IO.fromEither(parse(claim.content))
+        accessTokenId <- IO.fromEither(parseResult.hcursor.downField("accessTokenId").as[String])
+        maybeRefreshToken <- refreshTokenRepositoryAlgebra.getByAccessTokenId(accessTokenId).value
+      } yield maybeRefreshToken
+
+      r.map(f=>f.map(t=>UserId(t.userId)))
+    }
+
+  }
+
+  val middleware = JwtAuthMiddleware[IO, UserId](jwtAuth, authenticate)
 
 
   def authedService: AuthedRoutes[UserId, IO] =

@@ -62,8 +62,10 @@ object UsersServer extends IOApp {
         val action = for {
           credentials <- EitherT.liftF(req.as[Credentials])
           dbCredentials <- userService.getByCredentials(credentials)
-          refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(generateRefreshToken(40), (System.currentTimeMillis() + REFRESH_TOKEN_EXPIRY), dbCredentials.id.get)))
-          token <- createToken(dbCredentials.id.get, 60)
+          accessTokenId <- EitherT.right(IO(generateRandomString(10)))
+          token <- createToken(dbCredentials.id.get, 60, accessTokenId)
+          deleteOldTokens <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(dbCredentials.id.get))
+          refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(generateRandomString(40), (System.currentTimeMillis() + REFRESH_TOKEN_EXPIRY), dbCredentials.id.get, accessTokenId)))
           tokens <- tokens(token.accessToken, refreshToken, token.expiredAt)
         } yield tokens
 
@@ -75,20 +77,22 @@ object UsersServer extends IOApp {
       case req@POST -> Root / "refresh" =>
         val action = for {
           refreshToken <- EitherT.liftF(req.as[AccessTokenRequest])
-          dbRefreshToken <- refreshTokenRepositoryAlgebra.getByRefreshToken(refreshToken.refreshToken).toRight(RefreshTokenNotFoundError())
-          validRefreshToken <- {
+          oldRefreshToken <- refreshTokenRepositoryAlgebra.getByRefreshToken(refreshToken.refreshToken).toRight(RefreshTokenNotFoundError())
+          oldValidRefreshToken <- {
             val eitherT: EitherT[IO, RefreshTokenExpiredError, RefreshToken] = EitherT.fromEither {
-              if (dbRefreshToken.isExpired()) {
+              if (oldRefreshToken.isExpired()) {
                 Left(RefreshTokenExpiredError())
               } else {
-                Right(dbRefreshToken)
+                Right(oldRefreshToken)
               }
             }
             eitherT
           }
-
-          token <- createToken(validRefreshToken.userId, 60)
-          tokens <- tokens(token.accessToken, dbRefreshToken, token.expiredAt)
+          accessTokenId <- EitherT.right(IO(generateRandomString(10)))
+          token <- createToken(oldValidRefreshToken.userId, 60, accessTokenId)
+          deleteOldTokens <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(oldValidRefreshToken.userId))
+          newRefreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(generateRandomString(40), (System.currentTimeMillis() + REFRESH_TOKEN_EXPIRY), oldValidRefreshToken.userId, accessTokenId)))
+          tokens <- tokens(token.accessToken, newRefreshToken, token.expiredAt)
         } yield tokens
 
         action.value.flatMap {
@@ -97,19 +101,19 @@ object UsersServer extends IOApp {
         }
     }
 
-  def tokens(accessToken: String, refreshToken: RefreshToken, expiredAt:Long): EitherT[IO, ValidationError, Tokens] = {
+  def tokens(accessToken: String, refreshToken: RefreshToken, expiredAt: Long): EitherT[IO, ValidationError, Tokens] = {
     val tokens = domain.Tokens(accessToken, refreshToken.refreshToken, expiredAt)
     EitherT.right(IO(tokens))
   }
 
-  private def generateRefreshToken(n: Int) = {
+  private def generateRandomString(n: Int) = {
     val alpha = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     val size = alpha.size
 
     (1 to n).map(_ => alpha(Random.nextInt.abs % size)).mkString
   }
 
-  def createToken(userId: String, expirationInMinutes: Int): EitherT[IO, ValidationError, AccessTokenWithExpiry] = {
+  def createToken(userId: String, expirationInMinutes: Int, accessTokenId: String): EitherT[IO, ValidationError, AccessTokenWithExpiry] = {
     val current = System.currentTimeMillis()
     val expiry = current / 1000 + TimeUnit.MINUTES.toSeconds(expirationInMinutes)
     val claims = JwtClaim(
@@ -117,12 +121,12 @@ object UsersServer extends IOApp {
       issuedAt = Some(current / 1000),
       issuer = Some("wind-alerts.com"),
       subject = Some(userId)
-    )
+    ) + ("accessTokenId", accessTokenId)
 
     EitherT.right(IO(AccessTokenWithExpiry(Jwt.encode(claims, "secretKey", JwtAlgorithm.HS256), expiry)))
   }
 
-  case class AccessTokenWithExpiry(accessToken:String, expiredAt:Long)
+  case class AccessTokenWithExpiry(accessToken: String, expiredAt: Long)
 
 
   private val service = new UserService(new FirestoreUserRepository(db), new FirestoreCredentialsRepository(db))

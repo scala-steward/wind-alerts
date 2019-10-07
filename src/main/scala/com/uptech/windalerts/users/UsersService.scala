@@ -1,10 +1,7 @@
 package com.uptech.windalerts.users
 
-import java.util.Optional
-
+import cats.{Functor, Monad}
 import cats.data._
-import cats.Functor
-import cats.Monad
 import cats.effect.IO
 import cats.syntax.functor._
 import com.uptech.windalerts.domain.domain.{Credentials, RegisterRequest, User}
