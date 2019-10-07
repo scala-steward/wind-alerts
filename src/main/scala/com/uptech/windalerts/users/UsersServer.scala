@@ -20,7 +20,7 @@ import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
 import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim}
-
+import com.uptech.windalerts.domain.codecs._
 import scala.util.{Random, Try}
 
 object UsersServer extends IOApp {
@@ -60,15 +60,15 @@ object UsersServer extends IOApp {
 
       case req@POST -> Root / "login" =>
         val action = for {
-          credentials <- EitherT.liftF(req.as[Credentials])
-          dbCredentials <- userService.getByCredentials(credentials)
+          credentials <- EitherT.liftF(req.as[LoginRequest])
+          dbCredentials <- userService.getByCredentials(credentials.email, credentials.password, credentials.deviceType)
+          updateDevice <- userService.updateDeviceToken(dbCredentials.id.get, credentials.deviceToken).toRight(CouldNotUpdateUserDeviceError())
           accessTokenId <- EitherT.right(IO(generateRandomString(10)))
           token <- createToken(dbCredentials.id.get, 60, accessTokenId)
           deleteOldTokens <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(dbCredentials.id.get))
           refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(generateRandomString(40), (System.currentTimeMillis() + REFRESH_TOKEN_EXPIRY), dbCredentials.id.get, accessTokenId)))
           tokens <- tokens(token.accessToken, refreshToken, token.expiredAt)
         } yield tokens
-
         action.value.flatMap {
           case Right(tokens) => Ok(tokens)
           case Left(error) => httpErrorHandler.handleError(error)
@@ -94,7 +94,6 @@ object UsersServer extends IOApp {
           newRefreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(generateRandomString(40), (System.currentTimeMillis() + REFRESH_TOKEN_EXPIRY), oldValidRefreshToken.userId, accessTokenId)))
           tokens <- tokens(token.accessToken, newRefreshToken, token.expiredAt)
         } yield tokens
-
         action.value.flatMap {
           case Right(tokens) => Ok(tokens)
           case Left(error) => httpErrorHandler.handleError(error)
@@ -102,8 +101,7 @@ object UsersServer extends IOApp {
     }
 
   def tokens(accessToken: String, refreshToken: RefreshToken, expiredAt: Long): EitherT[IO, ValidationError, Tokens] = {
-    val tokens = domain.Tokens(accessToken, refreshToken.refreshToken, expiredAt)
-    EitherT.right(IO(tokens))
+    EitherT.right(IO(domain.Tokens(accessToken, refreshToken.refreshToken, expiredAt)))
   }
 
   private def generateRandomString(n: Int) = {

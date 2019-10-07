@@ -77,7 +77,10 @@ object domain {
   final case class UserDevices(devices: Seq[UserDevice])
 
   final case class UserDevice(deviceId: String, ownerId: String)
+
   case class RegisterRequest(email: String, name: String, password: String, deviceId:String, deviceType:String, deviceToken:String)
+
+  case class LoginRequest(email: String, password: String, deviceType: String, deviceToken:String)
 
   object UserDevice {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[UserDevice] = try {

@@ -7,8 +7,10 @@ import cats.syntax.functor._
 import com.uptech.windalerts.domain.domain.{Credentials, RegisterRequest, User}
 
 class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsRepositoryAlgebra) {
-  def createUser(rr: RegisterRequest): EitherT[IO, UserAlreadyExistsError, User] = {
+  def updateDeviceToken(userId:String, deviceToken:String)  =
+    userRepo.updateDeviceToken(userId, deviceToken)
 
+  def createUser(rr: RegisterRequest): EitherT[IO, UserAlreadyExistsError, User] = {
     val credentials = Credentials(None, rr.email, rr.password, rr.deviceType)
     for {
       _ <- credentialsRepo.doesNotExist(credentials)
@@ -21,9 +23,9 @@ class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsR
     userRepo.get(userId).toRight(UserNotFoundError)
 
   def getByCredentials(
-                        credentials:Credentials,
+                        email: String, password:String, deviceType: String
                    ): EitherT[IO, UserAuthenticationFailedError, Credentials] =
-    credentialsRepo.findByCreds(credentials.email, credentials.password, credentials.deviceType).toRight(UserAuthenticationFailedError(credentials.email))
+    credentialsRepo.findByCreds(email, password, deviceType).toRight(UserAuthenticationFailedError(email))
 
   def deleteUser(userId: String): IO[Unit] =
     userRepo.delete(userId).value.void

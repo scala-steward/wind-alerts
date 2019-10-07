@@ -1,4 +1,5 @@
 package com.uptech.windalerts.users
+
 import java.util
 
 import cats.data.OptionT
@@ -11,7 +12,7 @@ import com.uptech.windalerts.domain.domain.User
 
 import scala.beans.BeanProperty
 
-class FirestoreUserRepository(db:Firestore)(implicit cs: ContextShift[IO]) extends UserRepositoryAlgebra {
+class FirestoreUserRepository(db: Firestore)(implicit cs: ContextShift[IO]) extends UserRepositoryAlgebra {
   private val usersCollection: CollectionReference = db.collection("users")
 
   override def getById(id: String): IO[Option[User]] = {
@@ -20,7 +21,8 @@ class FirestoreUserRepository(db:Firestore)(implicit cs: ContextShift[IO]) exten
 
   override def create(user: domain.User): IO[domain.User] = {
     for {
-      _ <- IO.fromFuture(IO(j2sFuture(usersCollection.add(toBean(user)))))
+
+      _ <- IO.fromFuture(IO(j2sFuture(usersCollection.document(user.id).create(toBean(user)))))
       alert <- IO(user)
     } yield alert
   }
@@ -48,6 +50,13 @@ class FirestoreUserRepository(db:Firestore)(implicit cs: ContextShift[IO]) exten
           }))
     } yield filtered.headOption
 
+  }
+
+  override def updateDeviceToken(userId: String, deviceToken: String): OptionT[IO, Unit] = {
+    OptionT.liftF(
+      for {
+        updateResultIO <- IO.fromFuture(IO(j2sFuture(usersCollection.document(userId).update("deviceToken", deviceToken))))
+      } yield updateResultIO)
   }
 }
 
