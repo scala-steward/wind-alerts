@@ -7,7 +7,7 @@ import cats.effect.{ContextShift, IO}
 import com.google.cloud.firestore
 import com.google.cloud.firestore.{CollectionReference, Firestore, WriteResult}
 import com.uptech.windalerts.domain.domain
-import com.uptech.windalerts.domain.domain.{Alert, DeviceRequest, UserDevice, UserDevices}
+import com.uptech.windalerts.domain.domain.{DeviceRequest, UserDevice, UserDevices}
 
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters
@@ -22,18 +22,18 @@ trait Devices {
 object Devices {
 
   trait Service {
-    def delete(owner: String, deviceId: String) : IO[Either[RuntimeException, IO[WriteResult]]]
+    def delete(owner: String, deviceId: String): IO[Either[RuntimeException, IO[WriteResult]]]
 
     def getAllForUser(user: String): IO[UserDevices]
 
-    def saveDevice(device: domain.DeviceRequest, getUid: String):IO[UserDevice]
+    def saveDevice(device: domain.DeviceRequest, getUid: String): IO[UserDevice]
   }
 
-  class FireStoreBackedService(db:Firestore)(implicit cs: ContextShift[IO]) extends Service {
+  class FireStoreBackedService(db: Firestore)(implicit cs: ContextShift[IO]) extends Service {
     private val devices: CollectionReference = db.collection("devices")
 
     override def getAllForUser(user: String): IO[UserDevices] = {
-      getAllByQuery(devices.whereEqualTo("owner", user)).map(devices=>UserDevices(devices))
+      getAllByQuery(devices.whereEqualTo("owner", user)).map(devices => UserDevices(devices))
     }
 
     override def saveDevice(device: domain.DeviceRequest, getUid: String): IO[UserDevice] = {
@@ -61,7 +61,7 @@ object Devices {
       Future(javaFuture.get())
     }
 
-    def toBean(device:DeviceRequest, owner:String): DeviceBean = {
+    def toBean(device: DeviceRequest, owner: String): DeviceBean = {
       new DeviceBean(owner, device.deviceId)
     }
 
@@ -91,4 +91,5 @@ object Devices {
   class DeviceBean(
                     @BeanProperty var owner: String,
                     @BeanProperty var deviceId: String) {}
+
 }

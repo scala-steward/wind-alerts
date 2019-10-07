@@ -117,7 +117,6 @@ object AlertsRepository {
 
     def toBean(alert: Alert): AlertBean = {
       val alertBean = new AlertBean(
-        "",
         alert.owner,
         alert.beachId,
         new java.util.ArrayList(JavaConverters.asJavaCollection(alert.days)),
@@ -151,7 +150,6 @@ object AlertsRepository {
   }
 
   class AlertBean(
-                   @BeanProperty var id: String,
                    @BeanProperty var owner: String,
                    @BeanProperty var beachId: Long,
                    @BeanProperty var days: java.util.List[Long],

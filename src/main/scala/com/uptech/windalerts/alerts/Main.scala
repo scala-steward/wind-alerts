@@ -54,8 +54,6 @@ object Main extends IOApp {
 
   val dbWithAuth = dbWithAuthIO.unsafeRunSync()
 
-
-
   val beaches = Beaches.ServiceImpl(Winds.impl, Swells.impl, Tides.impl)
   val alertsRepo: AlertsRepository.Repository = new AlertsRepository.FirebaseBackedRepository(dbWithAuth._1)
 

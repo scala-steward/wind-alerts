@@ -6,7 +6,7 @@ import java.util.concurrent.CompletableFuture
 import cats.data.OptionT
 import cats.effect.{ContextShift, IO}
 import com.google.cloud.firestore
-import com.google.cloud.firestore.{CollectionReference, Firestore}
+import com.google.cloud.firestore.{CollectionReference, Firestore, QueryDocumentSnapshot}
 import com.google.firestore.v1.WriteResult
 import com.uptech.windalerts.domain.conversions.{j2sFuture, j2sMap, j2sm}
 import com.uptech.windalerts.domain.domain
@@ -39,17 +39,15 @@ class FirestoreRefreshTokenRepository(db: Firestore)(implicit cs: ContextShift[I
   }
 
 
-  override def deleteForUserId(userId: String): IO[Unit] = {
-    for {
-      collection <- IO.fromFuture(IO(j2sFuture(tokensCollection.whereEqualTo("userId", userId).get())))
-      deleteResultOption <- IO(
-        j2sMap(collection.getDocuments)
-          .map(document => {
-            db.document(s"refreshTokens/${document.getId}").delete()
-          }).headOption.getOrElse(CompletableFuture.completedFuture(WriteResult.getDefaultInstance)))
-       deleteResult <- IO.fromFuture(IO(j2sFuture(deleteResultOption)))
-    } yield deleteResult
-  }
+  override def deleteForUserId(userId: String): IO[Unit] = for {
+    collection <- IO.fromFuture(IO(j2sFuture(tokensCollection.whereEqualTo("userId", userId).get())))
+    deleteResultOption <- IO(
+      j2sMap(collection.getDocuments)
+        .map(document => {
+          db.document(s"refreshTokens/${document.getId}").delete()
+        }).headOption.getOrElse(CompletableFuture.completedFuture(WriteResult.getDefaultInstance)))
+     deleteResult <- IO.fromFuture(IO(j2sFuture(deleteResultOption)))
+  } yield deleteResult
 
   private def getByQuery(query: firestore.Query) = {
     for {
@@ -57,10 +55,14 @@ class FirestoreRefreshTokenRepository(db: Firestore)(implicit cs: ContextShift[I
       filtered <- IO(
         j2sMap(collection.getDocuments)
           .map(document => {
-            val RefreshToken(refreshToken) = (document.getId, j2sm(document.getData).asInstanceOf[Map[String, util.HashMap[String, String]]])
-            refreshToken
+            map(document)
           }))
     } yield filtered.headOption
+  }
+
+  private def map(document: QueryDocumentSnapshot) = {
+    val RefreshToken(refreshToken) = (document.getId, j2sm(document.getData).asInstanceOf[Map[String, util.HashMap[String, String]]])
+    refreshToken
   }
 
   private def toBean(refreshToken: domain.RefreshToken) = new RefreshTokenBean(refreshToken.refreshToken, refreshToken.expiry, refreshToken.userId, refreshToken.accessTokenId)

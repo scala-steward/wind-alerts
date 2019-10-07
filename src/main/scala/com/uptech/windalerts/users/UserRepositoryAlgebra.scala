@@ -1,11 +1,13 @@
 package com.uptech.windalerts.users
 
 
-import cats.data.OptionT
+import cats.data.{EitherT, OptionT}
 import cats.effect.IO
 import com.uptech.windalerts.domain.domain.{Credentials, User}
 
 trait UserRepositoryAlgebra {
+  def updateDeviceToken(userId: String, deviceToken: String):OptionT[IO, Unit]
+
   def getById(id: String): IO[Option[User]]
 
   def create(user: User): IO[User]
