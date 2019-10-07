@@ -14,6 +14,8 @@ steps:
     args: ['-q', 'compile', '-P', 'notifications', 'jib:build']
   - name: 'gcr.io/cloud-builders/mvn'
     args: ['-q', 'compile', '-P', 'alerts', 'jib:build']
+  - name: 'gcr.io/cloud-builders/mvn'
+    args: ['-q', 'compile', '-P', 'users', 'jib:build']
   - name: 'gcr.io/cloud-builders/gcloud'
     args: ['beta', 'run', 'deploy', 'wind-alerts-alerts', '--image', 'gcr.io/wind-alerts-staging/wind-alerts-alerts:1.0-SNAPSHOT', '--region', 'asia-northeast1','--platform', 'managed', '--quiet', '--memory', '512Mi']
   - name: 'gcr.io/cloud-builders/gcloud'

@@ -54,7 +54,7 @@ object Main extends IOApp {
 
   val authenticate: JwtClaim => IO[Option[UserId]] =
     claim => IO(Some(UserId(claim.subject.get)))
-  
+
   val middleware = JwtAuthMiddleware[IO, UserId](jwtAuth, authenticate)
 
   val beaches = Beaches.ServiceImpl(Winds.impl, Swells.impl, Tides.impl)
