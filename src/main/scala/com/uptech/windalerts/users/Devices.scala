@@ -91,6 +91,4 @@ object Devices {
   class DeviceBean(
                     @BeanProperty var owner: String,
                     @BeanProperty var deviceId: String) {}
-
-
 }

@@ -9,6 +9,31 @@ import scala.util.control.NonFatal
 
 object domain {
 
+  case class UserSettings(userId:String)
+  case class Tokens(accessToken:String, refreshToken: String, expiredAt:Long)
+
+  case class AccessTokenRequest(refreshToken: String)
+
+  case class RefreshToken(refreshToken: String, expiry:Long, userId:String) {
+    def isExpired() = System.currentTimeMillis() > expiry
+
+  }
+
+  object RefreshToken {
+    def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[RefreshToken] = try {
+      val values = tuple._2
+      Some(RefreshToken(
+        values("refreshToken").asInstanceOf[String],
+        values("expiry").asInstanceOf[Long],
+        values("userId").asInstanceOf[String]
+      ))
+    }
+    catch {
+      case NonFatal(_) =>
+        None
+    }
+  }
+
   case class Credentials(id:Option[String], email: String,  password: String, deviceType:String)
 
   object Credentials {
@@ -35,7 +60,7 @@ object domain {
       Some(User(
         tuple._1,
         values("email").asInstanceOf[String],
-        values("password").asInstanceOf[String],
+        values("name").asInstanceOf[String],
         values("deviceId").asInstanceOf[String],
         values("deviceToken").asInstanceOf[String],
         values("deviceType").asInstanceOf[String]

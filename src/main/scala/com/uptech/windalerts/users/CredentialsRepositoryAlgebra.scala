@@ -2,7 +2,7 @@ package com.uptech.windalerts.users
 
 import cats.data.{EitherT, OptionT}
 import cats.effect.IO
-import com.uptech.windalerts.domain.domain.{Credentials, User}
+import com.uptech.windalerts.domain.domain.{Credentials}
 
 trait CredentialsRepositoryAlgebra {
   def doesNotExist(credentials: Credentials): EitherT[IO, UserAlreadyExistsError, Unit]

@@ -1,6 +1,6 @@
 package com.uptech.windalerts.domain
 
-object Errors {
+object errors {
   trait WindAlertError extends RuntimeException
   case class UserNotFound(userName: String) extends WindAlertError
   case class OperationNotPermitted(message:String) extends WindAlertError

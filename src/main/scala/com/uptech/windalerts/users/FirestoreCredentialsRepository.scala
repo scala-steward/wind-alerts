@@ -8,7 +8,7 @@ import com.google.cloud.firestore
 import com.google.cloud.firestore.{CollectionReference, Firestore}
 import com.uptech.windalerts.domain.conversions._
 import com.uptech.windalerts.domain.domain
-import com.uptech.windalerts.domain.domain.{Credentials, User}
+import com.uptech.windalerts.domain.domain.{Credentials}
 
 import scala.beans.BeanProperty
 
@@ -17,11 +17,6 @@ class FirestoreCredentialsRepository(db: Firestore)(implicit cs: ContextShift[IO
 
   override def doesNotExist(credentials: domain.Credentials): EitherT[IO, UserAlreadyExistsError, Unit] = {
     findByCreds(credentials.email, credentials.password, credentials.deviceType).map(_ => UserAlreadyExistsError("", "")).toLeft(())
-  }
-
-  def exists(credentials: Credentials): EitherT[IO, UserNotFoundError, Unit] = {
-    val maybeCreds = findByCreds(credentials.email, credentials.password, credentials.deviceType)
-    maybeCreds.map(_ => ()).toLeft(UserNotFoundError()).swap
   }
 
   override def exists(userId: String): EitherT[IO, UserNotFoundError.type, Unit] = {
@@ -51,8 +46,7 @@ class FirestoreCredentialsRepository(db: Firestore)(implicit cs: ContextShift[IO
   }
 
   private def toBean(credentials: domain.Credentials) = {
-    val bean = new CredentialsBean(credentials.email, credentials.password, credentials.deviceType)
-    bean
+    new CredentialsBean(credentials.email, credentials.password, credentials.deviceType)
   }
 
   private def getByQuery(query: firestore.Query) = {
@@ -67,7 +61,6 @@ class FirestoreCredentialsRepository(db: Firestore)(implicit cs: ContextShift[IO
     } yield filtered.headOption
 
   }
-
 
 }
 

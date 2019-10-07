@@ -20,3 +20,5 @@ steps:
     args: ['beta', 'run', 'deploy', 'wind-alerts-status', '--image', 'gcr.io/wind-alerts-staging/wind-alerts-status:1.0-SNAPSHOT', '--region', 'asia-northeast1','--platform', 'managed', '--quiet', '--memory', '512Mi']
   - name: 'gcr.io/cloud-builders/gcloud'
     args: ['beta', 'run', 'deploy', 'wind-alerts-notifications', '--image', 'gcr.io/wind-alerts-staging/wind-alerts-send-notifications:1.0-SNAPSHOT', '--region', 'asia-northeast1','--platform', 'managed', '--quiet', '--memory', '512Mi']
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: ['beta', 'run', 'deploy', 'wind-alerts-users', '--image', 'gcr.io/wind-alerts-staging/wind-alerts-users:1.0-SNAPSHOT', '--region', 'asia-northeast1','--platform', 'managed', '--quiet', '--memory', '512Mi']

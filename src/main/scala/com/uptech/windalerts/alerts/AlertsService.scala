@@ -5,7 +5,7 @@ import java.util.{Calendar, TimeZone}
 
 import cats.effect.IO
 import com.google.cloud.firestore.WriteResult
-import com.uptech.windalerts.domain.Errors.WindAlertError
+import com.uptech.windalerts.domain.errors.WindAlertError
 import com.uptech.windalerts.domain.domain.{Alert, AlertRequest, Alerts}
 
 
