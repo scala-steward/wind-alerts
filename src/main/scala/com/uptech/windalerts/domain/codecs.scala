@@ -1,7 +1,5 @@
 package com.uptech.windalerts.domain
 
-import java.util.Optional
-
 import cats.Applicative
 import cats.effect.Sync
 import com.uptech.windalerts.domain.domain._
@@ -133,5 +131,21 @@ object codecs {
   lazy implicit val credentialEncoder: Encoder[Credentials] = deriveEncoder[Credentials]
 
   implicit def credentialEntityEncoder[F[_] : Applicative]: EntityEncoder[F, Credentials] = jsonEncoderOf
+
+  lazy implicit val tokensDecoder: Decoder[Tokens] = deriveDecoder[Tokens]
+
+  implicit def tokensEntityDecoder[F[_] : Sync]: EntityDecoder[F, Tokens] = jsonOf
+
+  lazy implicit val tokenEncoder: Encoder[Tokens] = deriveEncoder[Tokens]
+
+  implicit def tokensEntityEncoder[F[_] : Applicative]: EntityEncoder[F, Tokens] = jsonEncoderOf
+
+  lazy implicit val accessTokenRequestDecoder: Decoder[AccessTokenRequest] = deriveDecoder[AccessTokenRequest]
+
+  implicit def accessTokenRequestEntityDecoder[F[_] : Sync]: EntityDecoder[F, AccessTokenRequest] = jsonOf
+
+  lazy implicit val accessTokenRequestEncoder: Encoder[AccessTokenRequest] = deriveEncoder[AccessTokenRequest]
+
+  implicit def accessTokenRequestEntityEncoder[F[_] : Applicative]: EntityEncoder[F, AccessTokenRequest] = jsonEncoderOf
 
 }

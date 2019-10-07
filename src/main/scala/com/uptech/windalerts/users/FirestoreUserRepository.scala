@@ -7,7 +7,7 @@ import com.uptech.windalerts.domain.domain
 
 import scala.beans.BeanProperty
 
-class FirestaoreUserRepository(db:Firestore)(implicit cs: ContextShift[IO]) extends UserRepositoryAlgebra {
+class FirestoreUserRepository(db:Firestore)(implicit cs: ContextShift[IO]) extends UserRepositoryAlgebra {
   private val userssCollection: CollectionReference = db.collection("users")
 
   override def create(user: domain.User): IO[domain.User] = {
