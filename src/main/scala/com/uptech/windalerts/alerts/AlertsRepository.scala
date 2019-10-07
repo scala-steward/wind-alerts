@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit
 import cats.effect.{ContextShift, IO}
 import com.google.cloud.firestore
 import com.google.cloud.firestore.{CollectionReference, Firestore, WriteResult}
-import com.uptech.windalerts.domain.Errors.{RecordNotFound, WindAlertError}
+import com.uptech.windalerts.domain.errors.{RecordNotFound, WindAlertError}
 import com.uptech.windalerts.domain.domain
 import com.uptech.windalerts.domain.domain._
 

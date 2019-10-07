@@ -253,5 +253,12 @@
                 <image>gcr.io/wind-alerts-staging/wind-alerts-alerts:${project.version}</image>
             </properties>
         </profile>
+        <profile>
+            <id>users</id>
+            <properties>
+                <profile.mainClass>com.uptech.windalerts.users.UsersServer</profile.mainClass>
+                <image>gcr.io/wind-alerts-staging/wind-alerts-users:${project.version}</image>
+            </properties>
+        </profile>
     </profiles>
 </project>

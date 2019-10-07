@@ -1,11 +1,7 @@
 package com.uptech.windalerts.alerts
 
 import java.io.FileInputStream
-import cats.effect._
-import cats.implicits._
-import org.http4s.server.{Router, Server => H4Server}
-import org.http4s.server.blaze.BlazeServerBuilder
-import org.http4s.implicits._
+
 import cats.data.OptionT
 import cats.effect.{IO, _}
 import cats.implicits._
@@ -14,21 +10,20 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
-import com.uptech.windalerts.domain.Errors.HeaderNotPresent
 import com.uptech.windalerts.domain.HttpErrorHandler
-import com.uptech.windalerts.status.{Beaches, Swells, Tides, Winds}
-import com.uptech.windalerts.users.{Devices, Users, UsersRepository}
-import org.http4s.{AuthedRoutes, HttpRoutes}
-import org.http4s.dsl.impl.Root
-import org.http4s.dsl.io._
-import org.http4s.headers.Authorization
-import org.http4s.implicits._
-import org.http4s.server.blaze.BlazeServerBuilder
-import org.log4s.getLogger
-import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.codecs._
+import com.uptech.windalerts.domain.domain._
+import com.uptech.windalerts.status.{Beaches, Swells, Tides, Winds}
+import com.uptech.windalerts.users.{Devices, FirestoreUserRepository}
 import dev.profunktor.auth.JwtAuthMiddleware
 import dev.profunktor.auth.jwt.{JwtAuth, JwtSecretKey}
+import org.http4s.dsl.impl.Root
+import org.http4s.dsl.io._
+import org.http4s.implicits._
+import org.http4s.server.Router
+import org.http4s.server.blaze.BlazeServerBuilder
+import org.http4s.{AuthedRoutes, HttpRoutes}
+import org.log4s.getLogger
 import pdi.jwt.{JwtAlgorithm, JwtClaim}
 
 import scala.util.Try
@@ -65,8 +60,7 @@ object Main extends IOApp {
   val alertsRepo: AlertsRepository.Repository = new AlertsRepository.FirebaseBackedRepository(dbWithAuth._1)
 
   val alertService = new AlertsService.ServiceImpl(alertsRepo)
-  val userService = new Users.FireStoreBackedService(dbWithAuth._2)
-  val usersRepo = new UsersRepository.FirestoreBackedRepository(dbWithAuth._1)
+  val usersRepo = new FirestoreUserRepository(dbWithAuth._1)
 
   val devices = new Devices.FireStoreBackedService(dbWithAuth._1)
   implicit val httpErrorHandler: HttpErrorHandler[IO] = new HttpErrorHandler[IO]

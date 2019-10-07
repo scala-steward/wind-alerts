@@ -11,7 +11,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.uptech.windalerts.domain.HttpErrorHandler
 import com.uptech.windalerts.status.{Beaches, Swells, Tides, Winds}
-import com.uptech.windalerts.users.{Devices, Users, UsersRepository}
+import com.uptech.windalerts.users.{Devices, FirestoreUserRepository, UserRepositoryAlgebra}
 import org.http4s.HttpRoutes
 import org.http4s.dsl.impl.Root
 import org.http4s.dsl.io._
@@ -46,14 +46,13 @@ object SendNotifications extends IOApp {
   val alertsRepo:AlertsRepository.Repository = new AlertsRepository.FirebaseBackedRepository(dbWithAuth._1)
 
   val alerts = new AlertsService.ServiceImpl(alertsRepo)
-  val users = new Users.FireStoreBackedService(dbWithAuth._2)
-  val usersRepo =  new UsersRepository.FirestoreBackedRepository(dbWithAuth._1)
+  val usersRepo =  new FirestoreUserRepository(dbWithAuth._1)
 
   val devices = new Devices.FireStoreBackedService(dbWithAuth._1)
   implicit val httpErrorHandler: HttpErrorHandler[IO] = new HttpErrorHandler[IO]
-  val notifications = new Notifications(alerts, beaches, users, devices, usersRepo, dbWithAuth._3, httpErrorHandler)
+  val notifications = new Notifications(alerts, beaches, devices, usersRepo, dbWithAuth._3, httpErrorHandler)
 
-  def allRoutes(A: AlertsService.Service, B: Beaches.Service, UR:UsersRepository.Repository, firebaseMessaging: FirebaseMessaging, H:HttpErrorHandler[IO]) = HttpRoutes.of[IO] {
+  def allRoutes(A: AlertsService.Service, B: Beaches.Service, UR:UserRepositoryAlgebra, firebaseMessaging: FirebaseMessaging, H:HttpErrorHandler[IO]) = HttpRoutes.of[IO] {
     case GET -> Root / "notify" => {
       val res = notifications.sendNotification
       val either = res.attempt.unsafeRunSync()

@@ -6,6 +6,8 @@ import cats.effect.IO
 import com.uptech.windalerts.domain.domain.{Credentials, User}
 
 trait UserRepositoryAlgebra {
+  def getById(id: String): IO[Option[User]]
+
   def create(user: User): IO[User]
 
   def update(user: User): OptionT[IO, User]

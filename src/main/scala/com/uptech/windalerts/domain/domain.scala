@@ -9,6 +9,7 @@ import scala.util.control.NonFatal
 
 object domain {
 
+  case class UserSettings(userId:String)
   case class Tokens(accessToken:String, refreshToken: String, expiredAt:Long)
 
   case class AccessTokenRequest(refreshToken: String)
@@ -59,7 +60,7 @@ object domain {
       Some(User(
         tuple._1,
         values("email").asInstanceOf[String],
-        values("password").asInstanceOf[String],
+        values("name").asInstanceOf[String],
         values("deviceId").asInstanceOf[String],
         values("deviceToken").asInstanceOf[String],
         values("deviceType").asInstanceOf[String]
