@@ -5,13 +5,12 @@ import java.io.FileInputStream
 import cats.effect.{IO, _}
 import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.uptech.windalerts.domain.HttpErrorHandler
 import com.uptech.windalerts.status.{Beaches, Swells, Tides, Winds}
-import com.uptech.windalerts.users.{Devices, FirestoreUserRepository, UserRepositoryAlgebra}
+import com.uptech.windalerts.users.{FirestoreUserRepository, UserRepositoryAlgebra}
 import org.http4s.HttpRoutes
 import org.http4s.dsl.impl.Root
 import org.http4s.dsl.io._
@@ -36,9 +35,8 @@ object SendNotifications extends IOApp {
     options <- IO(new FirebaseOptions.Builder().setCredentials(credentials).setProjectId("wind-alerts-staging").build)
     _ <- IO(FirebaseApp.initializeApp(options))
     db <- IO(FirestoreClient.getFirestore)
-    auth <- IO(FirebaseAuth.getInstance)
     notifications <- IO(FirebaseMessaging.getInstance)
-  } yield (db, auth, notifications)
+  } yield (db, notifications)
 
   val dbWithAuth = dbWithAuthIO.unsafeRunSync()
 
@@ -48,9 +46,8 @@ object SendNotifications extends IOApp {
   val alerts = new AlertsService.ServiceImpl(alertsRepo)
   val usersRepo =  new FirestoreUserRepository(dbWithAuth._1)
 
-  val devices = new Devices.FireStoreBackedService(dbWithAuth._1)
   implicit val httpErrorHandler: HttpErrorHandler[IO] = new HttpErrorHandler[IO]
-  val notifications = new Notifications(alerts, beaches, devices, usersRepo, dbWithAuth._3, httpErrorHandler)
+  val notifications = new Notifications(alerts, beaches, usersRepo, dbWithAuth._2, httpErrorHandler)
 
   def allRoutes(A: AlertsService.Service, B: Beaches.Service, UR:UserRepositoryAlgebra, firebaseMessaging: FirebaseMessaging, H:HttpErrorHandler[IO]) = HttpRoutes.of[IO] {
     case GET -> Root / "notify" => {
@@ -65,7 +62,7 @@ object SendNotifications extends IOApp {
 
     BlazeServerBuilder[IO]
       .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
-      .withHttpApp(allRoutes(alerts, beaches,  usersRepo, dbWithAuth._3, httpErrorHandler))
+      .withHttpApp(allRoutes(alerts, beaches,  usersRepo, dbWithAuth._2, httpErrorHandler))
       .serve
       .compile
       .drain

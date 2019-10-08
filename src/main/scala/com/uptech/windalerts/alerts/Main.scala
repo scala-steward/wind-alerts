@@ -2,13 +2,10 @@ package com.uptech.windalerts.alerts
 
 import java.io.FileInputStream
 
-import io.circe._
-import io.circe.parser._
 import cats.data.OptionT
 import cats.effect.{IO, _}
 import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
@@ -16,9 +13,10 @@ import com.uptech.windalerts.domain.HttpErrorHandler
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.status.{Beaches, Swells, Tides, Winds}
-import com.uptech.windalerts.users.{Devices, FirestoreRefreshTokenRepository, FirestoreUserRepository, RefreshTokenRepositoryAlgebra}
+import com.uptech.windalerts.users.{FirestoreRefreshTokenRepository, FirestoreUserRepository, RefreshTokenRepositoryAlgebra}
 import dev.profunktor.auth.JwtAuthMiddleware
 import dev.profunktor.auth.jwt.{JwtAuth, JwtSecretKey}
+import io.circe.parser._
 import org.http4s.dsl.impl.Root
 import org.http4s.dsl.io._
 import org.http4s.implicits._
@@ -48,9 +46,8 @@ object Main extends IOApp {
     options <- IO(new FirebaseOptions.Builder().setCredentials(credentials).setProjectId("wind-alerts-staging").build)
     _ <- IO(FirebaseApp.initializeApp(options))
     db <- IO(FirestoreClient.getFirestore)
-    auth <- IO(FirebaseAuth.getInstance)
     notifications <- IO(FirebaseMessaging.getInstance)
-  } yield (db, auth, notifications)
+  } yield (db, notifications)
 
   val dbWithAuth = dbWithAuthIO.unsafeRunSync()
 
@@ -60,7 +57,6 @@ object Main extends IOApp {
   val alertService = new AlertsService.ServiceImpl(alertsRepo)
   val usersRepo = new FirestoreUserRepository(dbWithAuth._1)
 
-  val devices = new Devices.FireStoreBackedService(dbWithAuth._1)
   val refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra = new FirestoreRefreshTokenRepository(dbWithAuth._1)
   implicit val httpErrorHandler: HttpErrorHandler[IO] = new HttpErrorHandler[IO]
 

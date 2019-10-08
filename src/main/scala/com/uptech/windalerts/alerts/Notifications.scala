@@ -6,10 +6,10 @@ import com.google.firebase.messaging.{FirebaseMessaging, Message, Notification}
 import com.uptech.windalerts.domain.domain.BeachId
 import com.uptech.windalerts.domain.{HttpErrorHandler, domain}
 import com.uptech.windalerts.status.Beaches
-import com.uptech.windalerts.users.{Devices, UserRepositoryAlgebra}
+import com.uptech.windalerts.users.{ UserRepositoryAlgebra}
 import org.log4s.getLogger
 
-class Notifications(A: AlertsService.Service, B: Beaches.Service, D:Devices.Service, UR:UserRepositoryAlgebra, firebaseMessaging: FirebaseMessaging, H:HttpErrorHandler[IO]) {
+class Notifications(A: AlertsService.Service, B: Beaches.Service, UR:UserRepositoryAlgebra, firebaseMessaging: FirebaseMessaging, H:HttpErrorHandler[IO]) {
   private val logger = getLogger
 
   def sendNotification = {
