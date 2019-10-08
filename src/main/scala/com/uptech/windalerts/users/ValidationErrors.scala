@@ -7,3 +7,4 @@ case class UserAuthenticationFailedError(email: String) extends ValidationError
 case class RefreshTokenNotFoundError() extends ValidationError
 case class RefreshTokenExpiredError() extends ValidationError
 case class CouldNotUpdateUserDeviceError() extends ValidationError
+case class CouldNotUpdatePasswordError() extends ValidationError

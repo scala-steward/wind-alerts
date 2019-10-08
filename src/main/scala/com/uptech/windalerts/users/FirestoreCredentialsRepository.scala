@@ -49,6 +49,13 @@ class FirestoreCredentialsRepository(db: Firestore)(implicit cs: ContextShift[IO
     new CredentialsBean(credentials.email, credentials.password, credentials.deviceType)
   }
 
+  override def updatePassword(userId: String, password: String): OptionT[IO, Unit] = {
+    OptionT.liftF(
+      for {
+        updateResultIO <- IO.fromFuture(IO(j2sFuture(credentialsCollection.document(userId).update("password", password))))
+      } yield updateResultIO)
+  }
+
   private def getByQuery(query: firestore.Query) = {
     for {
       collection <- IO.fromFuture(IO(j2sFuture(query.get())))

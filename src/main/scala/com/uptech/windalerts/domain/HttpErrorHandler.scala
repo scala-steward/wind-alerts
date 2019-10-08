@@ -1,13 +1,10 @@
 package com.uptech.windalerts.domain
 
 
-import java.lang.RuntimeException
-
 import cats.Monad
-import com.uptech.windalerts.users.{RefreshTokenExpiredError, RefreshTokenNotFoundError, UserAlreadyExistsError, UserAuthenticationFailedError, ValidationError}
-import org.http4s.{Response, Status}
+import com.uptech.windalerts.users._
+import org.http4s.Response
 import org.http4s.dsl.Http4sDsl
-import org.http4s.dsl.io.{BadRequest, Conflict}
 
 class HttpErrorHandler[F[_] : Monad] extends Http4sDsl[F] {
   val handleThrowable: Throwable => F[Response[F]] = {
@@ -17,7 +14,6 @@ class HttpErrorHandler[F[_] : Monad] extends Http4sDsl[F] {
     case e: errors.HeaderNotPresent => BadRequest(e.message)
     case e: errors.UserAlreadyRegistered => Conflict(e.message)
     case everythingElse => InternalServerError(everythingElse.toString)
-
   }
 
   val handleError: ValidationError => F[Response[F]] = {

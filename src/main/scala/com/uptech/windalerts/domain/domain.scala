@@ -7,12 +7,16 @@ import scala.collection.JavaConverters
 import scala.util.control.NonFatal
 
 object domain {
-  case class UserSettings(userId:String)
-  case class Tokens(accessToken:String, refreshToken: String, expiredAt:Long)
+
+  case class UserId(id: String)
+
+  case class UserSettings(userId: String)
+
+  case class Tokens(accessToken: String, refreshToken: String, expiredAt: Long)
 
   case class AccessTokenRequest(refreshToken: String)
 
-  case class RefreshToken(refreshToken: String, expiry:Long, userId:String, accessTokenId:String) {
+  case class RefreshToken(refreshToken: String, expiry: Long, userId: String, accessTokenId: String) {
     def isExpired() = System.currentTimeMillis() > expiry
   }
 
@@ -32,7 +36,7 @@ object domain {
     }
   }
 
-  case class Credentials(id:Option[String], email: String,  password: String, deviceType:String)
+  case class Credentials(id: Option[String], email: String, password: String, deviceType: String)
 
   object Credentials {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Credentials] = try {
@@ -70,7 +74,7 @@ object domain {
     }
   }
 
-  final case class AlertWithUser(alert: Alert, user:User)
+  final case class AlertWithUser(alert: Alert, user: User)
 
   final case class DeviceRequest(deviceId: String)
 
@@ -78,9 +82,11 @@ object domain {
 
   final case class UserDevice(deviceId: String, ownerId: String)
 
-  case class RegisterRequest(email: String, name: String, password: String, deviceId:String, deviceType:String, deviceToken:String)
+  case class RegisterRequest(email: String, name: String, password: String, deviceId: String, deviceType: String, deviceToken: String)
 
-  case class LoginRequest(email: String, password: String, deviceType: String, deviceToken:String)
+  case class LoginRequest(email: String, password: String, deviceType: String, deviceToken: String)
+
+  case class ChangePasswordRequest(email: String, oldPassword: String, newPassword: String, deviceType: String)
 
   object UserDevice {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[UserDevice] = try {
