@@ -21,7 +21,6 @@ class FirestoreUserRepository(db: Firestore)(implicit cs: ContextShift[IO]) exte
 
   override def create(user: domain.User): IO[domain.User] = {
     for {
-
       _ <- IO.fromFuture(IO(j2sFuture(usersCollection.document(user.id).create(toBean(user)))))
       alert <- IO(user)
     } yield alert
@@ -58,6 +57,7 @@ class FirestoreUserRepository(db: Firestore)(implicit cs: ContextShift[IO]) exte
         updateResultIO <- IO.fromFuture(IO(j2sFuture(usersCollection.document(userId).update("deviceToken", deviceToken))))
       } yield updateResultIO)
   }
+
 }
 
 

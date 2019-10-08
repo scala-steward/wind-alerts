@@ -10,6 +10,9 @@ class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsR
   def updateDeviceToken(userId:String, deviceToken:String)  =
     userRepo.updateDeviceToken(userId, deviceToken)
 
+  def updatePassword(userId:String, password:String):OptionT[IO, Unit]  =
+    credentialsRepo.updatePassword(userId, password)
+
   def createUser(rr: RegisterRequest): EitherT[IO, UserAlreadyExistsError, User] = {
     val credentials = Credentials(None, rr.email, rr.password, rr.deviceType)
     for {
@@ -24,7 +27,7 @@ class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsR
 
   def getByCredentials(
                         email: String, password:String, deviceType: String
-                   ): EitherT[IO, UserAuthenticationFailedError, Credentials] =
+                   ): EitherT[IO, ValidationError, Credentials] =
     credentialsRepo.findByCreds(email, password, deviceType).toRight(UserAuthenticationFailedError(email))
 
   def deleteUser(userId: String): IO[Unit] =
