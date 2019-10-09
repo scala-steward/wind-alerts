@@ -12,7 +12,7 @@ object domain {
 
   case class UserSettings(userId: String)
 
-  case class TokensWithUser(accessToken: String, refreshToken: String, expiredAt: Long, user:User)
+  case class TokensWithUser(accessToken: String, refreshToken: String, expiredAt: Long, user: User)
 
   case class AccessTokenRequest(refreshToken: String)
 
@@ -57,10 +57,15 @@ object domain {
   sealed case class UserType(value: String)
 
   object UserType {
+
     object Registered extends UserType("Registered")
+
     object Trial extends UserType("Trial")
+
     object TrialExpired extends UserType("TrialExpired")
+
     object Premium extends UserType("Premium")
+
     val values = Seq(Registered, Trial, TrialExpired, Premium)
 
     def apply(value: String): UserType = value match {
@@ -71,7 +76,7 @@ object domain {
     }
   }
 
-  final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, registeredAt:Long, startTrialAt:Long, userType: String)
+  final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, registeredAt: Long, startTrialAt: Long, userType: String)
 
   object User {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[User] = try {
@@ -154,6 +159,8 @@ object domain {
                            waveHeightFrom: Double,
                            waveHeightTo: Double,
                            windDirections: Seq[String],
+                           notificationsPerHour: Long,
+                           enabled: Boolean,
                            timeZone: String = "Australia/Sydney")
 
   case class Alerts(alerts: Seq[Alert])
@@ -168,6 +175,8 @@ object domain {
                     waveHeightFrom: Double,
                     waveHeightTo: Double,
                     windDirections: Seq[String],
+                    notificationsPerHour: Long,
+                    enabled: Boolean,
                     timeZone: String = "Australia/Sydney") {
     def isToBeNotified(beach: Beach): Boolean = {
       swellDirections.contains(beach.tide.swell.directionText) &&
@@ -191,6 +200,8 @@ object domain {
         waveHeightFrom = alertRequest.waveHeightFrom,
         waveHeightTo = alertRequest.waveHeightTo,
         windDirections = alertRequest.windDirections,
+        notificationsPerHour = alertRequest.notificationsPerHour,
+        enabled = alertRequest.enabled,
         timeZone = alertRequest.timeZone)
 
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Alert] = try {
@@ -213,6 +224,8 @@ object domain {
         values("waveHeightFrom").asInstanceOf[Number].doubleValue(),
         values("waveHeightTo").asInstanceOf[Number].doubleValue(),
         j2s(values("windDirections").asInstanceOf[util.ArrayList[String]]),
+        values("notificationsPerHour").asInstanceOf[Long],
+        values("enabled").asInstanceOf[Boolean],
         values.get("timeZone").getOrElse("Australia/Sydney").asInstanceOf[String]
       ))
     }
