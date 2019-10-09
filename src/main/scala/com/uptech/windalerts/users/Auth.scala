@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit
 import cats.data.EitherT
 import cats.effect.IO
 import com.uptech.windalerts.domain.domain
-import com.uptech.windalerts.domain.domain.{RefreshToken, Tokens, UserId}
+import com.uptech.windalerts.domain.domain.{RefreshToken, TokensWithUser, User, UserId}
 import dev.profunktor.auth.JwtAuthMiddleware
 import dev.profunktor.auth.jwt.{JwtAuth, JwtSecretKey}
 import io.circe.parser._
@@ -48,9 +48,8 @@ class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra) {
     EitherT.right(IO(AccessTokenWithExpiry(Jwt.encode(claims, key.value, JwtAlgorithm.HS256), expiry)))
   }
 
-  def tokens(accessToken: String, refreshToken: RefreshToken, expiredAt: Long): EitherT[IO, ValidationError, Tokens] = {
-    EitherT.right(IO(domain.Tokens(accessToken, refreshToken.refreshToken, expiredAt)))
-  }
+  def tokens(accessToken: String, refreshToken: RefreshToken, expiredAt: Long, user:User): EitherT[IO, ValidationError, TokensWithUser] =
+    EitherT.right(IO(domain.TokensWithUser(accessToken, refreshToken.refreshToken, expiredAt, user)))
 
   def generateRandomString(n: Int) = {
     val alpha = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"

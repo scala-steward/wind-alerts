@@ -8,16 +8,12 @@ import com.google.cloud.firestore
 import com.google.cloud.firestore.{CollectionReference, Firestore}
 import com.uptech.windalerts.domain.conversions._
 import com.uptech.windalerts.domain.domain
-import com.uptech.windalerts.domain.domain.User
+import com.uptech.windalerts.domain.domain.{Alert, Credentials, User}
 
 import scala.beans.BeanProperty
 
 class FirestoreUserRepository(db: Firestore)(implicit cs: ContextShift[IO]) extends UserRepositoryAlgebra {
   private val usersCollection: CollectionReference = db.collection("users")
-
-  override def getById(id: String): IO[Option[User]] = {
-    getByQuery(usersCollection.whereEqualTo("userId", id))
-  }
 
   override def create(user: domain.User): IO[domain.User] = {
     for {
@@ -28,14 +24,31 @@ class FirestoreUserRepository(db: Firestore)(implicit cs: ContextShift[IO]) exte
 
   override def update(user: domain.User): OptionT[IO, domain.User] = ???
 
-  override def get(userId: String): OptionT[IO, domain.User] = ???
-
   override def delete(userId: String): OptionT[IO, domain.User] = ???
 
   override def deleteByUserName(userName: String): OptionT[IO, domain.User] = ???
 
   private def toBean(user: domain.User) = {
-    new UserBean(user.id, user.name, user.deviceId, user.deviceToken)
+    new UserBean(user.email, user.name, user.deviceId, user.deviceToken, user.deviceType, user.registeredAt, user.startTrialAt, user.userType)
+  }
+
+  override def getByEmailAndDeviceType(email: String, deviceType: String): IO[Option[User]] = {
+    getByQuery(usersCollection.whereEqualTo("email", email).whereEqualTo("deviceType", deviceType))
+  }
+
+  override def getByUserId(userId: String): IO[Option[User]] =  {
+    for {
+      document <- IO.fromFuture(IO(j2sFuture(usersCollection.document(userId).get())))
+      maybeUser <- IO{
+        if (document.exists()) {
+          val User(user) = (document.getId, j2sm(document.getData).asInstanceOf[Map[String, util.HashMap[String, String]]])
+          Some(user)
+        } else {
+          None
+        }
+      }
+    } yield maybeUser
+
   }
 
   private def getByQuery(query: firestore.Query) = {
@@ -44,7 +57,7 @@ class FirestoreUserRepository(db: Firestore)(implicit cs: ContextShift[IO]) exte
       filtered <- IO(
         j2sMap(collection.getDocuments)
           .map(document => {
-            val User(user) = (document.get("userId").asInstanceOf[String], j2sm(document.getData).asInstanceOf[Map[String, util.HashMap[String, String]]])
+            val User(user) = (document.getId, j2sm(document.getData).asInstanceOf[Map[String, util.HashMap[String, String]]])
             user
           }))
     } yield filtered.headOption
@@ -60,10 +73,13 @@ class FirestoreUserRepository(db: Firestore)(implicit cs: ContextShift[IO]) exte
 
 }
 
-
 class UserBean(
-                @BeanProperty var userId: String,
+                @BeanProperty var email: String,
                 @BeanProperty var name: String,
                 @BeanProperty var deviceId: String,
                 @BeanProperty var deviceToken: String,
+                @BeanProperty var deviceType: String,
+                @BeanProperty var registeredAt: Long,
+                @BeanProperty var startTrialAt: Long,
+                @BeanProperty var userType: String
               ) {}

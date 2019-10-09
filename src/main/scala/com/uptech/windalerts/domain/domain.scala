@@ -12,7 +12,7 @@ object domain {
 
   case class UserSettings(userId: String)
 
-  case class Tokens(accessToken: String, refreshToken: String, expiredAt: Long)
+  case class TokensWithUser(accessToken: String, refreshToken: String, expiredAt: Long, user:User)
 
   case class AccessTokenRequest(refreshToken: String)
 
@@ -54,7 +54,24 @@ object domain {
     }
   }
 
-  final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String)
+  sealed case class UserType(value: String)
+
+  object UserType {
+    object Registered extends UserType("Registered")
+    object Trial extends UserType("Trial")
+    object TrialExpired extends UserType("TrialExpired")
+    object Premium extends UserType("Premium")
+    val values = Seq(Registered, Trial, TrialExpired, Premium)
+
+    def apply(value: String): UserType = value match {
+      case Registered.value => Registered
+      case Trial.value => Trial
+      case TrialExpired.value => TrialExpired
+      case Premium.value => Premium
+    }
+  }
+
+  final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, registeredAt:Long, startTrialAt:Long, userType: String)
 
   object User {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[User] = try {
@@ -65,7 +82,10 @@ object domain {
         values("name").asInstanceOf[String],
         values("deviceId").asInstanceOf[String],
         values("deviceToken").asInstanceOf[String],
-        values("deviceType").asInstanceOf[String]
+        values("deviceType").asInstanceOf[String],
+        values("registeredAt").asInstanceOf[Long],
+        values("startTrialAt").asInstanceOf[Long],
+        UserType(values("userType").asInstanceOf[String]).value
       ))
     }
     catch {

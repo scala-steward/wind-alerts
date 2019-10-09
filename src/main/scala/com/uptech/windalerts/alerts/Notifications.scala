@@ -25,7 +25,7 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, UR:UserReposit
       log <- IO(logger.info(s"alertsByBeaches ${alertsByBeaches.keys}"))
 
       usersToBeNotified <- IO(alertsToBeNotified.values.flatMap(elem => elem).map(alert => {
-        val maybeUser = UR.getById(alert.owner)
+        val maybeUser = UR.getByUserId(alert.owner)
         logger.info(s"Maybeuser $maybeUser")
         maybeUser.map(userIO => userIO.map(user => domain.AlertWithUser(alert, user)))
       }).toList)

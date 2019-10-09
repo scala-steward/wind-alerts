@@ -17,7 +17,6 @@ import org.http4s.dsl.io._
 import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
-import com.uptech.windalerts.domain.codecs._
 
 import scala.util.Try
 
