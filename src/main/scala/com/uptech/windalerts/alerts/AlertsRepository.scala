@@ -125,6 +125,8 @@ object AlertsRepository {
         alert.waveHeightFrom,
         alert.waveHeightTo,
         new java.util.ArrayList(JavaConverters.asJavaCollection(alert.windDirections)),
+        alert.notificationsPerHour,
+        alert.enabled,
         alert.timeZone)
       alertBean
     }
@@ -158,6 +160,8 @@ object AlertsRepository {
                    @BeanProperty var waveHeightFrom: Double,
                    @BeanProperty var waveHeightTo: Double,
                    @BeanProperty var windDirections: java.util.List[String],
+                   @BeanProperty var notificationsPerHour: Long,
+                   @BeanProperty var enabled: Boolean,
                    @BeanProperty var timeZone: String = "Australia/Sydney") {}
 
 
