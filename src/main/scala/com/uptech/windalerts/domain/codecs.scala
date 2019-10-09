@@ -84,10 +84,10 @@ object codecs {
   lazy implicit val credentialEncoder: Encoder[Credentials] = deriveEncoder[Credentials]
   implicit def credentialEntityEncoder[F[_] : Applicative]: EntityEncoder[F, Credentials] = jsonEncoderOf
 
-  lazy implicit val tokensDecoder: Decoder[Tokens] = deriveDecoder[Tokens]
-  implicit def tokensEntityDecoder[F[_] : Sync]: EntityDecoder[F, Tokens] = jsonOf
-  lazy implicit val tokenEncoder: Encoder[Tokens] = deriveEncoder[Tokens]
-  implicit def tokensEntityEncoder[F[_] : Applicative]: EntityEncoder[F, Tokens] = jsonEncoderOf
+  lazy implicit val tokensDecoder: Decoder[TokensWithUser] = deriveDecoder[TokensWithUser]
+  implicit def tokensEntityDecoder[F[_] : Sync]: EntityDecoder[F, TokensWithUser] = jsonOf
+  lazy implicit val tokenEncoder: Encoder[TokensWithUser] = deriveEncoder[TokensWithUser]
+  implicit def tokensEntityEncoder[F[_] : Applicative]: EntityEncoder[F, TokensWithUser] = jsonEncoderOf
 
   lazy implicit val accessTokenRequestDecoder: Decoder[AccessTokenRequest] = deriveDecoder[AccessTokenRequest]
   implicit def accessTokenRequestEntityDecoder[F[_] : Sync]: EntityDecoder[F, AccessTokenRequest] = jsonOf

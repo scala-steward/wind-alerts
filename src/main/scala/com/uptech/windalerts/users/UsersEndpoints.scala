@@ -16,13 +16,18 @@ class UsersEndpoints(userService: UserService,
 
   def openEndpoints(): HttpRoutes[IO] =
     HttpRoutes.of[IO] {
-      case req@POST -> Root =>
+      case req@POST -> Root  =>
         val action = for {
-          rr <- req.as[RegisterRequest]
-          result <- userService.createUser(rr).value
-        } yield result
-        action.flatMap {
-          case Right(saved) => Ok(saved)
+          rr <- EitherT.liftF(req.as[RegisterRequest])
+          result <- userService.createUser(rr)
+          dbCredentials <- EitherT.right(IO(Credentials(Some(result.id), rr.email, rr.password, rr.deviceType)))
+          accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
+          token <- auth.createToken(dbCredentials.id.get, 60, accessTokenId)
+          refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbCredentials.id.get, accessTokenId)))
+          tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, result)
+        } yield tokens
+        action.value.flatMap {
+          case Right(tokens) => Ok(tokens)
           case Left(error) => httpErrorHandler.handleError(error)
         }
 
@@ -30,12 +35,13 @@ class UsersEndpoints(userService: UserService,
         val action = for {
           credentials <- EitherT.liftF(req.as[LoginRequest])
           dbCredentials <- userService.getByCredentials(credentials.email, credentials.password, credentials.deviceType)
+          dbUser <- userService.getUser(dbCredentials.email, dbCredentials.deviceType)
           updateDevice <- userService.updateDeviceToken(dbCredentials.id.get, credentials.deviceToken).toRight(CouldNotUpdateUserDeviceError())
           accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
           token <- auth.createToken(dbCredentials.id.get, 60, accessTokenId)
           deleteOldTokens <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(dbCredentials.id.get))
           refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbCredentials.id.get, accessTokenId)))
-          tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt)
+          tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, dbUser)
         } yield tokens
         action.value.flatMap {
           case Right(tokens) => Ok(tokens)
@@ -60,7 +66,8 @@ class UsersEndpoints(userService: UserService,
           token <- auth.createToken(oldValidRefreshToken.userId, 60, accessTokenId)
           _ <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(oldValidRefreshToken.userId))
           newRefreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), oldValidRefreshToken.userId, accessTokenId)))
-          tokens <- auth.tokens(token.accessToken, newRefreshToken, token.expiredAt)
+          user <- userService.getUser(newRefreshToken.userId)
+          tokens <- auth.tokens(token.accessToken, newRefreshToken, token.expiredAt, user)
         } yield tokens
         action.value.flatMap {
           case Right(tokens) => Ok(tokens)

@@ -16,8 +16,13 @@ class FirestoreCredentialsRepository(db: Firestore)(implicit cs: ContextShift[IO
   private val credentialsCollection: CollectionReference = db.collection("credentials")
 
   override def doesNotExist(credentials: domain.Credentials): EitherT[IO, UserAlreadyExistsError, Unit] = {
-    findByCreds(credentials.email, credentials.password, credentials.deviceType).map(_ => UserAlreadyExistsError("", "")).toLeft(())
+    OptionT(getByQuery(
+      credentialsCollection
+        .whereEqualTo("email", credentials.email)
+        .whereEqualTo("deviceType", credentials.deviceType)
+    )).map(_ => UserAlreadyExistsError("", "")).toLeft(())
   }
+
 
   override def exists(userId: String): EitherT[IO, UserNotFoundError.type, Unit] = {
     ???

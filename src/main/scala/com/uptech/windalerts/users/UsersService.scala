@@ -4,6 +4,7 @@ import cats.{Functor, Monad}
 import cats.data._
 import cats.effect.IO
 import cats.syntax.functor._
+import com.uptech.windalerts.domain.domain.UserType.Registered
 import com.uptech.windalerts.domain.domain.{Credentials, RegisterRequest, User}
 
 class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsRepositoryAlgebra) {
@@ -18,12 +19,15 @@ class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsR
     for {
       _ <- credentialsRepo.doesNotExist(credentials)
       savedCreds <- EitherT.liftF(credentialsRepo.create(credentials))
-      saved <- EitherT.liftF(userRepo.create(User(savedCreds.id.get, rr.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType)))
+      saved <- EitherT.liftF(userRepo.create(User(savedCreds.id.get, rr.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), -1, Registered.value)))
     } yield saved
   }
 
-  def getUser(userId: String): EitherT[IO, UserNotFoundError.type, User] =
-    userRepo.get(userId).toRight(UserNotFoundError)
+  def getUser(email: String, deviceType:String): EitherT[IO, UserNotFoundError, User] =
+    OptionT(userRepo.getByEmailAndDeviceType(email, deviceType)).toRight(UserNotFoundError())
+
+  def getUser(userId:String): EitherT[IO, UserNotFoundError, User] =
+    OptionT(userRepo.getByUserId(userId)).toRight(UserNotFoundError())
 
   def getByCredentials(
                         email: String, password:String, deviceType: String

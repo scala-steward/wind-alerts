@@ -22,7 +22,7 @@ class HttpErrorHandler[F[_] : Monad] extends Http4sDsl[F] {
     case UserAuthenticationFailedError(name) =>
       BadRequest(s"Authentication failed for user $name")
     case RefreshTokenNotFoundError() =>
-      BadRequest(s"Request token not found")
+      BadRequest(s"Refresh token not found")
     case RefreshTokenExpiredError() =>
       BadRequest(s"Refresh token expired")
     case everythingElse => InternalServerError(everythingElse.toString)
