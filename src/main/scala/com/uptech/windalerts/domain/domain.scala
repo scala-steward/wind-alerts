@@ -8,7 +8,7 @@ import scala.util.control.NonFatal
 
 object domain {
 
-  case class UpdateUserRequest(name:String, userType: String)
+  case class UpdateUserRequest(name: String, userType: String, snoozeTill: Long)
 
   case class UserId(id: String)
 
@@ -78,7 +78,7 @@ object domain {
     }
   }
 
-  final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, registeredAt: Long, startTrialAt: Long, userType: String)
+  final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, registeredAt: Long, startTrialAt: Long, userType: String, snoozeTill:Long)
 
   object User {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[User] = try {
@@ -92,7 +92,8 @@ object domain {
         values("deviceType").asInstanceOf[String],
         values("registeredAt").asInstanceOf[Long],
         values("startTrialAt").asInstanceOf[Long],
-        UserType(values("userType").asInstanceOf[String]).value
+        UserType(values("userType").asInstanceOf[String]).value,
+        values("snoozeTill").asInstanceOf[Long]
       ))
     }
     catch {

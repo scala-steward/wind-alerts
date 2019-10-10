@@ -17,7 +17,7 @@ class UsersEndpoints(userService: UserService,
       case authReq@PUT -> Root  as user => {
         val response = authReq.req.decode[UpdateUserRequest] { request =>
           val action = for {
-            updateResult <- userService.updateUserProfile(user.id, request.name, UserType(request.userType))
+            updateResult <- userService.updateUserProfile(user.id, request.name, UserType(request.userType), request.snoozeTill)
           } yield updateResult
           action.value.flatMap {
             case Right(tokens) => Ok(tokens)
