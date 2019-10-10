@@ -26,7 +26,7 @@ class FirestoreUserRepository(db: Firestore)(implicit cs: ContextShift[IO]) exte
   override def update(user: domain.User): OptionT[IO, domain.User] = {
     OptionT.liftF(
       for {
-        updateResultIO <- IO.fromFuture(IO(j2sFuture(usersCollection.document(user.id).set(toBean(user))).map(r=>user)))
+        updateResultIO <- IO.fromFuture(IO(j2sFuture(usersCollection.document(user.id).set(toBean(user))).map(r => user)))
       } yield updateResultIO)
   }
 
@@ -35,17 +35,17 @@ class FirestoreUserRepository(db: Firestore)(implicit cs: ContextShift[IO]) exte
   override def deleteByUserName(userName: String): OptionT[IO, domain.User] = ???
 
   private def toBean(user: domain.User) = {
-    new UserBean(user.email, user.name, user.deviceId, user.deviceToken, user.deviceType, user.registeredAt, user.startTrialAt, user.userType)
+    new UserBean(user.email, user.name, user.deviceId, user.deviceToken, user.deviceType, user.registeredAt, user.startTrialAt, user.userType, user.snoozeTill)
   }
 
   override def getByEmailAndDeviceType(email: String, deviceType: String): IO[Option[User]] = {
     getByQuery(usersCollection.whereEqualTo("email", email).whereEqualTo("deviceType", deviceType))
   }
 
-  override def getByUserId(userId: String): IO[Option[User]] =  {
+  override def getByUserId(userId: String): IO[Option[User]] = {
     for {
       document <- IO.fromFuture(IO(j2sFuture(usersCollection.document(userId).get())))
-      maybeUser <- IO{
+      maybeUser <- IO {
         if (document.exists()) {
           val User(user) = (document.getId, j2sm(document.getData).asInstanceOf[Map[String, util.HashMap[String, String]]])
           Some(user)
@@ -86,5 +86,6 @@ class UserBean(
                 @BeanProperty var deviceType: String,
                 @BeanProperty var registeredAt: Long,
                 @BeanProperty var startTrialAt: Long,
-                @BeanProperty var userType: String
+                @BeanProperty var userType: String,
+                @BeanProperty var snoozeTill: Long
               ) {}
