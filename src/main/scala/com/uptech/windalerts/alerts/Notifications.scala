@@ -32,9 +32,14 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, UR:UserReposit
 
       usersToBeNotifiedSeq <- usersToBeNotified.sequence
       log <- IO(logger.info(s"usersToBeNotifiedSeq $usersToBeNotifiedSeq"))
-      usersToBeNotifiedFlattend <- IO(usersToBeNotifiedSeq.flatten)
 
-      sendNotifications <- IO(usersToBeNotifiedFlattend.foreach(u => {
+      usersToBeNotifiedFlattend <- IO(usersToBeNotifiedSeq.flatten)
+      log <- IO(logger.info(s"usersToBeNotifiedFlattend $usersToBeNotifiedFlattend"))
+
+      usersToBeNotifiedFiltered <- IO(usersToBeNotifiedFlattend.filterNot(f => f.user.snoozeTill > System.currentTimeMillis()))
+      log <- IO(logger.info(s"usersToBeNotifiedFiltered $usersToBeNotifiedFiltered"))
+
+      sendNotifications <- IO(usersToBeNotifiedFiltered.foreach(u => {
         val msg = Message.builder()
           .setNotification(new Notification(
             s"Wind Alert on ${u.alert.beachId}",
