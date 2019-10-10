@@ -8,3 +8,5 @@ case class RefreshTokenNotFoundError() extends ValidationError
 case class RefreshTokenExpiredError() extends ValidationError
 case class CouldNotUpdateUserDeviceError() extends ValidationError
 case class CouldNotUpdatePasswordError() extends ValidationError
+case class CouldNotUpdateUserTypeError() extends ValidationError
+case class OperationNotAllowed(message:String) extends ValidationError

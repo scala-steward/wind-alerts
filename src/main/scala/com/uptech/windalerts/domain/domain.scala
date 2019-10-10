@@ -8,6 +8,8 @@ import scala.util.control.NonFatal
 
 object domain {
 
+  case class UpdateUserRequest(name:String, userType: String)
+
   case class UserId(id: String)
 
   case class UserSettings(userId: String)

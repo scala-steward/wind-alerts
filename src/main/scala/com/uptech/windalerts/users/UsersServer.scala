@@ -30,7 +30,11 @@ object UsersServer extends IOApp {
       refreshTokenRepository <- IO(new FirestoreRefreshTokenRepository(db))
       auth <- IO(new Auth(refreshTokenRepository))
       endpoints <- IO(new UsersEndpoints(usersService, new HttpErrorHandler[IO], refreshTokenRepo, auth))
-      httpApp <- IO(Router("/v1/users" -> endpoints.openEndpoints()).orNotFound)
+      httpApp <- IO(
+        Router(
+          "/v1/users/profile" -> auth.middleware(endpoints.authedService()),
+          "/v1/users" -> endpoints.openEndpoints()
+      ).orNotFound)
       server <- BlazeServerBuilder[IO]
                     .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
                     .withHttpApp(httpApp)
