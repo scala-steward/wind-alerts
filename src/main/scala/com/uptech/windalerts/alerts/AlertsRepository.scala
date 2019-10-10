@@ -98,7 +98,7 @@ object AlertsRepository {
 
     override def getAllForDay(day: Int): IO[Seq[Alert]] = {
       for {
-        all <- getAllByQuery(alerts.whereArrayContains("days", day))
+        all <- getAllByQuery(alerts.whereArrayContains("days", day).whereEqualTo("enabled", true))
       } yield all
     }
 
