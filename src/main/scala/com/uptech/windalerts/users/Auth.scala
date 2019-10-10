@@ -35,9 +35,9 @@ class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra) {
   val middleware = JwtAuthMiddleware[IO, UserId](jwtAuth, authenticate)
 
 
-  def createToken(userId: String, expirationInMinutes: Int, accessTokenId: String): EitherT[IO, ValidationError, AccessTokenWithExpiry] = {
+  def createToken(userId: String, expirationInDays: Int, accessTokenId: String): EitherT[IO, ValidationError, AccessTokenWithExpiry] = {
     val current = System.currentTimeMillis()
-    val expiry = current / 1000 + TimeUnit.MINUTES.toSeconds(expirationInMinutes)
+    val expiry = current / 1000 + TimeUnit.DAYS.toSeconds(expirationInDays)
     val claims = JwtClaim(
       expiration = Some(expiry),
       issuedAt = Some(current / 1000),
