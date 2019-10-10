@@ -1,6 +1,7 @@
 package com.uptech.windalerts.users
 
 import java.util
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import cats.data.OptionT
 import cats.effect.{ContextShift, IO}
@@ -8,7 +9,7 @@ import com.google.cloud.firestore
 import com.google.cloud.firestore.{CollectionReference, Firestore}
 import com.uptech.windalerts.domain.conversions._
 import com.uptech.windalerts.domain.domain
-import com.uptech.windalerts.domain.domain.{Alert, Credentials, User}
+import com.uptech.windalerts.domain.domain.User
 
 import scala.beans.BeanProperty
 
@@ -22,7 +23,12 @@ class FirestoreUserRepository(db: Firestore)(implicit cs: ContextShift[IO]) exte
     } yield alert
   }
 
-  override def update(user: domain.User): OptionT[IO, domain.User] = ???
+  override def update(user: domain.User): OptionT[IO, domain.User] = {
+    OptionT.liftF(
+      for {
+        updateResultIO <- IO.fromFuture(IO(j2sFuture(usersCollection.document(user.id).set(toBean(user))).map(r=>user)))
+      } yield updateResultIO)
+  }
 
   override def delete(userId: String): OptionT[IO, domain.User] = ???
 
@@ -70,7 +76,6 @@ class FirestoreUserRepository(db: Firestore)(implicit cs: ContextShift[IO]) exte
         updateResultIO <- IO.fromFuture(IO(j2sFuture(usersCollection.document(userId).update("deviceToken", deviceToken))))
       } yield updateResultIO)
   }
-
 }
 
 class UserBean(

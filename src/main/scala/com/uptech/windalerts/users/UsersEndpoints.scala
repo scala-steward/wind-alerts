@@ -4,7 +4,7 @@ import cats.data.{EitherT, OptionT}
 import cats.effect.IO
 import com.uptech.windalerts.domain.{HttpErrorHandler, domain}
 import com.uptech.windalerts.domain.codecs._
-import com.uptech.windalerts.domain.domain.{AccessTokenRequest, AlertRequest, ChangePasswordRequest, Credentials, LoginRequest, RefreshToken, RegisterRequest, UserId}
+import com.uptech.windalerts.domain.domain.{AccessTokenRequest, AlertRequest, ChangePasswordRequest, Credentials, LoginRequest, RefreshToken, RegisterRequest, UpdateUserRequest, UserId, UserType}
 import org.http4s.{AuthedRoutes, HttpRoutes}
 import org.http4s.dsl.Http4sDsl
 
@@ -12,11 +12,26 @@ class UsersEndpoints(userService: UserService,
                      httpErrorHandler: HttpErrorHandler[IO],
                      refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra,
                      auth: Auth) extends Http4sDsl[IO] {
+  def authedService(): AuthedRoutes[UserId, IO] =
+    AuthedRoutes {
+      case authReq@PUT -> Root  as user => {
+        val response = authReq.req.decode[UpdateUserRequest] { request =>
+          val action = for {
+            updateResult <- userService.updateUserProfile(user.id, request.name, UserType(request.userType))
+          } yield updateResult
+          action.value.flatMap {
+            case Right(tokens) => Ok(tokens)
+            case Left(error) => httpErrorHandler.handleError(error)
+          }
+        }
+        OptionT.liftF(response)
+      }
 
+    }
 
   def openEndpoints(): HttpRoutes[IO] =
     HttpRoutes.of[IO] {
-      case req@POST -> Root  =>
+      case req@POST -> Root =>
         val action = for {
           rr <- EitherT.liftF(req.as[RegisterRequest])
           result <- userService.createUser(rr)
