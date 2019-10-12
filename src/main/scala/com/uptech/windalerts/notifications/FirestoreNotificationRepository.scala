@@ -22,12 +22,12 @@ class FirestoreNotificationRepository(db: Firestore)(implicit cs: ContextShift[I
   }
 
   def toBean(notification: domain.Notification) = {
-    new NotificationBean(notification.userId, notification.deviceToken, notification.title, notification.body, notification.sentAt)
+    new NotificationBean(notification.alertId, notification.deviceToken, notification.title, notification.body, notification.sentAt)
   }
 
-  override def countNotificationInLastHour(userId:String) = {
+  override def countNotificationInLastHour(alertId:String) = {
     for {
-      all <- getByQuery(collection.whereEqualTo("userId", userId).whereGreaterThan("sentAt", System.currentTimeMillis() - (60 * 60 * 1000)))
+      all <- getByQuery(collection.whereEqualTo("alertId", alertId).whereGreaterThan("sentAt", System.currentTimeMillis() - (60 * 60 * 1000)))
     } yield all.size
   }
 
@@ -47,7 +47,7 @@ class FirestoreNotificationRepository(db: Firestore)(implicit cs: ContextShift[I
 
 
 class NotificationBean(
-                        @BeanProperty var userId: String,
+                        @BeanProperty var alertId: String,
                         @BeanProperty var deviceToken: String,
                         @BeanProperty var title: String,
                         @BeanProperty var body: String,
