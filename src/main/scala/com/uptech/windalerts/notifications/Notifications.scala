@@ -4,7 +4,7 @@ import cats.effect.IO
 import cats.implicits._
 import com.google.firebase.messaging.{FirebaseMessaging, Message, Notification}
 import com.uptech.windalerts.alerts.AlertsService
-import com.uptech.windalerts.domain.domain.{BeachId, Notification, User}
+import com.uptech.windalerts.domain.domain.{Alert, BeachId, Notification, User}
 import com.uptech.windalerts.domain.{HttpErrorHandler, domain}
 import com.uptech.windalerts.status.Beaches
 import com.uptech.windalerts.users.UserRepositoryAlgebra
@@ -39,7 +39,7 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, UR: UserReposi
 
       usersToBeNotifiedSnoozeFiltered <- IO(usersToBeNotifiedFlattend.filterNot(f => f.user.snoozeTill > System.currentTimeMillis()))
       usersToBeNotifiedSnoozeFilteredWithCount <- IO(usersToBeNotifiedFlattend.map(f => {
-        val io = notificationsRepository.countNotificationInLastHour(f.user.id)
+        val io = notificationsRepository.countNotificationInLastHour(f.alert.id)
         io.map(x=>(f, x))
       }))
       usersToBeNotifiedSnoozeFilteredWithCountIO <- com.uptech.windalerts.domain.conversions.toIO(usersToBeNotifiedSnoozeFilteredWithCount)
@@ -49,15 +49,15 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, UR: UserReposi
 
 
       log <- IO(logger.info(s"alertsByUserNotificationSettings $alertsByUserNotificationSettings"))
-      save <- IO(usersToBeNotifiedSnoozeFiltered.map(u => tryS(s"Wind Alert on ${u.alert.beachId}", "Surf Time.", u.user)))
+      save <- IO(usersToBeNotifiedSnoozeFiltered.map(u => tryS(s"Wind Alert on ${u.alert.beachId}", "Surf Time.", u.user, u.alert)))
 
     } yield ()
   }
 
 
-  private def tryS(title: String, body: String, u: User): Either[Exception, String] = {
+  private def tryS(title: String, body: String, u: User, a:Alert): Either[Exception, String] = {
     try Right{
-      val s= notificationsRepository.create(com.uptech.windalerts.domain.domain.Notification(None, u.id, u.deviceToken, title, body, System.currentTimeMillis()))
+      val s= notificationsRepository.create(com.uptech.windalerts.domain.domain.Notification(None, a.id, u.deviceToken, title, body, System.currentTimeMillis()))
       println(s.unsafeRunSync())
       firebaseMessaging.send(Message.builder()
       .setNotification(new com.google.firebase.messaging.Notification(title, body))

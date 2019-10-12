@@ -238,14 +238,14 @@ object domain {
 
   }
 
-  case class Notification(id:Option[String], userId: String, deviceToken:String, title:String, body:String, sentAt:Long)
+  case class Notification(id:Option[String], alertId: String, deviceToken:String, title:String, body:String, sentAt:Long)
 
   object Notification {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Notification] = try {
       val values = tuple._2
       Some(Notification(
         Some(tuple._1),
-        values("userId").asInstanceOf[String],
+        values("alertId").asInstanceOf[String],
         values("deviceToken").asInstanceOf[String],
         values("title").asInstanceOf[String],
         values("body").asInstanceOf[String],
