@@ -238,6 +238,25 @@ object domain {
 
   }
 
+  case class Notification(id:Option[String], userId: String, deviceToken:String, title:String, body:String, sentAt:Long)
+
+  object Notification {
+    def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Notification] = try {
+      val values = tuple._2
+      Some(Notification(
+        Some(tuple._1),
+        values("userId").asInstanceOf[String],
+        values("deviceToken").asInstanceOf[String],
+        values("title").asInstanceOf[String],
+        values("body").asInstanceOf[String],
+        values("sentAt").asInstanceOf[Long]
+      ))
+    }
+    catch {
+      case NonFatal(_) =>
+        None
+    }
+  }
   def j2s[A](inputList: util.List[A]): Seq[A] = JavaConverters.asScalaIteratorConverter(inputList.iterator).asScala.toSeq
 
   def j2sm[K, V](map: util.Map[K, V]): Map[K, V] = JavaConverters.mapAsScalaMap(map).toMap

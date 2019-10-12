@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit
 import cats.effect.{ContextShift, IO}
 import com.google.cloud.firestore
 import com.google.cloud.firestore.{CollectionReference, Firestore, WriteResult}
+import com.uptech.windalerts.domain.conversions.{j2sFuture, j2sm}
 import com.uptech.windalerts.domain.errors.{RecordNotFound, WindAlertError}
 import com.uptech.windalerts.domain.domain
 import com.uptech.windalerts.domain.domain._
@@ -44,18 +45,18 @@ object AlertsRepository {
 
     override def getById(id: String): IO[Option[Alert]] = {
       for {
-        doc <- IO({
-          val snapshot = alerts.document(id).get().get(5, TimeUnit.SECONDS)
-          if (snapshot.exists()) Some(snapshot)
-          else None
-        })
-        alert <- IO(
-          doc.map(document => {
-            val Alert(alert) = (document.getId, j2s(document.getData).asInstanceOf[Map[String, util.HashMap[String, String]]])
-            alert
+        document <- IO.fromFuture(IO(j2sFuture(alerts.document(id).get())))
+        maybeAlert <- IO {
+          if (document.exists()) {
+            val Alert(alert) = (document.getId, j2sm(document.getData).asInstanceOf[Map[String, util.HashMap[String, String]]])
+            Some(alert)
+          } else {
+            None
           }
-          ))
-      } yield alert
+        }
+      } yield maybeAlert
+
+
     }
 
     override def save(alertRequest: AlertRequest, user: String): IO[Alert] = {

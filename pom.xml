@@ -225,7 +225,6 @@
                 <configuration>
                     <container>
                         <mainClass>${profile.mainClass}</mainClass>
-                        <!--                        <image>${profile.image}</image>-->
                     </container>
                 </configuration>
             </plugin>
@@ -242,7 +241,7 @@
         <profile>
             <id>notifications</id>
             <properties>
-                <profile.mainClass>com.uptech.windalerts.alerts.SendNotifications</profile.mainClass>
+                <profile.mainClass>com.uptech.windalerts.notifications.SendNotifications</profile.mainClass>
                 <image>gcr.io/wind-alerts-staging/wind-alerts-send-notifications:${project.version}</image>
             </properties>
         </profile>
