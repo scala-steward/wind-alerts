@@ -2,9 +2,9 @@ package com.uptech.windalerts.notifications
 
 import cats.effect.IO
 import cats.implicits._
-import com.google.firebase.messaging.{FirebaseMessaging, Message, Notification}
+import com.google.firebase.messaging.{FirebaseMessaging, Message}
 import com.uptech.windalerts.alerts.AlertsService
-import com.uptech.windalerts.domain.domain.{Alert, BeachId, Notification, User}
+import com.uptech.windalerts.domain.domain.{Alert, BeachId, User}
 import com.uptech.windalerts.domain.{HttpErrorHandler, domain}
 import com.uptech.windalerts.status.Beaches
 import com.uptech.windalerts.users.UserRepositoryAlgebra
@@ -47,9 +47,8 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, UR: UserReposi
 
       alertsByUserNotificationSettings <- IO(usersToBeNotifiedSnoozeFilteredWithCountIO.filter(x=>x._2 < x._1.alert.notificationsPerHour).map(x => x._1))
 
-
       log <- IO(logger.info(s"alertsByUserNotificationSettings $alertsByUserNotificationSettings"))
-      save <- IO(usersToBeNotifiedSnoozeFiltered.map(u => tryS(s"Wind Alert on ${u.alert.beachId}", "Surf Time.", u.user, u.alert)))
+      save <- IO(alertsByUserNotificationSettings.map(u => tryS(s"Wind Alert on ${u.alert.beachId}", "Surf Time.", u.user, u.alert)))
 
     } yield ()
   }

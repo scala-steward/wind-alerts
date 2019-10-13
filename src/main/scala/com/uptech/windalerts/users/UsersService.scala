@@ -4,18 +4,20 @@ import cats.{Functor, Monad}
 import cats.data._
 import cats.effect.IO
 import cats.syntax.functor._
+import com.restfb.{DefaultFacebookClient, Parameter, Version}
 import com.uptech.windalerts.domain.domain.UserType.{Premium, Registered, Trial}
-import com.uptech.windalerts.domain.domain.{Credentials, RegisterRequest, User, UserType}
+import com.uptech.windalerts.domain.domain.{Credentials, FacebookCredentials, FacebookRegisterRequest, RegisterRequest, User, UserType}
+import com.uptech.windalerts.users.FbClient.facebookClient
 
 class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsRepositoryAlgebra) {
-  def updateUserProfile(id: String, name: String, userType: UserType, snoozeTill:Long): EitherT[IO, ValidationError, User] = {
+  def updateUserProfile(id: String, name: String, userType: UserType, snoozeTill: Long): EitherT[IO, ValidationError, User] = {
     for {
       user <- getUser(id)
       operationResult <- updateTypeAllowed(userType, name, snoozeTill, user)
     } yield operationResult
   }
 
-  private def updateTypeAllowed(newUserType: UserType, name: String, snoozeTill:Long, user: User): EitherT[IO, ValidationError, User] = {
+  private def updateTypeAllowed(newUserType: UserType, name: String, snoozeTill: Long, user: User): EitherT[IO, ValidationError, User] = {
     UserType(user.userType) match {
       case Registered | Trial => {
         newUserType match {
@@ -36,10 +38,22 @@ class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsR
   def updatePassword(userId: String, password: String): OptionT[IO, Unit] =
     credentialsRepo.updatePassword(userId, password)
 
+  def createUser(rr: FacebookRegisterRequest): EitherT[IO, UserAlreadyExistsError, (User, FacebookCredentials)] = {
+    val facebookClient = new DefaultFacebookClient(rr.token, "06cee1aa51e14d50c40f28b47a6b7501", Version.LATEST);
+
+    for {
+      fbuser <- EitherT.liftF(IO(facebookClient.fetchObject("me", classOf[com.restfb.types.User], Parameter.`with`("fields", "name,id,email"))))
+
+      _ <- credentialsRepo.doesNotExist(fbuser.getEmail, rr.deviceToken)
+      savedCreds <- EitherT.liftF(credentialsRepo.create(FacebookCredentials(None, fbuser.getEmail, rr.token, rr.deviceType)))
+      saved <- EitherT.liftF(userRepo.create(User(savedCreds.id.get, fbuser.getEmail, fbuser.getName, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), -1, Registered.value, -1)))
+    } yield (saved, savedCreds)
+  }
+
   def createUser(rr: RegisterRequest): EitherT[IO, UserAlreadyExistsError, User] = {
     val credentials = Credentials(None, rr.email, rr.password, rr.deviceType)
     for {
-      _ <- credentialsRepo.doesNotExist(credentials)
+      _ <- credentialsRepo.doesNotExist(credentials.email, credentials.deviceType)
       savedCreds <- EitherT.liftF(credentialsRepo.create(credentials))
       saved <- EitherT.liftF(userRepo.create(User(savedCreds.id.get, rr.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), -1, Registered.value, -1)))
     } yield saved

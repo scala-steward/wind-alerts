@@ -74,6 +74,12 @@ object codecs {
   lazy implicit val salertEncoder: Encoder[Alerts] = deriveEncoder[Alerts]
   implicit def salertEntityEncoder[F[_] : Applicative]: EntityEncoder[F, Alerts] = jsonEncoderOf
 
+
+  lazy implicit val srDecoder: Decoder[FacebookRegisterRequest] = deriveDecoder[FacebookRegisterRequest]
+  implicit def srEntityDecoder[F[_] : Sync]: EntityDecoder[F, FacebookRegisterRequest] = jsonOf
+  lazy implicit val srEncoder: Encoder[FacebookRegisterRequest] = deriveEncoder[FacebookRegisterRequest]
+  implicit def srEntityEncoder[F[_] : Applicative]: EntityEncoder[F, FacebookRegisterRequest] = jsonEncoderOf
+
   lazy implicit val rDecoder: Decoder[RegisterRequest] = deriveDecoder[RegisterRequest]
   implicit def rEntityDecoder[F[_] : Sync]: EntityDecoder[F, RegisterRequest] = jsonOf
   lazy implicit val rEncoder: Encoder[RegisterRequest] = deriveEncoder[RegisterRequest]

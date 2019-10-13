@@ -2,14 +2,16 @@ package com.uptech.windalerts.users
 
 import cats.data.{EitherT, OptionT}
 import cats.effect.IO
-import com.uptech.windalerts.domain.domain.{Credentials}
+import com.uptech.windalerts.domain.domain.{Credentials, FacebookCredentials}
 
 trait CredentialsRepositoryAlgebra {
-  def doesNotExist(credentials: Credentials): EitherT[IO, UserAlreadyExistsError, Unit]
+  def doesNotExist(email:String, deviceType:String): EitherT[IO, UserAlreadyExistsError, Unit]
 
   def exists(userId: String): EitherT[IO, UserNotFoundError.type, Unit]
 
   def create(credentials: Credentials): IO[Credentials]
+
+  def create(credentials: FacebookCredentials): IO[FacebookCredentials]
 
   def update(user: Credentials): OptionT[IO, Credentials]
 

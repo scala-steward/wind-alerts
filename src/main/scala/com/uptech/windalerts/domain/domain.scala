@@ -38,6 +38,8 @@ object domain {
     }
   }
 
+  case class FacebookCredentials(id: Option[String], email: String, accessToken: String, deviceType: String)
+
   case class Credentials(id: Option[String], email: String, password: String, deviceType: String)
 
   object Credentials {
@@ -109,6 +111,8 @@ object domain {
   final case class UserDevices(devices: Seq[UserDevice])
 
   final case class UserDevice(deviceId: String, ownerId: String)
+
+  case class FacebookRegisterRequest(token:String, deviceId: String, deviceType: String, deviceToken: String)
 
   case class RegisterRequest(email: String, name: String, password: String, deviceId: String, deviceType: String, deviceToken: String)
 

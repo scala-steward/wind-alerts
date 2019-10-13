@@ -4,7 +4,7 @@ import cats.data.{EitherT, OptionT}
 import cats.effect.IO
 import com.uptech.windalerts.domain.{HttpErrorHandler, domain}
 import com.uptech.windalerts.domain.codecs._
-import com.uptech.windalerts.domain.domain.{AccessTokenRequest, AlertRequest, ChangePasswordRequest, Credentials, LoginRequest, RefreshToken, RegisterRequest, UpdateUserRequest, UserId, UserType}
+import com.uptech.windalerts.domain.domain.{AccessTokenRequest, AlertRequest, ChangePasswordRequest, Credentials, FacebookCredentials, FacebookRegisterRequest, LoginRequest, RefreshToken, RegisterRequest, UpdateUserRequest, UserId, UserType}
 import org.http4s.{AuthedRoutes, HttpRoutes}
 import org.http4s.dsl.Http4sDsl
 
@@ -29,6 +29,24 @@ class UsersEndpoints(userService: UserService,
 
     }
 
+
+  def socialEndpoints(): HttpRoutes[IO] = {
+    HttpRoutes.of[IO] {
+      case req@POST -> Root =>
+        val action = for {
+          rr <- EitherT.liftF(req.as[FacebookRegisterRequest])
+          result <- userService.createUser(rr)
+          accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
+          token <- auth.createToken(result._2.id.get, 60, accessTokenId)
+          refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), result._2.id.get, accessTokenId)))
+          tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, result._1)
+        } yield tokens
+        action.value.flatMap {
+          case Right(tokens) => Ok(tokens)
+          case Left(error) => httpErrorHandler.handleError(error)
+        }
+    }
+  }
   def openEndpoints(): HttpRoutes[IO] =
     HttpRoutes.of[IO] {
       case req@POST -> Root =>
