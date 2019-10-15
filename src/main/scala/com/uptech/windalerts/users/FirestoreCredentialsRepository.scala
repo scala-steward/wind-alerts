@@ -8,32 +8,40 @@ import com.google.cloud.firestore
 import com.google.cloud.firestore.{CollectionReference, Firestore}
 import com.uptech.windalerts.domain.conversions._
 import com.uptech.windalerts.domain.domain
-import com.uptech.windalerts.domain.domain.{Credentials}
+import com.uptech.windalerts.domain.domain.{Credentials, FacebookCredentials}
 
 import scala.beans.BeanProperty
 
 class FirestoreCredentialsRepository(db: Firestore)(implicit cs: ContextShift[IO]) extends CredentialsRepositoryAlgebra {
   private val credentialsCollection: CollectionReference = db.collection("credentials")
 
-  override def doesNotExist(credentials: domain.Credentials): EitherT[IO, UserAlreadyExistsError, Unit] = {
+  override def doesNotExist(email: String, deviceType: String): EitherT[IO, UserAlreadyExistsError, Unit] = {
     OptionT(getByQuery(
       credentialsCollection
-        .whereEqualTo("email", credentials.email)
-        .whereEqualTo("deviceType", credentials.deviceType)
+        .whereEqualTo("email", email)
+        .whereEqualTo("deviceType", deviceType)
     )).map(_ => UserAlreadyExistsError("", "")).toLeft(())
   }
 
 
-  override def exists(userId: String): EitherT[IO, UserNotFoundError.type, Unit] = {
+  override def exists(userId: String): EitherT[IO, UserNotFoundError, Unit] = {
     ???
   }
 
   override def create(credentials: domain.Credentials): IO[domain.Credentials] = {
     for {
       document <- IO.fromFuture(IO(j2sFuture(credentialsCollection.add(toBean(credentials)))))
-      alert <- IO(credentials.copy(id = Some(document.getId)))
-    } yield alert
+      saved <- IO(credentials.copy(id = Some(document.getId)))
+    } yield saved
   }
+
+  override def create(credentials: domain.FacebookCredentials): IO[FacebookCredentials] = {
+    for {
+      document <- IO.fromFuture(IO(j2sFuture(credentialsCollection.add(toBean(credentials)))))
+      saved <- IO(credentials.copy(id = Some(document.getId)))
+    } yield saved
+  }
+
 
   override def update(user: domain.Credentials): OptionT[IO, domain.Credentials] = ???
 
@@ -52,6 +60,10 @@ class FirestoreCredentialsRepository(db: Firestore)(implicit cs: ContextShift[IO
 
   private def toBean(credentials: domain.Credentials) = {
     new CredentialsBean(credentials.email, credentials.password, credentials.deviceType)
+  }
+
+  private def toBean(credentials: domain.FacebookCredentials) = {
+    new FacebookCredentialsBean(credentials.email, credentials.accessToken, credentials.deviceType)
   }
 
   override def updatePassword(userId: String, password: String): OptionT[IO, Unit] = {
@@ -76,6 +88,14 @@ class FirestoreCredentialsRepository(db: Firestore)(implicit cs: ContextShift[IO
 
 }
 
+object FirestoreCredentialsRepository {
+
+}
+
+class FacebookCredentialsBean(
+                       @BeanProperty var email: String,
+                       @BeanProperty var accessToken: String,
+                       @BeanProperty var deviceType: String) {}
 
 class CredentialsBean(
                        @BeanProperty var email: String,

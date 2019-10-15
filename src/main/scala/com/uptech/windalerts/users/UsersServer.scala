@@ -33,7 +33,8 @@ object UsersServer extends IOApp {
       httpApp <- IO(
         Router(
           "/v1/users/profile" -> auth.middleware(endpoints.authedService()),
-          "/v1/users" -> endpoints.openEndpoints()
+          "/v1/users" -> endpoints.openEndpoints(),
+          "/v1/users/social/facebook" -> endpoints.socialEndpoints()
       ).orNotFound)
       server <- BlazeServerBuilder[IO]
                     .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
