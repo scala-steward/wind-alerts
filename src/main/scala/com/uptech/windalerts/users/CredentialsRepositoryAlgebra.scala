@@ -7,7 +7,7 @@ import com.uptech.windalerts.domain.domain.{Credentials, FacebookCredentials}
 trait CredentialsRepositoryAlgebra {
   def doesNotExist(email:String, deviceType:String): EitherT[IO, UserAlreadyExistsError, Unit]
 
-  def exists(userId: String): EitherT[IO, UserNotFoundError.type, Unit]
+  def exists(userId: String): EitherT[IO, UserNotFoundError, Unit]
 
   def create(credentials: Credentials): IO[Credentials]
 

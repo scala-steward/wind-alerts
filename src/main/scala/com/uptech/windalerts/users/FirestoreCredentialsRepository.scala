@@ -24,7 +24,7 @@ class FirestoreCredentialsRepository(db: Firestore)(implicit cs: ContextShift[IO
   }
 
 
-  override def exists(userId: String): EitherT[IO, UserNotFoundError.type, Unit] = {
+  override def exists(userId: String): EitherT[IO, UserNotFoundError, Unit] = {
     ???
   }
 

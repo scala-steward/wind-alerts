@@ -1,13 +1,12 @@
 package com.uptech.windalerts.users
 
-import cats.{Functor, Monad}
+import cats.Functor
 import cats.data._
 import cats.effect.IO
 import cats.syntax.functor._
 import com.restfb.{DefaultFacebookClient, Parameter, Version}
-import com.uptech.windalerts.domain.domain.UserType.{Premium, Registered, Trial}
-import com.uptech.windalerts.domain.domain.{Credentials, FacebookCredentials, FacebookRegisterRequest, RegisterRequest, User, UserType}
-import com.uptech.windalerts.users.FbClient.facebookClient
+import com.uptech.windalerts.domain.domain.UserType.{Registered, Trial}
+import com.uptech.windalerts.domain.domain._
 
 class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsRepositoryAlgebra) {
   def updateUserProfile(id: String, name: String, userType: UserType, snoozeTill: Long): EitherT[IO, ValidationError, User] = {
@@ -42,11 +41,11 @@ class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsR
     val facebookClient = new DefaultFacebookClient(rr.token, "06cee1aa51e14d50c40f28b47a6b7501", Version.LATEST);
 
     for {
-      fbuser <- EitherT.liftF(IO(facebookClient.fetchObject("me", classOf[com.restfb.types.User], Parameter.`with`("fields", "name,id,email"))))
+      facebookUser <- EitherT.liftF(IO(facebookClient.fetchObject("me", classOf[com.restfb.types.User], Parameter.`with`("fields", "name,id,email"))))
 
-      _ <- credentialsRepo.doesNotExist(fbuser.getEmail, rr.deviceToken)
-      savedCreds <- EitherT.liftF(credentialsRepo.create(FacebookCredentials(None, fbuser.getEmail, rr.token, rr.deviceType)))
-      saved <- EitherT.liftF(userRepo.create(User(savedCreds.id.get, fbuser.getEmail, fbuser.getName, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), -1, Registered.value, -1)))
+      _ <- credentialsRepo.doesNotExist(facebookUser.getEmail, rr.deviceToken)
+      savedCreds <- EitherT.liftF(credentialsRepo.create(FacebookCredentials(None, facebookUser.getEmail, rr.token, rr.deviceType)))
+      saved <- EitherT.liftF(userRepo.create(User(savedCreds.id.get, facebookUser.getEmail, facebookUser.getName, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), -1, Registered.value, -1)))
     } yield (saved, savedCreds)
   }
 
@@ -57,6 +56,32 @@ class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsR
       savedCreds <- EitherT.liftF(credentialsRepo.create(credentials))
       saved <- EitherT.liftF(userRepo.create(User(savedCreds.id.get, rr.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), -1, Registered.value, -1)))
     } yield saved
+  }
+
+  def getUserAndUpdateRole(userId:String): EitherT[IO, UserNotFoundError, User] = {
+    for {
+      eitherUser <- OptionT(userRepo.getByUserId(userId)).toRight(UserNotFoundError())
+      updated <- eitherT(eitherUser)
+    } yield updated
+  }
+
+  def getUserAndUpdateRole(email: String, deviceType: String): EitherT[IO, UserNotFoundError, User] = {
+    for {
+      eitherUser <- OptionT(userRepo.getByEmailAndDeviceType(email, deviceType)).toRight(UserNotFoundError())
+      updated <- eitherT(eitherUser)
+    } yield updated
+  }
+
+  private def eitherT(eitherUser: User):EitherT[IO, UserNotFoundError, User] = {
+    if (eitherUser.isTrialEnded()) {
+      update(eitherUser.copy(userType = UserType.TrialExpired.value))
+    } else {
+      EitherT.fromEither(toEither(eitherUser))
+    }
+  }
+
+  private def toEither(user: User):Either[UserNotFoundError, User] = {
+    Right(user)
   }
 
   def getUser(email: String, deviceType: String): EitherT[IO, UserNotFoundError, User] =
@@ -76,10 +101,9 @@ class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsR
   def deleteByUserName(userName: String)(implicit F: Functor[IO]): IO[Unit] =
     userRepo.deleteByUserName(userName).value.void
 
-  def update(user: User)(implicit M: Monad[IO]): EitherT[IO, UserNotFoundError.type, User] =
+  def update(user: User): EitherT[IO, UserNotFoundError, User] =
     for {
-      _ <- credentialsRepo.exists(user.id)
-      saved <- userRepo.update(user).toRight(UserNotFoundError)
+      saved <- userRepo.update(user).toRight(UserNotFoundError())
     } yield saved
 
 }

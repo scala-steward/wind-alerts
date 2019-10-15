@@ -14,7 +14,7 @@ class UsersEndpoints(userService: UserService,
                      auth: Auth) extends Http4sDsl[IO] {
   def authedService(): AuthedRoutes[UserId, IO] =
     AuthedRoutes {
-      case authReq@PUT -> Root  as user => {
+      case authReq@PUT -> Root as user => {
         val response = authReq.req.decode[UpdateUserRequest] { request =>
           val action = for {
             updateResult <- userService.updateUserProfile(user.id, request.name, UserType(request.userType), request.snoozeTill)
@@ -47,6 +47,7 @@ class UsersEndpoints(userService: UserService,
         }
     }
   }
+
   def openEndpoints(): HttpRoutes[IO] =
     HttpRoutes.of[IO] {
       case req@POST -> Root =>
@@ -68,7 +69,7 @@ class UsersEndpoints(userService: UserService,
         val action = for {
           credentials <- EitherT.liftF(req.as[LoginRequest])
           dbCredentials <- userService.getByCredentials(credentials.email, credentials.password, credentials.deviceType)
-          dbUser <- userService.getUser(dbCredentials.email, dbCredentials.deviceType)
+          dbUser <- userService.getUserAndUpdateRole(dbCredentials.email, dbCredentials.deviceType)
           updateDevice <- userService.updateDeviceToken(dbCredentials.id.get, credentials.deviceToken).toRight(CouldNotUpdateUserDeviceError())
           accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
           token <- auth.createToken(dbCredentials.id.get, 60, accessTokenId)
@@ -100,6 +101,8 @@ class UsersEndpoints(userService: UserService,
           _ <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(oldValidRefreshToken.userId))
           newRefreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), oldValidRefreshToken.userId, accessTokenId)))
           user <- userService.getUser(newRefreshToken.userId)
+          dbUser <- userService.getUserAndUpdateRole(newRefreshToken.userId)
+
           tokens <- auth.tokens(token.accessToken, newRefreshToken, token.expiredAt, user)
         } yield tokens
         action.value.flatMap {

@@ -80,7 +80,11 @@ object domain {
     }
   }
 
-  final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, registeredAt: Long, startTrialAt: Long, userType: String, snoozeTill:Long)
+  final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, registeredAt: Long, startTrialAt: Long, userType: String, snoozeTill:Long) {
+    def isTrialEnded() = {
+      startTrialAt != -1 && startTrialAt < System.currentTimeMillis() - (30 * 24 * 60 * 60 * 1000)
+    }
+  }
 
   object User {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[User] = try {
