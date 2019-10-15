@@ -8,7 +8,8 @@ import com.restfb.{DefaultFacebookClient, Parameter, Version}
 import com.uptech.windalerts.domain.domain.UserType.{Registered, Trial}
 import com.uptech.windalerts.domain.domain._
 
-class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsRepositoryAlgebra) {
+class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsRepositoryAlgebra, facebookCredentialsRepo : FacebookCredentialsRepositoryAlgebra) {
+
   def updateUserProfile(id: String, name: String, userType: UserType, snoozeTill: Long): EitherT[IO, ValidationError, User] = {
     for {
       user <- getUser(id)
@@ -37,25 +38,39 @@ class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsR
   def updatePassword(userId: String, password: String): OptionT[IO, Unit] =
     credentialsRepo.updatePassword(userId, password)
 
-  def createUser(rr: FacebookRegisterRequest): EitherT[IO, UserAlreadyExistsError, (User, FacebookCredentials)] = {
-    val facebookClient = new DefaultFacebookClient(rr.token, "06cee1aa51e14d50c40f28b47a6b7501", Version.LATEST);
-
+  def getFacebookUserByAccessToken(accessToken: String, deviceType: String) = {
     for {
+      facebookClient <- EitherT.liftF(IO(new DefaultFacebookClient(accessToken, "06cee1aa51e14d50c40f28b47a6b7501", Version.LATEST)))
       facebookUser <- EitherT.liftF(IO(facebookClient.fetchObject("me", classOf[com.restfb.types.User], Parameter.`with`("fields", "name,id,email"))))
+      dbUser <- getUser(facebookUser.getEmail, deviceType)
+    } yield dbUser
+  }
 
-      _ <- credentialsRepo.doesNotExist(facebookUser.getEmail, rr.deviceToken)
-      savedCreds <- EitherT.liftF(credentialsRepo.create(FacebookCredentials(None, facebookUser.getEmail, rr.token, rr.deviceType)))
-      saved <- EitherT.liftF(userRepo.create(User(savedCreds.id.get, facebookUser.getEmail, facebookUser.getName, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), -1, Registered.value, -1)))
-    } yield (saved, savedCreds)
+  def createUser(rr: FacebookRegisterRequest): EitherT[IO, UserAlreadyExistsError, (User, FacebookCredentials)] = {
+    for {
+      facebookClient <- EitherT.liftF(IO(new DefaultFacebookClient(rr.accessToken, "06cee1aa51e14d50c40f28b47a6b7501", Version.LATEST)))
+      facebookUser <- EitherT.liftF(IO(facebookClient.fetchObject("me", classOf[com.restfb.types.User], Parameter.`with`("fields", "name,id,email"))))
+      _ <- doesNotExist(facebookUser.getEmail, rr.deviceType)
+
+      savedCreds <- EitherT.liftF(facebookCredentialsRepo.create(FacebookCredentials(None, facebookUser.getEmail, rr.accessToken, rr.deviceType)))
+      savedUser <- EitherT.liftF(userRepo.create(User(savedCreds.id.get, facebookUser.getEmail, facebookUser.getName, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), -1, Registered.value, -1)))
+    } yield (savedUser, savedCreds)
   }
 
   def createUser(rr: RegisterRequest): EitherT[IO, UserAlreadyExistsError, User] = {
     val credentials = Credentials(None, rr.email, rr.password, rr.deviceType)
     for {
-      _ <- credentialsRepo.doesNotExist(credentials.email, credentials.deviceType)
+      _ <- doesNotExist(credentials.email, credentials.deviceType)
       savedCreds <- EitherT.liftF(credentialsRepo.create(credentials))
       saved <- EitherT.liftF(userRepo.create(User(savedCreds.id.get, rr.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), -1, Registered.value, -1)))
     } yield saved
+  }
+
+  def doesNotExist(email:String, deviceType:String) = {
+    for {
+      emailDoesNotExist <- credentialsRepo.doesNotExist(email, deviceType)
+      facebookDoesNotExist <- facebookCredentialsRepo.doesNotExist(email, deviceType)
+    } yield (emailDoesNotExist, facebookDoesNotExist)
   }
 
   def getUserAndUpdateRole(userId:String): EitherT[IO, UserNotFoundError, User] = {
@@ -111,7 +126,8 @@ class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsR
 object UserService {
   def apply[IO[_]](
                     usersRepository: UserRepositoryAlgebra,
-                    credentialsRepository: CredentialsRepositoryAlgebra
+                    credentialsRepository: CredentialsRepositoryAlgebra,
+                    facebookCredentialsRepositoryAlgebra: FacebookCredentialsRepositoryAlgebra
                   ): UserService =
-    new UserService(usersRepository, credentialsRepository)
+    new UserService(usersRepository, credentialsRepository, facebookCredentialsRepositoryAlgebra)
 }

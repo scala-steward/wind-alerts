@@ -4,7 +4,7 @@ import cats.data.{EitherT, OptionT}
 import cats.effect.IO
 import com.uptech.windalerts.domain.{HttpErrorHandler, domain}
 import com.uptech.windalerts.domain.codecs._
-import com.uptech.windalerts.domain.domain.{AccessTokenRequest, AlertRequest, ChangePasswordRequest, Credentials, FacebookCredentials, FacebookRegisterRequest, LoginRequest, RefreshToken, RegisterRequest, UpdateUserRequest, UserId, UserType}
+import com.uptech.windalerts.domain.domain.{AccessTokenRequest, AlertRequest, ChangePasswordRequest, Credentials, FacebookCredentials, FacebookLoginRequest, FacebookRegisterRequest, LoginRequest, RefreshToken, RegisterRequest, UpdateUserRequest, UserId, UserType}
 import org.http4s.{AuthedRoutes, HttpRoutes}
 import org.http4s.dsl.Http4sDsl
 
@@ -45,7 +45,24 @@ class UsersEndpoints(userService: UserService,
           case Right(tokens) => Ok(tokens)
           case Left(error) => httpErrorHandler.handleError(error)
         }
+
+      case req@POST -> Root / "login" =>
+        val action = for {
+          credentials <- EitherT.liftF(req.as[FacebookLoginRequest])
+          dbUser <- userService.getFacebookUserByAccessToken(credentials.accessToken, credentials.deviceType)
+          updateDevice <- userService.updateDeviceToken(dbUser.id, credentials.deviceToken).toRight(CouldNotUpdateUserDeviceError())
+          accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
+          token <- auth.createToken(dbUser.id, 60, accessTokenId)
+          deleteOldTokens <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(dbUser.id))
+          refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbUser.id, accessTokenId)))
+          tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, dbUser)
+        } yield tokens
+        action.value.flatMap {
+          case Right(tokens) => Ok(tokens)
+          case Left(error) => httpErrorHandler.handleError(error)
+        }
     }
+
   }
 
   def openEndpoints(): HttpRoutes[IO] =
