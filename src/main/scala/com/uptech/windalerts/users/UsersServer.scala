@@ -25,8 +25,10 @@ object UsersServer extends IOApp {
       _ <- IO(FirebaseApp.initializeApp(options))
       db <- IO(FirestoreClient.getFirestore)
       credentialsRepository <- IO(new FirestoreCredentialsRepository(db))
+      facebookCredentialsRepository <- IO(new FirestoreFacebookCredentialsRepositoryAlgebra(db))
+
       refreshTokenRepo <- IO(new FirestoreRefreshTokenRepository(db))
-      usersService <- IO(new UserService(new FirestoreUserRepository(db), credentialsRepository))
+      usersService <- IO(new UserService(new FirestoreUserRepository(db), credentialsRepository, facebookCredentialsRepository))
       refreshTokenRepository <- IO(new FirestoreRefreshTokenRepository(db))
       auth <- IO(new Auth(refreshTokenRepository))
       endpoints <- IO(new UsersEndpoints(usersService, new HttpErrorHandler[IO], refreshTokenRepo, auth))

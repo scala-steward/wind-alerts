@@ -35,13 +35,6 @@ class FirestoreCredentialsRepository(db: Firestore)(implicit cs: ContextShift[IO
     } yield saved
   }
 
-  override def create(credentials: domain.FacebookCredentials): IO[FacebookCredentials] = {
-    for {
-      document <- IO.fromFuture(IO(j2sFuture(credentialsCollection.add(toBean(credentials)))))
-      saved <- IO(credentials.copy(id = Some(document.getId)))
-    } yield saved
-  }
-
 
   override def update(user: domain.Credentials): OptionT[IO, domain.Credentials] = ???
 
@@ -92,10 +85,6 @@ object FirestoreCredentialsRepository {
 
 }
 
-class FacebookCredentialsBean(
-                       @BeanProperty var email: String,
-                       @BeanProperty var accessToken: String,
-                       @BeanProperty var deviceType: String) {}
 
 class CredentialsBean(
                        @BeanProperty var email: String,

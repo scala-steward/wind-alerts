@@ -39,6 +39,21 @@ object domain {
   }
 
   case class FacebookCredentials(id: Option[String], email: String, accessToken: String, deviceType: String)
+  object FacebookCredentials {
+    def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Credentials] = try {
+      val values = tuple._2
+      Some(Credentials(
+        Some(tuple._1),
+        values("email").asInstanceOf[String],
+        values("accessToken").asInstanceOf[String],
+        values("deviceType").asInstanceOf[String]
+      ))
+    }
+    catch {
+      case NonFatal(_) =>
+        None
+    }
+  }
 
   case class Credentials(id: Option[String], email: String, password: String, deviceType: String)
 
@@ -116,9 +131,11 @@ object domain {
 
   final case class UserDevice(deviceId: String, ownerId: String)
 
-  case class FacebookRegisterRequest(token:String, deviceId: String, deviceType: String, deviceToken: String)
+  case class FacebookRegisterRequest(accessToken:String, deviceId: String, deviceType: String, deviceToken: String)
 
   case class RegisterRequest(email: String, name: String, password: String, deviceId: String, deviceType: String, deviceToken: String)
+
+  case class FacebookLoginRequest(accessToken:String, deviceType: String, deviceToken: String)
 
   case class LoginRequest(email: String, password: String, deviceType: String, deviceToken: String)
 
