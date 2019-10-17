@@ -3,7 +3,7 @@ package com.uptech.windalerts.users
 import java.util
 import java.util.concurrent.CompletableFuture
 
-import cats.data.OptionT
+import cats.data.{EitherT, OptionT}
 import cats.effect.{ContextShift, IO}
 import com.google.cloud.firestore
 import com.google.cloud.firestore.{CollectionReference, Firestore, QueryDocumentSnapshot}
@@ -31,6 +31,19 @@ class FirestoreRefreshTokenRepository(db: Firestore)(implicit cs: ContextShift[I
         .whereEqualTo("refreshToken", refreshToken)
     ))
   }
+
+  override def getUserIdByAccessTokenIdOption(accessTokenId: String): EitherT[IO, RuntimeException, RefreshToken] = {
+    EitherT.fromOptionF(getByAccessTokenIdOption(accessTokenId), new RuntimeException())
+  }
+
+
+  override def getByAccessTokenIdOption(accessTokenId: String) = {
+    getByQuery(
+      tokensCollection
+        .whereEqualTo("accessTokenId", accessTokenId)
+    )
+  }
+
   override def getByAccessTokenId(accessTokenId:String): OptionT[IO, RefreshToken] = {
     OptionT(getByQuery(
       tokensCollection

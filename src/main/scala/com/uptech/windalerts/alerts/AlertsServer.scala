@@ -8,7 +8,7 @@ import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.uptech.windalerts.domain.HttpErrorHandler
-import com.uptech.windalerts.users.{Auth, FirestoreCredentialsRepository, FirestoreRefreshTokenRepository, RefreshTokenRepositoryAlgebra}
+import com.uptech.windalerts.users.{Auth, FirestoreCredentialsRepository, FirestoreFacebookCredentialsRepositoryAlgebra, FirestoreRefreshTokenRepository, FirestoreUserRepository, UserService}
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
@@ -25,13 +25,19 @@ object AlertsServer extends IOApp {
       options <- IO(new FirebaseOptions.Builder().setCredentials(credentials).setProjectId("wind-alerts-staging").build)
       _ <- IO(FirebaseApp.initializeApp(options))
       db <- IO(FirestoreClient.getFirestore)
-      alertsRepo <- IO(new AlertsRepository.FirebaseBackedRepository(db))
+      alertsRepo <- IO(new AlertsRepository.FirestoreAlertsRepository(db))
       alertService <- IO(new AlertsService.ServiceImpl(alertsRepo))
       httpErrorHandler <- IO(new HttpErrorHandler[IO])
       refreshTokenRepository <- IO(new FirestoreRefreshTokenRepository(db))
+      userRepository <- IO(new FirestoreUserRepository(db))
+      credentialsRepository <- IO(new FirestoreCredentialsRepository(db))
+      fbCredentialsRepository <- IO(new FirestoreFacebookCredentialsRepositoryAlgebra(db))
+
       auth <- IO(new Auth(refreshTokenRepository))
+      usersService <- IO( new UserService(userRepository, credentialsRepository, fbCredentialsRepository, alertsRepo))
+      alertsEndPoints <- IO(new AlertsEndpoints(alertService, usersService, httpErrorHandler))
       httpApp <- IO(Router(
-        "/v1/users/alerts" -> auth.middleware(new AlertsEndpoints(alertService, httpErrorHandler).authedService())
+        "/v1/users/alerts" -> auth.middleware(alertsEndPoints.allUsersService())
       ).orNotFound)
 
       server <- BlazeServerBuilder[IO]

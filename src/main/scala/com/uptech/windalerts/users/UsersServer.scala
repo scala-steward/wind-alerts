@@ -7,6 +7,7 @@ import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
+import com.uptech.windalerts.alerts.AlertsRepository.FirestoreAlertsRepository
 import com.uptech.windalerts.domain.HttpErrorHandler
 import org.http4s.implicits._
 import org.http4s.server.Router
@@ -28,7 +29,9 @@ object UsersServer extends IOApp {
       facebookCredentialsRepository <- IO(new FirestoreFacebookCredentialsRepositoryAlgebra(db))
 
       refreshTokenRepo <- IO(new FirestoreRefreshTokenRepository(db))
-      usersService <- IO(new UserService(new FirestoreUserRepository(db), credentialsRepository, facebookCredentialsRepository))
+      userRepository <- IO(new FirestoreUserRepository(db))
+      alertsRepository <- IO(new FirestoreAlertsRepository(db))
+      usersService <- IO(new UserService(userRepository, credentialsRepository, facebookCredentialsRepository, alertsRepository))
       refreshTokenRepository <- IO(new FirestoreRefreshTokenRepository(db))
       auth <- IO(new Auth(refreshTokenRepository))
       endpoints <- IO(new UsersEndpoints(usersService, new HttpErrorHandler[IO], refreshTokenRepo, auth))
