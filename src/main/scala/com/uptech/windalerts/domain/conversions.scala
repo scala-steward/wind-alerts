@@ -24,4 +24,8 @@ object conversions {
 
     y
   }
+
+  def toIOSeq[T](x: Seq[IO[T]]) = {
+    toIO(x.toList).map(l=>l.toSeq)
+  }
 }

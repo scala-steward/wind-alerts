@@ -41,7 +41,7 @@ object SendNotifications extends IOApp {
   val dbWithAuth = dbWithAuthIO.unsafeRunSync()
 
   val beaches = Beaches.ServiceImpl(Winds.impl, Swells.impl, Tides.impl)
-  val alertsRepo: AlertsRepository.Repository = new AlertsRepository.FirebaseBackedRepository(dbWithAuth._1)
+  val alertsRepo: AlertsRepository.Repository = new AlertsRepository.FirestoreAlertsRepository(dbWithAuth._1)
 
   val alerts = new AlertsService.ServiceImpl(alertsRepo)
   val usersRepo = new FirestoreUserRepository(dbWithAuth._1)

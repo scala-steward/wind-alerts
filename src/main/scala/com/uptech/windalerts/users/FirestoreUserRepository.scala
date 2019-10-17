@@ -55,6 +55,7 @@ class FirestoreUserRepository(db: Firestore)(implicit cs: ContextShift[IO]) exte
       }
     } yield maybeUser
 
+
   }
 
   private def getByQuery(query: firestore.Query) = {

@@ -5,10 +5,11 @@ import cats.data._
 import cats.effect.IO
 import cats.syntax.functor._
 import com.restfb.{DefaultFacebookClient, Parameter, Version}
+import com.uptech.windalerts.alerts.AlertsRepository
 import com.uptech.windalerts.domain.domain.UserType.{Registered, Trial}
 import com.uptech.windalerts.domain.domain._
 
-class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsRepositoryAlgebra, facebookCredentialsRepo : FacebookCredentialsRepositoryAlgebra) {
+class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsRepositoryAlgebra, facebookCredentialsRepo : FacebookCredentialsRepositoryAlgebra, alertsRepository: AlertsRepository.Repository) {
 
   def updateUserProfile(id: String, name: String, userType: UserType, snoozeTill: Long): EitherT[IO, ValidationError, User] = {
     for {
@@ -76,20 +77,23 @@ class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsR
   def getUserAndUpdateRole(userId:String): EitherT[IO, UserNotFoundError, User] = {
     for {
       eitherUser <- OptionT(userRepo.getByUserId(userId)).toRight(UserNotFoundError())
-      updated <- eitherT(eitherUser)
+      updated <- updateRole(eitherUser)
     } yield updated
   }
 
   def getUserAndUpdateRole(email: String, deviceType: String): EitherT[IO, UserNotFoundError, User] = {
     for {
       eitherUser <- OptionT(userRepo.getByEmailAndDeviceType(email, deviceType)).toRight(UserNotFoundError())
-      updated <- eitherT(eitherUser)
+      updated <- updateRole(eitherUser)
     } yield updated
   }
 
-  private def eitherT(eitherUser: User):EitherT[IO, UserNotFoundError, User] = {
-    if (eitherUser.isTrialEnded()) {
-      update(eitherUser.copy(userType = UserType.TrialExpired.value))
+  private def updateRole(eitherUser: User):EitherT[IO, UserNotFoundError, User] = {
+    if (UserType(eitherUser.userType) == Trial && eitherUser.isTrialEnded()) {
+      for {
+        updated <- update(eitherUser.copy(userType = UserType.TrialExpired.value))
+        _ <- EitherT.liftF(alertsRepository.disableAllButOneAlerts(updated.id))
+      } yield updated
     } else {
       EitherT.fromEither(toEither(eitherUser))
     }
@@ -102,7 +106,7 @@ class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsR
   def getUser(email: String, deviceType: String): EitherT[IO, UserNotFoundError, User] =
     OptionT(userRepo.getByEmailAndDeviceType(email, deviceType)).toRight(UserNotFoundError())
 
-  def getUser(userId: String): EitherT[IO, UserNotFoundError, User] =
+  def getUser(userId: String): EitherT[IO, ValidationError, User] =
     OptionT(userRepo.getByUserId(userId)).toRight(UserNotFoundError())
 
   def getByCredentials(
@@ -127,7 +131,8 @@ object UserService {
   def apply[IO[_]](
                     usersRepository: UserRepositoryAlgebra,
                     credentialsRepository: CredentialsRepositoryAlgebra,
-                    facebookCredentialsRepositoryAlgebra: FacebookCredentialsRepositoryAlgebra
+                    facebookCredentialsRepositoryAlgebra: FacebookCredentialsRepositoryAlgebra,
+                    alertsRepository: AlertsRepository.Repository
                   ): UserService =
-    new UserService(usersRepository, credentialsRepository, facebookCredentialsRepositoryAlgebra)
+    new UserService(usersRepository, credentialsRepository, facebookCredentialsRepositoryAlgebra, alertsRepository)
 }

@@ -8,11 +8,12 @@ import com.google.cloud.firestore
 import com.google.cloud.firestore.{CollectionReference, Firestore, WriteResult}
 import com.uptech.windalerts.domain.conversions.{j2sFuture, j2sm}
 import com.uptech.windalerts.domain.errors.{RecordNotFound, WindAlertError}
-import com.uptech.windalerts.domain.domain
+import com.uptech.windalerts.domain.{conversions, domain}
 import com.uptech.windalerts.domain.domain._
+import org.log4s.getLogger
 
 import scala.beans.BeanProperty
-import scala.collection.JavaConverters
+import scala.collection.{JavaConverters, immutable}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -24,6 +25,8 @@ trait AlertsRepository extends Serializable {
 object AlertsRepository {
 
   trait Repository {
+    def disableAllButOneAlerts(userId:String):IO[Seq[Alert]]
+
     def getById(id: String): IO[Option[Alert]]
 
     def getAllForDay(day: Int): IO[Seq[Alert]]
@@ -39,7 +42,8 @@ object AlertsRepository {
     def update(requester: String, alertId: String, updateAlertRequest: AlertRequest): IO[Either[RuntimeException, IO[Alert]]]
   }
 
-  class FirebaseBackedRepository(db: Firestore)(implicit cs: ContextShift[IO]) extends AlertsRepository.Repository {
+  class FirestoreAlertsRepository(db: Firestore)(implicit cs: ContextShift[IO]) extends AlertsRepository.Repository {
+    private val logger = getLogger
 
     private val alerts: CollectionReference = db.collection("alerts")
 
@@ -55,7 +59,6 @@ object AlertsRepository {
           }
         }
       } yield maybeAlert
-
 
     }
 
@@ -150,6 +153,22 @@ object AlertsRepository {
       Future(javaFuture.get())
     }
 
+    override def disableAllButOneAlerts(userId:String):IO[Seq[Alert]] = {
+     for {
+        all <- getAllForUser(userId)
+        updatedIOs <- IO({
+          all.alerts.filter(_.enabled) match {
+            case Seq() => List[IO[Alert]]()
+            case Seq(only) => List[IO[Alert]](IO(only))
+            case longSeq => longSeq.tail.map(a => update(a.id, a.copy(enabled = false)))
+          }
+        }
+
+        )
+        updatedAlerts <- conversions.toIOSeq(updatedIOs)
+        _ <- IO(logger.error(s"Updated $updatedAlerts" ))
+      } yield updatedAlerts
+    }
   }
 
   class AlertBean(
