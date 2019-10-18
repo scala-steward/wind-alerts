@@ -29,7 +29,7 @@ object UsersServer extends IOApp {
       facebookCredentialsRepository <- IO(new FirestoreFacebookCredentialsRepositoryAlgebra(db))
 
       refreshTokenRepo <- IO(new FirestoreRefreshTokenRepository(db))
-      userRepository <- IO(new FirestoreUserRepository(db))
+      userRepository <- IO(new FirestoreUserRepository(db, new FirestoreOps()))
       alertsRepository <- IO(new FirestoreAlertsRepository(db))
       usersService <- IO(new UserService(userRepository, credentialsRepository, facebookCredentialsRepository, alertsRepository))
       refreshTokenRepository <- IO(new FirestoreRefreshTokenRepository(db))
