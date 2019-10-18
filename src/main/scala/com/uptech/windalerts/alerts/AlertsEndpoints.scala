@@ -6,12 +6,12 @@ import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain.UserType.{Premium, Trial}
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.{HttpErrorHandler, domain}
-import com.uptech.windalerts.users.{OperationNotAllowed, UserService, ValidationError}
+import com.uptech.windalerts.users.{Auth, OperationNotAllowed, UserService, ValidationError}
 import org.http4s.AuthedRoutes
 import org.http4s.dsl.Http4sDsl
 
 
-class AlertsEndpoints(alertService: AlertsService.Service, usersService: UserService, httpErrorHandler: HttpErrorHandler[IO]) extends Http4sDsl[IO] {
+class AlertsEndpoints(alertService: AlertsService.Service, usersService: UserService, auth:Auth, httpErrorHandler: HttpErrorHandler[IO]) extends Http4sDsl[IO] {
   def allUsersService(): AuthedRoutes[UserId, IO] =
     AuthedRoutes {
       case GET -> Root as user => {
@@ -47,7 +47,7 @@ class AlertsEndpoints(alertService: AlertsService.Service, usersService: UserSer
         val response = authReq.req.decode[AlertRequest] { alert =>
           val action = for {
             dbUser <- usersService.getUser(user.id)
-            _ <- authorize(dbUser)
+            _ <- auth.authorizePremiumUsers(dbUser)
             saved <-  EitherT.liftF(alertService.save(alert, user.id)).asInstanceOf[EitherT[IO, ValidationError, Alert]]
           } yield saved
 
@@ -60,12 +60,5 @@ class AlertsEndpoints(alertService: AlertsService.Service, usersService: UserSer
       }
     }
 
-  private def authorize(dbUser: domain.User):EitherT[IO, ValidationError, User] = {
-    val either = if (UserType(dbUser.userType) == UserType.Premium || UserType(dbUser.userType) == UserType.Trial) {
-      Right(dbUser)
-    } else {
-      Left(OperationNotAllowed(s"Only ${Premium.value} and ${Trial.value} users can create alerts"))
-    }
-    EitherT.fromEither((either))
-  }
+
 }

@@ -5,14 +5,14 @@ import java.util
 import cats.data.{EitherT, OptionT}
 import cats.effect.{ContextShift, IO}
 import com.google.cloud.firestore
-import com.google.cloud.firestore.{CollectionReference, Firestore}
+import com.google.cloud.firestore.{CollectionReference, Firestore, QueryDocumentSnapshot}
 import com.uptech.windalerts.domain.conversions._
-import com.uptech.windalerts.domain.domain
+import com.uptech.windalerts.domain.{FirestoreOps, domain}
 import com.uptech.windalerts.domain.domain.{Credentials, FacebookCredentials}
 
 import scala.beans.BeanProperty
 
-class FirestoreCredentialsRepository(db: Firestore)(implicit cs: ContextShift[IO]) extends CredentialsRepositoryAlgebra {
+class FirestoreCredentialsRepository(db: Firestore, dbops:FirestoreOps)(implicit cs: ContextShift[IO]) extends CredentialsRepositoryAlgebra {
   private val credentialsCollection: CollectionReference = db.collection("credentials")
 
   override def doesNotExist(email: String, deviceType: String): EitherT[IO, UserAlreadyExistsError, Unit] = {
@@ -66,17 +66,12 @@ class FirestoreCredentialsRepository(db: Firestore)(implicit cs: ContextShift[IO
       } yield updateResultIO)
   }
 
-  private def getByQuery(query: firestore.Query) = {
-    for {
-      collection <- IO.fromFuture(IO(j2sFuture(query.get())))
-      filtered <- IO(
-        j2sMap(collection.getDocuments)
-          .map(document => {
-            val Credentials(credentials) = (document.getId, j2sm(document.getData).asInstanceOf[Map[String, util.HashMap[String, String]]])
-            credentials
-          }))
-    } yield filtered.headOption
-
+  def getByQuery(query: firestore.Query): IO[Option[Credentials]] = {
+    val mf: QueryDocumentSnapshot => Credentials = document => {
+      val Credentials(credentials) = (document.getId, j2sm(document.getData).asInstanceOf[Map[String, util.HashMap[String, String]]])
+      credentials
+    }
+    dbops.getOneByQuery(query, mf)
   }
 
 }

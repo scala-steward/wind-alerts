@@ -7,7 +7,7 @@ import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
-import com.uptech.windalerts.domain.HttpErrorHandler
+import com.uptech.windalerts.domain.{FirestoreOps, HttpErrorHandler}
 import com.uptech.windalerts.users.{Auth, FirestoreCredentialsRepository, FirestoreFacebookCredentialsRepositoryAlgebra, FirestoreRefreshTokenRepository, FirestoreUserRepository, UserService}
 import org.http4s.implicits._
 import org.http4s.server.Router
@@ -29,13 +29,13 @@ object AlertsServer extends IOApp {
       alertService <- IO(new AlertsService.ServiceImpl(alertsRepo))
       httpErrorHandler <- IO(new HttpErrorHandler[IO])
       refreshTokenRepository <- IO(new FirestoreRefreshTokenRepository(db))
-      userRepository <- IO(new FirestoreUserRepository(db))
-      credentialsRepository <- IO(new FirestoreCredentialsRepository(db))
+      userRepository <- IO(new FirestoreUserRepository(db), new FirestoreOps())
+      credentialsRepository <- IO(new FirestoreCredentialsRepository(db, new FirestoreOps()))
       fbCredentialsRepository <- IO(new FirestoreFacebookCredentialsRepositoryAlgebra(db))
 
       auth <- IO(new Auth(refreshTokenRepository))
       usersService <- IO( new UserService(userRepository, credentialsRepository, fbCredentialsRepository, alertsRepo))
-      alertsEndPoints <- IO(new AlertsEndpoints(alertService, usersService, httpErrorHandler))
+      alertsEndPoints <- IO(new AlertsEndpoints(alertService, usersService, auth, httpErrorHandler))
       httpApp <- IO(Router(
         "/v1/users/alerts" -> auth.middleware(alertsEndPoints.allUsersService())
       ).orNotFound)
