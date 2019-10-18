@@ -5,7 +5,8 @@ import java.util.concurrent.TimeUnit
 import cats.data.EitherT
 import cats.effect.IO
 import com.uptech.windalerts.domain.domain
-import com.uptech.windalerts.domain.domain.{RefreshToken, TokensWithUser, User, UserId}
+import com.uptech.windalerts.domain.domain.UserType.{Premium, Trial}
+import com.uptech.windalerts.domain.domain.{RefreshToken, TokensWithUser, User, UserId, UserType}
 import dev.profunktor.auth.JwtAuthMiddleware
 import dev.profunktor.auth.jwt.{JwtAuth, JwtSecretKey}
 import io.circe.parser._
@@ -56,5 +57,14 @@ class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra) {
     val size = alpha.size
 
     (1 to n).map(_ => alpha(Random.nextInt.abs % size)).mkString
+  }
+
+  def authorizePremiumUsers(user: domain.User):EitherT[IO, ValidationError, User] = {
+    val either = if (UserType(user.userType) == UserType.Premium || UserType(user.userType) == UserType.Trial) {
+      Right(user)
+    } else {
+      Left(OperationNotAllowed(s"Only ${Premium.value} and ${Trial.value} can perform this action"))
+    }
+    EitherT.fromEither(either)
   }
 }

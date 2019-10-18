@@ -8,7 +8,7 @@ import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.uptech.windalerts.alerts.AlertsRepository.FirestoreAlertsRepository
-import com.uptech.windalerts.domain.HttpErrorHandler
+import com.uptech.windalerts.domain.{FirestoreOps, HttpErrorHandler}
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
@@ -25,7 +25,7 @@ object UsersServer extends IOApp {
       options <- IO(new FirebaseOptions.Builder().setCredentials(credentials).setProjectId("wind-alerts-staging").build)
       _ <- IO(FirebaseApp.initializeApp(options))
       db <- IO(FirestoreClient.getFirestore)
-      credentialsRepository <- IO(new FirestoreCredentialsRepository(db))
+      credentialsRepository <- IO(new FirestoreCredentialsRepository(db, new FirestoreOps()))
       facebookCredentialsRepository <- IO(new FirestoreFacebookCredentialsRepositoryAlgebra(db))
 
       refreshTokenRepo <- IO(new FirestoreRefreshTokenRepository(db))
