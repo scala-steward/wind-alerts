@@ -29,7 +29,7 @@ object AlertsServer extends IOApp {
       alertService <- IO(new AlertsService.ServiceImpl(alertsRepo))
       httpErrorHandler <- IO(new HttpErrorHandler[IO])
       refreshTokenRepository <- IO(new FirestoreRefreshTokenRepository(db))
-      userRepository <- IO(new FirestoreUserRepository(db), new FirestoreOps())
+      userRepository <- IO(new FirestoreUserRepository(db, new FirestoreOps()))
       credentialsRepository <- IO(new FirestoreCredentialsRepository(db, new FirestoreOps()))
       fbCredentialsRepository <- IO(new FirestoreFacebookCredentialsRepositoryAlgebra(db))
 
