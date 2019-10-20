@@ -10,3 +10,4 @@ project/target
 *.iml
 *.json
 resources/*.json
+resources/*.conf

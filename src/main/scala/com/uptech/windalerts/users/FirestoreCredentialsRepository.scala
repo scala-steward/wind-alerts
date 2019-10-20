@@ -55,10 +55,6 @@ class FirestoreCredentialsRepository(db: Firestore, dbops:FirestoreOps)(implicit
     new CredentialsBean(credentials.email, credentials.password, credentials.deviceType)
   }
 
-  private def toBean(credentials: domain.FacebookCredentials) = {
-    new FacebookCredentialsBean(credentials.email, credentials.accessToken, credentials.deviceType)
-  }
-
   override def updatePassword(userId: String, password: String): OptionT[IO, Unit] = {
     OptionT.liftF(
       for {
