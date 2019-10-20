@@ -1,18 +1,19 @@
 package com.uptech.windalerts.notifications
 
-import java.io.FileInputStream
+import java.io.{File, FileInputStream}
 
 import cats.effect.{ExitCode, IO, IOApp}
 import cats.implicits._
-import com._
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.uptech.windalerts.alerts.{AlertsRepository, AlertsService}
-import com.uptech.windalerts.domain.{FirestoreOps, HttpErrorHandler}
+import com.uptech.windalerts.domain.{AppSettings, FirestoreOps, HttpErrorHandler}
 import com.uptech.windalerts.status.{Beaches, Swells, Tides, Winds}
 import com.uptech.windalerts.users.{FirestoreUserRepository, UserRepositoryAlgebra}
+import io.circe.config.parser
+import io.circe.generic.auto._
 import org.http4s.HttpRoutes
 import org.http4s.dsl.impl.Root
 import org.http4s.dsl.io.{->, /, GET, Ok, _}
@@ -40,7 +41,9 @@ object SendNotifications extends IOApp {
 
   val dbWithAuth = dbWithAuthIO.unsafeRunSync()
 
-  val beaches = Beaches.ServiceImpl(Winds.impl, Swells.impl, Tides.impl)
+  val conf = readConf
+  val key = conf.surfsup.willyWeather.key
+  val beaches = Beaches.ServiceImpl(Winds.impl(key), Swells.impl(key), Tides.impl(key))
   val alertsRepo: AlertsRepository.Repository = new AlertsRepository.FirestoreAlertsRepository(dbWithAuth._1)
 
   val alerts = new AlertsService.ServiceImpl(alertsRepo)
@@ -67,6 +70,11 @@ object SendNotifications extends IOApp {
       .compile
       .drain
       .as(ExitCode.Success)
+  }
+
+  private def readConf:AppSettings = {
+    Option(parser.decodeFile[AppSettings](new File("/app/resources/application.conf")).toOption
+      .getOrElse(parser.decodeFile[AppSettings](new File("src/main/resources/application.conf")).toOption.get)).get
   }
 
 }

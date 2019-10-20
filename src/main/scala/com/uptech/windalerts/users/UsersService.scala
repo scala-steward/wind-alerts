@@ -6,7 +6,7 @@ import cats.effect.IO
 import cats.syntax.functor._
 import com.restfb.{DefaultFacebookClient, Parameter, Version}
 import com.uptech.windalerts.alerts.AlertsRepository
-import com.uptech.windalerts.domain.domain.UserType.{Registered, Trial}
+import com.uptech.windalerts.domain.domain.UserType.Trial
 import com.uptech.windalerts.domain.domain._
 
 class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsRepositoryAlgebra, facebookCredentialsRepo : FacebookCredentialsRepositoryAlgebra, alertsRepository: AlertsRepository.Repository) {
@@ -20,7 +20,7 @@ class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsR
 
   private def updateTypeAllowed(newUserType: UserType, name: String, snoozeTill: Long, user: User): EitherT[IO, ValidationError, User] = {
     UserType(user.userType) match {
-      case Registered | Trial => {
+      case  Trial => {
         newUserType match {
           case Trial => {
             val newStartTrial = if (user.startTrialAt == -1) System.currentTimeMillis() else user.startTrialAt
@@ -54,7 +54,7 @@ class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsR
       _ <- doesNotExist(facebookUser.getEmail, rr.deviceType)
 
       savedCreds <- EitherT.liftF(facebookCredentialsRepo.create(FacebookCredentials(None, facebookUser.getEmail, rr.accessToken, rr.deviceType)))
-      savedUser <- EitherT.liftF(userRepo.create(User(savedCreds.id.get, facebookUser.getEmail, facebookUser.getName, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), -1, Registered.value, -1)))
+      savedUser <- EitherT.liftF(userRepo.create(User(savedCreds.id.get, facebookUser.getEmail, facebookUser.getName, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Trial.value, -1)))
     } yield (savedUser, savedCreds)
   }
 
@@ -63,7 +63,7 @@ class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsR
     for {
       _ <- doesNotExist(credentials.email, credentials.deviceType)
       savedCreds <- EitherT.liftF(credentialsRepo.create(credentials))
-      saved <- EitherT.liftF(userRepo.create(User(savedCreds.id.get, rr.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), -1, Registered.value, -1)))
+      saved <- EitherT.liftF(userRepo.create(User(savedCreds.id.get, rr.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Trial.value, -1)))
     } yield saved
   }
 

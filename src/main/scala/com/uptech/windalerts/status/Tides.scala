@@ -25,9 +25,9 @@ object Tides {
     def get(beachId: BeachId): IO[domain.TideHeight]
   }
 
-  val impl: Service = (beachId: BeachId) => {
+  def impl(apiKey:String): Service = (beachId: BeachId) => {
 
-    val request = sttp.get(uri"https://api.willyweather.com.au/v2/ZjM0ZmY1Zjc5NDQ3N2IzNjE3MmRmYm/locations/${beachId.id}/weather.json?forecasts=tides&days=1")
+    val request = sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecasts=tides&days=1")
     implicit val backend = HttpURLConnectionBackend()
     val response = request.send()
 

@@ -22,9 +22,9 @@ object Winds {
     def get(beachId: BeachId): IO[domain.Wind]
   }
 
-  val impl: Service = (beachId: BeachId) => {
+  def impl(apiKey:String): Service = (beachId: BeachId) => {
 
-    val request = sttp.get(uri"https://api.willyweather.com.au/v2/ZjM0ZmY1Zjc5NDQ3N2IzNjE3MmRmYm/locations/${beachId.id}/weather.json?observational=true")
+    val request = sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?observational=true")
     implicit val backend = HttpURLConnectionBackend()
     val response = request.send()
 

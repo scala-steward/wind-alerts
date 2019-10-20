@@ -151,7 +151,11 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
+        <dependency>
+            <groupId>io.circe</groupId>
+            <artifactId>circe-config_2.12</artifactId>
+            <version>0.7.0</version>
+        </dependency>
         <dependency>
             <groupId>com.restfb</groupId>
             <artifactId>restfb</artifactId>
