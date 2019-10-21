@@ -1,10 +1,11 @@
 package com.uptech.windalerts.alerts
 
-import java.util.Calendar.{DAY_OF_WEEK, HOUR_OF_DAY}
+import java.util.Calendar.{DAY_OF_WEEK, HOUR_OF_DAY, MINUTE}
 import java.util.{Calendar, TimeZone}
 
 import cats.effect.IO
 import com.google.cloud.firestore.WriteResult
+import com.uptech.windalerts.domain.conversions
 import com.uptech.windalerts.domain.errors.WindAlertError
 import com.uptech.windalerts.domain.domain.{Alert, AlertRequest, Alerts}
 
@@ -16,7 +17,7 @@ trait AlertsService extends Serializable {
 object AlertsService {
 
   trait Service {
-    def getAllForDay: IO[Seq[Alert]]
+    def getAllForDayAndTimeRange: IO[Seq[Alert]]
 
     def save(alert: AlertRequest, user: String): IO[Alert]
 
@@ -38,11 +39,11 @@ object AlertsService {
 
     override def getAllForUser(user: String): IO[Alerts] = repo.getAllForUser(user)
 
-    override def getAllForDay: IO[Seq[Alert]] =
+    override def getAllForDayAndTimeRange: IO[Seq[Alert]] =
       for {
         cal <- IO(Calendar.getInstance(TimeZone.getTimeZone("Australia/Sydney")))
         all <- repo.getAllForDay(cal.get(DAY_OF_WEEK))
-        filtered <- IO(all.filter(_.isToBeAlertedAt(cal.get(HOUR_OF_DAY))))
+        filtered <- IO(all.filter(_.isToBeAlertedAt(s"${cal.get(HOUR_OF_DAY)}${conversions.makeTwoDigits(cal.get(MINUTE))}".toInt)))
       } yield filtered
   }
 

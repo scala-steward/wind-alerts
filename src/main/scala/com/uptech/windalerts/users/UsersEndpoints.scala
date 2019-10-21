@@ -2,11 +2,11 @@ package com.uptech.windalerts.users
 
 import cats.data.{EitherT, OptionT}
 import cats.effect.IO
-import com.uptech.windalerts.domain.{HttpErrorHandler, domain}
+import com.uptech.windalerts.domain.HttpErrorHandler
 import com.uptech.windalerts.domain.codecs._
-import com.uptech.windalerts.domain.domain.{AccessTokenRequest, AlertRequest, ChangePasswordRequest, Credentials, FacebookCredentials, FacebookLoginRequest, FacebookRegisterRequest, LoginRequest, RefreshToken, RegisterRequest, UpdateUserRequest, UserId, UserType}
-import org.http4s.{AuthedRoutes, HttpRoutes}
+import com.uptech.windalerts.domain.domain._
 import org.http4s.dsl.Http4sDsl
+import org.http4s.{AuthedRoutes, HttpRoutes}
 
 class UsersEndpoints(userService: UserService,
                      httpErrorHandler: HttpErrorHandler[IO],

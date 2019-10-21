@@ -2,16 +2,16 @@ package com.uptech.windalerts.users
 
 import java.util
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import cats.data.OptionT
 import cats.effect.{ContextShift, IO}
 import com.google.cloud.firestore
 import com.google.cloud.firestore.{CollectionReference, Firestore, QueryDocumentSnapshot}
 import com.uptech.windalerts.domain.conversions._
+import com.uptech.windalerts.domain.domain.User
 import com.uptech.windalerts.domain.{FirestoreOps, domain}
-import com.uptech.windalerts.domain.domain.{Notification, User}
 
 import scala.beans.BeanProperty
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class FirestoreUserRepository(db: Firestore, dbops:FirestoreOps)(implicit cs: ContextShift[IO]) extends UserRepositoryAlgebra {
   private val usersCollection: CollectionReference = db.collection("users")

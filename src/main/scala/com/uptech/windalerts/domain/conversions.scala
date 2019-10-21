@@ -28,4 +28,12 @@ object conversions {
   def toIOSeq[T](x: Seq[IO[T]]) = {
     toIO(x.toList).map(l=>l.toSeq)
   }
+
+  def makeTwoDigits(i: Int) = {
+    if (i < 10) {
+      s"0$i"
+    } else {
+      s"$i"
+    }
+  }
 }

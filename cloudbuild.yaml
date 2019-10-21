@@ -3,8 +3,8 @@ steps:
     args:
       - 'kms'
       - 'decrypt'
-      - '--ciphertext-file=src/main/resources/application.conf.enc'
-      - '--plaintext-file=src/main/resources/application.conf'
+      - '--ciphertext-file=src/main/resources/$PROJECT_ID.conf.enc'
+      - '--plaintext-file=src/main/resources/$PROJECT_ID.conf'
       - '--location=global'
       - '--keyring=alerts'
       - '--key=staging'
@@ -12,8 +12,8 @@ steps:
     args:
       - 'kms'
       - 'decrypt'
-      - '--ciphertext-file=src/main/resources/wind-alerts-staging.json.enc'
-      - '--plaintext-file=src/main/resources/wind-alerts-staging.json'
+      - '--ciphertext-file=src/main/resources/$PROJECT_ID.json.enc'
+      - '--plaintext-file=src/main/resources/$PROJECT_ID.json'
       - '--location=global'
       - '--keyring=alerts'
       - '--key=staging'
@@ -26,10 +26,19 @@ steps:
   - name: 'gcr.io/cloud-builders/mvn'
     args: ['-q', 'compile', '-P', 'users', 'jib:build']
   - name: 'gcr.io/cloud-builders/gcloud'
-    args: ['beta', 'run', 'deploy', 'wind-alerts-alerts', '--image', 'gcr.io/wind-alerts-staging/wind-alerts-alerts:1.0-SNAPSHOT', '--region', 'asia-northeast1','--platform', 'managed', '--quiet', '--memory', '512Mi']
+    args: ['beta', 'run', 'deploy', 'wind-alerts-alerts', '--image', 'gcr.io/wind-alerts-staging/wind-alerts-alerts:1.0-SNAPSHOT', '--region', 'asia-northeast1','--platform', 'managed', '--quiet', '--memory', '512Mi', '--concurrency', '80', '--allow-unauthenticated']
+    env:
+    - 'projectId=$PROJECT_ID'
   - name: 'gcr.io/cloud-builders/gcloud'
-    args: ['beta', 'run', 'deploy', 'wind-alerts-status', '--image', 'gcr.io/wind-alerts-staging/wind-alerts-status:1.0-SNAPSHOT', '--region', 'asia-northeast1','--platform', 'managed', '--quiet', '--memory', '512Mi']
+    args: ['beta', 'run', 'deploy', 'wind-alerts-status', '--image', 'gcr.io/wind-alerts-staging/wind-alerts-status:1.0-SNAPSHOT', '--region', 'asia-northeast1','--platform', 'managed', '--quiet', '--memory', '512Mi', '--concurrency', '80', '--allow-unauthenticated']
+    env:
+    - 'projectId=$PROJECT_ID'
   - name: 'gcr.io/cloud-builders/gcloud'
-    args: ['beta', 'run', 'deploy', 'wind-alerts-notifications', '--image', 'gcr.io/wind-alerts-staging/wind-alerts-send-notifications:1.0-SNAPSHOT', '--region', 'asia-northeast1','--platform', 'managed', '--quiet', '--memory', '512Mi']
+    args: ['beta', 'run', 'deploy', 'wind-alerts-notifications', '--image', 'gcr.io/wind-alerts-staging/wind-alerts-send-notifications:1.0-SNAPSHOT', '--region', 'asia-northeast1','--platform', 'managed', '--quiet', '--memory', '512Mi',  '--concurrency', '1',  '--no-allow-unauthenticated']
+    env:
+    - 'projectId=$PROJECT_ID'
   - name: 'gcr.io/cloud-builders/gcloud'
-    args: ['beta', 'run', 'deploy', 'wind-alerts-users', '--image', 'gcr.io/wind-alerts-staging/wind-alerts-users:1.0-SNAPSHOT', '--region', 'asia-northeast1','--platform', 'managed', '--quiet', '--memory', '512Mi']
+    args: ['beta', 'run', 'deploy', 'wind-alerts-users', '--image', 'gcr.io/wind-alerts-staging/wind-alerts-users:1.0-SNAPSHOT', '--region', 'asia-northeast1','--platform', 'managed', '--quiet', '--memory', '512Mi', '--concurrency', '1',  '--allow-unauthenticated']
+    env:
+    - 'projectId=$PROJECT_ID'
+

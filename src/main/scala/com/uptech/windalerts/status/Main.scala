@@ -41,8 +41,9 @@ object  Main extends IOApp {
     } yield server
   }
 
-  private def readConf:AppSettings = {
-    Option(parser.decodeFile[AppSettings](new File("/app/resources/application.conf")).toOption
-      .getOrElse(parser.decodeFile[AppSettings](new File("src/main/resources/application.conf")).toOption.get)).get
+  private def readConf: AppSettings = {
+    val projectId = sys.env("projectId")
+    Option(parser.decodeFile[AppSettings](new File(s"/app/resources/$projectId.conf")).toOption
+      .getOrElse(parser.decodeFile[AppSettings](new File(s"src/main/resources/$projectId.conf")).toOption.get)).get
   }
 }
