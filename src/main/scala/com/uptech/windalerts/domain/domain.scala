@@ -163,7 +163,7 @@ object domain {
   final case class Beach(wind: Wind, tide: Tide)
 
   case class TimeRange(@BeanProperty from: Int, @BeanProperty to: Int) {
-    def isWithinRange(hour: Int): Boolean = from <= hour && to > hour
+    def isWithinRange(hourAndMinutes: Int): Boolean = from <= hourAndMinutes && to > hourAndMinutes
   }
 
   object TimeRange {
@@ -208,7 +208,7 @@ object domain {
         windDirections.contains(beach.wind.directionText)
     }
 
-    def isToBeAlertedAt(hour: Int): Boolean = timeRanges.exists(_.isWithinRange(hour))
+    def isToBeAlertedAt(hourAndMinutes: Int): Boolean = timeRanges.exists(_.isWithinRange(hourAndMinutes))
   }
 
   object Alert {

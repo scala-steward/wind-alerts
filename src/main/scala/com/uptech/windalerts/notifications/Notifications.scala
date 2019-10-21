@@ -15,7 +15,7 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, UR: UserReposi
 
   def sendNotification = {
     for {
-      alerts <- A.getAllForDay
+      alerts <- A.getAllForDayAndTimeRange
       alertsByBeaches <- IO(alerts.groupBy(_.beachId).map(
         kv => {
           (B.get(BeachId(kv._1.toInt)), kv._2)
