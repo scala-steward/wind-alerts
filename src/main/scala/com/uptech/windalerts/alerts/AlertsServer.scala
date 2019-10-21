@@ -20,9 +20,10 @@ object AlertsServer extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = {
     for {
       _ <- IO(getLogger.error("Starting"))
-      credentials <- IO(Try(GoogleCredentials.fromStream(new FileInputStream("/app/resources/wind-alerts-staging.json")))
+      projectId <- IO(sys.env("projectId"))
+      credentials <- IO(Try(GoogleCredentials.fromStream(new FileInputStream(s"/app/resources/$projectId.json")))
         .getOrElse(GoogleCredentials.getApplicationDefault))
-      options <- IO(new FirebaseOptions.Builder().setCredentials(credentials).setProjectId("wind-alerts-staging").build)
+      options <- IO(new FirebaseOptions.Builder().setCredentials(credentials).setProjectId(projectId).build)
       _ <- IO(FirebaseApp.initializeApp(options))
       db <- IO(FirestoreClient.getFirestore)
       alertsRepo <- IO(new AlertsRepository.FirestoreAlertsRepository(db))

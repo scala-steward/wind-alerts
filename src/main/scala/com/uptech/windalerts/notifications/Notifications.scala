@@ -21,9 +21,9 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, UR: UserReposi
           (B.get(BeachId(kv._1.toInt)), kv._2)
         }))
       asIOMap <- toIOMap(alertsByBeaches)
-      log <- IO(logger.info(s"alertsByBeaches $alertsByBeaches"))
+      _ <- IO(logger.info(s"alertsByBeaches $alertsByBeaches"))
       alertsToBeNotified <- IO(asIOMap.map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)))))
-      log <- IO(logger.info(s"alertsByBeaches ${alertsByBeaches.keys}"))
+      _ <- IO(logger.info(s"alertsByBeaches ${alertsByBeaches.keys}"))
 
       usersToBeNotified <- IO(alertsToBeNotified.values.flatMap(elem => elem).map(alert => {
         val maybeUser = UR.getByUserId(alert.owner)
@@ -32,10 +32,10 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, UR: UserReposi
       }).toList)
 
       usersToBeNotifiedSeq <- usersToBeNotified.sequence
-      log <- IO(logger.info(s"usersToBeNotifiedSeq $usersToBeNotifiedSeq"))
+      _ <- IO(logger.info(s"usersToBeNotifiedSeq $usersToBeNotifiedSeq"))
 
       usersToBeNotifiedFlattend <- IO(usersToBeNotifiedSeq.flatten)
-      log <- IO(logger.info(s"usersToBeNotifiedFlattend $usersToBeNotifiedFlattend"))
+      _ <- IO(logger.info(s"usersToBeNotifiedFlattend $usersToBeNotifiedFlattend"))
 
       usersToBeNotifiedSnoozeFiltered <- IO(usersToBeNotifiedFlattend.filterNot(f => f.user.snoozeTill > System.currentTimeMillis()))
       usersToBeNotifiedSnoozeFilteredWithCount <- IO(usersToBeNotifiedFlattend.map(f => {

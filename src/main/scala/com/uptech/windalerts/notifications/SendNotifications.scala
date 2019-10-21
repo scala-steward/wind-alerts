@@ -31,9 +31,10 @@ object SendNotifications extends IOApp {
 
 
   val dbWithAuthIO = for {
-    credentials <- IO(Try(GoogleCredentials.fromStream(new FileInputStream("/app/resources/wind-alerts-staging.json")))
+    projectId <- IO(sys.env("projectId"))
+    credentials <- IO(Try(GoogleCredentials.fromStream(new FileInputStream(s"/app/resources/$projectId.json")))
       .getOrElse(GoogleCredentials.getApplicationDefault))
-    options <- IO(new FirebaseOptions.Builder().setCredentials(credentials).setProjectId("wind-alerts-staging").build)
+    options <- IO(new FirebaseOptions.Builder().setCredentials(credentials).setProjectId(projectId).build)
     _ <- IO(FirebaseApp.initializeApp(options))
     db <- IO(FirestoreClient.getFirestore)
     notifications <- IO(FirebaseMessaging.getInstance)
@@ -72,9 +73,10 @@ object SendNotifications extends IOApp {
       .as(ExitCode.Success)
   }
 
-  private def readConf:AppSettings = {
-    Option(parser.decodeFile[AppSettings](new File("/app/resources/application.conf")).toOption
-      .getOrElse(parser.decodeFile[AppSettings](new File("src/main/resources/application.conf")).toOption.get)).get
+  private def readConf: AppSettings = {
+    val projectId = sys.env("projectId")
+    Option(parser.decodeFile[AppSettings](new File(s"/app/resources/$projectId.conf")).toOption
+      .getOrElse(parser.decodeFile[AppSettings](new File(s"src/main/resources/$projectId.conf")).toOption.get)).get
   }
 
 }

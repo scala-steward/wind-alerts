@@ -21,8 +21,10 @@ object UsersServer extends IOApp {
     for {
       _ <- IO(getLogger.error("Starting"))
 
-      credentials <- IO(Try(GoogleCredentials.fromStream(new FileInputStream("/app/resources/wind-alerts-staging.json"))).getOrElse(GoogleCredentials.getApplicationDefault))
-      options <- IO(new FirebaseOptions.Builder().setCredentials(credentials).setProjectId("wind-alerts-staging").build)
+      projectId <- IO(sys.env("projectId"))
+      credentials <- IO(Try(GoogleCredentials.fromStream(new FileInputStream(s"/app/resources/$projectId.json")))
+        .getOrElse(GoogleCredentials.getApplicationDefault))
+      options <- IO(new FirebaseOptions.Builder().setCredentials(credentials).setProjectId(projectId).build)
       _ <- IO(FirebaseApp.initializeApp(options))
       db <- IO(FirestoreClient.getFirestore)
       credentialsRepository <- IO(new FirestoreCredentialsRepository(db, new FirestoreOps()))
