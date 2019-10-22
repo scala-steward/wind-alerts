@@ -208,7 +208,7 @@ object domain {
         windDirections.contains(beach.wind.directionText)
     }
 
-    def isToBeAlertedAt(hourAndMinutes: Int): Boolean = timeRanges.exists(_.isWithinRange(hourAndMinutes))
+    def isToBeAlertedAt(minutes: Int): Boolean = timeRanges.exists(_.isWithinRange(minutes))
   }
 
   object Alert {

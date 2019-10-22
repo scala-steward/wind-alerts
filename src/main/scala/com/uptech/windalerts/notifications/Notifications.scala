@@ -4,6 +4,7 @@ import cats.effect.IO
 import cats.implicits._
 import com.google.firebase.messaging.{FirebaseMessaging, Message}
 import com.uptech.windalerts.alerts.AlertsService
+import com.uptech.windalerts.domain.conversions.toIO
 import com.uptech.windalerts.domain.domain.{Alert, BeachId, User}
 import com.uptech.windalerts.domain.{HttpErrorHandler, domain}
 import com.uptech.windalerts.status.Beaches
@@ -42,7 +43,7 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, UR: UserReposi
         val io = notificationsRepository.countNotificationInLastHour(f.alert.id)
         io.map(x=>(f, x))
       }))
-      usersToBeNotifiedSnoozeFilteredWithCountIO <- com.uptech.windalerts.domain.conversions.toIO(usersToBeNotifiedSnoozeFilteredWithCount)
+      usersToBeNotifiedSnoozeFilteredWithCountIO <- toIO(usersToBeNotifiedSnoozeFilteredWithCount)
       log <- IO(logger.info(s"usersToBeNotifiedSnoozeFilteredWithCountIO $usersToBeNotifiedSnoozeFilteredWithCountIO"))
 
       alertsByUserNotificationSettings <- IO(usersToBeNotifiedSnoozeFilteredWithCountIO.filter(x=>x._2 < x._1.alert.notificationsPerHour).map(x => x._1))
