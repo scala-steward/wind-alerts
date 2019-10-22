@@ -17,7 +17,6 @@ steps:
       - '--location=global'
       - '--keyring=$PROJECT_ID-keyring'
       - '--key=$PROJECT_ID-key'
-      - '--key=staging'
   - name: 'gcr.io/cloud-builders/mvn'
     args: ['-q', 'compile', '-P', 'status', 'jib:build']
   - name: 'gcr.io/cloud-builders/mvn'
