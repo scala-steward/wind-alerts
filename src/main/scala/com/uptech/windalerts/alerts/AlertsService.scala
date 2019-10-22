@@ -43,8 +43,9 @@ object AlertsService {
       for {
         cal <- IO(Calendar.getInstance(TimeZone.getTimeZone("Australia/Sydney")))
         all <- repo.getAllForDay(cal.get(DAY_OF_WEEK))
-        filtered <- IO(all.filter(_.isToBeAlertedAt(s"${cal.get(HOUR_OF_DAY)}${conversions.makeTwoDigits(cal.get(MINUTE))}".toInt)))
+        filtered <- IO(all.filter(_.isToBeAlertedAt(getMinutes(cal))))
       } yield filtered
   }
 
+  private def getMinutes(cal: Calendar) = cal.get(HOUR_OF_DAY) * 60 + cal.get(MINUTE)
 }
