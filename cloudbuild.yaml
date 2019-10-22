@@ -14,6 +14,7 @@ steps:
       - 'decrypt'
       - '--ciphertext-file=src/main/resources/$PROJECT_ID.json.enc'
       - '--plaintext-file=src/main/resources/$PROJECT_ID.json'
+      - '--location=global'
       - '--keyring=$PROJECT_ID-keyring'
       - '--key=$PROJECT_ID-key'
       - '--key=staging'
