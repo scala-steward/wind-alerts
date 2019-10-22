@@ -44,6 +44,6 @@ object  Main extends IOApp {
   private def readConf: AppSettings = {
     val projectId = sys.env("projectId")
     Option(parser.decodeFile[AppSettings](new File(s"/app/resources/$projectId.conf")).toOption
-      .getOrElse(parser.decodeFile[AppSettings](new File(s"src/main/resources/$projectId.conf")).toOption.get)).get
+      .getOrElse(parser.decodeFile[AppSettings](new File(s"src/main/resources/application.conf")).toOption.get)).get
   }
 }
