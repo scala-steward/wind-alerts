@@ -22,6 +22,8 @@ object  Main extends IOApp {
   def allRoutes( B: Beaches.Service, H:HttpErrorHandler[IO]) = HttpRoutes.of[IO] {
     case GET -> Root / "v1" / "beaches" / IntVar(id) / "currentStatus" =>
       Ok(B.get(BeachId(id)))
+    case GET -> Root / "beaches" / IntVar(id) / "currentStatus" =>
+      Ok(B.get(BeachId(id)))
   }.orNotFound
 
   def run(args: List[String]): IO[ExitCode] = {
