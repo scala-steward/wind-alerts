@@ -18,13 +18,13 @@ steps:
       - '--keyring=$PROJECT_ID-keyring'
       - '--key=$PROJECT_ID-key'
   - name: 'gcr.io/cloud-builders/mvn'
-    args: ['-q', 'compile', '-P', 'status', 'jib:build']
+    args: ['-q', 'compile', '-P', 'status', 'jib:build', '-DenvProjectId=$PROJECT_ID']
   - name: 'gcr.io/cloud-builders/mvn'
-    args: ['-q', 'compile', '-P', 'notifications', 'jib:build']
+    args: ['-q', 'compile', '-P', 'notifications', 'jib:build', '-DenvProjectId=$PROJECT_ID']
   - name: 'gcr.io/cloud-builders/mvn'
-    args: ['-q', 'compile', '-P', 'alerts', 'jib:build']
+    args: ['-q', 'compile', '-P', 'alerts', 'jib:build', '-DenvProjectId=$PROJECT_ID']
   - name: 'gcr.io/cloud-builders/mvn'
-    args: ['-q', 'compile', '-P', 'users', 'jib:build']
+    args: ['-q', 'compile', '-P', 'users', 'jib:build', '-DenvProjectId=$PROJECT_ID']
   - name: 'gcr.io/cloud-builders/gcloud'
     args: ['beta', 'run', 'deploy', 'wind-alerts-alerts', '--image', 'gcr.io/$PROJECT_ID/wind-alerts-alerts:1.0-SNAPSHOT', '--region', 'asia-northeast1','--platform', 'managed', '--quiet', '--memory', '512Mi', '--concurrency', '80', '--allow-unauthenticated', '--set-env-vars', 'projectId=$PROJECT_ID']
   - name: 'gcr.io/cloud-builders/gcloud'
