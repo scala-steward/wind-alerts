@@ -30,7 +30,6 @@ object Tides {
     val request = sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecasts=tides&days=1")
     implicit val backend = HttpURLConnectionBackend()
     val response = request.send()
-
     val eitherResponse = response.body.map(s => {
       val timeZoneStr = parser.parse(s).getOrElse(Json.Null).hcursor.downField("location").downField("timeZone").as[String]
       val timeZone = TimeZone.getTimeZone(timeZoneStr.getOrElse("Australia/Sydney"))

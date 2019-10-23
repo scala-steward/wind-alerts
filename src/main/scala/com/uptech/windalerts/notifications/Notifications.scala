@@ -24,7 +24,7 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, UR: UserReposi
       asIOMap <- toIOMap(alertsByBeaches)
       _ <- IO(logger.info(s"alertsByBeaches $alertsByBeaches"))
       alertsToBeNotified <- IO(asIOMap.map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)))))
-      _ <- IO(logger.info(s"alertsByBeaches ${alertsByBeaches.keys}"))
+      _ <- IO(logger.info(s"alertsToBeNotified ${alertsToBeNotified}"))
 
       usersToBeNotified <- IO(alertsToBeNotified.values.flatMap(elem => elem).map(alert => {
         val maybeUser = UR.getByUserId(alert.owner)

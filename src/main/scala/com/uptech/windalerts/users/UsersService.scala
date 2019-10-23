@@ -6,10 +6,15 @@ import cats.effect.IO
 import cats.syntax.functor._
 import com.restfb.{DefaultFacebookClient, Parameter, Version}
 import com.uptech.windalerts.alerts.AlertsRepository
+import com.uptech.windalerts.domain.config
 import com.uptech.windalerts.domain.domain.UserType.Trial
 import com.uptech.windalerts.domain.domain._
 
-class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsRepositoryAlgebra, facebookCredentialsRepo : FacebookCredentialsRepositoryAlgebra, alertsRepository: AlertsRepository.Repository) {
+class UserService(userRepo: UserRepositoryAlgebra, 
+                  credentialsRepo: CredentialsRepositoryAlgebra, 
+                  facebookCredentialsRepo : FacebookCredentialsRepositoryAlgebra, 
+                  alertsRepository: AlertsRepository.Repository,
+                  facebookSecretKey:String) {
 
   def updateUserProfile(id: String, name: String, userType: UserType, snoozeTill: Long): EitherT[IO, ValidationError, User] = {
     for {
@@ -40,7 +45,7 @@ class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsR
 
   def getFacebookUserByAccessToken(accessToken: String, deviceType: String) = {
     for {
-      facebookClient <- EitherT.liftF(IO(new DefaultFacebookClient(accessToken, "6d7acd87109ea89c54cde17f4ea9df9b", Version.LATEST)))
+      facebookClient <- EitherT.liftF(IO(new DefaultFacebookClient(accessToken, facebookSecretKey, Version.LATEST)))
       facebookUser <- EitherT.liftF(IO(facebookClient.fetchObject("me", classOf[com.restfb.types.User], Parameter.`with`("fields", "name,id,email"))))
       dbUser <- getUser(facebookUser.getEmail, deviceType)
     } yield dbUser
@@ -48,7 +53,7 @@ class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsR
 
   def createUser(rr: FacebookRegisterRequest): EitherT[IO, UserAlreadyExistsError, (User, FacebookCredentials)] = {
     for {
-      facebookClient <- EitherT.liftF(IO(new DefaultFacebookClient(rr.accessToken, "6d7acd87109ea89c54cde17f4ea9df9b", Version.LATEST)))
+      facebookClient <- EitherT.liftF(IO(new DefaultFacebookClient(rr.accessToken, facebookSecretKey, Version.LATEST)))
       facebookUser <- EitherT.liftF(IO(facebookClient.fetchObject("me", classOf[com.restfb.types.User], Parameter.`with`("fields", "name,id,email"))))
       _ <- doesNotExist(facebookUser.getEmail, rr.deviceType)
 
@@ -133,5 +138,5 @@ object UserService {
                     facebookCredentialsRepositoryAlgebra: FacebookCredentialsRepositoryAlgebra,
                     alertsRepository: AlertsRepository.Repository
                   ): UserService =
-    new UserService(usersRepository, credentialsRepository, facebookCredentialsRepositoryAlgebra, alertsRepository)
+    new UserService(usersRepository, credentialsRepository, facebookCredentialsRepositoryAlgebra, alertsRepository, config.readConf.surfsup.facebook.key)
 }

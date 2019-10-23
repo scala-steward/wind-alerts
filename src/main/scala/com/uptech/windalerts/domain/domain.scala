@@ -2,11 +2,15 @@ package com.uptech.windalerts.domain
 
 import java.util
 
+import org.log4s.getLogger
+
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters
 import scala.util.control.NonFatal
 
 object domain {
+  private val logger = getLogger
+
 
   case class UpdateUserRequest(name: String, userType: String, snoozeTill: Long)
 
@@ -203,6 +207,9 @@ object domain {
                     enabled: Boolean,
                     timeZone: String = "Australia/Sydney") {
     def isToBeNotified(beach: Beach): Boolean = {
+      logger.error(s"beach to check $beach")
+      logger.error(s"self $swellDirections $waveHeightFrom $waveHeightTo $windDirections")
+
       swellDirections.contains(beach.tide.swell.directionText) &&
         waveHeightFrom <= beach.tide.swell.height && waveHeightTo >= beach.tide.swell.height &&
         windDirections.contains(beach.wind.directionText)

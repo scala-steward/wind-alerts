@@ -9,7 +9,7 @@ import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.uptech.windalerts.alerts.{AlertsRepository, AlertsService}
-import com.uptech.windalerts.domain.{AppSettings, FirestoreOps, HttpErrorHandler}
+import com.uptech.windalerts.domain.{AppSettings, FirestoreOps, HttpErrorHandler, config}
 import com.uptech.windalerts.status.{Beaches, Swells, Tides, Winds}
 import com.uptech.windalerts.users.{FirestoreUserRepository, UserRepositoryAlgebra}
 import io.circe.config.parser
@@ -42,7 +42,7 @@ object SendNotifications extends IOApp {
 
   val dbWithAuth = dbWithAuthIO.unsafeRunSync()
 
-  val conf = readConf
+  val conf = config.readConf
   val key = conf.surfsup.willyWeather.key
   val beaches = Beaches.ServiceImpl(Winds.impl(key), Swells.impl(key), Tides.impl(key))
   val alertsRepo: AlertsRepository.Repository = new AlertsRepository.FirestoreAlertsRepository(dbWithAuth._1)
@@ -71,12 +71,6 @@ object SendNotifications extends IOApp {
       .compile
       .drain
       .as(ExitCode.Success)
-  }
-
-  private def readConf: AppSettings = {
-    val projectId = sys.env("projectId")
-    Option(parser.decodeFile[AppSettings](new File(s"/app/resources/$projectId.conf")).toOption
-      .getOrElse(parser.decodeFile[AppSettings](new File(s"src/main/resources/application.conf")).toOption.get)).get
   }
 
 }
