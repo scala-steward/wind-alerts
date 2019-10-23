@@ -23,8 +23,7 @@ class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsR
       case  Trial => {
         newUserType match {
           case Trial => {
-            val newStartTrial = if (user.startTrialAt == -1) System.currentTimeMillis() else user.startTrialAt
-            userRepo.update(user.copy(userType = newUserType.value, name = name, startTrialAt = newStartTrial, snoozeTill = snoozeTill)).toRight(CouldNotUpdateUserTypeError())
+            userRepo.update(user.copy(userType = newUserType.value, name = name, snoozeTill = snoozeTill)).toRight(CouldNotUpdateUserTypeError())
           }
           case anyOtherType => EitherT.left(IO(OperationNotAllowed(s"${anyOtherType.value} user can not be updated to ${newUserType.value}")))
         }
@@ -41,7 +40,7 @@ class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsR
 
   def getFacebookUserByAccessToken(accessToken: String, deviceType: String) = {
     for {
-      facebookClient <- EitherT.liftF(IO(new DefaultFacebookClient(accessToken, "06cee1aa51e14d50c40f28b47a6b7501", Version.LATEST)))
+      facebookClient <- EitherT.liftF(IO(new DefaultFacebookClient(accessToken, "6d7acd87109ea89c54cde17f4ea9df9b", Version.LATEST)))
       facebookUser <- EitherT.liftF(IO(facebookClient.fetchObject("me", classOf[com.restfb.types.User], Parameter.`with`("fields", "name,id,email"))))
       dbUser <- getUser(facebookUser.getEmail, deviceType)
     } yield dbUser
@@ -49,7 +48,7 @@ class UserService(userRepo: UserRepositoryAlgebra, credentialsRepo: CredentialsR
 
   def createUser(rr: FacebookRegisterRequest): EitherT[IO, UserAlreadyExistsError, (User, FacebookCredentials)] = {
     for {
-      facebookClient <- EitherT.liftF(IO(new DefaultFacebookClient(rr.accessToken, "06cee1aa51e14d50c40f28b47a6b7501", Version.LATEST)))
+      facebookClient <- EitherT.liftF(IO(new DefaultFacebookClient(rr.accessToken, "6d7acd87109ea89c54cde17f4ea9df9b", Version.LATEST)))
       facebookUser <- EitherT.liftF(IO(facebookClient.fetchObject("me", classOf[com.restfb.types.User], Parameter.`with`("fields", "name,id,email"))))
       _ <- doesNotExist(facebookUser.getEmail, rr.deviceType)
 
