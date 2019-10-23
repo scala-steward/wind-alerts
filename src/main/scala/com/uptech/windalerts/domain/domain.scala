@@ -94,7 +94,7 @@ object domain {
 
   final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, userType: String, snoozeTill:Long) {
     def isTrialEnded() = {
-      startTrialAt != -1 && startTrialAt < System.currentTimeMillis() - (30 * 24 * 60 * 60 * 1000)
+      startTrialAt != -1 && startTrialAt < System.currentTimeMillis() - (30L * 24L * 60L * 60L * 1000L)
     }
   }
 
