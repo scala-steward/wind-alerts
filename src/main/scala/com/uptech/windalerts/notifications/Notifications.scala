@@ -41,12 +41,12 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, UR: UserReposi
       usersToBeNotifiedSnoozeFiltered <- IO(usersToBeNotifiedFlattend.filterNot(f => f.user.snoozeTill > System.currentTimeMillis()))
       usersToBeNotifiedSnoozeFilteredWithCount <- IO(usersToBeNotifiedFlattend.map(f => {
         val io = notificationsRepository.countNotificationInLastHour(f.alert.id)
-        io.map(x=>(f, x))
+        io.map(x => (f, x))
       }))
       usersToBeNotifiedSnoozeFilteredWithCountIO <- toIO(usersToBeNotifiedSnoozeFilteredWithCount)
       log <- IO(logger.info(s"usersToBeNotifiedSnoozeFilteredWithCountIO $usersToBeNotifiedSnoozeFilteredWithCountIO"))
 
-      alertsByUserNotificationSettings <- IO(usersToBeNotifiedSnoozeFilteredWithCountIO.filter(x=>x._2 < x._1.alert.notificationsPerHour).map(x => x._1))
+      alertsByUserNotificationSettings <- IO(usersToBeNotifiedSnoozeFilteredWithCountIO.filter(x => x._2 < x._1.alert.notificationsPerHour).map(x => x._1))
 
       log <- IO(logger.info(s"alertsByUserNotificationSettings $alertsByUserNotificationSettings"))
       save <- IO(alertsByUserNotificationSettings.map(u => tryS(s"Wind Alert on ${u.alert.beachId}", "Surf Time.", u.user, u.alert)))
@@ -55,16 +55,25 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, UR: UserReposi
   }
 
 
-  private def tryS(title: String, body: String, u: User, a:Alert): Either[Exception, String] = {
-    try Right{
-      val s= notificationsRepository.create(com.uptech.windalerts.domain.domain.Notification(None, a.id, u.deviceToken, title, body, System.currentTimeMillis()))
-      println(s.unsafeRunSync())
-      firebaseMessaging.send(Message.builder()
-      .setNotification(new com.google.firebase.messaging.Notification(title, body))
-      .setToken(u.deviceToken)
-      .build())}
-     catch {
-      case e: Exception => Left(e)
+  private def tryS(title: String, body: String, u: User, a: Alert): Either[Exception, String] = {
+    try Right {
+      val sent = firebaseMessaging.send(Message.builder()
+        .setNotification(new com.google.firebase.messaging.Notification(title, body))
+        .setToken(u.deviceToken)
+        .build())
+      val s = notificationsRepository.create(com.uptech.windalerts.domain.domain.Notification(None, a.id, u.deviceToken, title, body, System.currentTimeMillis()))
+      logger.warn(s"${s.unsafeRunSync()}")
+
+      logger.warn(s" sent ${sent}")
+
+      sent
+    }
+
+    catch {
+      case e: Exception => {
+        logger.error(s"Error $e")
+        Left(e)
+      }
     }
   }
 
