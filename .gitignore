@@ -11,3 +11,5 @@ project/target
 *.json
 resources/*.json
 resources/*.conf
+src/main/resources/*.json
+src/main/resources/application.conf

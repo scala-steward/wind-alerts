@@ -6,7 +6,7 @@ import cats.effect.{IO, _}
 import cats.implicits._
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain.BeachId
-import com.uptech.windalerts.domain.{AppSettings, HttpErrorHandler}
+import com.uptech.windalerts.domain.{AppSettings, HttpErrorHandler, config}
 import io.circe.config.parser
 import io.circe.generic.auto._
 import org.http4s.HttpRoutes
@@ -29,7 +29,7 @@ object  Main extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
     for {
       _ <- IO(getLogger.error("Starting"))
-      conf <- IO(readConf)
+      conf <- IO(config.readConf)
       apiKey <- IO(conf.surfsup.willyWeather.key)
       beaches <- IO(Beaches.ServiceImpl(Winds.impl(apiKey), Swells.impl(apiKey), Tides.impl(apiKey)))
       httpErrorHandler <- IO(new HttpErrorHandler[IO])
@@ -43,9 +43,4 @@ object  Main extends IOApp {
     } yield server
   }
 
-  private def readConf: AppSettings = {
-    val projectId = sys.env("projectId")
-    Option(parser.decodeFile[AppSettings](new File(s"/app/resources/$projectId.conf")).toOption
-      .getOrElse(parser.decodeFile[AppSettings](new File(s"src/main/resources/application.conf")).toOption.get)).get
-  }
 }
