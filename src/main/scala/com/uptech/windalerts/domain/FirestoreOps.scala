@@ -1,12 +1,9 @@
 package com.uptech.windalerts.domain
 
-import java.util
-
 import cats.effect.{ContextShift, IO}
 import com.google.cloud.firestore
 import com.google.cloud.firestore.QueryDocumentSnapshot
-import com.uptech.windalerts.domain.conversions.{j2sFuture, j2sMap, j2sm}
-import com.uptech.windalerts.domain.domain.Notification
+import com.uptech.windalerts.domain.conversions.{j2sFuture, j2sMap}
 
 class FirestoreOps(implicit cs: ContextShift[IO]) {
   def getByQuery[T](query: firestore.Query, mf: QueryDocumentSnapshot => T):IO[Seq[T]] = {

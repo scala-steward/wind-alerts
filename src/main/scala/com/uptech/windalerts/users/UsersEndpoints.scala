@@ -91,7 +91,10 @@ class UsersEndpoints(userService: UserService,
           _ <- EitherT.liftF(IO(logger.error(s"emailToken $emailToken")))
           emailConf <- EitherT.liftF(IO(secrets.read.surfsUp.email))
           urlConf <- EitherT.liftF(IO(config.read.surfsUp.urls.baseUrl))
-          _ <- EitherT.liftF(IO(new EmailSender(emailConf.userName, emailConf.password, urlConf)
+          emailSender <- EitherT.liftF(new EmailSender(emailConf.userName, emailConf.password, urlConf))
+          _ <- EitherT.liftF(IO(logger.error(s"emailSender $emailSender")))
+
+          _ <- EitherT.liftF(IO(emailSender
             .sendVerificationEmail(result.email, s"${req.uri}/verifyEmail/${emailToken.accessToken}")))
           dbCredentials <- EitherT.right(IO(Credentials(Some(result.id), rr.email, rr.password, rr.deviceType)))
           accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))

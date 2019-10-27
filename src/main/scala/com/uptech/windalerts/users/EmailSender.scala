@@ -2,12 +2,11 @@ package com.uptech.windalerts.users
 
 import java.util.Properties
 
-import javax.mail.{Authenticator, PasswordAuthentication}
-import javax.mail.{Message, Session, Transport}
-import javax.mail.internet.{InternetAddress, MimeMessage}
+import javax.mail.internet.MimeMessage
+import javax.mail._
 import org.log4s.getLogger
 
-class EmailSender(username: String, password: String, baseUrl: String) extends App {
+class EmailSender(username: String, password: String, baseUrl: String) {
   private val logger = getLogger
 
 
