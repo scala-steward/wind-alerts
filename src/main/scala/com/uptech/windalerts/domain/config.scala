@@ -16,7 +16,6 @@ object config {
   case class Urls(baseUrl: String)
 
   def read: AppConfig = {
-    val projectId = sys.env("projectId")
     Option(parser.decodeFile[AppConfig](new File(s"/app/resources/application.conf")).toOption
       .getOrElse(parser.decodeFile[AppConfig](new File(s"src/main/resources/application.conf")).toOption.get)).get
   }
