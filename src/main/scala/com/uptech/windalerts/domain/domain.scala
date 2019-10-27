@@ -81,15 +81,18 @@ object domain {
 
   object UserType {
 
+    object Registered extends UserType("Registered")
+
     object Trial extends UserType("Trial")
 
     object TrialExpired extends UserType("TrialExpired")
 
     object Premium extends UserType("Premium")
 
-    val values = Seq( Trial, TrialExpired, Premium)
+    val values = Seq(Registered, Trial, TrialExpired, Premium)
 
     def apply(value: String): UserType = value match {
+      case Registered.value => Registered
       case Trial.value => Trial
       case TrialExpired.value => TrialExpired
       case Premium.value => Premium

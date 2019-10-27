@@ -2,22 +2,25 @@ package com.uptech.windalerts.users
 
 import cats.data.{EitherT, OptionT}
 import cats.effect.IO
-import com.uptech.windalerts.domain.HttpErrorHandler
+import com.uptech.windalerts.domain.{HttpErrorHandler, config, secrets}
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
 import org.http4s.dsl.Http4sDsl
-import org.http4s.{AuthedRoutes, HttpRoutes}
+import org.http4s.{AuthedRoutes, HttpRoutes, Response}
+import org.log4s.getLogger
 
 class UsersEndpoints(userService: UserService,
                      httpErrorHandler: HttpErrorHandler[IO],
                      refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra,
                      auth: Auth) extends Http4sDsl[IO] {
+  private val logger = getLogger
+
   def authedService(): AuthedRoutes[UserId, IO] =
     AuthedRoutes {
       case authReq@PUT -> Root as user => {
-        val response = authReq.req.decode[UpdateUserRequest] { request =>
+        val response: IO[Response[IO]] = authReq.req.decode[UpdateUserRequest] { request =>
           val action = for {
-            updateResult <- userService.updateUserProfile(user.id, request.name, UserType(request.userType), request.snoozeTill)
+            updateResult <- userService.updateUserProfile(user.id, request.name,  request.snoozeTill)
           } yield updateResult
           action.value.flatMap {
             case Right(tokens) => Ok(tokens)
@@ -32,6 +35,7 @@ class UsersEndpoints(userService: UserService,
 
   def socialEndpoints(): HttpRoutes[IO] = {
     HttpRoutes.of[IO] {
+
       case req@POST -> Root =>
         val action = for {
           rr <- EitherT.liftF(req.as[FacebookRegisterRequest])
@@ -67,10 +71,28 @@ class UsersEndpoints(userService: UserService,
 
   def openEndpoints(): HttpRoutes[IO] =
     HttpRoutes.of[IO] {
+      case req@GET -> Root / "verifyEmail" / jwtToken => {
+        val updatedUser = for {
+          notExpiredTokenUser <- auth.verifyNotExpired(jwtToken)
+          updated <- userService.verifyEmail(notExpiredTokenUser)
+        } yield updated
+
+        updatedUser.value.flatMap {
+          case Right(user) => Ok(user)
+          case Left(error) => httpErrorHandler.handleError(error)
+        }
+      }
+
       case req@POST -> Root =>
         val action = for {
           rr <- EitherT.liftF(req.as[RegisterRequest])
           result <- userService.createUser(rr)
+          emailToken <- auth.createVerification(result.id, 30, result.email)
+          _ <- EitherT.liftF(IO(logger.error(s"emailToken $emailToken")))
+          emailConf <- EitherT.liftF(IO(secrets.read.surfsUp.email))
+          urlConf <- EitherT.liftF(IO(config.read.surfsUp.urls.baseUrl))
+          _ <- EitherT.liftF(IO(new EmailSender(emailConf.userName, emailConf.password, urlConf)
+            .sendVerificationEmail(result.email, s"${req.uri}/verifyEmail/${emailToken.accessToken}")))
           dbCredentials <- EitherT.right(IO(Credentials(Some(result.id), rr.email, rr.password, rr.deviceType)))
           accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
           token <- auth.createToken(dbCredentials.id.get, 60, accessTokenId)
