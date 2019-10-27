@@ -19,7 +19,6 @@ class EmailSender(username: String, password: String, baseUrl: String) extends A
       prop.put("mail.smtp.auth", "true")
       prop.put("mail.smtp.starttls.enable", "true")
 
-
       val session = Session.getInstance(prop, new Authenticator() {
         override protected def getPasswordAuthentication = new PasswordAuthentication(username, password)
       })
@@ -30,7 +29,7 @@ class EmailSender(username: String, password: String, baseUrl: String) extends A
       message.setText(s"$baseUrl$token")
       Transport.send(message)
     } catch {
-      case e:Exception => logger.error(s"Exception sending email $e")
+      case e:Throwable => logger.error(s"Exception sending email $e , ${e.printStackTrace()}")
     }
   }
 
