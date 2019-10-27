@@ -3,8 +3,8 @@ steps:
     args:
       - 'kms'
       - 'decrypt'
-      - '--ciphertext-file=src/main/resources/$PROJECT_ID.secret.enc'
-      - '--plaintext-file=src/main/resources/$PROJECT_ID.secret'
+      - '--ciphertext-file=src/main/resources/$PROJECT_ID.secrets.enc'
+      - '--plaintext-file=src/main/resources/$PROJECT_ID.secrets'
       - '--location=global'
       - '--keyring=$PROJECT_ID-keyring'
       - '--key=$PROJECT_ID-key'
