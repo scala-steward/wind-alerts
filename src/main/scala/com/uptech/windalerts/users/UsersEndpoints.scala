@@ -78,7 +78,7 @@ class UsersEndpoints(userService: UserService,
         } yield updated
 
         updatedUser.value.flatMap {
-          case Right(user) => Ok(user)
+          case Right(user) => Ok()
           case Left(error) => httpErrorHandler.handleError(error)
         }
       }
