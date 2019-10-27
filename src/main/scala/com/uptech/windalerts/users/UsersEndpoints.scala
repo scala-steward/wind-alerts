@@ -71,14 +71,14 @@ class UsersEndpoints(userService: UserService,
 
   def openEndpoints(): HttpRoutes[IO] =
     HttpRoutes.of[IO] {
-      case req@GET -> Root / "verifyEmail" / jwtToken => {
+      case GET -> Root / "verifyEmail" / jwtToken => {
         val updatedUser = for {
           notExpiredTokenUser <- auth.verifyNotExpired(jwtToken)
           updated <- userService.verifyEmail(notExpiredTokenUser)
         } yield updated
 
         updatedUser.value.flatMap {
-          case Right(user) => Ok()
+          case Right(_) => Ok()
           case Left(error) => httpErrorHandler.handleError(error)
         }
       }
