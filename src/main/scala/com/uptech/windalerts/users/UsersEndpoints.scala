@@ -91,7 +91,7 @@ class UsersEndpoints(userService: UserService,
           _ <- EitherT.liftF(IO(logger.error(s"emailToken $emailToken")))
           emailConf <- EitherT.liftF(IO(secrets.read.surfsUp.email))
           urlConf <- EitherT.liftF(IO(config.read.surfsUp.urls.baseUrl))
-          emailSender <- EitherT.liftF(new EmailSender(emailConf.userName, emailConf.password, urlConf))
+          emailSender <- EitherT.liftF(IO(new EmailSender(emailConf.userName, emailConf.password, urlConf)))
           _ <- EitherT.liftF(IO(logger.error(s"emailSender $emailSender")))
 
           _ <- EitherT.liftF(IO(emailSender
