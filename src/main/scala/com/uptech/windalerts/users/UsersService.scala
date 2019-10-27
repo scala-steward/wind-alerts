@@ -1,40 +1,44 @@
 package com.uptech.windalerts.users
 
+import java.util.Properties
+
 import cats.Functor
 import cats.data._
 import cats.effect.IO
 import cats.syntax.functor._
 import com.restfb.{DefaultFacebookClient, Parameter, Version}
 import com.uptech.windalerts.alerts.AlertsRepository
-import com.uptech.windalerts.domain.config
-import com.uptech.windalerts.domain.domain.UserType.Trial
+import com.uptech.windalerts.domain.secrets
+import com.uptech.windalerts.domain.domain.UserType._
 import com.uptech.windalerts.domain.domain._
 
-class UserService(userRepo: UserRepositoryAlgebra, 
-                  credentialsRepo: CredentialsRepositoryAlgebra, 
-                  facebookCredentialsRepo : FacebookCredentialsRepositoryAlgebra, 
+class UserService(userRepo: UserRepositoryAlgebra,
+                  credentialsRepo: CredentialsRepositoryAlgebra,
+                  facebookCredentialsRepo: FacebookCredentialsRepositoryAlgebra,
                   alertsRepository: AlertsRepository.Repository,
-                  facebookSecretKey:String) {
-
-  def updateUserProfile(id: String, name: String, userType: UserType, snoozeTill: Long): EitherT[IO, ValidationError, User] = {
+                  facebookSecretKey: String) {
+  def verifyEmail(id: String) = {
     for {
       user <- getUser(id)
-      operationResult <- updateTypeAllowed(userType, name, snoozeTill, user)
+      operationResult <- updateUserType(user)
     } yield operationResult
   }
 
-  private def updateTypeAllowed(newUserType: UserType, name: String, snoozeTill: Long, user: User): EitherT[IO, ValidationError, User] = {
-    UserType(user.userType) match {
-      case  Trial => {
-        newUserType match {
-          case Trial => {
-            userRepo.update(user.copy(userType = newUserType.value, name = name, snoozeTill = snoozeTill)).toRight(CouldNotUpdateUserTypeError())
-          }
-          case anyOtherType => EitherT.left(IO(OperationNotAllowed(s"${anyOtherType.value} user can not be updated to ${newUserType.value}")))
-        }
-      }
-      case anyOtherType => EitherT.left(IO(OperationNotAllowed(s"${anyOtherType.value} user can not be updated to ${newUserType.value}")))
-    }
+
+  private def updateUserType(user: User):EitherT[IO, ValidationError, User] = {
+    userRepo.update(user.copy(userType = Trial.value)).toRight(CouldNotUpdateUserError())
+  }
+
+
+  def updateUserProfile(id: String, name: String, snoozeTill: Long): EitherT[IO, ValidationError, User] = {
+    for {
+      user <- getUser(id)
+      operationResult <- updateUser(name, snoozeTill, user)
+    } yield operationResult
+  }
+
+  private def updateUser(name: String, snoozeTill: Long, user: User): EitherT[IO, ValidationError, User] = {
+    userRepo.update(user.copy(name = name, snoozeTill = snoozeTill)).toRight(CouldNotUpdateUserError())
   }
 
   def updateDeviceToken(userId: String, deviceToken: String) =
@@ -67,18 +71,19 @@ class UserService(userRepo: UserRepositoryAlgebra,
     for {
       _ <- doesNotExist(credentials.email, credentials.deviceType)
       savedCreds <- EitherT.liftF(credentialsRepo.create(credentials))
-      saved <- EitherT.liftF(userRepo.create(User(savedCreds.id.get, rr.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Trial.value, -1)))
+      saved <- EitherT.liftF(userRepo.create(User(savedCreds.id.get, rr.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Registered.value, -1)))
     } yield saved
   }
 
-  def doesNotExist(email:String, deviceType:String) = {
+
+  def doesNotExist(email: String, deviceType: String) = {
     for {
       emailDoesNotExist <- credentialsRepo.doesNotExist(email, deviceType)
       facebookDoesNotExist <- facebookCredentialsRepo.doesNotExist(email, deviceType)
     } yield (emailDoesNotExist, facebookDoesNotExist)
   }
 
-  def getUserAndUpdateRole(userId:String): EitherT[IO, UserNotFoundError, User] = {
+  def getUserAndUpdateRole(userId: String): EitherT[IO, UserNotFoundError, User] = {
     for {
       eitherUser <- OptionT(userRepo.getByUserId(userId)).toRight(UserNotFoundError())
       updated <- updateRole(eitherUser)
@@ -92,7 +97,7 @@ class UserService(userRepo: UserRepositoryAlgebra,
     } yield updated
   }
 
-  private def updateRole(eitherUser: User):EitherT[IO, UserNotFoundError, User] = {
+  private def updateRole(eitherUser: User): EitherT[IO, UserNotFoundError, User] = {
     if (UserType(eitherUser.userType) == Trial && eitherUser.isTrialEnded()) {
       for {
         updated <- update(eitherUser.copy(userType = UserType.TrialExpired.value))
@@ -103,7 +108,7 @@ class UserService(userRepo: UserRepositoryAlgebra,
     }
   }
 
-  private def toEither(user: User):Either[UserNotFoundError, User] = {
+  private def toEither(user: User): Either[UserNotFoundError, User] = {
     Right(user)
   }
 
@@ -138,5 +143,5 @@ object UserService {
                     facebookCredentialsRepositoryAlgebra: FacebookCredentialsRepositoryAlgebra,
                     alertsRepository: AlertsRepository.Repository
                   ): UserService =
-    new UserService(usersRepository, credentialsRepository, facebookCredentialsRepositoryAlgebra, alertsRepository, config.readConf.surfsup.facebook.key)
+    new UserService(usersRepository, credentialsRepository, facebookCredentialsRepositoryAlgebra, alertsRepository, secrets.read.surfsUp.facebook.key)
 }

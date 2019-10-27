@@ -2,7 +2,7 @@ package com.uptech.windalerts.users
 
 import java.util.concurrent.TimeUnit
 
-import cats.data.EitherT
+import cats.data.{EitherT, OptionT}
 import cats.effect.IO
 import com.uptech.windalerts.domain.domain
 import com.uptech.windalerts.domain.domain.UserType.{Premium, Trial}
@@ -35,6 +35,40 @@ class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra) {
 
   val middleware = JwtAuthMiddleware[IO, UserId](jwtAuth, authenticate)
 
+  def verifyNotExpired(token:String) = {
+    val notExpiredOption = for {
+      decodedToken <- OptionT.liftF(IO.fromTry(Jwt.decode(token, key.value, Seq(JwtAlgorithm.HS256))))
+      notExpired <- isExpired(decodedToken)
+      userId <- OptionT(IO(notExpired.subject))
+    } yield userId
+    notExpiredOption.toRight(TokenExpiredError())
+  }
+
+  private def isExpired(decodedToken: JwtClaim) = {
+    val isExpired = decodedToken.expiration match {
+      case Some(expiry) => {
+        if ( System.currentTimeMillis() / 1000 > expiry )
+          Some(decodedToken)
+        else
+          None
+      }
+      case None => None
+    }
+    OptionT.liftF(IO(decodedToken))
+  }
+
+  def createVerification(userId: String, expirationInDays: Int, email: String): EitherT[IO, ValidationError, AccessTokenWithExpiry] = {
+    val current = System.currentTimeMillis()
+    val expiry = current / 1000 + TimeUnit.DAYS.toSeconds(expirationInDays)
+    val claims = JwtClaim(
+      expiration = Some(expiry),
+      issuedAt = Some(current / 1000),
+      issuer = Some("wind-alerts.com"),
+      subject = Some(userId)
+    )
+
+    EitherT.right(IO(AccessTokenWithExpiry(Jwt.encode(claims, key.value, JwtAlgorithm.HS256), expiry)))
+  }
 
   def createToken(userId: String, expirationInDays: Int, accessTokenId: String): EitherT[IO, ValidationError, AccessTokenWithExpiry] = {
     val current = System.currentTimeMillis()
