@@ -42,11 +42,10 @@ class FirestoreCredentialsRepository(db: Firestore, dbops:FirestoreOps)(implicit
 
   override def delete(userId: String): OptionT[IO, domain.Credentials] = ???
 
-  override def findByCreds(email: String, password: String, deviceType: String): OptionT[IO, domain.Credentials] = {
+  override def findByCreds(email: String, deviceType: String): OptionT[IO, domain.Credentials] = {
     OptionT(getByQuery(
       credentialsCollection
         .whereEqualTo("email", email)
-        .whereEqualTo("password", password)
         .whereEqualTo("deviceType", deviceType)
     ))
   }

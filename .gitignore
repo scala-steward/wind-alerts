@@ -12,4 +12,5 @@ project/target
 resources/*.json
 resources/*.conf
 src/main/resources/*.json
+src/main/resources/secrets.conf
 src/main/resources/application.conf

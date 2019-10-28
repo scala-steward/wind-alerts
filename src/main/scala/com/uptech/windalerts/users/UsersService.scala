@@ -1,16 +1,15 @@
 package com.uptech.windalerts.users
 
-import java.util.Properties
-
 import cats.Functor
 import cats.data._
 import cats.effect.IO
 import cats.syntax.functor._
+import com.github.t3hnar.bcrypt._
 import com.restfb.{DefaultFacebookClient, Parameter, Version}
 import com.uptech.windalerts.alerts.AlertsRepository
-import com.uptech.windalerts.domain.secrets
 import com.uptech.windalerts.domain.domain.UserType._
 import com.uptech.windalerts.domain.domain._
+import com.uptech.windalerts.domain.secrets
 
 class UserService(userRepo: UserRepositoryAlgebra,
                   credentialsRepo: CredentialsRepositoryAlgebra,
@@ -24,8 +23,7 @@ class UserService(userRepo: UserRepositoryAlgebra,
     } yield operationResult
   }
 
-
-  private def updateUserType(user: User):EitherT[IO, ValidationError, User] = {
+  private def updateUserType(user: User): EitherT[IO, ValidationError, User] = {
     userRepo.update(user.copy(userType = Trial.value)).toRight(CouldNotUpdateUserError())
   }
 
@@ -45,7 +43,7 @@ class UserService(userRepo: UserRepositoryAlgebra,
     userRepo.updateDeviceToken(userId, deviceToken)
 
   def updatePassword(userId: String, password: String): OptionT[IO, Unit] =
-    credentialsRepo.updatePassword(userId, password)
+    credentialsRepo.updatePassword(userId, password.bcrypt)
 
   def getFacebookUserByAccessToken(accessToken: String, deviceType: String) = {
     for {
@@ -67,7 +65,7 @@ class UserService(userRepo: UserRepositoryAlgebra,
   }
 
   def createUser(rr: RegisterRequest): EitherT[IO, UserAlreadyExistsError, User] = {
-    val credentials = Credentials(None, rr.email, rr.password, rr.deviceType)
+    val credentials = Credentials(None, rr.email, rr.password.bcrypt, rr.deviceType)
     for {
       _ <- doesNotExist(credentials.email, credentials.deviceType)
       savedCreds <- EitherT.liftF(credentialsRepo.create(credentials))
@@ -121,7 +119,21 @@ class UserService(userRepo: UserRepositoryAlgebra,
   def getByCredentials(
                         email: String, password: String, deviceType: String
                       ): EitherT[IO, ValidationError, Credentials] =
-    credentialsRepo.findByCreds(email, password, deviceType).toRight(UserAuthenticationFailedError(email))
+    for {
+      creds <- credentialsRepo.findByCreds(email, deviceType).toRight(UserAuthenticationFailedError(email))
+      passwordMatched <- isPasswordMatch(password, creds)
+    } yield passwordMatched
+
+
+  private def isPasswordMatch(password: String, creds: Credentials):EitherT[IO, ValidationError, Credentials] = {
+    val passwordMatch =
+      if (password.isBcrypted(creds.password)) {
+        Right(creds)
+      } else {
+        Left(UserAuthenticationFailedError(creds.email))
+      }
+    EitherT(IO(passwordMatch))
+  }
 
   def deleteUser(userId: String): IO[Unit] =
     userRepo.delete(userId).value.void
