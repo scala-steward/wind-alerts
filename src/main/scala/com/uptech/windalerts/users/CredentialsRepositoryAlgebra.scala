@@ -17,7 +17,7 @@ trait CredentialsRepositoryAlgebra {
 
   def delete(userId: String): OptionT[IO, Credentials]
 
-  def findByCreds(email: String, password:String, deviceType: String): OptionT[IO, Credentials]
+  def findByCreds(email: String,  deviceType: String): OptionT[IO, Credentials]
 
   def updatePassword(userId: String, password: String) :OptionT[IO, Unit]
 
