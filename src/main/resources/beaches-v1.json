@@ -1,0 +1,9550 @@
+{
+  "beaches" : [
+    {
+      "id" : 1439,
+      "location" : "Culburra Beach",
+      "postCode" : 2540,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1464,
+      "location" : "Depot Beach",
+      "postCode" : 2536,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1747,
+      "location" : "Mollymook Beach",
+      "postCode" : 2539,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1872,
+      "location" : "Pambula Beach",
+      "postCode" : 2549,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1879,
+      "location" : "Pebbly Beach",
+      "postCode" : 2536,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1898,
+      "location" : "Pretty Beach",
+      "postCode" : 2539,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1968,
+      "location" : "Surf Beach",
+      "postCode" : 2536,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2028,
+      "location" : "Tura Beach",
+      "postCode" : 2548,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2197,
+      "location" : "Avalon Beach",
+      "postCode" : 2107,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2212,
+      "location" : "Collaroy Beach",
+      "postCode" : 2097,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2243,
+      "location" : "Newport Beach",
+      "postCode" : 2106,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2249,
+      "location" : "Palm Beach",
+      "postCode" : 2108,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2259,
+      "location" : "Whale Beach",
+      "postCode" : 2107,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2318,
+      "location" : "Avoca Beach",
+      "postCode" : 2251,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2363,
+      "location" : "Forresters Beach",
+      "postCode" : 2260,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2400,
+      "location" : "MacMasters Beach",
+      "postCode" : 2251,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2428,
+      "location" : "Pearl Beach",
+      "postCode" : 2256,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2440,
+      "location" : "Shelly Beach",
+      "postCode" : 2261,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2459,
+      "location" : "Umina Beach",
+      "postCode" : 2257,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2510,
+      "location" : "Bar Beach",
+      "postCode" : 2300,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2540,
+      "location" : "Blueys Beach",
+      "postCode" : 2428,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2551,
+      "location" : "Boomerang Beach",
+      "postCode" : 2428,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2609,
+      "location" : "Caves Beach",
+      "postCode" : 2281,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2657,
+      "location" : "Diamond Beach",
+      "postCode" : 2430,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2683,
+      "location" : "Elizabeth Beach",
+      "postCode" : 2428,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2906,
+      "location" : "Murrays Beach",
+      "postCode" : -1,
+      "region" : "ACT"
+    },
+    {
+      "id" : 2955,
+      "location" : "Pinny Beach",
+      "postCode" : 2281,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3268,
+      "location" : "Werri Beach",
+      "postCode" : 2534,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3762,
+      "location" : "Corindi Beach",
+      "postCode" : 2456,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3844,
+      "location" : "Emerald Beach",
+      "postCode" : 2456,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3871,
+      "location" : "Flynns Beach",
+      "postCode" : 2444,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3921,
+      "location" : "Grants Beach",
+      "postCode" : 2445,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4059,
+      "location" : "Lighthouse Beach",
+      "postCode" : 2444,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4143,
+      "location" : "Moonee Beach",
+      "postCode" : 2450,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4243,
+      "location" : "Patchs Beach",
+      "postCode" : 2478,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4313,
+      "location" : "Safety Beach",
+      "postCode" : 2456,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4318,
+      "location" : "Sandy Beach",
+      "postCode" : 2456,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4323,
+      "location" : "Sapphire Beach",
+      "postCode" : 2450,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4355,
+      "location" : "South Golden Beach",
+      "postCode" : 2483,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4502,
+      "location" : "Valla Beach",
+      "postCode" : 2448,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4962,
+      "location" : "Cabarita Beach",
+      "postCode" : 2488,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4988,
+      "location" : "Bondi Beach",
+      "postCode" : 2026,
+      "region" : "NSW"
+    },
+    {
+      "id" : 5107,
+      "location" : "Dundee Beach",
+      "postCode" : 840,
+      "region" : "NT"
+    },
+    {
+      "id" : 5276,
+      "location" : "Wagait Beach",
+      "postCode" : 822,
+      "region" : "NT"
+    },
+    {
+      "id" : 5407,
+      "location" : "Armstrong Beach",
+      "postCode" : 4737,
+      "region" : "QLD"
+    },
+    {
+      "id" : 5438,
+      "location" : "Blacks Beach",
+      "postCode" : 4740,
+      "region" : "QLD"
+    },
+    {
+      "id" : 5532,
+      "location" : "Dingo Beach",
+      "postCode" : 4800,
+      "region" : "QLD"
+    },
+    {
+      "id" : 5601,
+      "location" : "Grasstree Beach",
+      "postCode" : 4740,
+      "region" : "QLD"
+    },
+    {
+      "id" : 5798,
+      "location" : "Queens Beach",
+      "postCode" : 4805,
+      "region" : "QLD"
+    },
+    {
+      "id" : 5824,
+      "location" : "Sarina Beach",
+      "postCode" : 4737,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6003,
+      "location" : "Main Beach",
+      "postCode" : 4217,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6005,
+      "location" : "Mermaid Beach",
+      "postCode" : 4218,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6020,
+      "location" : "Nobby Beach",
+      "postCode" : 4218,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6027,
+      "location" : "Palm Beach",
+      "postCode" : 4221,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6093,
+      "location" : "Balgal Beach",
+      "postCode" : 4816,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6820,
+      "location" : "Castaways Beach",
+      "postCode" : 4567,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6833,
+      "location" : "Coolum Beach",
+      "postCode" : 4573,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6848,
+      "location" : "Dicky Beach",
+      "postCode" : 4551,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6897,
+      "location" : "Kings Beach",
+      "postCode" : 4551,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6916,
+      "location" : "Marcus Beach",
+      "postCode" : 4573,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6926,
+      "location" : "Moffat Beach",
+      "postCode" : 4551,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6956,
+      "location" : "Orchid Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6964,
+      "location" : "Peregian Beach",
+      "postCode" : 4573,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6972,
+      "location" : "Rainbow Beach",
+      "postCode" : 4581,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6981,
+      "location" : "Shelly Beach",
+      "postCode" : 4551,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6985,
+      "location" : "Sunrise Beach",
+      "postCode" : 4567,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6986,
+      "location" : "Sunshine Beach",
+      "postCode" : 4567,
+      "region" : "QLD"
+    },
+    {
+      "id" : 7352,
+      "location" : "Moore Park Beach",
+      "postCode" : 4670,
+      "region" : "QLD"
+    },
+    {
+      "id" : 7404,
+      "location" : "Rules Beach",
+      "postCode" : 4674,
+      "region" : "QLD"
+    },
+    {
+      "id" : 8685,
+      "location" : "Christies Beach",
+      "postCode" : 5165,
+      "region" : "SA"
+    },
+    {
+      "id" : 8686,
+      "location" : "Christies Beach North",
+      "postCode" : 5165,
+      "region" : "SA"
+    },
+    {
+      "id" : 8713,
+      "location" : "Henley Beach",
+      "postCode" : 5022,
+      "region" : "SA"
+    },
+    {
+      "id" : 8714,
+      "location" : "Henley Beach South",
+      "postCode" : 5022,
+      "region" : "SA"
+    },
+    {
+      "id" : 8728,
+      "location" : "Maslin Beach",
+      "postCode" : 5170,
+      "region" : "SA"
+    },
+    {
+      "id" : 8741,
+      "location" : "O'Sullivan Beach",
+      "postCode" : 5166,
+      "region" : "SA"
+    },
+    {
+      "id" : 8784,
+      "location" : "West Beach",
+      "postCode" : 5024,
+      "region" : "SA"
+    },
+    {
+      "id" : 9180,
+      "location" : "Pinks Beach",
+      "postCode" : 5275,
+      "region" : "SA"
+    },
+    {
+      "id" : 9425,
+      "location" : "Bluff Beach",
+      "postCode" : 5575,
+      "region" : "SA"
+    },
+    {
+      "id" : 9466,
+      "location" : "Couch Beach",
+      "postCode" : 5575,
+      "region" : "SA"
+    },
+    {
+      "id" : 9687,
+      "location" : "North Beach",
+      "postCode" : 5556,
+      "region" : "SA"
+    },
+    {
+      "id" : 9819,
+      "location" : "Tiddy Widdy Beach",
+      "postCode" : 5571,
+      "region" : "SA"
+    },
+    {
+      "id" : 9887,
+      "location" : "Aldinga Beach",
+      "postCode" : 5173,
+      "region" : "SA"
+    },
+    {
+      "id" : 10027,
+      "location" : "Goolwa Beach",
+      "postCode" : 5214,
+      "region" : "SA"
+    },
+    {
+      "id" : 10176,
+      "location" : "Myponga Beach",
+      "postCode" : 5202,
+      "region" : "SA"
+    },
+    {
+      "id" : 10271,
+      "location" : "Sellicks Beach",
+      "postCode" : 5174,
+      "region" : "SA"
+    },
+    {
+      "id" : 10393,
+      "location" : "Bakers Beach",
+      "postCode" : 7307,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10425,
+      "location" : "Boat Harbour Beach",
+      "postCode" : 7321,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10544,
+      "location" : "Edgcumbe Beach",
+      "postCode" : 7321,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10581,
+      "location" : "Friendly Beaches",
+      "postCode" : 7215,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10614,
+      "location" : "Greens Beach",
+      "postCode" : 7270,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10627,
+      "location" : "Hawley Beach",
+      "postCode" : 7307,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10802,
+      "location" : "Musselroe Bay",
+      "postCode" : 7264,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10967,
+      "location" : "Sisters Beach",
+      "postCode" : 7321,
+      "region" : "TAS"
+    },
+    {
+      "id" : 11064,
+      "location" : "Turners Beach",
+      "postCode" : 7315,
+      "region" : "TAS"
+    },
+    {
+      "id" : 11642,
+      "location" : "Bells Beach",
+      "postCode" : 3228,
+      "region" : "VIC"
+    },
+    {
+      "id" : 12148,
+      "location" : "Flamingo Beach",
+      "postCode" : 3851,
+      "region" : "VIC"
+    },
+    {
+      "id" : 12235,
+      "location" : "Glomar Beach",
+      "postCode" : 3851,
+      "region" : "VIC"
+    },
+    {
+      "id" : 12239,
+      "location" : "Golden Beach",
+      "postCode" : 3851,
+      "region" : "VIC"
+    },
+    {
+      "id" : 12538,
+      "location" : "Lake Tyers Beach",
+      "postCode" : 3909,
+      "region" : "VIC"
+    },
+    {
+      "id" : 12972,
+      "location" : "Paradise Beach",
+      "postCode" : 3851,
+      "region" : "VIC"
+    },
+    {
+      "id" : 13170,
+      "location" : "Smiths Beach",
+      "postCode" : 3922,
+      "region" : "VIC"
+    },
+    {
+      "id" : 13233,
+      "location" : "Surf Beach",
+      "postCode" : 3922,
+      "region" : "VIC"
+    },
+    {
+      "id" : 13586,
+      "location" : "Woodside Beach",
+      "postCode" : 3874,
+      "region" : "VIC"
+    },
+    {
+      "id" : 13881,
+      "location" : "St Andrews Beach",
+      "postCode" : 3941,
+      "region" : "VIC"
+    },
+    {
+      "id" : 14513,
+      "location" : "Burns Beach",
+      "postCode" : 6028,
+      "region" : "WA"
+    },
+    {
+      "id" : 14769,
+      "location" : "Cable Beach",
+      "postCode" : 6726,
+      "region" : "WA"
+    },
+    {
+      "id" : 14956,
+      "location" : "Eighty Mile Beach",
+      "postCode" : 6725,
+      "region" : "WA"
+    },
+    {
+      "id" : 14977,
+      "location" : "Finucane",
+      "postCode" : 6722,
+      "region" : "WA"
+    },
+    {
+      "id" : 14986,
+      "location" : "Forrest Beach",
+      "postCode" : 6271,
+      "region" : "WA"
+    },
+    {
+      "id" : 15002,
+      "location" : "Geraldton",
+      "postCode" : 6530,
+      "region" : "WA"
+    },
+    {
+      "id" : 15474,
+      "location" : "Ocean Beach",
+      "postCode" : 6333,
+      "region" : "WA"
+    },
+    {
+      "id" : 15507,
+      "location" : "Peppermint Grove Beach",
+      "postCode" : 6271,
+      "region" : "WA"
+    },
+    {
+      "id" : 15533,
+      "location" : "Preston Beach",
+      "postCode" : 6215,
+      "region" : "WA"
+    },
+    {
+      "id" : 15644,
+      "location" : "Sunset Beach",
+      "postCode" : 6530,
+      "region" : "WA"
+    },
+    {
+      "id" : 15656,
+      "location" : "Tarcoola Beach",
+      "postCode" : 6530,
+      "region" : "WA"
+    },
+    {
+      "id" : 15753,
+      "location" : "West Beach",
+      "postCode" : 6450,
+      "region" : "WA"
+    },
+    {
+      "id" : 15890,
+      "location" : "City Beach",
+      "postCode" : 6015,
+      "region" : "WA"
+    },
+    {
+      "id" : 15960,
+      "location" : "North Beach",
+      "postCode" : 6020,
+      "region" : "WA"
+    },
+    {
+      "id" : 17568,
+      "location" : "North Entrance Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17571,
+      "location" : "Soldiers Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17572,
+      "location" : "Terrigal Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17573,
+      "location" : "The Entrance Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17575,
+      "location" : "Wamberal Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17583,
+      "location" : "Bluff Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17588,
+      "location" : "Clarkes Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17590,
+      "location" : "Durranbah Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17591,
+      "location" : "Evans Head Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17594,
+      "location" : "Pippi Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17596,
+      "location" : "Shelly Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17598,
+      "location" : "Tallow Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17599,
+      "location" : "Wategos Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17600,
+      "location" : "Yamba Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17618,
+      "location" : "Aslings Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17619,
+      "location" : "Bengello Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17621,
+      "location" : "Merimbula Main Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17623,
+      "location" : "Narooma Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17636,
+      "location" : "Blacksmiths Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17640,
+      "location" : "Merewether Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17641,
+      "location" : "Newcastle Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17643,
+      "location" : "One Mile Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17645,
+      "location" : "Stockton Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17655,
+      "location" : "Corrimal Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17656,
+      "location" : "North Wollongong Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17657,
+      "location" : "Port Kembla Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17661,
+      "location" : "Towradgi Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17662,
+      "location" : "Windang Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17663,
+      "location" : "Wollongong City Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17669,
+      "location" : "Bennetts Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17675,
+      "location" : "Fingal Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17701,
+      "location" : "Killick Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17703,
+      "location" : "North Haven Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17704,
+      "location" : "Rainbow Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17705,
+      "location" : "Port Macquarie Town Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17721,
+      "location" : "Diggers Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17723,
+      "location" : "Hungry Head Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17727,
+      "location" : "Park Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17732,
+      "location" : "Woolgoolga Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17744,
+      "location" : "Bombo Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17746,
+      "location" : "Cudmirrah Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17747,
+      "location" : "Jones (or Boyds) Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17748,
+      "location" : "Kendalls Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17751,
+      "location" : "Seven Mile Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17752,
+      "location" : "Shellharbour North Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17755,
+      "location" : "Kiama Surf Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17756,
+      "location" : "Warrain Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17758,
+      "location" : "Warilla Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17773,
+      "location" : "Burning Palms Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17783,
+      "location" : "South Era Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17786,
+      "location" : "Wanda Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17802,
+      "location" : "Bilgola Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17803,
+      "location" : "Bungan Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17805,
+      "location" : "Dee Why Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17806,
+      "location" : "Freshwater",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17809,
+      "location" : "Mona Vale Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17810,
+      "location" : "Narrabeen Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17814,
+      "location" : "Manly Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17820,
+      "location" : "Warriewood Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17869,
+      "location" : "Broadbeach Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17871,
+      "location" : "Cylinder Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17872,
+      "location" : "Kurrawa Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17875,
+      "location" : "Miami Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17876,
+      "location" : "Nobbys Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17878,
+      "location" : "Northcliffe Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17941,
+      "location" : "Eimeo Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17943,
+      "location" : "Mackay Town Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18043,
+      "location" : "Kelly's Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18117,
+      "location" : "Bilinga Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18118,
+      "location" : "Coolangatta Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18119,
+      "location" : "Currumbin Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18120,
+      "location" : "Greenmount Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18121,
+      "location" : "Kirra Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18123,
+      "location" : "Pacific Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18126,
+      "location" : "Tallebudgera Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18127,
+      "location" : "Tugun Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18154,
+      "location" : "Marcoola Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18156,
+      "location" : "Maroochydore Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18157,
+      "location" : "Mooloolaba Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18158,
+      "location" : "Mudjimba Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18159,
+      "location" : "Noosa Main Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18182,
+      "location" : "Teewah Sands",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18234,
+      "location" : "Gunnamatta Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18254,
+      "location" : "Sorrento Back Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18288,
+      "location" : "Betka Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18289,
+      "location" : "Five Mile Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18294,
+      "location" : "Lakes Entrance Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18295,
+      "location" : "Cherry Tree Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18297,
+      "location" : "McGauran Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18299,
+      "location" : "Ninety Mile Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18304,
+      "location" : "Quarry Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18306,
+      "location" : "Secret Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18307,
+      "location" : "Squeaky Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18328,
+      "location" : "Logans Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18331,
+      "location" : "Shelly Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18343,
+      "location" : "Shallow Inlet Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18364,
+      "location" : "Anglesea Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18367,
+      "location" : "Bancoora Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18371,
+      "location" : "Jan Juc Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18374,
+      "location" : "Ocean Grove Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18379,
+      "location" : "Whites Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18404,
+      "location" : "Casuarina Beach",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18435,
+      "location" : "Waitpinga Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 18448,
+      "location" : "Twilight Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18605,
+      "location" : "Buttons Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 18607,
+      "location" : "Somerset Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 18613,
+      "location" : "Watcombe Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 18614,
+      "location" : "Bluff Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 18716,
+      "location" : "Hanson Bay Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 18791,
+      "location" : "Fourth Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18800,
+      "location" : "Mindalong Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18803,
+      "location" : "Dalyellup Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18821,
+      "location" : "Swanbourne Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18822,
+      "location" : "Coogee Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18824,
+      "location" : "Cottesloe Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18829,
+      "location" : "Champion Bay Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18911,
+      "location" : "Shelley Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18917,
+      "location" : "Floreat Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18919,
+      "location" : "Trigg Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18920,
+      "location" : "Leighton Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18922,
+      "location" : "Mullaloo Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18924,
+      "location" : "Pyramids Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18931,
+      "location" : "Whitford Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18932,
+      "location" : "Yanchep Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18946,
+      "location" : "Manyana Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19017,
+      "location" : "Main Beach (Byron Bay)",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19027,
+      "location" : "Main Beach (Nambucca Heads)",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19029,
+      "location" : "Wooli Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19065,
+      "location" : "Chinamans Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19066,
+      "location" : "Iluka Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19067,
+      "location" : "One Mile Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19089,
+      "location" : "Salonika Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19093,
+      "location" : "Broadwater Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19094,
+      "location" : "Sandon Back Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19095,
+      "location" : "Shelly Beach (Nambucca Heads)",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19096,
+      "location" : "Nambucca Heads South Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19097,
+      "location" : "Stuarts Point - Ocean Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19098,
+      "location" : "Gap Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19100,
+      "location" : "Angels Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19101,
+      "location" : "Flat Rock Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19102,
+      "location" : "Seven Mile Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19103,
+      "location" : "South Ballina Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19105,
+      "location" : "Casuarina Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19106,
+      "location" : "Spookies Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19107,
+      "location" : "Angourie South Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19108,
+      "location" : "Shelley Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19110,
+      "location" : "Pebbly Beach (Barcoongere)",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19111,
+      "location" : "Station Creek Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19112,
+      "location" : "Ocean View Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19113,
+      "location" : "Woolgoolga Back Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19114,
+      "location" : "Fiddamans Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19115,
+      "location" : "Boambee Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19116,
+      "location" : "Bongil Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19118,
+      "location" : "North Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19119,
+      "location" : "Pebbly Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19120,
+      "location" : "Crescent Head Back Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19122,
+      "location" : "Oxley Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19123,
+      "location" : "Nobbys Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19124,
+      "location" : "Shelly Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19125,
+      "location" : "Miners Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19126,
+      "location" : "North Shore Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19127,
+      "location" : "Lake Cathie Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19128,
+      "location" : "Pilot Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19129,
+      "location" : "Kylies Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19130,
+      "location" : "Nine Mile Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19132,
+      "location" : "Tuncurry Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19134,
+      "location" : "Lighthouse Beach (Seal Rocks)",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19135,
+      "location" : "Treachery Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19136,
+      "location" : "Mungo Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19137,
+      "location" : "Ghosties Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19138,
+      "location" : "Frazer Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19139,
+      "location" : "Birdie Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19140,
+      "location" : "Lakes Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19142,
+      "location" : "Putty Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19143,
+      "location" : "Turimetta Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19158,
+      "location" : "Wattamolla Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19159,
+      "location" : "Big Marley Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19160,
+      "location" : "Sharkies Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19161,
+      "location" : "Tamarama Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19162,
+      "location" : "Bronte Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19163,
+      "location" : "Clovelly Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19165,
+      "location" : "Coogee Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19167,
+      "location" : "Maroubra Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19170,
+      "location" : "Cronulla Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19171,
+      "location" : "North Cronulla Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19172,
+      "location" : "Shelley Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19173,
+      "location" : "Garie Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19174,
+      "location" : "Stanwell Park Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19176,
+      "location" : "McCauleys Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19177,
+      "location" : "Bulli Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19178,
+      "location" : "Woonona Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19179,
+      "location" : "Sandon Point Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19180,
+      "location" : "Bellambi Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19181,
+      "location" : "Shellharbour South Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19182,
+      "location" : "Killalea Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19184,
+      "location" : "Minnamurra Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19186,
+      "location" : "Kiama East Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19187,
+      "location" : "Walkers Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19190,
+      "location" : "Currarong Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19191,
+      "location" : "Wilsons Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19193,
+      "location" : "Chinamans Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19194,
+      "location" : "Steamers Beach",
+      "postCode" : -1,
+      "region" : "ACT"
+    },
+    {
+      "id" : 19196,
+      "location" : "Bherwerre Beach",
+      "postCode" : -1,
+      "region" : "ACT"
+    },
+    {
+      "id" : 19197,
+      "location" : "Monument Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19198,
+      "location" : "Inyadda Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19199,
+      "location" : "Washerwomans Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19200,
+      "location" : "Conjola Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19201,
+      "location" : "Buckleys Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19202,
+      "location" : "Narrawallee Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19203,
+      "location" : "Collers Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19205,
+      "location" : "Racecourse Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19206,
+      "location" : "Burrill Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19207,
+      "location" : "Wairo Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19209,
+      "location" : "Murramarang Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19211,
+      "location" : "Shelly Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19212,
+      "location" : "Merry Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19213,
+      "location" : "Emily Miller Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19214,
+      "location" : "Myrtle Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19215,
+      "location" : "Richmond Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19216,
+      "location" : "Oaky Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19219,
+      "location" : "Barlings Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19220,
+      "location" : "Tomakin Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19221,
+      "location" : "Broulee Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19222,
+      "location" : "Brou Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19224,
+      "location" : "Handkerchief Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19225,
+      "location" : "Loader Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19226,
+      "location" : "Haywards Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19227,
+      "location" : "Moorhead Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19228,
+      "location" : "Bermagui Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19229,
+      "location" : "Beares Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19230,
+      "location" : "Breakaway Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19231,
+      "location" : "Baragoot Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19232,
+      "location" : "Murrah Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19233,
+      "location" : "Bunga Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19234,
+      "location" : "Aragunnu Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19235,
+      "location" : "Picnic Point Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19236,
+      "location" : "Middle Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19237,
+      "location" : "Cowdroys Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19238,
+      "location" : "Nelson Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19240,
+      "location" : "Wallagoot Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19241,
+      "location" : "Bournda Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19242,
+      "location" : "Mitchies Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19243,
+      "location" : "Haycock Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19244,
+      "location" : "Quondolo Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19245,
+      "location" : "Pinnacles Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19246,
+      "location" : "Saltwater Creek Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19247,
+      "location" : "Wonboyn Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19248,
+      "location" : "Jane Spiers Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19249,
+      "location" : "Newtons Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19256,
+      "location" : "Jacksons Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19257,
+      "location" : "Mots Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19258,
+      "location" : "Pettmans Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19259,
+      "location" : "Shelley Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19262,
+      "location" : "Three Mile Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19264,
+      "location" : "Morgans Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19266,
+      "location" : "Inverloch Surf Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19267,
+      "location" : "Sandy Waterhole Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19268,
+      "location" : "Black Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19270,
+      "location" : "Berrys Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19271,
+      "location" : "Summerland Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19272,
+      "location" : "Flinders Ocean Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19274,
+      "location" : "Rye Ocean Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19275,
+      "location" : "No. 16 Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19276,
+      "location" : "Pearses Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19277,
+      "location" : "St Pauls Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19278,
+      "location" : "Portsea Surf Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19279,
+      "location" : "Cheviot Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19298,
+      "location" : "Thirteenth Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19299,
+      "location" : "Front Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19300,
+      "location" : "Addiscot Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19301,
+      "location" : "Point Roadknight Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19302,
+      "location" : "Shelly Beach (Lorne)",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19303,
+      "location" : "Station Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19304,
+      "location" : "Milanesia Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19305,
+      "location" : "Sutherlands Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19306,
+      "location" : "Johanna Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19307,
+      "location" : "Wreck Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19308,
+      "location" : "Moonlight Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19309,
+      "location" : "Rivernook Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19310,
+      "location" : "Princetown Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19311,
+      "location" : "Clifton Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19312,
+      "location" : "Gibson Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19314,
+      "location" : "Shelly Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19315,
+      "location" : "Warrnambool Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19316,
+      "location" : "Killarney Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19317,
+      "location" : "Port Fairy East Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19318,
+      "location" : "Southcombe Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19319,
+      "location" : "Taylors Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19320,
+      "location" : "Little River Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19321,
+      "location" : "Yambuk Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19328,
+      "location" : "Wild Dog Beach",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19329,
+      "location" : "Brown Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19331,
+      "location" : "Admella Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19332,
+      "location" : "Canunda Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19333,
+      "location" : "Geltwood Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19334,
+      "location" : "McIntyre Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19336,
+      "location" : "Stinky Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19337,
+      "location" : "Robe West Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19338,
+      "location" : "Karatta Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19339,
+      "location" : "Robe Town Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19340,
+      "location" : "Hooper Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19341,
+      "location" : "Outlet Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19342,
+      "location" : "Fox Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19343,
+      "location" : "Long Beach (Robe)",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19344,
+      "location" : "Long Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19345,
+      "location" : "Salt Creek Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19346,
+      "location" : "Basham Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19347,
+      "location" : "Kings Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19348,
+      "location" : "Parsons Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19349,
+      "location" : "Ballaparudda Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19350,
+      "location" : "Callawonga Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19355,
+      "location" : "Dodd Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19357,
+      "location" : "Cowrie Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19358,
+      "location" : "Mary Ellis Wreck Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19360,
+      "location" : "Red Banks Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19362,
+      "location" : "Gunyah Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19365,
+      "location" : "Sensation Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19367,
+      "location" : "Farm Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19368,
+      "location" : "Gallipoli Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19369,
+      "location" : "Greenly Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19370,
+      "location" : "Convention Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19372,
+      "location" : "Picnic Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19373,
+      "location" : "Kiana Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19374,
+      "location" : "Sheringa Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19375,
+      "location" : "Locks Well Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19378,
+      "location" : "Talia Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19379,
+      "location" : "Mount Camel Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19380,
+      "location" : "Rincon Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19382,
+      "location" : "Tyringa Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19386,
+      "location" : "Streaky Bay Back Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19391,
+      "location" : "Cactus Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19392,
+      "location" : "Scotts Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19393,
+      "location" : "Cabbots Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19394,
+      "location" : "Cheetima Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19395,
+      "location" : "Dog Fence Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19396,
+      "location" : "Kanidal Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19398,
+      "location" : "Morgans Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19399,
+      "location" : "Southport Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19400,
+      "location" : "Hallett Cove Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19405,
+      "location" : "Butlers Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19406,
+      "location" : "Jolly Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19408,
+      "location" : "Browns Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19409,
+      "location" : "Gym Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19411,
+      "location" : "Burners Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19412,
+      "location" : "Cockle Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19417,
+      "location" : "Coopers Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19421,
+      "location" : "Murninnie Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19422,
+      "location" : "Windmill Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19423,
+      "location" : "Mills Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19424,
+      "location" : "Salt Creek Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19432,
+      "location" : "Kennedy Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19434,
+      "location" : "Wharton Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19436,
+      "location" : "Lovers Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19437,
+      "location" : "Blue Haven",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19438,
+      "location" : "Nine Mile Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19439,
+      "location" : "Eleven Mile Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19440,
+      "location" : "Shelly Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19441,
+      "location" : "Quagi Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19442,
+      "location" : "Munglinup Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19445,
+      "location" : "Twelve Mile Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19446,
+      "location" : "Two Mile Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19447,
+      "location" : "Hopetoun West Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19448,
+      "location" : "Four Mile Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19449,
+      "location" : "Barrens Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19450,
+      "location" : "Mylies Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19451,
+      "location" : "Whalebone Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19453,
+      "location" : "Trigelow Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19454,
+      "location" : "Tooregullup Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19455,
+      "location" : "House Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19457,
+      "location" : "Peppermint Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19458,
+      "location" : "Bremer Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19459,
+      "location" : "Bremer Bay Back Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19460,
+      "location" : "Short Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19461,
+      "location" : "Banky Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19463,
+      "location" : "Blossom Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19464,
+      "location" : "Native Dog Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19465,
+      "location" : "Dillon Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19466,
+      "location" : "Stream Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19467,
+      "location" : "Foster Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19468,
+      "location" : "Pallinup Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19470,
+      "location" : "Hassell Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19472,
+      "location" : "Bettys Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19473,
+      "location" : "Normans Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19474,
+      "location" : "Little Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19475,
+      "location" : "Nanarup Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19478,
+      "location" : "Ben Dearg Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19484,
+      "location" : "Perkins Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19485,
+      "location" : "Cosy Corner Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19486,
+      "location" : "Dingo Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19487,
+      "location" : "Shelley Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19488,
+      "location" : "Lowlands Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19489,
+      "location" : "Anvil Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19491,
+      "location" : "Ocean Beach - Back Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19492,
+      "location" : "Lights Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19493,
+      "location" : "Mazzoletti Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19494,
+      "location" : "Parry Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19496,
+      "location" : "Quarram Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19499,
+      "location" : "Conspicuous Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19500,
+      "location" : "Bellanger Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19501,
+      "location" : "Circus Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19503,
+      "location" : "Hush Hush Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19504,
+      "location" : "Mandalay Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19505,
+      "location" : "Coodamurrup Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19506,
+      "location" : "Salmon Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19507,
+      "location" : "Pebbley Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19508,
+      "location" : "Warren Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19509,
+      "location" : "Yeagarup Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19513,
+      "location" : "Boranup Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19514,
+      "location" : "Conto Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19515,
+      "location" : "Redgate Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19516,
+      "location" : "Kilcarnup Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19517,
+      "location" : "Gnoocardup Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19525,
+      "location" : "Minninup Sand Patch",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19526,
+      "location" : "Stirling Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19527,
+      "location" : "Belvidere Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19528,
+      "location" : "Buffalo Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19529,
+      "location" : "Myalup Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19530,
+      "location" : "Whitehills Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19531,
+      "location" : "Tims Thicket Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19532,
+      "location" : "Dawesville - Oceanside",
+      "postCode" : 6211,
+      "region" : "WA"
+    },
+    {
+      "id" : 19536,
+      "location" : "Halls Head Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19537,
+      "location" : "Warnbro Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19539,
+      "location" : "Rockingham Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19541,
+      "location" : "Mosman Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19542,
+      "location" : "South Trigg Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19543,
+      "location" : "Bennion Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19545,
+      "location" : "Sorrento Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19550,
+      "location" : "Beaumaris Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19553,
+      "location" : "Mindarie Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19554,
+      "location" : "Quinns Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19555,
+      "location" : "Scarborough Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19556,
+      "location" : "Brighton Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19557,
+      "location" : "Carsons Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19558,
+      "location" : "Ten Mile Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19559,
+      "location" : "Port Denison South Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19562,
+      "location" : "Port Denison Surf Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19563,
+      "location" : "Seaspray Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19564,
+      "location" : "Five Mile Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19565,
+      "location" : "Nine Mile Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19568,
+      "location" : "Coronation Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19569,
+      "location" : "Wagoe Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19570,
+      "location" : "Red Bluff Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19571,
+      "location" : "Miaboolya Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19572,
+      "location" : "Bejaling Sand Patch",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19574,
+      "location" : "Lameroo Beach",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 19577,
+      "location" : "Whalebone Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19578,
+      "location" : "Kangkiji Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19582,
+      "location" : "King Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19583,
+      "location" : "Oombunghi Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19586,
+      "location" : "Picnic Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19598,
+      "location" : "Lamberts Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19599,
+      "location" : "Far Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19600,
+      "location" : "Mick Ready Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19601,
+      "location" : "Campwin Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19603,
+      "location" : "Dawson Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19607,
+      "location" : "Five Rocks Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19608,
+      "location" : "Nine Mile Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19612,
+      "location" : "Eurimbula Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19613,
+      "location" : "Corroboree Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19614,
+      "location" : "Maheno Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19615,
+      "location" : "Seventy Five Mile Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19616,
+      "location" : "Alexandria Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19622,
+      "location" : "Jason Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19623,
+      "location" : "Blue Lake Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19624,
+      "location" : "Main Beach (Tweed Heads)",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19625,
+      "location" : "Boulder Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19626,
+      "location" : "Ten Mile Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19627,
+      "location" : "Little Shelley Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19628,
+      "location" : "Plumbago Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19629,
+      "location" : "Red Cliff Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19630,
+      "location" : "Pebbly Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19631,
+      "location" : "Hatchcover Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19632,
+      "location" : "Little Pebbly Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19634,
+      "location" : "Sandon Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19635,
+      "location" : "Campbells Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19636,
+      "location" : "Hills Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19637,
+      "location" : "Korora Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19638,
+      "location" : "Coffs Harbour Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19639,
+      "location" : "Grassy Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19640,
+      "location" : "North Smoky Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19641,
+      "location" : "South Smoky Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19642,
+      "location" : "O'Connors Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19644,
+      "location" : "Dunbogan Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19645,
+      "location" : "Burgess Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19646,
+      "location" : "McBrides Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19647,
+      "location" : "Seven Mile Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19648,
+      "location" : "Submarine Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19649,
+      "location" : "Zenith Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19650,
+      "location" : "Little Park Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19651,
+      "location" : "Nine Mile Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19652,
+      "location" : "Quarry Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19653,
+      "location" : "Middle Camp Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19654,
+      "location" : "Moonee Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19656,
+      "location" : "Lighthouse Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19657,
+      "location" : "Tuggerah Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19658,
+      "location" : "Little Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19659,
+      "location" : "Tallow Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19959,
+      "location" : "Sandy Creek Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19960,
+      "location" : "Snellings Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19961,
+      "location" : "King George Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19971,
+      "location" : "Boat Harbour Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 19976,
+      "location" : "Planter Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 19977,
+      "location" : "Swimming Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 19978,
+      "location" : "Foochow Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 19990,
+      "location" : "Yellow Rock Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 19993,
+      "location" : "Martha Lavinia Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 19996,
+      "location" : "White Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 19997,
+      "location" : "Nine Mile Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 19998,
+      "location" : "Fraser Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 19999,
+      "location" : "Colliers Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20001,
+      "location" : "Sandfly Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20002,
+      "location" : "British Admiral Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20003,
+      "location" : "Whalebone Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20004,
+      "location" : "Little Porky Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20005,
+      "location" : "Porky Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20006,
+      "location" : "Ocean Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20024,
+      "location" : "Emily Beach",
+      "postCode" : -1,
+      "region" : "OFFSHORE"
+    },
+    {
+      "id" : 20095,
+      "location" : "Cooloola Beach",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20107,
+      "location" : "Sleepy Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20109,
+      "location" : "Barbers Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20114,
+      "location" : "Taylors Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20115,
+      "location" : "Swimcart Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20117,
+      "location" : "Maurouard Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20119,
+      "location" : "McIntyres Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20120,
+      "location" : "Little Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20121,
+      "location" : "Lagoons Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20122,
+      "location" : "Templestowe Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20123,
+      "location" : "Redbill Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20131,
+      "location" : "Boltons Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20134,
+      "location" : "Two Mile Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20135,
+      "location" : "Blue Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20146,
+      "location" : "Ocean Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20155,
+      "location" : "Brickmakers Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20159,
+      "location" : "Picnic Point Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20160,
+      "location" : "Coles Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20161,
+      "location" : "Back Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20163,
+      "location" : "Pardoe Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20164,
+      "location" : "Moorland Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20165,
+      "location" : "Northdown Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20166,
+      "location" : "Badger Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20167,
+      "location" : "East Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20168,
+      "location" : "Bellboy Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20169,
+      "location" : "Millers Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20170,
+      "location" : "Adams Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20171,
+      "location" : "Barnbougle Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20173,
+      "location" : "Boobyalla Beach",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20208,
+      "location" : "Jays Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18137,
+      "location" : "Logan River Albert River Junction",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18175,
+      "location" : "Maroochy River North Maroochy River Junction",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18470,
+      "location" : "Tweed River - Birds Bay Terranora Broadwater",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 18512,
+      "location" : "Hunter River - Maitland Belmore Bridge",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 18556,
+      "location" : "Parramatta River - Meadowbank Railway Bridge",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4850,
+      "location" : "Lord Howe Island",
+      "postCode" : 2898,
+      "region" : "OFFSHORE"
+    },
+    {
+      "id" : 5134,
+      "location" : "North Goulburn Island",
+      "postCode" : 822,
+      "region" : "NT"
+    },
+    {
+      "id" : 5271,
+      "location" : "Vernon Islands",
+      "postCode" : 822,
+      "region" : "NT"
+    },
+    {
+      "id" : 5520,
+      "location" : "Curtis Island",
+      "postCode" : 4680,
+      "region" : "QLD"
+    },
+    {
+      "id" : 5602,
+      "location" : "Great Keppel Island",
+      "postCode" : 4700,
+      "region" : "QLD"
+    },
+    {
+      "id" : 5618,
+      "location" : "Hayman Island",
+      "postCode" : 4801,
+      "region" : "QLD"
+    },
+    {
+      "id" : 5626,
+      "location" : "Hook Island",
+      "postCode" : 4741,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6038,
+      "location" : "South Stradbroke Island",
+      "postCode" : 4216,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6091,
+      "location" : "Badu Island",
+      "postCode" : 4875,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6132,
+      "location" : "Boigu Island",
+      "postCode" : 4875,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6181,
+      "location" : "Coconut Island",
+      "postCode" : 4875,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6219,
+      "location" : "Erub Island",
+      "postCode" : 4875,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6220,
+      "location" : "Dauan Island",
+      "postCode" : 4875,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6266,
+      "location" : "Fitzroy Island",
+      "postCode" : 4871,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6305,
+      "location" : "Green Island",
+      "postCode" : 4871,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6410,
+      "location" : "Mabuiag Island",
+      "postCode" : 4875,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6487,
+      "location" : "Murray Island",
+      "postCode" : 4875,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6527,
+      "location" : "Great Palm Island",
+      "postCode" : 4816,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6572,
+      "location" : "Saibai Island",
+      "postCode" : 4875,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6604,
+      "location" : "Stephens Island",
+      "postCode" : 4875,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6670,
+      "location" : "Warraber Island",
+      "postCode" : 4875,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6681,
+      "location" : "West Wellesley Islands",
+      "postCode" : 4871,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6703,
+      "location" : "Yam Island",
+      "postCode" : 4875,
+      "region" : "QLD"
+    },
+    {
+      "id" : 10742,
+      "location" : "Macquarie Island",
+      "postCode" : 7151,
+      "region" : "OFFSHORE"
+    },
+    {
+      "id" : 11033,
+      "location" : "Tasman Island",
+      "postCode" : 7001,
+      "region" : "TAS"
+    },
+    {
+      "id" : 11041,
+      "location" : "Three Hummock Island",
+      "postCode" : 7330,
+      "region" : "TAS"
+    },
+    {
+      "id" : 14387,
+      "location" : "Garden Island",
+      "postCode" : 6168,
+      "region" : "WA"
+    },
+    {
+      "id" : 14468,
+      "location" : "Rottnest Island",
+      "postCode" : 6161,
+      "region" : "WA"
+    },
+    {
+      "id" : 14651,
+      "location" : "Barrow Island",
+      "postCode" : 6712,
+      "region" : "WA"
+    },
+    {
+      "id" : 14673,
+      "location" : "Bernier Island",
+      "postCode" : 6701,
+      "region" : "WA"
+    },
+    {
+      "id" : 14815,
+      "location" : "Christmas Island",
+      "postCode" : 6798,
+      "region" : "OFFSHORE"
+    },
+    {
+      "id" : 14821,
+      "location" : "Cockatoo Island",
+      "postCode" : 6731,
+      "region" : "WA"
+    },
+    {
+      "id" : 14906,
+      "location" : "Dirk Hartog Island",
+      "postCode" : 6537,
+      "region" : "WA"
+    },
+    {
+      "id" : 14915,
+      "location" : "Dorre Island",
+      "postCode" : 6701,
+      "region" : "WA"
+    },
+    {
+      "id" : 15166,
+      "location" : "Koolan Island",
+      "postCode" : 6733,
+      "region" : "WA"
+    },
+    {
+      "id" : 15664,
+      "location" : "Thevenard Island",
+      "postCode" : 6711,
+      "region" : "WA"
+    },
+    {
+      "id" : 15761,
+      "location" : "Cocos (Keeling) Islands",
+      "postCode" : 6799,
+      "region" : "OFFSHORE"
+    },
+    {
+      "id" : 17681,
+      "location" : "Broughton Island",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17734,
+      "location" : "N.W. Solitary Island",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17831,
+      "location" : "Chapman Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17837,
+      "location" : "Hannibal Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17842,
+      "location" : "Low Wooded Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17849,
+      "location" : "Raine Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17852,
+      "location" : "Sir Charles Hardy Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17860,
+      "location" : "Bountiful Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17861,
+      "location" : "Mornington Island",
+      "postCode" : 4871,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17948,
+      "location" : "Border Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17952,
+      "location" : "Creal Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17953,
+      "location" : "Credlin Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17961,
+      "location" : "Haslewood Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17967,
+      "location" : "Kennedy Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17972,
+      "location" : "Penrith Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17975,
+      "location" : "Scawfell Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17978,
+      "location" : "St Bees Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17979,
+      "location" : "Stanley Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17980,
+      "location" : "Thomas Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17982,
+      "location" : "Willis Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18029,
+      "location" : "Peart Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18049,
+      "location" : "Cato Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18064,
+      "location" : "High Peak Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18066,
+      "location" : "Lady Elliot Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18067,
+      "location" : "Lady Musgrave Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18070,
+      "location" : "Middle Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18071,
+      "location" : "One Tree Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18073,
+      "location" : "Peaked Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18187,
+      "location" : "Aureed Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18189,
+      "location" : "Booby Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18191,
+      "location" : "Crab Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18193,
+      "location" : "Dugong Islet",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18194,
+      "location" : "East Strait Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18195,
+      "location" : "Gabba Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18196,
+      "location" : "Goods Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18198,
+      "location" : "Hawkesbury Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18199,
+      "location" : "Kirkcaldie Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18201,
+      "location" : "McSweeny Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18203,
+      "location" : "Poll Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18206,
+      "location" : "Red Wallis Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18207,
+      "location" : "Rennel Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18210,
+      "location" : "Suarji Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18216,
+      "location" : "Twin Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18219,
+      "location" : "Zegai Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18311,
+      "location" : "Gabo Island",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18312,
+      "location" : "Rabbit Island",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18333,
+      "location" : "Griffith Island",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18422,
+      "location" : "Peron Island North",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18620,
+      "location" : "Bass Pyramid",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 18622,
+      "location" : "Deal Island",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 18628,
+      "location" : "Maatsuyker Island",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 18631,
+      "location" : "Swan Island",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 18632,
+      "location" : "Stack Island",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 18674,
+      "location" : "Althorpe Island",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 18675,
+      "location" : "Wedge Island",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 18695,
+      "location" : "Reevesby Island",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 18696,
+      "location" : "Greenly Island",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 18697,
+      "location" : "Pearson Island",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 18698,
+      "location" : "St Francis Island",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 18753,
+      "location" : "Entrance Island",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18755,
+      "location" : "New Year Island",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18756,
+      "location" : "NW Crocodile Island",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18757,
+      "location" : "Stevens Island",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18758,
+      "location" : "Guluwuru Island",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18763,
+      "location" : "Truant Island",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18764,
+      "location" : "Hawk Island",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18765,
+      "location" : "Christine Reef",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18789,
+      "location" : "West Island",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18793,
+      "location" : "Daw Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18794,
+      "location" : "Goose Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18831,
+      "location" : "Pelsaert Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18832,
+      "location" : "Easter Group",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18833,
+      "location" : "North Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18852,
+      "location" : "Serrurier Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18856,
+      "location" : "Large Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18863,
+      "location" : "Hauy Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18869,
+      "location" : "Depuch Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18870,
+      "location" : "Bedout Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18872,
+      "location" : "Sunday Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18873,
+      "location" : "Bedford Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18874,
+      "location" : "Macleay Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18877,
+      "location" : "Degerando Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18878,
+      "location" : "White Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18879,
+      "location" : "Adele Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18881,
+      "location" : "Browse Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18883,
+      "location" : "North Maret Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18884,
+      "location" : "Baudin Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18885,
+      "location" : "Cassini Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18886,
+      "location" : "Troughton Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18951,
+      "location" : "Montague Island",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19085,
+      "location" : "SS Yongala",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19208,
+      "location" : "Crampton Island",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19210,
+      "location" : "Brush Island",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19261,
+      "location" : "Clonmel Island",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19356,
+      "location" : "Thistle Island Surf Beach",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19376,
+      "location" : "Waldegrave Islands",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19383,
+      "location" : "Jones Island",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19385,
+      "location" : "Nicolas Baudin Island",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19415,
+      "location" : "Wardang Island",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19416,
+      "location" : "Island Point",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19426,
+      "location" : "Spilsby Island",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19427,
+      "location" : "Roxby Island",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19429,
+      "location" : "Williams Island",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19435,
+      "location" : "South Twin Peak Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19456,
+      "location" : "Doubtful Islands",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19471,
+      "location" : "Bald Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19476,
+      "location" : "Breaksea Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19573,
+      "location" : "Eva Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19576,
+      "location" : "Eel Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19633,
+      "location" : "Plover Island",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19973,
+      "location" : "Inner Sister Island",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 19974,
+      "location" : "Babel Island",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 19991,
+      "location" : "New Year Island",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20012,
+      "location" : "Orpheus Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20039,
+      "location" : "Polmaise Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20040,
+      "location" : "Gannet Cay",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20041,
+      "location" : "Bell Cay",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20042,
+      "location" : "Cullen Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20046,
+      "location" : "Eden Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20055,
+      "location" : "Turu Cay",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20056,
+      "location" : "Varzin Shoal",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20060,
+      "location" : "Kai-Maituine Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20061,
+      "location" : "Phipi Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20062,
+      "location" : "Zuizin Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20063,
+      "location" : "Pearce Cay",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20064,
+      "location" : "Dungeness Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20065,
+      "location" : "Alert Patches",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20067,
+      "location" : "Alpha Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20068,
+      "location" : "Round Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20069,
+      "location" : "Nardana Patches",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20070,
+      "location" : "Unnamed Cay",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20073,
+      "location" : "Unnamed Reef no. 3",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20074,
+      "location" : "First Three Mile Opening",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20075,
+      "location" : "Cruiser Passage",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20077,
+      "location" : "Flinders Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20079,
+      "location" : "Unnamed Reef no. 1",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20080,
+      "location" : "Barnett Patches",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20081,
+      "location" : "Tile Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20084,
+      "location" : "Marion Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20085,
+      "location" : "Mellish Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20086,
+      "location" : "East Diamond Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20088,
+      "location" : "40km NE of Great Keppel Island",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20092,
+      "location" : "Breaksea Spit",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20094,
+      "location" : "Elizabeth Reef",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 20099,
+      "location" : "Seal Rocks",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 20100,
+      "location" : "East Monceour Island",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 20106,
+      "location" : "Hogan Island",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20127,
+      "location" : "Schouten Island",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20133,
+      "location" : "Maria Island",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20153,
+      "location" : "Hunter Island",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20172,
+      "location" : "Waterhouse Island",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20174,
+      "location" : "Tiparra Reef",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 20188,
+      "location" : "North Muiron Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 20190,
+      "location" : "North Sandy Island (offshore)",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 20193,
+      "location" : "Trimouille Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 20194,
+      "location" : "North West Island",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 1219,
+      "location" : "Bawley Point",
+      "postCode" : 2539,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1449,
+      "location" : "Cunjurong Point",
+      "postCode" : 2539,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1474,
+      "location" : "Dolphin Point",
+      "postCode" : 2539,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1896,
+      "location" : "Potato Point",
+      "postCode" : 2545,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3079,
+      "location" : "Wallabi Point",
+      "postCode" : 2430,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3143,
+      "location" : "Barrack Point",
+      "postCode" : 2528,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4972,
+      "location" : "Hastings Point",
+      "postCode" : 2489,
+      "region" : "NSW"
+    },
+    {
+      "id" : 5114,
+      "location" : "East Point",
+      "postCode" : 820,
+      "region" : "NT"
+    },
+    {
+      "id" : 5174,
+      "location" : "Lee Point",
+      "postCode" : 810,
+      "region" : "NT"
+    },
+    {
+      "id" : 5834,
+      "location" : "Slade Point",
+      "postCode" : 4740,
+      "region" : "QLD"
+    },
+    {
+      "id" : 7056,
+      "location" : "Cape Moreton",
+      "postCode" : 4025,
+      "region" : "QLD"
+    },
+    {
+      "id" : 8559,
+      "location" : "Amity Point",
+      "postCode" : 4183,
+      "region" : "QLD"
+    },
+    {
+      "id" : 8822,
+      "location" : "Boatswain Point",
+      "postCode" : 5275,
+      "region" : "SA"
+    },
+    {
+      "id" : 8863,
+      "location" : "Cape Douglas",
+      "postCode" : 5291,
+      "region" : "SA"
+    },
+    {
+      "id" : 8864,
+      "location" : "Cape Jaffa",
+      "postCode" : 5275,
+      "region" : "SA"
+    },
+    {
+      "id" : 9166,
+      "location" : "Pelican Point",
+      "postCode" : 5291,
+      "region" : "SA"
+    },
+    {
+      "id" : 9465,
+      "location" : "Corny Point",
+      "postCode" : 5575,
+      "region" : "SA"
+    },
+    {
+      "id" : 9940,
+      "location" : "Cape Borda",
+      "postCode" : 5223,
+      "region" : "SA"
+    },
+    {
+      "id" : 9941,
+      "location" : "Cape Jervis",
+      "postCode" : 5204,
+      "region" : "SA"
+    },
+    {
+      "id" : 10462,
+      "location" : "Cape Portland",
+      "postCode" : 7264,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10495,
+      "location" : "Cowrie Point",
+      "postCode" : 7321,
+      "region" : "TAS"
+    },
+    {
+      "id" : 11836,
+      "location" : "Cape Bridgewater",
+      "postCode" : 3305,
+      "region" : "VIC"
+    },
+    {
+      "id" : 11837,
+      "location" : "Cape Conran",
+      "postCode" : 3888,
+      "region" : "VIC"
+    },
+    {
+      "id" : 11838,
+      "location" : "Cape Otway",
+      "postCode" : 3233,
+      "region" : "VIC"
+    },
+    {
+      "id" : 11839,
+      "location" : "Cape Paterson",
+      "postCode" : 3995,
+      "region" : "VIC"
+    },
+    {
+      "id" : 13014,
+      "location" : "Point Lonsdale",
+      "postCode" : 3225,
+      "region" : "VIC"
+    },
+    {
+      "id" : 13127,
+      "location" : "Sandy Point",
+      "postCode" : 3959,
+      "region" : "VIC"
+    },
+    {
+      "id" : 13813,
+      "location" : "Cape Schanck",
+      "postCode" : 3939,
+      "region" : "VIC"
+    },
+    {
+      "id" : 14556,
+      "location" : "Ledge Point",
+      "postCode" : 6043,
+      "region" : "WA"
+    },
+    {
+      "id" : 14685,
+      "location" : "Bluff Point",
+      "postCode" : 6530,
+      "region" : "WA"
+    },
+    {
+      "id" : 14780,
+      "location" : "Cape Arid",
+      "postCode" : 6452,
+      "region" : "WA"
+    },
+    {
+      "id" : 14782,
+      "location" : "Cape Le Grand",
+      "postCode" : 6450,
+      "region" : "WA"
+    },
+    {
+      "id" : 15527,
+      "location" : "Point Samson",
+      "postCode" : 6720,
+      "region" : "WA"
+    },
+    {
+      "id" : 15756,
+      "location" : "West Cape Howe",
+      "postCode" : 6330,
+      "region" : "WA"
+    },
+    {
+      "id" : 17658,
+      "location" : "Sandon Point",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17702,
+      "location" : "Tacking Point",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17726,
+      "location" : "Meroo Point",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 17855,
+      "location" : "Cape Flattery",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17864,
+      "location" : "Cullen Point",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17867,
+      "location" : "Vrilya Point",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17983,
+      "location" : "Abbot Point",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18057,
+      "location" : "Snout Point",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18059,
+      "location" : "Waddy Point",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18082,
+      "location" : "Cape Capricorn",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18083,
+      "location" : "Cape Manifold",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18135,
+      "location" : "Snapper Rocks",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18170,
+      "location" : "Double Island Point",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18180,
+      "location" : "Noosa River - Munna Point",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18220,
+      "location" : "Ince Point",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18287,
+      "location" : "Bastion Point",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18321,
+      "location" : "Point Hicks",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18406,
+      "location" : "Munkunuwa",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18408,
+      "location" : "Camp Point",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18428,
+      "location" : "Pirates Bay",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 18497,
+      "location" : "Pambula Lake - Tea Tree Point",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 18576,
+      "location" : "Cape Bowling Green",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18577,
+      "location" : "Cape Upstart",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18592,
+      "location" : "South Passage",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18594,
+      "location" : "Point Danger",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18595,
+      "location" : "Inskip Point",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18630,
+      "location" : "Recherche Bay",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 18639,
+      "location" : "Bramble Cove",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 18686,
+      "location" : "Pondalowie Bay",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 18706,
+      "location" : "Whalers Bay",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 18708,
+      "location" : "Port Eyre",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 18729,
+      "location" : "Burge Point",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18730,
+      "location" : "Cape Hotham",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18731,
+      "location" : "Chambers Bay",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18735,
+      "location" : "Pearce Point",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18736,
+      "location" : "Point Jenny",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18737,
+      "location" : "Native Point",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18740,
+      "location" : "Glyde Point",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18741,
+      "location" : "Point Stuart",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18760,
+      "location" : "Auster Point",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18772,
+      "location" : "Port Langdon",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18773,
+      "location" : "Cape Beatrice",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18775,
+      "location" : "Two Hills Bay",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18776,
+      "location" : "Cape Don",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18777,
+      "location" : "Port Essington",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18778,
+      "location" : "Cape Croker",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18780,
+      "location" : "Cape Cockburn",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18782,
+      "location" : "Cuthbert Point",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18783,
+      "location" : "Cape Grey",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18784,
+      "location" : "Cape Arnhem",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18786,
+      "location" : "Yabooma",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18797,
+      "location" : "Mary Ann Haven",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18815,
+      "location" : "Flinders Bay",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18816,
+      "location" : "Cape Hamelin",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18818,
+      "location" : "Bunker Bay",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18838,
+      "location" : "Port Gregory",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18844,
+      "location" : "Withnell Point",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18849,
+      "location" : "Tantabiddi",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18851,
+      "location" : "Point Murat",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18862,
+      "location" : "Cape Legendre",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18867,
+      "location" : "Port Walcott",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18900,
+      "location" : "Red Bluff",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18903,
+      "location" : "Karrakatta Bay",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18908,
+      "location" : "Cape Voltaire",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18934,
+      "location" : "Warnbro Sound",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19121,
+      "location" : "Point Plomer",
+      "postCode" : 2444,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19133,
+      "location" : "Cape Hawke",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19218,
+      "location" : "Burrewarra Point",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19253,
+      "location" : "Pearl Point",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19265,
+      "location" : "Cape Liptrap",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19324,
+      "location" : "Blacknose Point",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19325,
+      "location" : "Point Danger",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19326,
+      "location" : "Cape Nelson",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19366,
+      "location" : "Point Isaac",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19371,
+      "location" : "Point Drummond",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19381,
+      "location" : "Point Weyland",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19384,
+      "location" : "Point Labatt",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19387,
+      "location" : "Cape Bauer",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19388,
+      "location" : "Point Brown",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19389,
+      "location" : "Point Bell",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19390,
+      "location" : "Point Sinclair",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19403,
+      "location" : "Troubridge Point",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19404,
+      "location" : "Point Davenport",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19407,
+      "location" : "Cape Spencer",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19410,
+      "location" : "Daly Head",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19418,
+      "location" : "Point Riley",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19430,
+      "location" : "Cape Catastrophe",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19452,
+      "location" : "Point Ann",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19462,
+      "location" : "Point Henry",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19469,
+      "location" : "Cape Riche",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19477,
+      "location" : "Cape Vancouver",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19495,
+      "location" : "Point Hillier",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19497,
+      "location" : "Point Irwin",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19502,
+      "location" : "Point Nuyts",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19510,
+      "location" : "Black Point",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19512,
+      "location" : "Cape Leeuwin",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19524,
+      "location" : "Cape Naturaliste",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19560,
+      "location" : "Leander Point",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19566,
+      "location" : "Point Moore",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19604,
+      "location" : "Cape Palmerston",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19618,
+      "location" : "Dolphin Point",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19957,
+      "location" : "Cape Bouguer",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19958,
+      "location" : "Cape du Couedic",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19975,
+      "location" : "Pot Boil Point",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 19979,
+      "location" : "Cape Richards",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19992,
+      "location" : "Cape Wickham",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 19994,
+      "location" : "Lavinia Point",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 19995,
+      "location" : "Cowper Point",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20017,
+      "location" : "Point Vincent",
+      "postCode" : -1,
+      "region" : "OFFSHORE"
+    },
+    {
+      "id" : 20020,
+      "location" : "Puppys Point",
+      "postCode" : -1,
+      "region" : "OFFSHORE"
+    },
+    {
+      "id" : 20021,
+      "location" : "Rocky Point",
+      "postCode" : -1,
+      "region" : "OFFSHORE"
+    },
+    {
+      "id" : 20027,
+      "location" : "Steels Point",
+      "postCode" : -1,
+      "region" : "OFFSHORE"
+    },
+    {
+      "id" : 20034,
+      "location" : "Wapet Landing",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 20059,
+      "location" : "Bampfield Head",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20066,
+      "location" : "Papou Point",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20110,
+      "location" : "Cape Frankland",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20112,
+      "location" : "Policemans Point",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20116,
+      "location" : "St Helens Point",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20144,
+      "location" : "Cape Bruny",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20180,
+      "location" : "Cache Point",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 20182,
+      "location" : "Point David",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 20183,
+      "location" : "One Tree Point",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 20198,
+      "location" : "Guy Point",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 1761,
+      "location" : "Moruya Heads",
+      "postCode" : 2537,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2032,
+      "location" : "Tuross Head",
+      "postCode" : 2537,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2330,
+      "location" : "Box Head",
+      "postCode" : 2257,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2419,
+      "location" : "Norah Head",
+      "postCode" : 2263,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2535,
+      "location" : "Black Head",
+      "postCode" : 2430,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2644,
+      "location" : "Crowdy Head",
+      "postCode" : 2427,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2970,
+      "location" : "Red Head",
+      "postCode" : 2430,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2972,
+      "location" : "Redhead",
+      "postCode" : 2290,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3026,
+      "location" : "Swansea Heads",
+      "postCode" : 2281,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3527,
+      "location" : "Arrawarra Headland",
+      "postCode" : 2456,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3656,
+      "location" : "Broken Head",
+      "postCode" : 2481,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3660,
+      "location" : "Brooms Head",
+      "postCode" : 2463,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3697,
+      "location" : "Camden Head",
+      "postCode" : 2443,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3794,
+      "location" : "Diamond Head",
+      "postCode" : 2443,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3922,
+      "location" : "Grassy Head",
+      "postCode" : 2441,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3953,
+      "location" : "Hat Head",
+      "postCode" : 2440,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4056,
+      "location" : "Lennox Head",
+      "postCode" : 2478,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4329,
+      "location" : "Scotts Head",
+      "postCode" : 2447,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4343,
+      "location" : "Skennars Head",
+      "postCode" : 2478,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4542,
+      "location" : "Wenonah Head",
+      "postCode" : 2455,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4584,
+      "location" : "Woody Head",
+      "postCode" : 2466,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4970,
+      "location" : "Fingal Head",
+      "postCode" : 2487,
+      "region" : "NSW"
+    },
+    {
+      "id" : 5956,
+      "location" : "Burleigh Heads",
+      "postCode" : 4220,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6782,
+      "location" : "Alexandra Headland",
+      "postCode" : 4572,
+      "region" : "QLD"
+    },
+    {
+      "id" : 7219,
+      "location" : "Burnett Heads",
+      "postCode" : 4670,
+      "region" : "QLD"
+    },
+    {
+      "id" : 7274,
+      "location" : "Elliott Heads",
+      "postCode" : 4670,
+      "region" : "QLD"
+    },
+    {
+      "id" : 10390,
+      "location" : "Badger Head",
+      "postCode" : 7270,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10721,
+      "location" : "Low Head",
+      "postCode" : 7253,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10741,
+      "location" : "Macquarie Heads",
+      "postCode" : 7468,
+      "region" : "TAS"
+    },
+    {
+      "id" : 11004,
+      "location" : "Stony Head",
+      "postCode" : 7252,
+      "region" : "TAS"
+    },
+    {
+      "id" : 11025,
+      "location" : "Table Cape",
+      "postCode" : 7325,
+      "region" : "TAS"
+    },
+    {
+      "id" : 11840,
+      "location" : "Cape Woolamai",
+      "postCode" : 3925,
+      "region" : "VIC"
+    },
+    {
+      "id" : 14393,
+      "location" : "Halls Head",
+      "postCode" : 6210,
+      "region" : "WA"
+    },
+    {
+      "id" : 15035,
+      "location" : "Green Head",
+      "postCode" : 6514,
+      "region" : "WA"
+    },
+    {
+      "id" : 17689,
+      "location" : "Port Stephens - Heads",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 18055,
+      "location" : "Indian Head",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18300,
+      "location" : "Norman Bay",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18302,
+      "location" : "Picnic Bay",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18309,
+      "location" : "Whisky Bay",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18738,
+      "location" : "Tapa Bay",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18748,
+      "location" : "West Alligator Head",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18781,
+      "location" : "Aurari Bay",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18812,
+      "location" : "Wilson Head",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18847,
+      "location" : "Norwegian Bay",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19008,
+      "location" : "Port Phillip Heads",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19223,
+      "location" : "Wagonga Head",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19250,
+      "location" : "Little Rame Head",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19251,
+      "location" : "Rame Head",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19498,
+      "location" : "Rame Head",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19655,
+      "location" : "Wybung Head",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19660,
+      "location" : "Barrenjoey Head",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 20091,
+      "location" : "Round Hill Head",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20156,
+      "location" : "Rocky Cape",
+      "postCode" : 7321,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20158,
+      "location" : "Blythe Heads",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 17665,
+      "location" : "Lake Illawarra - Entrance",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 18326,
+      "location" : "Snowy River Mouth",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18465,
+      "location" : "Tweed Heads - River Entrance",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 18472,
+      "location" : "Cudgen Creek Mouth",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 18473,
+      "location" : "Brunswick Heads - River Entrance",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 18501,
+      "location" : "Manning River - Farquhar Inlet South Channel",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 18531,
+      "location" : "Wooli River Mouth",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 18733,
+      "location" : "Fitzmaurice River Mouth",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18747,
+      "location" : "West Alligator River Mouth",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18779,
+      "location" : "Rose River Mouth",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18805,
+      "location" : "Margaret River Mouth",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18826,
+      "location" : "Greenough River Mouth",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18898,
+      "location" : "Lagrange Bay",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18958,
+      "location" : "Crookhaven River - Entrance",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19064,
+      "location" : "Richmond River Mouth",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 20157,
+      "location" : "Inglis River - Mouth",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20162,
+      "location" : "Mersey River - Mouth",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 17830,
+      "location" : "Carter Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17832,
+      "location" : "Creech Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17836,
+      "location" : "Ham Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17851,
+      "location" : "Ribbon Reef No. 9",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17955,
+      "location" : "Dip Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17958,
+      "location" : "Elusive Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17965,
+      "location" : "Jaguar Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 17973,
+      "location" : "Pith Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18020,
+      "location" : "Euston Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18026,
+      "location" : "Holmes Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18028,
+      "location" : "Nathan Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18031,
+      "location" : "Saxon Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18075,
+      "location" : "Saumarez Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18186,
+      "location" : "Ashmore Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18214,
+      "location" : "Triangle Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18217,
+      "location" : "Warrior Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18355,
+      "location" : "Rip Bank",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18421,
+      "location" : "Lynedoch Bank",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18453,
+      "location" : "Roller",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18638,
+      "location" : "Cape Sorell (offshore)",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 18767,
+      "location" : "Arafura Sea",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18770,
+      "location" : "West of Cape Wessel",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18871,
+      "location" : "Imperieuse Reef",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18880,
+      "location" : "Lynher Bank",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18882,
+      "location" : "Scott Reef",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18889,
+      "location" : "Skua No4 Well",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18890,
+      "location" : "Ashmore Reef",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18891,
+      "location" : "Jabiru",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18894,
+      "location" : "Laminaria",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19072,
+      "location" : "Ribbon No. 2 Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19073,
+      "location" : "Ribbon No. 6 Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19074,
+      "location" : "Opal Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19075,
+      "location" : "Agincourt No. 4 Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19076,
+      "location" : "Channel Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19077,
+      "location" : "Fitzroy Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19078,
+      "location" : "Mantis Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19079,
+      "location" : "Michaelmas Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19080,
+      "location" : "Flynn Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19081,
+      "location" : "Milln Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19082,
+      "location" : "Cod Hole",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19084,
+      "location" : "Tongue Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19091,
+      "location" : "Sykes Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19092,
+      "location" : "Broomfield Reef",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19109,
+      "location" : "Minnie Waters Back Beach",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 20177,
+      "location" : "Cape Scott (offshore)",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 20178,
+      "location" : "Unnamed Shoal",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 20179,
+      "location" : "Point Fawcett (offshore)",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 20181,
+      "location" : "Point Jahleel (offshore)",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 20195,
+      "location" : "Mermaid Reef",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 20196,
+      "location" : "East Holothuria Reef",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18405,
+      "location" : "Beagle A",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18407,
+      "location" : "Parsons Bank",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18411,
+      "location" : "Goodrich Bank",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18412,
+      "location" : "Fish Reef",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18413,
+      "location" : "Fenton Patches",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18414,
+      "location" : "Hancox Shoal",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18415,
+      "location" : "Newby Shoal",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18416,
+      "location" : "Calder Shoal",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18417,
+      "location" : "Echo Shoal",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18418,
+      "location" : "Loxton Shoal",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18419,
+      "location" : "Evans Shoal",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18420,
+      "location" : "The Boxers",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18766,
+      "location" : "Money Shoal",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18769,
+      "location" : "Paxie Shoal",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18790,
+      "location" : "Hogmanay Shoal",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18887,
+      "location" : "Van Cloon Shoal",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18888,
+      "location" : "Heywood Shoal",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18892,
+      "location" : "Pee Shoal",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 18893,
+      "location" : "Dillon Shoal",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 168,
+      "location" : "Little Bay",
+      "postCode" : 2036,
+      "region" : "NSW"
+    },
+    {
+      "id" : 169,
+      "location" : "Malabar",
+      "postCode" : 2036,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1209,
+      "location" : "Barragga Bay",
+      "postCode" : 2546,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1241,
+      "location" : "Berrara",
+      "postCode" : 2540,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1253,
+      "location" : "Bingie",
+      "postCode" : 2537,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1402,
+      "location" : "Congo",
+      "postCode" : 2537,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1455,
+      "location" : "Cuttagee",
+      "postCode" : 2546,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1457,
+      "location" : "Dalmeny",
+      "postCode" : 2546,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1571,
+      "location" : "Green Cape",
+      "postCode" : 2551,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1580,
+      "location" : "Guerilla Bay",
+      "postCode" : 2536,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1645,
+      "location" : "Kianga",
+      "postCode" : 2546,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1649,
+      "location" : "Kinghorne",
+      "postCode" : 2540,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1653,
+      "location" : "Kioloa",
+      "postCode" : 2539,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1671,
+      "location" : "Lilli Pilli",
+      "postCode" : 2536,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1696,
+      "location" : "Malua Bay",
+      "postCode" : 2536,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1717,
+      "location" : "Meringo",
+      "postCode" : 2537,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1746,
+      "location" : "Mollymook",
+      "postCode" : 2539,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1922,
+      "location" : "Rosedale",
+      "postCode" : 2536,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1943,
+      "location" : "South Durras",
+      "postCode" : 2536,
+      "region" : "NSW"
+    },
+    {
+      "id" : 1984,
+      "location" : "Tathra",
+      "postCode" : 2550,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2216,
+      "location" : "Curl Curl",
+      "postCode" : 2096,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2245,
+      "location" : "North Curl Curl",
+      "postCode" : 2099,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2320,
+      "location" : "Bateau Bay",
+      "postCode" : 2261,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2325,
+      "location" : "Blue Bay",
+      "postCode" : 2261,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2348,
+      "location" : "Copacabana",
+      "postCode" : 2251,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2420,
+      "location" : "Noraville",
+      "postCode" : 2263,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2421,
+      "location" : "North Avoca",
+      "postCode" : 2260,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2451,
+      "location" : "Terrigal",
+      "postCode" : 2260,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2496,
+      "location" : "Anna Bay",
+      "postCode" : 2316,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2541,
+      "location" : "Boat Harbour",
+      "postCode" : 2316,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2608,
+      "location" : "Catherine Hill Bay",
+      "postCode" : 2281,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2663,
+      "location" : "Dudley",
+      "postCode" : 2290,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2698,
+      "location" : "Fishermans Bay",
+      "postCode" : 2316,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2933,
+      "location" : "Old Bar",
+      "postCode" : 2430,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2988,
+      "location" : "Saltwater",
+      "postCode" : 2430,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2989,
+      "location" : "Sandbar",
+      "postCode" : 2428,
+      "region" : "NSW"
+    },
+    {
+      "id" : 2999,
+      "location" : "Seal Rocks",
+      "postCode" : 2423,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3137,
+      "location" : "Austinmer",
+      "postCode" : 2515,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3158,
+      "location" : "Clifton",
+      "postCode" : 2515,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3159,
+      "location" : "Coalcliff",
+      "postCode" : 2508,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3160,
+      "location" : "Coledale",
+      "postCode" : 2515,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3216,
+      "location" : "Lilyvale",
+      "postCode" : 2508,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3236,
+      "location" : "Otford",
+      "postCode" : 2508,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3246,
+      "location" : "Scarborough",
+      "postCode" : 2515,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3258,
+      "location" : "Thirroul",
+      "postCode" : 2515,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3275,
+      "location" : "Wombarra",
+      "postCode" : 2515,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3519,
+      "location" : "Angourie",
+      "postCode" : 2464,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3521,
+      "location" : "Arakoon",
+      "postCode" : 2431,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3796,
+      "location" : "Diggers Camp",
+      "postCode" : 2462,
+      "region" : "NSW"
+    },
+    {
+      "id" : 3849,
+      "location" : "Esk",
+      "postCode" : 2472,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4128,
+      "location" : "Minnie Water",
+      "postCode" : 2462,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4164,
+      "location" : "Mullaway",
+      "postCode" : 2456,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4281,
+      "location" : "Red Rock",
+      "postCode" : 2456,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4327,
+      "location" : "Sawtell",
+      "postCode" : 2452,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4361,
+      "location" : "South West Rocks",
+      "postCode" : 2431,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4378,
+      "location" : "Suffolk Park",
+      "postCode" : 2481,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4593,
+      "location" : "Wooyung",
+      "postCode" : 2483,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4974,
+      "location" : "Kingscliff",
+      "postCode" : 2487,
+      "region" : "NSW"
+    },
+    {
+      "id" : 4977,
+      "location" : "Pottsville",
+      "postCode" : 2489,
+      "region" : "NSW"
+    },
+    {
+      "id" : 5008,
+      "location" : "HMAS Watson",
+      "postCode" : 2030,
+      "region" : "NSW"
+    },
+    {
+      "id" : 5067,
+      "location" : "Brinkin",
+      "postCode" : 810,
+      "region" : "NT"
+    },
+    {
+      "id" : 5069,
+      "location" : "Buffalo Creek",
+      "postCode" : 812,
+      "region" : "NT"
+    },
+    {
+      "id" : 5203,
+      "location" : "Minjilang",
+      "postCode" : 822,
+      "region" : "NT"
+    },
+    {
+      "id" : 5216,
+      "location" : "Nhulunbuy",
+      "postCode" : 880,
+      "region" : "NT"
+    },
+    {
+      "id" : 5218,
+      "location" : "Nightcliff",
+      "postCode" : 810,
+      "region" : "NT"
+    },
+    {
+      "id" : 5242,
+      "location" : "Rapid Creek",
+      "postCode" : 810,
+      "region" : "NT"
+    },
+    {
+      "id" : 5390,
+      "location" : "Agnes Water",
+      "postCode" : 4677,
+      "region" : "QLD"
+    },
+    {
+      "id" : 5459,
+      "location" : "Bucasia",
+      "postCode" : 4750,
+      "region" : "QLD"
+    },
+    {
+      "id" : 5535,
+      "location" : "Dolphin Heads",
+      "postCode" : 4740,
+      "region" : "QLD"
+    },
+    {
+      "id" : 5577,
+      "location" : "Freshwater Point",
+      "postCode" : 4737,
+      "region" : "QLD"
+    },
+    {
+      "id" : 5623,
+      "location" : "Hideaway Bay",
+      "postCode" : 4800,
+      "region" : "QLD"
+    },
+    {
+      "id" : 5791,
+      "location" : "Plum Tree",
+      "postCode" : 4702,
+      "region" : "QLD"
+    },
+    {
+      "id" : 5829,
+      "location" : "Seventeen Seventy",
+      "postCode" : 4677,
+      "region" : "QLD"
+    },
+    {
+      "id" : 5830,
+      "location" : "Shoal Point",
+      "postCode" : 4750,
+      "region" : "QLD"
+    },
+    {
+      "id" : 5846,
+      "location" : "Stanage",
+      "postCode" : 4702,
+      "region" : "QLD"
+    },
+    {
+      "id" : 5849,
+      "location" : "Stockyard",
+      "postCode" : 4703,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6079,
+      "location" : "Alva",
+      "postCode" : 4807,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6311,
+      "location" : "Gununa",
+      "postCode" : 4871,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6403,
+      "location" : "Lucinda",
+      "postCode" : 4850,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6781,
+      "location" : "Woorim",
+      "postCode" : 4507,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6802,
+      "location" : "Bokarina",
+      "postCode" : 4575,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6810,
+      "location" : "Buddina",
+      "postCode" : 4575,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6815,
+      "location" : "Caloundra",
+      "postCode" : 4551,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6858,
+      "location" : "Eurong",
+      "postCode" : 4581,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6915,
+      "location" : "Marcoola",
+      "postCode" : 4564,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6931,
+      "location" : "Mooloolaba",
+      "postCode" : 4557,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6935,
+      "location" : "Mount Coolum",
+      "postCode" : 4573,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6948,
+      "location" : "Noosa Heads",
+      "postCode" : 4567,
+      "region" : "QLD"
+    },
+    {
+      "id" : 6970,
+      "location" : "Point Arkwright",
+      "postCode" : 4573,
+      "region" : "QLD"
+    },
+    {
+      "id" : 7011,
+      "location" : "Warana",
+      "postCode" : 4575,
+      "region" : "QLD"
+    },
+    {
+      "id" : 7028,
+      "location" : "Yaroomba",
+      "postCode" : 4573,
+      "region" : "QLD"
+    },
+    {
+      "id" : 7184,
+      "location" : "Bargara",
+      "postCode" : 4670,
+      "region" : "QLD"
+    },
+    {
+      "id" : 7239,
+      "location" : "Coonarr",
+      "postCode" : 4670,
+      "region" : "QLD"
+    },
+    {
+      "id" : 7240,
+      "location" : "Coral Cove",
+      "postCode" : 4670,
+      "region" : "QLD"
+    },
+    {
+      "id" : 7250,
+      "location" : "Deepwater",
+      "postCode" : 4674,
+      "region" : "QLD"
+    },
+    {
+      "id" : 7305,
+      "location" : "Happy Valley",
+      "postCode" : 4655,
+      "region" : "QLD"
+    },
+    {
+      "id" : 7315,
+      "location" : "Innes Park",
+      "postCode" : 4670,
+      "region" : "QLD"
+    },
+    {
+      "id" : 7345,
+      "location" : "Mon Repos",
+      "postCode" : 4670,
+      "region" : "QLD"
+    },
+    {
+      "id" : 7460,
+      "location" : "Winfield",
+      "postCode" : 4670,
+      "region" : "QLD"
+    },
+    {
+      "id" : 8558,
+      "location" : "Amity",
+      "postCode" : 4183,
+      "region" : "QLD"
+    },
+    {
+      "id" : 8632,
+      "location" : "Point Lookout",
+      "postCode" : 4183,
+      "region" : "QLD"
+    },
+    {
+      "id" : 8708,
+      "location" : "Grange",
+      "postCode" : 5022,
+      "region" : "SA"
+    },
+    {
+      "id" : 8723,
+      "location" : "Largs Bay",
+      "postCode" : 5016,
+      "region" : "SA"
+    },
+    {
+      "id" : 8724,
+      "location" : "Largs North",
+      "postCode" : 5016,
+      "region" : "SA"
+    },
+    {
+      "id" : 8732,
+      "location" : "Moana",
+      "postCode" : 5169,
+      "region" : "SA"
+    },
+    {
+      "id" : 8739,
+      "location" : "North Haven",
+      "postCode" : 5018,
+      "region" : "SA"
+    },
+    {
+      "id" : 8745,
+      "location" : "Osborne",
+      "postCode" : 5017,
+      "region" : "SA"
+    },
+    {
+      "id" : 8747,
+      "location" : "Outer Harbor",
+      "postCode" : 5018,
+      "region" : "SA"
+    },
+    {
+      "id" : 8756,
+      "location" : "Port Noarlunga",
+      "postCode" : 5167,
+      "region" : "SA"
+    },
+    {
+      "id" : 8757,
+      "location" : "Port Noarlunga South",
+      "postCode" : 5167,
+      "region" : "SA"
+    },
+    {
+      "id" : 8758,
+      "location" : "Port Stanvac",
+      "postCode" : 5160,
+      "region" : "SA"
+    },
+    {
+      "id" : 8767,
+      "location" : "Seaford",
+      "postCode" : 5169,
+      "region" : "SA"
+    },
+    {
+      "id" : 8773,
+      "location" : "Semaphore",
+      "postCode" : 5019,
+      "region" : "SA"
+    },
+    {
+      "id" : 8775,
+      "location" : "Semaphore South",
+      "postCode" : 5019,
+      "region" : "SA"
+    },
+    {
+      "id" : 8778,
+      "location" : "Taperoo",
+      "postCode" : 5017,
+      "region" : "SA"
+    },
+    {
+      "id" : 8779,
+      "location" : "Tennyson",
+      "postCode" : 5022,
+      "region" : "SA"
+    },
+    {
+      "id" : 8786,
+      "location" : "West Lakes Shore",
+      "postCode" : 5020,
+      "region" : "SA"
+    },
+    {
+      "id" : 8796,
+      "location" : "Arno Bay",
+      "postCode" : 5603,
+      "region" : "SA"
+    },
+    {
+      "id" : 8806,
+      "location" : "Beachport",
+      "postCode" : 5280,
+      "region" : "SA"
+    },
+    {
+      "id" : 8818,
+      "location" : "Blackfellows Caves",
+      "postCode" : 5291,
+      "region" : "SA"
+    },
+    {
+      "id" : 8869,
+      "location" : "Carpenter Rocks",
+      "postCode" : 5291,
+      "region" : "SA"
+    },
+    {
+      "id" : 8887,
+      "location" : "Coffin Bay",
+      "postCode" : 5607,
+      "region" : "SA"
+    },
+    {
+      "id" : 8930,
+      "location" : "Eba Anchorage",
+      "postCode" : 5680,
+      "region" : "SA"
+    },
+    {
+      "id" : 8932,
+      "location" : "Eight Mile Creek",
+      "postCode" : 5291,
+      "region" : "SA"
+    },
+    {
+      "id" : 8933,
+      "location" : "Elliston",
+      "postCode" : 5670,
+      "region" : "SA"
+    },
+    {
+      "id" : 8939,
+      "location" : "Fowlers Bay",
+      "postCode" : 5690,
+      "region" : "SA"
+    },
+    {
+      "id" : 8966,
+      "location" : "Haslam",
+      "postCode" : 5680,
+      "region" : "SA"
+    },
+    {
+      "id" : 9006,
+      "location" : "Kingston Se",
+      "postCode" : 5275,
+      "region" : "SA"
+    },
+    {
+      "id" : 9022,
+      "location" : "Laura Bay",
+      "postCode" : 5680,
+      "region" : "SA"
+    },
+    {
+      "id" : 9038,
+      "location" : "Lucky Bay",
+      "postCode" : 5602,
+      "region" : "SA"
+    },
+    {
+      "id" : 9137,
+      "location" : "Nora Creina",
+      "postCode" : 5276,
+      "region" : "SA"
+    },
+    {
+      "id" : 9169,
+      "location" : "Perlubie",
+      "postCode" : 5680,
+      "region" : "SA"
+    },
+    {
+      "id" : 9197,
+      "location" : "Port Gibbon",
+      "postCode" : 5602,
+      "region" : "SA"
+    },
+    {
+      "id" : 9201,
+      "location" : "Port Macdonnell",
+      "postCode" : 5291,
+      "region" : "SA"
+    },
+    {
+      "id" : 9202,
+      "location" : "Port Neill",
+      "postCode" : 5604,
+      "region" : "SA"
+    },
+    {
+      "id" : 9215,
+      "location" : "Racecourse Bay",
+      "postCode" : 5291,
+      "region" : "SA"
+    },
+    {
+      "id" : 9233,
+      "location" : "Sceale Bay",
+      "postCode" : 5680,
+      "region" : "SA"
+    },
+    {
+      "id" : 9241,
+      "location" : "Smoky Bay",
+      "postCode" : 5680,
+      "region" : "SA"
+    },
+    {
+      "id" : 9244,
+      "location" : "Southend",
+      "postCode" : 5280,
+      "region" : "SA"
+    },
+    {
+      "id" : 9274,
+      "location" : "Thevenard",
+      "postCode" : 5690,
+      "region" : "SA"
+    },
+    {
+      "id" : 9281,
+      "location" : "Tumby Bay",
+      "postCode" : 5605,
+      "region" : "SA"
+    },
+    {
+      "id" : 9290,
+      "location" : "Venus Bay",
+      "postCode" : 5607,
+      "region" : "SA"
+    },
+    {
+      "id" : 9319,
+      "location" : "Westall",
+      "postCode" : 5680,
+      "region" : "SA"
+    },
+    {
+      "id" : 9363,
+      "location" : "Wyomi",
+      "postCode" : 5275,
+      "region" : "SA"
+    },
+    {
+      "id" : 9370,
+      "location" : "Yanerbie",
+      "postCode" : 5680,
+      "region" : "SA"
+    },
+    {
+      "id" : 9394,
+      "location" : "Ardrossan",
+      "postCode" : 5571,
+      "region" : "SA"
+    },
+    {
+      "id" : 9406,
+      "location" : "Balgowan",
+      "postCode" : 5573,
+      "region" : "SA"
+    },
+    {
+      "id" : 9420,
+      "location" : "Black Point",
+      "postCode" : 5571,
+      "region" : "SA"
+    },
+    {
+      "id" : 9436,
+      "location" : "Brighton",
+      "postCode" : 5048,
+      "region" : "SA"
+    },
+    {
+      "id" : 9453,
+      "location" : "Chinaman Wells",
+      "postCode" : 5573,
+      "region" : "SA"
+    },
+    {
+      "id" : 9464,
+      "location" : "Coobowie",
+      "postCode" : 5583,
+      "region" : "SA"
+    },
+    {
+      "id" : 9494,
+      "location" : "Edithburgh",
+      "postCode" : 5583,
+      "region" : "SA"
+    },
+    {
+      "id" : 9520,
+      "location" : "Fisherman Bay",
+      "postCode" : 5522,
+      "region" : "SA"
+    },
+    {
+      "id" : 9524,
+      "location" : "Foul Bay",
+      "postCode" : 5577,
+      "region" : "SA"
+    },
+    {
+      "id" : 9542,
+      "location" : "Glenelg",
+      "postCode" : 5045,
+      "region" : "SA"
+    },
+    {
+      "id" : 9545,
+      "location" : "Glenelg North",
+      "postCode" : 5045,
+      "region" : "SA"
+    },
+    {
+      "id" : 9546,
+      "location" : "Glenelg South",
+      "postCode" : 5045,
+      "region" : "SA"
+    },
+    {
+      "id" : 9567,
+      "location" : "Hardwicke Bay",
+      "postCode" : 5575,
+      "region" : "SA"
+    },
+    {
+      "id" : 9588,
+      "location" : "James Well",
+      "postCode" : 5571,
+      "region" : "SA"
+    },
+    {
+      "id" : 9609,
+      "location" : "Kingston Park",
+      "postCode" : 5049,
+      "region" : "SA"
+    },
+    {
+      "id" : 9643,
+      "location" : "Marino",
+      "postCode" : 5049,
+      "region" : "SA"
+    },
+    {
+      "id" : 9645,
+      "location" : "Marion Bay",
+      "postCode" : 5575,
+      "region" : "SA"
+    },
+    {
+      "id" : 9661,
+      "location" : "Moonta Bay",
+      "postCode" : 5558,
+      "region" : "SA"
+    },
+    {
+      "id" : 9688,
+      "location" : "North Brighton",
+      "postCode" : 5048,
+      "region" : "SA"
+    },
+    {
+      "id" : 9713,
+      "location" : "Pine Point",
+      "postCode" : 5571,
+      "region" : "SA"
+    },
+    {
+      "id" : 9718,
+      "location" : "Point Souttar",
+      "postCode" : 5575,
+      "region" : "SA"
+    },
+    {
+      "id" : 9719,
+      "location" : "Point Turton",
+      "postCode" : 5575,
+      "region" : "SA"
+    },
+    {
+      "id" : 9725,
+      "location" : "Port Giles",
+      "postCode" : 5582,
+      "region" : "SA"
+    },
+    {
+      "id" : 9726,
+      "location" : "Port Hughes",
+      "postCode" : 5558,
+      "region" : "SA"
+    },
+    {
+      "id" : 9727,
+      "location" : "Port Julia",
+      "postCode" : 5575,
+      "region" : "SA"
+    },
+    {
+      "id" : 9728,
+      "location" : "Port Moorowie",
+      "postCode" : 5576,
+      "region" : "SA"
+    },
+    {
+      "id" : 9729,
+      "location" : "Port Rickaby",
+      "postCode" : 5575,
+      "region" : "SA"
+    },
+    {
+      "id" : 9731,
+      "location" : "Port Vincent",
+      "postCode" : 5581,
+      "region" : "SA"
+    },
+    {
+      "id" : 9753,
+      "location" : "Rogues Point",
+      "postCode" : 5571,
+      "region" : "SA"
+    },
+    {
+      "id" : 9765,
+      "location" : "Seacliff",
+      "postCode" : 5049,
+      "region" : "SA"
+    },
+    {
+      "id" : 9775,
+      "location" : "Sheaoak Flat",
+      "postCode" : 5581,
+      "region" : "SA"
+    },
+    {
+      "id" : 9780,
+      "location" : "Somerton Park",
+      "postCode" : 5044,
+      "region" : "SA"
+    },
+    {
+      "id" : 9781,
+      "location" : "South Brighton",
+      "postCode" : 5048,
+      "region" : "SA"
+    },
+    {
+      "id" : 9794,
+      "location" : "Stansbury",
+      "postCode" : 5582,
+      "region" : "SA"
+    },
+    {
+      "id" : 9797,
+      "location" : "Stenhouse Bay",
+      "postCode" : 5575,
+      "region" : "SA"
+    },
+    {
+      "id" : 9814,
+      "location" : "The Pines",
+      "postCode" : 5575,
+      "region" : "SA"
+    },
+    {
+      "id" : 9818,
+      "location" : "Tickera",
+      "postCode" : 5555,
+      "region" : "SA"
+    },
+    {
+      "id" : 9836,
+      "location" : "Wallaroo",
+      "postCode" : 5556,
+      "region" : "SA"
+    },
+    {
+      "id" : 9839,
+      "location" : "Warburto",
+      "postCode" : 5556,
+      "region" : "SA"
+    },
+    {
+      "id" : 9874,
+      "location" : "Wool Bay",
+      "postCode" : 5575,
+      "region" : "SA"
+    },
+    {
+      "id" : 9907,
+      "location" : "Bay Of Shoals",
+      "postCode" : 5223,
+      "region" : "SA"
+    },
+    {
+      "id" : 9944,
+      "location" : "Carrickalinga",
+      "postCode" : 5204,
+      "region" : "SA"
+    },
+    {
+      "id" : 9945,
+      "location" : "Cassini",
+      "postCode" : 5223,
+      "region" : "SA"
+    },
+    {
+      "id" : 9997,
+      "location" : "Emu Bay",
+      "postCode" : 5223,
+      "region" : "SA"
+    },
+    {
+      "id" : 9998,
+      "location" : "Encounter Bay",
+      "postCode" : 5211,
+      "region" : "SA"
+    },
+    {
+      "id" : 10009,
+      "location" : "Flinders Chase",
+      "postCode" : 5223,
+      "region" : "SA"
+    },
+    {
+      "id" : 10051,
+      "location" : "Hayborough",
+      "postCode" : 5211,
+      "region" : "SA"
+    },
+    {
+      "id" : 10088,
+      "location" : "Kingscote",
+      "postCode" : 5223,
+      "region" : "SA"
+    },
+    {
+      "id" : 10122,
+      "location" : "McCracken",
+      "postCode" : 5211,
+      "region" : "SA"
+    },
+    {
+      "id" : 10135,
+      "location" : "Middleton",
+      "postCode" : 5213,
+      "region" : "SA"
+    },
+    {
+      "id" : 10182,
+      "location" : "Nepean Bay",
+      "postCode" : 5223,
+      "region" : "SA"
+    },
+    {
+      "id" : 10188,
+      "location" : "Normanville",
+      "postCode" : 5204,
+      "region" : "SA"
+    },
+    {
+      "id" : 10189,
+      "location" : "North Cape",
+      "postCode" : 5223,
+      "region" : "SA"
+    },
+    {
+      "id" : 10234,
+      "location" : "Port Elliot",
+      "postCode" : 5212,
+      "region" : "SA"
+    },
+    {
+      "id" : 10236,
+      "location" : "Port Willunga",
+      "postCode" : 5173,
+      "region" : "SA"
+    },
+    {
+      "id" : 10241,
+      "location" : "Rapid Bay",
+      "postCode" : 5204,
+      "region" : "SA"
+    },
+    {
+      "id" : 10268,
+      "location" : "Seal Bay",
+      "postCode" : 5223,
+      "region" : "SA"
+    },
+    {
+      "id" : 10269,
+      "location" : "Second Valley",
+      "postCode" : 5204,
+      "region" : "SA"
+    },
+    {
+      "id" : 10275,
+      "location" : "Silver Sands",
+      "postCode" : 5173,
+      "region" : "SA"
+    },
+    {
+      "id" : 10281,
+      "location" : "St Kilda",
+      "postCode" : 5110,
+      "region" : "SA"
+    },
+    {
+      "id" : 10283,
+      "location" : "Stokes Bay",
+      "postCode" : 5223,
+      "region" : "SA"
+    },
+    {
+      "id" : 10309,
+      "location" : "Tunkalilla",
+      "postCode" : 5203,
+      "region" : "SA"
+    },
+    {
+      "id" : 10316,
+      "location" : "Victor Harbor",
+      "postCode" : 5211,
+      "region" : "SA"
+    },
+    {
+      "id" : 10319,
+      "location" : "Vivonne Bay",
+      "postCode" : 5223,
+      "region" : "SA"
+    },
+    {
+      "id" : 10346,
+      "location" : "Wirrina Cove",
+      "postCode" : 5204,
+      "region" : "SA"
+    },
+    {
+      "id" : 10371,
+      "location" : "Adventure Bay",
+      "postCode" : 7150,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10401,
+      "location" : "Beaumaris",
+      "postCode" : 7215,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10403,
+      "location" : "Beechford",
+      "postCode" : 7252,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10410,
+      "location" : "Bicheno",
+      "postCode" : 7215,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10440,
+      "location" : "Bridport",
+      "postCode" : 7262,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10450,
+      "location" : "Burnie",
+      "postCode" : 7320,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10473,
+      "location" : "Chasm Creek",
+      "postCode" : 7321,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10490,
+      "location" : "Cooee",
+      "postCode" : 7320,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10501,
+      "location" : "Crayfish Creek",
+      "postCode" : 7321,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10506,
+      "location" : "Currie",
+      "postCode" : 7256,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10523,
+      "location" : "Doctors Rocks",
+      "postCode" : 7325,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10527,
+      "location" : "Douglas River",
+      "postCode" : 7215,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10543,
+      "location" : "Eddystone",
+      "postCode" : 7264,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10561,
+      "location" : "Falmouth",
+      "postCode" : 7215,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10577,
+      "location" : "Four Mile Creek",
+      "postCode" : 7215,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10608,
+      "location" : "Granville Harbour",
+      "postCode" : 7469,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10610,
+      "location" : "Grassy",
+      "postCode" : 7256,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10629,
+      "location" : "Hellyer",
+      "postCode" : 7321,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10704,
+      "location" : "Lillico",
+      "postCode" : 7310,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10735,
+      "location" : "Lulworth",
+      "postCode" : 7252,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10749,
+      "location" : "Marion Bay",
+      "postCode" : 7175,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10807,
+      "location" : "Naracoopa",
+      "postCode" : 7256,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10838,
+      "location" : "Ocean Vista",
+      "postCode" : 7320,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10850,
+      "location" : "Palana",
+      "postCode" : 7255,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10865,
+      "location" : "Penguin",
+      "postCode" : 7316,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10879,
+      "location" : "Port Latta",
+      "postCode" : 7321,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10884,
+      "location" : "Preservation Bay",
+      "postCode" : 7316,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10953,
+      "location" : "Scamander",
+      "postCode" : 7215,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10960,
+      "location" : "Seymour",
+      "postCode" : 7215,
+      "region" : "TAS"
+    },
+    {
+      "id" : 10998,
+      "location" : "Stanley",
+      "postCode" : 7331,
+      "region" : "TAS"
+    },
+    {
+      "id" : 11015,
+      "location" : "Sulphur Creek",
+      "postCode" : 7316,
+      "region" : "TAS"
+    },
+    {
+      "id" : 11019,
+      "location" : "Surprise Bay",
+      "postCode" : 7256,
+      "region" : "TAS"
+    },
+    {
+      "id" : 11039,
+      "location" : "The Gardens",
+      "postCode" : 7216,
+      "region" : "TAS"
+    },
+    {
+      "id" : 11048,
+      "location" : "Tomahawk",
+      "postCode" : 7262,
+      "region" : "TAS"
+    },
+    {
+      "id" : 11056,
+      "location" : "Trial Harbour",
+      "postCode" : 7469,
+      "region" : "TAS"
+    },
+    {
+      "id" : 11113,
+      "location" : "Weymouth",
+      "postCode" : 7252,
+      "region" : "TAS"
+    },
+    {
+      "id" : 11127,
+      "location" : "Wivenhoe",
+      "postCode" : 7320,
+      "region" : "TAS"
+    },
+    {
+      "id" : 11132,
+      "location" : "Woolnorth",
+      "postCode" : 7330,
+      "region" : "TAS"
+    },
+    {
+      "id" : 11172,
+      "location" : "Big Hill",
+      "postCode" : 3555,
+      "region" : "VIC"
+    },
+    {
+      "id" : 11514,
+      "location" : "Aireys Inlet",
+      "postCode" : 3231,
+      "region" : "VIC"
+    },
+    {
+      "id" : 11541,
+      "location" : "Apollo Bay",
+      "postCode" : 3233,
+      "region" : "VIC"
+    },
+    {
+      "id" : 11918,
+      "location" : "Codrington",
+      "postCode" : 3285,
+      "region" : "VIC"
+    },
+    {
+      "id" : 12078,
+      "location" : "Dutton Way",
+      "postCode" : 3305,
+      "region" : "VIC"
+    },
+    {
+      "id" : 12085,
+      "location" : "Eastern View",
+      "postCode" : 3231,
+      "region" : "VIC"
+    },
+    {
+      "id" : 12129,
+      "location" : "Fairhaven",
+      "postCode" : 3231,
+      "region" : "VIC"
+    },
+    {
+      "id" : 12209,
+      "location" : "Glenaire",
+      "postCode" : 3238,
+      "region" : "VIC"
+    },
+    {
+      "id" : 12288,
+      "location" : "Grey River",
+      "postCode" : 3221,
+      "region" : "VIC"
+    },
+    {
+      "id" : 12305,
+      "location" : "Harmers Haven",
+      "postCode" : 3995,
+      "region" : "VIC"
+    },
+    {
+      "id" : 12440,
+      "location" : "Kennett River",
+      "postCode" : 3221,
+      "region" : "VIC"
+    },
+    {
+      "id" : 12454,
+      "location" : "Kilcunda",
+      "postCode" : 3995,
+      "region" : "VIC"
+    },
+    {
+      "id" : 12614,
+      "location" : "Lorne",
+      "postCode" : 3232,
+      "region" : "VIC"
+    },
+    {
+      "id" : 12655,
+      "location" : "Marengo",
+      "postCode" : 3233,
+      "region" : "VIC"
+    },
+    {
+      "id" : 12746,
+      "location" : "Moggs Creek",
+      "postCode" : 3231,
+      "region" : "VIC"
+    },
+    {
+      "id" : 12875,
+      "location" : "Narrawong",
+      "postCode" : 3285,
+      "region" : "VIC"
+    },
+    {
+      "id" : 12993,
+      "location" : "Peterborough",
+      "postCode" : 3270,
+      "region" : "VIC"
+    },
+    {
+      "id" : 12994,
+      "location" : "Petticoat Creek",
+      "postCode" : 3233,
+      "region" : "VIC"
+    },
+    {
+      "id" : 13029,
+      "location" : "Port Campbell",
+      "postCode" : 3269,
+      "region" : "VIC"
+    },
+    {
+      "id" : 13133,
+      "location" : "Seaspray",
+      "postCode" : 3851,
+      "region" : "VIC"
+    },
+    {
+      "id" : 13137,
+      "location" : "Separation Creek",
+      "postCode" : 3221,
+      "region" : "VIC"
+    },
+    {
+      "id" : 13163,
+      "location" : "Skenes Creek",
+      "postCode" : 3233,
+      "region" : "VIC"
+    },
+    {
+      "id" : 13224,
+      "location" : "Sugarloaf",
+      "postCode" : 3221,
+      "region" : "VIC"
+    },
+    {
+      "id" : 13230,
+      "location" : "Sunderland Bay",
+      "postCode" : 3922,
+      "region" : "VIC"
+    },
+    {
+      "id" : 13321,
+      "location" : "The Cove",
+      "postCode" : 3268,
+      "region" : "VIC"
+    },
+    {
+      "id" : 13325,
+      "location" : "The Honeysuckles",
+      "postCode" : 3851,
+      "region" : "VIC"
+    },
+    {
+      "id" : 13404,
+      "location" : "Tyrendarra East",
+      "postCode" : 3285,
+      "region" : "VIC"
+    },
+    {
+      "id" : 13424,
+      "location" : "Venus Bay",
+      "postCode" : 3956,
+      "region" : "VIC"
+    },
+    {
+      "id" : 13445,
+      "location" : "Walkerville",
+      "postCode" : 3956,
+      "region" : "VIC"
+    },
+    {
+      "id" : 13446,
+      "location" : "Walkerville South",
+      "postCode" : 3956,
+      "region" : "VIC"
+    },
+    {
+      "id" : 13473,
+      "location" : "Waratah Bay",
+      "postCode" : 3959,
+      "region" : "VIC"
+    },
+    {
+      "id" : 13624,
+      "location" : "Wye River",
+      "postCode" : 3221,
+      "region" : "VIC"
+    },
+    {
+      "id" : 13832,
+      "location" : "Flinders",
+      "postCode" : 3929,
+      "region" : "VIC"
+    },
+    {
+      "id" : 14384,
+      "location" : "Fremantle",
+      "postCode" : 6160,
+      "region" : "WA"
+    },
+    {
+      "id" : 14389,
+      "location" : "Golden Bay",
+      "postCode" : 6174,
+      "region" : "WA"
+    },
+    {
+      "id" : 14420,
+      "location" : "Madora Bay",
+      "postCode" : 6210,
+      "region" : "WA"
+    },
+    {
+      "id" : 14456,
+      "location" : "Peron",
+      "postCode" : 6168,
+      "region" : "WA"
+    },
+    {
+      "id" : 14460,
+      "location" : "Port Kennedy",
+      "postCode" : 6172,
+      "region" : "WA"
+    },
+    {
+      "id" : 14469,
+      "location" : "Safety Bay",
+      "postCode" : 6169,
+      "region" : "WA"
+    },
+    {
+      "id" : 14471,
+      "location" : "San Remo",
+      "postCode" : 6210,
+      "region" : "WA"
+    },
+    {
+      "id" : 14472,
+      "location" : "Secret Harbour",
+      "postCode" : 6173,
+      "region" : "WA"
+    },
+    {
+      "id" : 14473,
+      "location" : "Shoalwater",
+      "postCode" : 6169,
+      "region" : "WA"
+    },
+    {
+      "id" : 14474,
+      "location" : "Silver Sands",
+      "postCode" : 6210,
+      "region" : "WA"
+    },
+    {
+      "id" : 14476,
+      "location" : "Singleton",
+      "postCode" : 6175,
+      "region" : "WA"
+    },
+    {
+      "id" : 14488,
+      "location" : "Waikiki",
+      "postCode" : 6169,
+      "region" : "WA"
+    },
+    {
+      "id" : 14492,
+      "location" : "Wannanup - Oceanside",
+      "postCode" : 6210,
+      "region" : "WA"
+    },
+    {
+      "id" : 14495,
+      "location" : "Warnbro",
+      "postCode" : 6169,
+      "region" : "WA"
+    },
+    {
+      "id" : 14511,
+      "location" : "Breton Bay",
+      "postCode" : 6043,
+      "region" : "WA"
+    },
+    {
+      "id" : 14537,
+      "location" : "Guilderton",
+      "postCode" : 6041,
+      "region" : "WA"
+    },
+    {
+      "id" : 14555,
+      "location" : "Lancelin",
+      "postCode" : 6044,
+      "region" : "WA"
+    },
+    {
+      "id" : 14584,
+      "location" : "Seabird",
+      "postCode" : 6042,
+      "region" : "WA"
+    },
+    {
+      "id" : 14591,
+      "location" : "Two Rocks",
+      "postCode" : 6037,
+      "region" : "WA"
+    },
+    {
+      "id" : 14594,
+      "location" : "Wedge Island",
+      "postCode" : 6044,
+      "region" : "WA"
+    },
+    {
+      "id" : 14601,
+      "location" : "Abbey",
+      "postCode" : 6280,
+      "region" : "WA"
+    },
+    {
+      "id" : 14655,
+      "location" : "Beachlands",
+      "postCode" : 6530,
+      "region" : "WA"
+    },
+    {
+      "id" : 14697,
+      "location" : "Bookara",
+      "postCode" : 6525,
+      "region" : "WA"
+    },
+    {
+      "id" : 14729,
+      "location" : "Broadwater",
+      "postCode" : 6280,
+      "region" : "WA"
+    },
+    {
+      "id" : 14768,
+      "location" : "Busselton",
+      "postCode" : 6280,
+      "region" : "WA"
+    },
+    {
+      "id" : 14803,
+      "location" : "Cervantes",
+      "postCode" : 6511,
+      "region" : "WA"
+    },
+    {
+      "id" : 14846,
+      "location" : "Coral Bay",
+      "postCode" : 6701,
+      "region" : "WA"
+    },
+    {
+      "id" : 14918,
+      "location" : "Drummond Cove",
+      "postCode" : 6532,
+      "region" : "WA"
+    },
+    {
+      "id" : 14931,
+      "location" : "Dunsborough",
+      "postCode" : 6281,
+      "region" : "WA"
+    },
+    {
+      "id" : 14936,
+      "location" : "Eagle Bay",
+      "postCode" : 6281,
+      "region" : "WA"
+    },
+    {
+      "id" : 14969,
+      "location" : "Eucla",
+      "postCode" : 6443,
+      "region" : "WA"
+    },
+    {
+      "id" : 15000,
+      "location" : "Geographe",
+      "postCode" : 6280,
+      "region" : "WA"
+    },
+    {
+      "id" : 15017,
+      "location" : "Glenfield",
+      "postCode" : 6532,
+      "region" : "WA"
+    },
+    {
+      "id" : 15021,
+      "location" : "Gnarabup",
+      "postCode" : 6285,
+      "region" : "WA"
+    },
+    {
+      "id" : 15031,
+      "location" : "Gracetown",
+      "postCode" : 6284,
+      "region" : "WA"
+    },
+    {
+      "id" : 15040,
+      "location" : "Greenough",
+      "postCode" : 6532,
+      "region" : "WA"
+    },
+    {
+      "id" : 15043,
+      "location" : "Grey",
+      "postCode" : 6521,
+      "region" : "WA"
+    },
+    {
+      "id" : 15081,
+      "location" : "Hopetoun",
+      "postCode" : 6348,
+      "region" : "WA"
+    },
+    {
+      "id" : 15082,
+      "location" : "Horrocks",
+      "postCode" : 6535,
+      "region" : "WA"
+    },
+    {
+      "id" : 15094,
+      "location" : "Israelite Bay",
+      "postCode" : 6452,
+      "region" : "WA"
+    },
+    {
+      "id" : 15114,
+      "location" : "Jurien Bay",
+      "postCode" : 6516,
+      "region" : "WA"
+    },
+    {
+      "id" : 15117,
+      "location" : "Kalbarri",
+      "postCode" : 6536,
+      "region" : "WA"
+    },
+    {
+      "id" : 15143,
+      "location" : "Kealy",
+      "postCode" : 6280,
+      "region" : "WA"
+    },
+    {
+      "id" : 15216,
+      "location" : "Leeman",
+      "postCode" : 6514,
+      "region" : "WA"
+    },
+    {
+      "id" : 15243,
+      "location" : "Mahomets Flats",
+      "postCode" : 6530,
+      "region" : "WA"
+    },
+    {
+      "id" : 15265,
+      "location" : "Massey Bay",
+      "postCode" : 6701,
+      "region" : "WA"
+    },
+    {
+      "id" : 15429,
+      "location" : "Ningaloo",
+      "postCode" : 6701,
+      "region" : "WA"
+    },
+    {
+      "id" : 15501,
+      "location" : "Peaceful Bay",
+      "postCode" : 6333,
+      "region" : "WA"
+    },
+    {
+      "id" : 15532,
+      "location" : "Port Hedland",
+      "postCode" : 6721,
+      "region" : "WA"
+    },
+    {
+      "id" : 15535,
+      "location" : "Prevelly",
+      "postCode" : 6285,
+      "region" : "WA"
+    },
+    {
+      "id" : 15545,
+      "location" : "Quindalup",
+      "postCode" : 6281,
+      "region" : "WA"
+    },
+    {
+      "id" : 15595,
+      "location" : "Siesta Park",
+      "postCode" : 6280,
+      "region" : "WA"
+    },
+    {
+      "id" : 15604,
+      "location" : "South Carnarvon",
+      "postCode" : 6701,
+      "region" : "WA"
+    },
+    {
+      "id" : 15608,
+      "location" : "South Greenough",
+      "postCode" : 6528,
+      "region" : "WA"
+    },
+    {
+      "id" : 15723,
+      "location" : "Wandina",
+      "postCode" : 6530,
+      "region" : "WA"
+    },
+    {
+      "id" : 15755,
+      "location" : "West Busselton",
+      "postCode" : 6280,
+      "region" : "WA"
+    },
+    {
+      "id" : 15793,
+      "location" : "Windy Harbour",
+      "postCode" : 6262,
+      "region" : "WA"
+    },
+    {
+      "id" : 15804,
+      "location" : "Wonnerup",
+      "postCode" : 6280,
+      "region" : "WA"
+    },
+    {
+      "id" : 15879,
+      "location" : "Binningup",
+      "postCode" : 6233,
+      "region" : "WA"
+    },
+    {
+      "id" : 15883,
+      "location" : "Bunbury",
+      "postCode" : 6230,
+      "region" : "WA"
+    },
+    {
+      "id" : 15940,
+      "location" : "Marmion",
+      "postCode" : 6020,
+      "region" : "WA"
+    },
+    {
+      "id" : 15976,
+      "location" : "South Bunbury",
+      "postCode" : 6230,
+      "region" : "WA"
+    },
+    {
+      "id" : 17719,
+      "location" : "Trial Bay",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 18084,
+      "location" : "Clews Point",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18113,
+      "location" : "Thirsty Sound",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18325,
+      "location" : "Refuge Cove",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18382,
+      "location" : "Franklin Rd",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 18409,
+      "location" : "Snake Bay",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18410,
+      "location" : "St Asaph Bay",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18586,
+      "location" : "Yarrabah",
+      "postCode" : 4871,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18591,
+      "location" : "Gold Coast Seaway",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18634,
+      "location" : "Seal Bay",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 18672,
+      "location" : "Berry Bay",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 18677,
+      "location" : "Cape Elizabeth",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 18701,
+      "location" : "Franklin Harbour",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 18732,
+      "location" : "Daly River Mouth",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18751,
+      "location" : "Wild Man River Mouth",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 18761,
+      "location" : "Two Island Bay",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 19087,
+      "location" : "Rose Bay",
+      "postCode" : 4805,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19099,
+      "location" : "Smoky Cape",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19117,
+      "location" : "Tuckers Rock",
+      "postCode" : 2454,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19141,
+      "location" : "Maitland Bay",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19144,
+      "location" : "Long Reef",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19145,
+      "location" : "North Head",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19146,
+      "location" : "South Head",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19164,
+      "location" : "Gordons Bay",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19166,
+      "location" : "Lurline Bay",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19168,
+      "location" : "Long Bay",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19169,
+      "location" : "Mackenzies Bay",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19183,
+      "location" : "Bass Point",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19185,
+      "location" : "Kiama Harbour",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19188,
+      "location" : "Black Head",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19189,
+      "location" : "Penguins Head",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19195,
+      "location" : "Summercloud Bay",
+      "postCode" : -1,
+      "region" : "ACT"
+    },
+    {
+      "id" : 19217,
+      "location" : "North Head",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19239,
+      "location" : "Moon Bay",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19252,
+      "location" : "The Mahoganys",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19255,
+      "location" : "Point Ricardo",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19260,
+      "location" : "Wild Dog Shore",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19313,
+      "location" : "Twelve Apostles Marine Park",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19323,
+      "location" : "Portland Harbour",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 19330,
+      "location" : "Nene Valley",
+      "postCode" : 5291,
+      "region" : "SA"
+    },
+    {
+      "id" : 19359,
+      "location" : "Fishery Bay",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19363,
+      "location" : "Point Avoid",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19377,
+      "location" : "Walkers Rock",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19397,
+      "location" : "Twilight Cove",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19401,
+      "location" : "Pelican Point",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 19443,
+      "location" : "Starvation Bay",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19444,
+      "location" : "Mason Bay",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19481,
+      "location" : "Salmon Holes",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19482,
+      "location" : "The Blowholes",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19483,
+      "location" : "Natural Bridge",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19533,
+      "location" : "Avalon",
+      "postCode" : 6210,
+      "region" : "WA"
+    },
+    {
+      "id" : 19534,
+      "location" : "Falcon - Oceanside",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19540,
+      "location" : "Fremantle South Beach",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19544,
+      "location" : "Watermans Bay",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19546,
+      "location" : "Hillarys Boat Harbour",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19549,
+      "location" : "Ocean Reef Boat Harbour",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19552,
+      "location" : "Mindarie Marina",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19561,
+      "location" : "Port Denison Harbour",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 19617,
+      "location" : "Little Cove",
+      "postCode" : 4567,
+      "region" : "QLD"
+    },
+    {
+      "id" : 19661,
+      "location" : "Diamond Bay",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 19972,
+      "location" : "Killiecrankie Bay",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 19980,
+      "location" : "Zoe Bay",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20000,
+      "location" : "Fitzmaurice Bay",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20019,
+      "location" : "Anson Bay",
+      "postCode" : -1,
+      "region" : "OFFSHORE"
+    },
+    {
+      "id" : 20023,
+      "location" : "Sydney Bay",
+      "postCode" : -1,
+      "region" : "OFFSHORE"
+    },
+    {
+      "id" : 20025,
+      "location" : "Cemetery Bay",
+      "postCode" : -1,
+      "region" : "OFFSHORE"
+    },
+    {
+      "id" : 20026,
+      "location" : "Ball Bay",
+      "postCode" : -1,
+      "region" : "OFFSHORE"
+    },
+    {
+      "id" : 20028,
+      "location" : "Cascade Bay",
+      "postCode" : -1,
+      "region" : "OFFSHORE"
+    },
+    {
+      "id" : 20029,
+      "location" : "Bird Rock",
+      "postCode" : -1,
+      "region" : "OFFSHORE"
+    },
+    {
+      "id" : 20035,
+      "location" : "Tanker Mooring",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 20036,
+      "location" : "King Bay",
+      "postCode" : -1,
+      "region" : "WA"
+    },
+    {
+      "id" : 20052,
+      "location" : "Wollongong Harbour",
+      "postCode" : -1,
+      "region" : "NSW"
+    },
+    {
+      "id" : 20057,
+      "location" : "White Rocks Area",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20103,
+      "location" : "Queenscliff Pier",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 20108,
+      "location" : "Limestone Bay",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20113,
+      "location" : "Bay of Fires",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20118,
+      "location" : "Dianas Basin",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20124,
+      "location" : "Half Moon Bay",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20125,
+      "location" : "Wineglass Bay",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20126,
+      "location" : "Cape Tourville",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20136,
+      "location" : "Fortescue Bay",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20143,
+      "location" : "Cloudy Bay",
+      "postCode" : -1,
+      "region" : "TAS"
+    },
+    {
+      "id" : 20215,
+      "location" : "Anson Bay",
+      "postCode" : -1,
+      "region" : "NT"
+    },
+    {
+      "id" : 17924,
+      "location" : "North West Channel Fairway Beacon",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 18351,
+      "location" : "Fairway Buoy",
+      "postCode" : -1,
+      "region" : "VIC"
+    },
+    {
+      "id" : 18725,
+      "location" : "Shelf Edge Mooring",
+      "postCode" : -1,
+      "region" : "SA"
+    },
+    {
+      "id" : 20043,
+      "location" : "Townsville Fairway Beacon",
+      "postCode" : -1,
+      "region" : "QLD"
+    },
+    {
+      "id" : 20175,
+      "location" : "Middle Bank South Beacon",
+      "postCode" : -1,
+      "region" : "SA"
+    }
+  ]
+}
