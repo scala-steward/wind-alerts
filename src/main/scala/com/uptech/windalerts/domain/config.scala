@@ -5,18 +5,13 @@ package com.uptech.windalerts.domain
 
 import java.io.File
 
-import com.google.common.io.Files
 import io.circe._
-import io.circe.parser.{decode, _}
-import com.uptech.windalerts.domain.config.AppConfig
 import io.circe.config.parser
 import io.circe.generic.auto._
-import io.circe._
 import io.circe.generic.semiauto._
-
-import scala.io.Source
 import io.circe.parser.decode
 
+import scala.io.Source
 import scala.util.{Failure, Success, Try}
 
 object beaches {

@@ -1,6 +1,6 @@
 package com.uptech.windalerts.status
 
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, ZonedDateTime}
 import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 
@@ -13,6 +13,7 @@ import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder, Json, parser}
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
+import io.circe.optics.JsonPath._
 
 
 trait Tides extends Serializable {
@@ -26,32 +27,29 @@ object Tides {
   }
 
   def impl(apiKey:String): Service = (beachId: BeachId) => {
-
-    val request = sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecasts=tides&days=1")
+    val startDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    val startDateFormatted = startDateFormat.format(LocalDateTime.now().minusDays(1))
+    val request = sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecastGraphs=tides&days=3&startDate=$startDateFormatted")
     implicit val backend = HttpURLConnectionBackend()
     val response = request.send()
+    val currentTimeGmt = (System.currentTimeMillis()/1000) + ZonedDateTime.now.getOffset.getTotalSeconds
     val eitherResponse = response.body.map(s => {
-      val timeZoneStr = parser.parse(s).getOrElse(Json.Null).hcursor.downField("location").downField("timeZone").as[String]
-      val timeZone = TimeZone.getTimeZone(timeZoneStr.getOrElse("Australia/Sydney"))
-      val sdf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+      import TideDecoders._
 
-      parser.parse(s).getOrElse(Json.Null).hcursor
-        .downField("forecasts")
-        .downField("tides")
-        .downField("days").focus
-        .get
-        .hcursor
-        .downArray
-        .downField("entries")
-        .values
-        .get.flatMap(j => j.as[Tide].toSeq).filter(s => {
-        val entry = LocalDateTime.parse(s.dateTime, sdf).atZone(timeZone.toZoneId).withZoneSameInstant(TimeZone.getDefault.toZoneId)
+      val _entries = root.forecastGraphs.tides.dataConfig.series.groups.each.points.each.json.getAll(parser.parse(s).toOption.get)
+      val sorted = _entries.flatMap(j => j.as[Datum].toSeq.sortBy(s => {
+        s.x
+      }))
+      val before = sorted.filterNot(s=>s.x > currentTimeGmt)
+      val after = sorted.filter(s=>s.x > currentTimeGmt)
 
-        val currentTime = LocalDateTime.now()
-        entry.toLocalDateTime.isBefore(currentTime)
-      })
-        .maxBy(tide => tide.dateTime)
-    }).map(tide => TideHeight(tide.`type`))
+
+      val status = if (after.head.y > after.tail.head.y) "falling" else "rising"
+
+      val nextHigh = after.filter(_.description == "low").head
+      val nextLow = after.filter(_.description == "high").head
+      TideHeight(before.last.interpolateWith(currentTimeGmt, after.head).y, status, nextLow.x, nextHigh.x)
+    })
 
     val throwableEither = eitherResponse match {
       case Left(s) => Left(new RuntimeException(s))
@@ -60,21 +58,31 @@ object Tides {
     IO.fromEither(throwableEither)
   }
 
+  case class Datum(
+                   x: Long,
+                   y: Double,
+                   description: String,
+                   interpolated:Boolean
+                 ) {
+    def interpolateWith(newX:Long, other:Datum) =
+      Datum(newX, (other.y - y) / (other.x - x) * (newX - x) + y, "", true)
+  }
+
   case class Tide(
                    dateTime: String,
                    height: Double,
                    `type`: String
                  )
 
-  object Tide {
-    implicit val tideDecoder: Decoder[Tide] = deriveDecoder[Tide]
+  object TideDecoders {
+    implicit val tideDecoder: Decoder[Datum] = deriveDecoder[Datum]
 
-    implicit def tideEntityDecoder[F[_] : Sync]: EntityDecoder[F, Tide] =
+    implicit def tideEntityDecoder[F[_] : Sync]: EntityDecoder[F, Datum] =
       jsonOf
 
-    implicit val tideEncoder: Encoder[Tide] = deriveEncoder[Tide]
+    implicit val tideEncoder: Encoder[Datum] = deriveEncoder[Datum]
 
-    implicit def tideEntityEncoder[F[_] : Applicative]: EntityEncoder[F, Tide] =
+    implicit def tideEntityEncoder[F[_] : Applicative]: EntityEncoder[F, Datum] =
       jsonEncoderOf
   }
 

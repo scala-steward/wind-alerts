@@ -163,9 +163,12 @@ object domain {
 
   final case class Swell(height: Double = 0, direction: Double = 0, directionText: String)
 
-  final case class TideHeight(status: String)
+  final case class TideHeight(height:Double, status: String, nextLow:Long, nextHigh:Long)
 
-  final case class Tide(height: TideHeight, swell: Swell)
+  final case class TideHeightOutput(status:String)
+  final case class SwellOutput(height: Double = 0, direction: Double = 0, directionText: String, nextLow:Long, nextHigh:Long)
+
+  final case class Tide(height: TideHeightOutput, swell: SwellOutput)
 
   final case class Beach(wind: Wind, tide: Tide)
 
