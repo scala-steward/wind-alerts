@@ -29,6 +29,17 @@ object codecs {
   lazy implicit val tideEncoder: Encoder[Tide] = deriveEncoder[Tide]
   implicit def tideEntityEncoder[F[_] : Applicative]: EntityEncoder[F, Tide] = jsonEncoderOf
 
+  lazy implicit val tideODecoder: Decoder[TideHeightOutput] = deriveDecoder[TideHeightOutput]
+  implicit def tideOEntityDecoder[F[_] : Sync]: EntityDecoder[F, TideHeightOutput] = jsonOf
+  lazy implicit val tideOEncoder: Encoder[TideHeightOutput] = deriveEncoder[TideHeightOutput]
+  implicit def tideOEntityEncoder[F[_] : Applicative]: EntityEncoder[F, TideHeightOutput] = jsonEncoderOf
+
+  lazy implicit val swellODecoder: Decoder[SwellOutput] = deriveDecoder[SwellOutput]
+  implicit def swellOEntityDecoder[F[_] : Sync]: EntityDecoder[F, SwellOutput] = jsonOf
+  lazy implicit val swellOEncoder: Encoder[SwellOutput] = deriveEncoder[SwellOutput]
+  implicit def swellOEntityEncoder[F[_] : Applicative]: EntityEncoder[F, SwellOutput] = jsonEncoderOf
+
+
   lazy implicit val tideHeightDecoder: Decoder[TideHeight] = deriveDecoder[TideHeight]
   implicit def tideHeightEntityDecoder[F[_] : Sync]: EntityDecoder[F, TideHeight] = jsonOf
   lazy implicit val tideHeightEncoder: Encoder[TideHeight] = deriveEncoder[TideHeight]

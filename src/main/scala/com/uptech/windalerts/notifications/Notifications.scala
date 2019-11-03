@@ -33,7 +33,7 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, beaches: Map[L
 
       usersToBeNotified <- IO(alertsToBeNotified.values.flatMap(elem => elem).map(alert => {
         val maybeUser = UR.getByUserId(alert.owner)
-        logger.info(s"Maybeuser $maybeUser")
+        logger.info(s"Maybe user $maybeUser")
         maybeUser.map(userIO => userIO.map(user => domain.AlertWithUser(alert, user)))
       }).toList)
 
@@ -44,7 +44,7 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, beaches: Map[L
       _ <- IO(logger.info(s"usersToBeNotifiedFlattend $usersToBeNotifiedFlattend"))
 
       usersToBeNotifiedSnoozeFiltered <- IO(usersToBeNotifiedFlattend.filterNot(f => f.user.snoozeTill > System.currentTimeMillis()))
-      usersToBeNotifiedSnoozeFilteredWithCount <- IO(usersToBeNotifiedFlattend.map(f => {
+      usersToBeNotifiedSnoozeFilteredWithCount <- IO(usersToBeNotifiedSnoozeFiltered.map(f => {
         val io = notificationsRepository.countNotificationInLastHour(f.alert.id)
         io.map(x => (f, x))
       }))
