@@ -26,13 +26,13 @@ object Tides {
     def get(beachId: BeachId): IO[domain.TideHeight]
   }
 
-  def impl(apiKey:String): Service = (beachId: BeachId) => {
+  def impl(apiKey: String): Service = (beachId: BeachId) => {
     val startDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     val startDateFormatted = startDateFormat.format(LocalDateTime.now().minusDays(1))
     val request = sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecastGraphs=tides&days=3&startDate=$startDateFormatted")
     implicit val backend = HttpURLConnectionBackend()
     val response = request.send()
-    val currentTimeGmt = (System.currentTimeMillis()/1000) + ZonedDateTime.now.getOffset.getTotalSeconds
+    val currentTimeGmt = (System.currentTimeMillis() / 1000) + ZonedDateTime.now.getOffset.getTotalSeconds
     val eitherResponse = response.body.map(s => {
       import TideDecoders._
 
@@ -40,18 +40,18 @@ object Tides {
       val sorted = _entries.flatMap(j => j.as[Datum].toSeq.sortBy(s => {
         s.x
       }))
-      val before = sorted.filterNot(s=>s.x > currentTimeGmt)
-      val after = sorted.filter(s=>s.x > currentTimeGmt)
+      val before = sorted.filterNot(s => s.x > currentTimeGmt)
+      val after = sorted.filter(s => s.x  > currentTimeGmt)
+      val interpolated = before.last.interpolateWith(currentTimeGmt, after.head)
 
-
-      val status = if (after.head.y > after.tail.head.y) "Falling" else "Rising"
+      val status = if (interpolated.y < before.last.y) "Falling" else "Rising"
 
       val nextHigh_ = after.filter(_.description == "high").head
       val nextHigh = nextHigh_.copy(x = nextHigh_.x - ZonedDateTime.now.getOffset.getTotalSeconds)
       val nextLow_ = after.filter(_.description == "low").head
       val nextLow = nextLow_.copy(x = nextLow_.x - ZonedDateTime.now.getOffset.getTotalSeconds)
 
-      TideHeight(before.last.interpolateWith(currentTimeGmt, after.head).y, status, nextLow.x, nextHigh.x)
+      TideHeight(interpolated.y, status, nextLow.x, nextHigh.x)
     })
 
     val throwableEither = eitherResponse match {
@@ -62,12 +62,12 @@ object Tides {
   }
 
   case class Datum(
-                   x: Long,
-                   y: Double,
-                   description: String,
-                   interpolated:Boolean
-                 ) {
-    def interpolateWith(newX:Long, other:Datum) =
+                    x: Long,
+                    y: Double,
+                    description: String,
+                    interpolated: Boolean
+                  ) {
+    def interpolateWith(newX: Long, other: Datum) =
       Datum(newX, BigDecimal((other.y - y) / (other.x - x) * (newX - x) + y).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble, "", true)
   }
 
