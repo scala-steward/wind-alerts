@@ -56,7 +56,7 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, beaches: Map[L
       log <- IO(logger.info(s"alertsByUserNotificationSettings $alertsByUserNotificationSettings"))
       save <- IO(alertsByUserNotificationSettings.map(u => {
         val beachName = beaches(u.alert.beachId).location
-        tryS(config.surfsUp.notifications.title.replaceAll("BEACH_NAME", beachName),
+        tryS(u.alert.beachId, config.surfsUp.notifications.title.replaceAll("BEACH_NAME", beachName),
           config.surfsUp.notifications.body, u.user, u.alert)
       }
       )
@@ -66,9 +66,10 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, beaches: Map[L
   }
 
 
-  private def tryS(title: String, body: String, u: User, a: Alert): Either[Exception, String] = {
+  private def tryS(beachId:Long, title: String, body: String, u: User, a: Alert): Either[Exception, String] = {
     try Right {
       val sent = firebaseMessaging.send(Message.builder()
+        .putData("beachId", s"$beachId")
         .setNotification(new com.google.firebase.messaging.Notification(title, body))
         .setToken(u.deviceToken)
         .build())
