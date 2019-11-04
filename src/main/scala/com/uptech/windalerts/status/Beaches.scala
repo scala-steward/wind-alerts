@@ -2,7 +2,7 @@ package com.uptech.windalerts.status
 
 import cats.effect.IO
 import com.uptech.windalerts.domain.domain
-import com.uptech.windalerts.domain.domain.{Beach, BeachId, SwellOutput, Tide, TideHeight, TideHeightOutput}
+import com.uptech.windalerts.domain.domain.{Beach, BeachId, SwellOutput, Tide, TideHeight}
 
 
 trait Beaches extends Serializable {
@@ -21,7 +21,7 @@ object Beaches {
         wind <- W.get(beachId)
         tide <- T.get(beachId)
         swell <- S.get(beachId)
-      } yield Beach(wind, Tide(TideHeightOutput(tide.status), SwellOutput(tide.height, swell.direction, swell.directionText, tide.nextLow, tide.nextHigh)))
+      } yield Beach(wind, Tide(tide, SwellOutput(swell.height, swell.direction, swell.directionText)))
     }
   }
 

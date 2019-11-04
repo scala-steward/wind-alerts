@@ -44,10 +44,13 @@ object Tides {
       val after = sorted.filter(s=>s.x > currentTimeGmt)
 
 
-      val status = if (after.head.y > after.tail.head.y) "falling" else "rising"
+      val status = if (after.head.y > after.tail.head.y) "Falling" else "Rising"
 
-      val nextHigh = after.filter(_.description == "low").head
-      val nextLow = after.filter(_.description == "high").head
+      val nextHigh_ = after.filter(_.description == "high").head
+      val nextHigh = nextHigh_.copy(x = nextHigh_.x - ZonedDateTime.now.getOffset.getTotalSeconds)
+      val nextLow_ = after.filter(_.description == "low").head
+      val nextLow = nextLow_.copy(x = nextLow_.x - ZonedDateTime.now.getOffset.getTotalSeconds)
+
       TideHeight(before.last.interpolateWith(currentTimeGmt, after.head).y, status, nextLow.x, nextHigh.x)
     })
 
@@ -65,7 +68,7 @@ object Tides {
                    interpolated:Boolean
                  ) {
     def interpolateWith(newX:Long, other:Datum) =
-      Datum(newX, (other.y - y) / (other.x - x) * (newX - x) + y, "", true)
+      Datum(newX, BigDecimal((other.y - y) / (other.x - x) * (newX - x) + y).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble, "", true)
   }
 
   case class Tide(
