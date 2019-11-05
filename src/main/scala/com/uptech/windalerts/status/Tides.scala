@@ -44,12 +44,13 @@ object Tides {
       val after = sorted.filter(s => s.x  > currentTimeGmt)
       val interpolated = before.last.interpolateWith(currentTimeGmt, after.head)
 
-      val status = if (interpolated.y < before.last.y) "Falling" else "Rising"
 
       val nextHigh_ = after.filter(_.description == "high").head
       val nextHigh = nextHigh_.copy(x = nextHigh_.x - ZonedDateTime.now.getOffset.getTotalSeconds)
       val nextLow_ = after.filter(_.description == "low").head
       val nextLow = nextLow_.copy(x = nextLow_.x - ZonedDateTime.now.getOffset.getTotalSeconds)
+
+      val status = if (nextLow.x < nextHigh.x) "Falling" else "Rising"
 
       TideHeight(interpolated.y, status, nextLow.x, nextHigh.x)
     })

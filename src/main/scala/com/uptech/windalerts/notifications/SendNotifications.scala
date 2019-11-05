@@ -1,7 +1,6 @@
 package com.uptech.windalerts.notifications
 
 import java.io.FileInputStream
-
 import cats.effect.{ExitCode, IO, IOApp}
 import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
@@ -9,7 +8,7 @@ import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.uptech.windalerts.alerts.{AlertsRepository, AlertsService}
-import com.uptech.windalerts.domain.{FirestoreOps, HttpErrorHandler, beaches, config, secrets}
+import com.uptech.windalerts.domain.{FirestoreOps, HttpErrorHandler, beaches, config, secrets, swellAdjustments}
 import com.uptech.windalerts.status.{Beaches, Swells, Tides, Winds}
 import com.uptech.windalerts.users.{FirestoreUserRepository, UserRepositoryAlgebra}
 import org.http4s.HttpRoutes
@@ -44,7 +43,8 @@ object SendNotifications extends IOApp {
   val key = conf.surfsUp.willyWeather.key
   val beachSeq = beaches.read
   println(beachSeq)
-  val beachesService = Beaches.ServiceImpl(Winds.impl(key), Swells.impl(key), Tides.impl(key))
+  val adjustments = swellAdjustments.read
+  val beachesService = Beaches.ServiceImpl(Winds.impl(key), Swells.impl(key, adjustments), Tides.impl(key))
   val alertsRepo: AlertsRepository.Repository = new AlertsRepository.FirestoreAlertsRepository(dbWithAuth._1)
 
   val alerts = new AlertsService.ServiceImpl(alertsRepo)

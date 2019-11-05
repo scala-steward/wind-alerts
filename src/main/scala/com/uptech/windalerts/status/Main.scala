@@ -4,7 +4,7 @@ import cats.effect.{IO, _}
 import cats.implicits._
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain.BeachId
-import com.uptech.windalerts.domain.{HttpErrorHandler, secrets}
+import com.uptech.windalerts.domain.{HttpErrorHandler, secrets, swellAdjustments}
 import org.http4s.HttpRoutes
 import org.http4s.dsl.impl.Root
 import org.http4s.dsl.io._
@@ -26,7 +26,7 @@ object  Main extends IOApp {
       _ <- IO(getLogger.error("Starting"))
       conf <- IO(secrets.read)
       apiKey <- IO(conf.surfsUp.willyWeather.key)
-      beaches <- IO(Beaches.ServiceImpl(Winds.impl(apiKey), Swells.impl(apiKey), Tides.impl(apiKey)))
+      beaches <- IO(Beaches.ServiceImpl(Winds.impl(apiKey), Swells.impl(apiKey, swellAdjustments.read), Tides.impl(apiKey)))
       httpErrorHandler <- IO(new HttpErrorHandler[IO])
       server <- BlazeServerBuilder[IO]
         .bindHttp(sys.env("PORT").toInt, "0.0.0.0")

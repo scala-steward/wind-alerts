@@ -9,11 +9,12 @@ import cats.effect.{IO, Sync}
 import com.softwaremill.sttp._
 import com.uptech.windalerts.domain.domain
 import com.uptech.windalerts.domain.domain.BeachId
+import com.uptech.windalerts.domain.swellAdjustments.{Adjustment, Adjustments}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+import io.circe.optics.JsonPath._
 import io.circe.{Decoder, Encoder, Json, parser}
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
-
 
 trait Swells extends Serializable {
   val alerts: Swells.Service
@@ -25,7 +26,7 @@ object Swells {
     def get(beachId: BeachId): IO[domain.Swell]
   }
 
-  def impl(apiKey:String): Service = (beachId: BeachId) => {
+  def impl(apiKey:String, adjustments: Adjustments): Service = (beachId: BeachId) => {
 
     val sdf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
@@ -36,20 +37,13 @@ object Swells {
     val eitherResponse = response.body.map(s => {
       val timeZoneStr = parser.parse(s).getOrElse(Json.Null).hcursor.downField("location").downField("timeZone").as[String]
       val timeZone = TimeZone.getTimeZone(timeZoneStr.getOrElse("Australia/Sydney"))
-      parser.parse(s).getOrElse(Json.Null).hcursor.downField("forecasts").downField("swell")
-        .downField("days").focus
-        .get
-        .hcursor
-        .downArray
-        .downField("entries")
-        .values
-        .get.flatMap(j => j.as[Swell].toSeq).filter(s => {
+      val entries = root.forecasts.swell.days.each.entries.each.json.getAll(parser.parse(s).toOption.get)
+
+      entries.flatMap(j => j.as[Swell].toSeq).filter(s => {
         val entry = LocalDateTime.parse(s.dateTime, sdf).atZone(timeZone.toZoneId).withZoneSameInstant(TimeZone.getDefault.toZoneId)
 
-        val currentTime = LocalDateTime.now()
-
-        entry.getHour == currentTime.getHour
-      })
+        entry.getHour == LocalDateTime.now().getHour
+      }).map(swell=>swell.copy(height = adjustments.adjust(swell.height)))
         .head
     }
     ).map(swell => domain.Swell(swell.height, swell.direction, swell.directionText))
