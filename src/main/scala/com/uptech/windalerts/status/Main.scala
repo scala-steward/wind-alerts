@@ -19,7 +19,7 @@ object  Main extends IOApp {
       Ok(B.get(BeachId(id)))
     case GET -> Root / "beaches" / IntVar(id) / "currentStatus" =>
       Ok(B.get(BeachId(id)))
-  }.orNotFound
+  }
 
   def run(args: List[String]): IO[ExitCode] = {
     for {
@@ -30,7 +30,7 @@ object  Main extends IOApp {
       httpErrorHandler <- IO(new HttpErrorHandler[IO])
       server <- BlazeServerBuilder[IO]
         .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
-        .withHttpApp(allRoutes( beaches, httpErrorHandler))
+        .withHttpApp(com.uptech.windalerts.domain.commons.tracingMiddleware(allRoutes( beaches, httpErrorHandler)).orNotFound)
         .serve
         .compile
         .drain

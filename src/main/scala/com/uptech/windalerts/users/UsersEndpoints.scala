@@ -2,9 +2,9 @@ package com.uptech.windalerts.users
 
 import cats.data.{EitherT, OptionT}
 import cats.effect.IO
-import com.uptech.windalerts.domain.{HttpErrorHandler, config, secrets}
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
+import com.uptech.windalerts.domain.{HttpErrorHandler, config, secrets}
 import org.http4s.dsl.Http4sDsl
 import org.http4s.{AuthedRoutes, HttpRoutes, Response}
 import org.log4s.getLogger
@@ -13,6 +13,7 @@ class UsersEndpoints(userService: UserService,
                      httpErrorHandler: HttpErrorHandler[IO],
                      refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra,
                      auth: Auth) extends Http4sDsl[IO] {
+
   private val logger = getLogger
 
   def authedService(): AuthedRoutes[UserId, IO] =
@@ -20,7 +21,7 @@ class UsersEndpoints(userService: UserService,
       case authReq@PUT -> Root as user => {
         val response: IO[Response[IO]] = authReq.req.decode[UpdateUserRequest] { request =>
           val action = for {
-            updateResult <- userService.updateUserProfile(user.id, request.name,  request.snoozeTill)
+            updateResult <- userService.updateUserProfile(user.id, request.name, request.snoozeTill)
           } yield updateResult
           action.value.flatMap {
             case Right(tokens) => Ok(tokens)
@@ -164,6 +165,5 @@ class UsersEndpoints(userService: UserService,
           case Left(error) => httpErrorHandler.handleError(error)
         }
     }
-
 
 }
