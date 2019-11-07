@@ -16,13 +16,14 @@ object Beaches {
   }
 
   final case class ServiceImpl[R](W: Winds.Service, S: Swells.Service, T: Tides.Service) extends Service {
-    override def get(beachId: BeachId): IO[Beach] = {
-      for {
-        wind <- W.get(beachId)
-        tide <- T.get(beachId)
-        swell <- S.get(beachId)
-      } yield Beach(wind, Tide(tide, SwellOutput(swell.height, swell.direction, swell.directionText)))
-    }
+    override def get(beachId: BeachId): IO[Beach] = for {
+      _ <- IO(com.uptech.windalerts.domain.commons.tracer.getCurrentSpan.addAnnotation("Getting wind data"))
+      wind <- W.get(beachId)
+      _ <- IO(com.uptech.windalerts.domain.commons.tracer.getCurrentSpan.addAnnotation("Getting tide data"))
+      tide <- T.get(beachId)
+      _ <- IO(com.uptech.windalerts.domain.commons.tracer.getCurrentSpan.addAnnotation("Getting swell data"))
+      swell <- S.get(beachId)
+    } yield Beach(wind, Tide(tide, SwellOutput(swell.height, swell.direction, swell.directionText)))
   }
 
 }
