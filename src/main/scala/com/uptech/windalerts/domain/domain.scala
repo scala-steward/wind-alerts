@@ -11,7 +11,6 @@ import scala.util.control.NonFatal
 object domain {
   private val logger = getLogger
 
-
   case class UpdateUserRequest(name: String, userType: String, snoozeTill: Long)
 
   case class UserId(id: String)
@@ -43,6 +42,7 @@ object domain {
   }
 
   case class FacebookCredentials(id: Option[String], email: String, accessToken: String, deviceType: String)
+
   object FacebookCredentials {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Credentials] = try {
       val values = tuple._2
@@ -99,7 +99,7 @@ object domain {
     }
   }
 
-  final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, userType: String, snoozeTill:Long) {
+  final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, userType: String, snoozeTill: Long) {
     def isTrialEnded() = {
       startTrialAt != -1 && startTrialAt < System.currentTimeMillis() - (30L * 24L * 60L * 60L * 1000L)
     }
@@ -134,28 +134,15 @@ object domain {
 
   final case class UserDevice(deviceId: String, ownerId: String)
 
-  case class FacebookRegisterRequest(accessToken:String, deviceId: String, deviceType: String, deviceToken: String)
+  case class FacebookRegisterRequest(accessToken: String, deviceId: String, deviceType: String, deviceToken: String)
 
   case class RegisterRequest(email: String, name: String, password: String, deviceId: String, deviceType: String, deviceToken: String)
 
-  case class FacebookLoginRequest(accessToken:String, deviceType: String, deviceToken: String)
+  case class FacebookLoginRequest(accessToken: String, deviceType: String, deviceToken: String)
 
   case class LoginRequest(email: String, password: String, deviceType: String, deviceToken: String)
 
   case class ChangePasswordRequest(email: String, oldPassword: String, newPassword: String, deviceType: String)
-
-  object UserDevice {
-    def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[UserDevice] = try {
-      val values = tuple._2
-      Some(UserDevice(
-        tuple._1,
-        values("owner").asInstanceOf[String]
-      ))
-    }
-    catch {
-      case NonFatal(_) => None
-    }
-  }
 
   final case class BeachId(id: Int) extends AnyVal
 
@@ -163,7 +150,7 @@ object domain {
 
   final case class Swell(height: Double = 0, direction: Double = 0, directionText: String)
 
-  final case class TideHeight(height:Double, status: String, nextLow:Long, nextHigh:Long)
+  final case class TideHeight(height: Double, status: String, nextLow: Long, nextHigh: Long)
 
   final case class SwellOutput(height: Double = 0, direction: Double = 0, directionText: String)
 
@@ -184,6 +171,22 @@ object domain {
     }
   }
 
+  sealed case class TideHeightStatus(value: String)
+
+  object TideHeightStatus {
+
+    object Rising extends TideHeightStatus("Rising")
+    object Falling extends TideHeightStatus("Falling")
+
+    val values = Seq(Rising, Falling)
+
+    def apply(value: String): TideHeightStatus = value match {
+      case Rising.value => Rising
+      case Falling.value => Falling
+    }
+  }
+
+
   case class AlertRequest(
                            beachId: Long,
                            days: Seq[Long],
@@ -192,6 +195,7 @@ object domain {
                            waveHeightFrom: Double,
                            waveHeightTo: Double,
                            windDirections: Seq[String],
+                           tideHeightStatuses: Seq[String] = Seq("Rising", "Falling"),
                            notificationsPerHour: Long,
                            enabled: Boolean,
                            timeZone: String = "Australia/Sydney")
@@ -208,6 +212,7 @@ object domain {
                     waveHeightFrom: Double,
                     waveHeightTo: Double,
                     windDirections: Seq[String],
+                    tideHeightStatuses: Seq[String] = Seq("Rising", "Falling"),
                     notificationsPerHour: Long,
                     enabled: Boolean,
                     timeZone: String = "Australia/Sydney") {
@@ -217,7 +222,8 @@ object domain {
 
       swellDirections.contains(beach.tide.swell.directionText) &&
         waveHeightFrom <= beach.tide.swell.height && waveHeightTo >= beach.tide.swell.height &&
-        windDirections.contains(beach.wind.directionText)
+        windDirections.contains(beach.wind.directionText) &&
+        tideHeightStatuses.contains(beach.tide.height.status)
     }
 
     def isToBeAlertedAt(minutes: Int): Boolean = timeRanges.exists(_.isWithinRange(minutes))
@@ -236,6 +242,7 @@ object domain {
         waveHeightFrom = alertRequest.waveHeightFrom,
         waveHeightTo = alertRequest.waveHeightTo,
         windDirections = alertRequest.windDirections,
+        tideHeightStatuses = alertRequest.tideHeightStatuses,
         notificationsPerHour = alertRequest.notificationsPerHour,
         enabled = alertRequest.enabled,
         timeZone = alertRequest.timeZone)
@@ -260,6 +267,7 @@ object domain {
         values("waveHeightFrom").asInstanceOf[Number].doubleValue(),
         values("waveHeightTo").asInstanceOf[Number].doubleValue(),
         j2s(values("windDirections").asInstanceOf[util.ArrayList[String]]),
+        j2s(values("tideHeightStatuses").asInstanceOf[util.ArrayList[String]]),
         values("notificationsPerHour").asInstanceOf[Long],
         values("enabled").asInstanceOf[Boolean],
         values.get("timeZone").getOrElse("Australia/Sydney").asInstanceOf[String]
@@ -271,7 +279,7 @@ object domain {
 
   }
 
-  case class Notification(id:Option[String], alertId: String, deviceToken:String, title:String, body:String, sentAt:Long)
+  case class Notification(id: Option[String], alertId: String, deviceToken: String, title: String, body: String, sentAt: Long)
 
   object Notification {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Notification] = try {
@@ -290,6 +298,7 @@ object domain {
         None
     }
   }
+
   def j2s[A](inputList: util.List[A]): Seq[A] = JavaConverters.asScalaIteratorConverter(inputList.iterator).asScala.toSeq
 
   def j2sm[K, V](map: util.Map[K, V]): Map[K, V] = JavaConverters.mapAsScalaMap(map).toMap
