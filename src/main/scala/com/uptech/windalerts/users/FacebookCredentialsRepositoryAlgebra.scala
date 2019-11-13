@@ -47,7 +47,9 @@ class FirestoreFacebookCredentialsRepositoryAlgebra(db: Firestore)(implicit cs: 
             credentials
           }))
     } yield filtered.headOption
+
   }
+
 
   private def toBean(credentials: domain.FacebookCredentials) = {
     new FacebookCredentialsBean(credentials.email, credentials.accessToken, credentials.deviceType)

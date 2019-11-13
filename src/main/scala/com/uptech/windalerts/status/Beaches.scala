@@ -2,7 +2,7 @@ package com.uptech.windalerts.status
 
 import cats.effect.IO
 import com.uptech.windalerts.domain.domain
-import com.uptech.windalerts.domain.domain.{Beach, BeachId, SwellOutput, Tide}
+import com.uptech.windalerts.domain.domain.{Beach, BeachId, SwellOutput, Tide, TideHeight}
 
 
 trait Beaches extends Serializable {

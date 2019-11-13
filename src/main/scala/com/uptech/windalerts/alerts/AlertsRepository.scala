@@ -1,19 +1,19 @@
 package com.uptech.windalerts.alerts
 
 import java.util
+import java.util.concurrent.TimeUnit
 
 import cats.effect.{ContextShift, IO}
 import com.google.cloud.firestore
 import com.google.cloud.firestore.{CollectionReference, Firestore, WriteResult}
-import com.google.common.collect.Lists
 import com.uptech.windalerts.domain.conversions.{j2sFuture, j2sm}
-import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.errors.{RecordNotFound, WindAlertError}
 import com.uptech.windalerts.domain.{conversions, domain}
+import com.uptech.windalerts.domain.domain._
 import org.log4s.getLogger
 
 import scala.beans.BeanProperty
-import scala.collection.JavaConverters
+import scala.collection.{JavaConverters, immutable}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -129,7 +129,6 @@ object AlertsRepository {
         alert.waveHeightFrom,
         alert.waveHeightTo,
         new java.util.ArrayList(JavaConverters.asJavaCollection(alert.windDirections)),
-        new java.util.ArrayList(JavaConverters.asJavaCollection(alert.tideHeightStatuses)),
         alert.notificationsPerHour,
         alert.enabled,
         alert.timeZone)
@@ -181,7 +180,6 @@ object AlertsRepository {
                    @BeanProperty var waveHeightFrom: Double,
                    @BeanProperty var waveHeightTo: Double,
                    @BeanProperty var windDirections: java.util.List[String],
-                   @BeanProperty var tideHeightStatuses: java.util.List[String],
                    @BeanProperty var notificationsPerHour: Long,
                    @BeanProperty var enabled: Boolean,
                    @BeanProperty var timeZone: String = "Australia/Sydney") {}
