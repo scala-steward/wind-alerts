@@ -8,7 +8,6 @@ import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.uptech.windalerts.alerts.AlertsRepository.FirestoreAlertsRepository
-import com.uptech.windalerts.domain.commons.tracingMiddleware
 import com.uptech.windalerts.domain.{FirestoreOps, HttpErrorHandler, secrets}
 import org.http4s.implicits._
 import org.http4s.server.Router
@@ -39,9 +38,9 @@ object UsersServer extends IOApp {
       endpoints <- IO(new UsersEndpoints(usersService, new HttpErrorHandler[IO], refreshTokenRepo, auth))
       httpApp <- IO(
         Router(
-          "/v1/users/profile" -> tracingMiddleware(auth.middleware(endpoints.authedService())),
-          "/v1/users" -> tracingMiddleware(endpoints.openEndpoints()),
-          "/v1/users/social/facebook" -> tracingMiddleware(endpoints.socialEndpoints())
+          "/v1/users/profile" -> auth.middleware(endpoints.authedService()),
+          "/v1/users" -> endpoints.openEndpoints(),
+          "/v1/users/social/facebook" -> endpoints.socialEndpoints()
       ).orNotFound)
       server <- BlazeServerBuilder[IO]
                     .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
