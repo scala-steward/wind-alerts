@@ -9,15 +9,15 @@
 ~~~~ Encrypt secrets.conf.
     gcloud kms encrypt \
       --location global \
-      --keyring surfsup-keyring \
-      --key surfsup-key \
+      --keyring {PROJECT_ID}-keyring \
+      --key {PROJECT_ID}-key \
       --plaintext-file secrets.conf \
-      --ciphertext-file surfsup.secrets.enc
+      --ciphertext-file {PROJECT_ID}.secrets.enc
 
 ~~~~ Encrypt surfsup.json
     gcloud kms encrypt \
       --location global \
-      --keyring surfsup-keyring \
-      --key surfsup-key \
+      --keyring {PROJECT_ID}-keyring \
+      --key {PROJECT_ID}-key \
       --plaintext-file surfsup.json \
-      --ciphertext-file surfsup.json.enc
+      --ciphertext-file {PROJECT_ID}.json.enc
