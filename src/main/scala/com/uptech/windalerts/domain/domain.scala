@@ -99,7 +99,7 @@ object domain {
     }
   }
 
-  final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, userType: String, snoozeTill: Long) {
+  final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, userType: String, snoozeTill: Long, notificationsPerHour: Long) {
     def isTrialEnded() = {
       startTrialAt != -1 && startTrialAt < System.currentTimeMillis() - (30L * 24L * 60L * 60L * 1000L)
     }
@@ -117,7 +117,8 @@ object domain {
         values("deviceType").asInstanceOf[String],
         values("startTrialAt").asInstanceOf[Long],
         UserType(values("userType").asInstanceOf[String]).value,
-        values("snoozeTill").asInstanceOf[Long]
+        values("snoozeTill").asInstanceOf[Long],
+        values("notificationsPerHour").asInstanceOf[Long]
       ))
     }
     catch {
@@ -196,7 +197,6 @@ object domain {
                            waveHeightTo: Double,
                            windDirections: Seq[String],
                            tideHeightStatuses: Seq[String] = Seq("Rising", "Falling"),
-                           notificationsPerHour: Long,
                            enabled: Boolean,
                            timeZone: String = "Australia/Sydney")
 
@@ -213,7 +213,6 @@ object domain {
                     waveHeightTo: Double,
                     windDirections: Seq[String],
                     tideHeightStatuses: Seq[String] = Seq("Rising", "Falling"),
-                    notificationsPerHour: Long,
                     enabled: Boolean,
                     timeZone: String = "Australia/Sydney") {
     def isToBeNotified(beach: Beach): Boolean = {
@@ -243,7 +242,6 @@ object domain {
         waveHeightTo = alertRequest.waveHeightTo,
         windDirections = alertRequest.windDirections,
         tideHeightStatuses = alertRequest.tideHeightStatuses,
-        notificationsPerHour = alertRequest.notificationsPerHour,
         enabled = alertRequest.enabled,
         timeZone = alertRequest.timeZone)
 
@@ -268,7 +266,6 @@ object domain {
         values("waveHeightTo").asInstanceOf[Number].doubleValue(),
         j2s(values("windDirections").asInstanceOf[util.ArrayList[String]]),
         j2s(values("tideHeightStatuses").asInstanceOf[util.ArrayList[String]]),
-        values("notificationsPerHour").asInstanceOf[Long],
         values("enabled").asInstanceOf[Boolean],
         values.get("timeZone").getOrElse("Australia/Sydney").asInstanceOf[String]
       ))
@@ -279,7 +276,7 @@ object domain {
 
   }
 
-  case class Notification(id: Option[String], alertId: String, deviceToken: String, title: String, body: String, sentAt: Long)
+  case class Notification(id: Option[String], alertId: String, userId:String, deviceToken: String, title: String, body: String, sentAt: Long)
 
   object Notification {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Notification] = try {
@@ -287,6 +284,7 @@ object domain {
       Some(Notification(
         Some(tuple._1),
         values("alertId").asInstanceOf[String],
+        values("userId").asInstanceOf[String],
         values("deviceToken").asInstanceOf[String],
         values("title").asInstanceOf[String],
         values("body").asInstanceOf[String],

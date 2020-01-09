@@ -25,9 +25,9 @@ class FirestoreNotificationRepository(db: Firestore, dbops:FirestoreOps)(implici
     new NotificationBean(notification.alertId, notification.deviceToken, notification.title, notification.body, notification.sentAt)
   }
 
-  override def countNotificationInLastHour(alertId:String) = {
+  override def countNotificationInLastHour(userId:String) = {
     for {
-      all <- getByQuery(collection.whereEqualTo("alertId", alertId).whereGreaterThan("sentAt", System.currentTimeMillis() - (60 * 60 * 1000)))
+      all <- getByQuery(collection.whereEqualTo("userId", userId).whereGreaterThan("sentAt", System.currentTimeMillis() - (60 * 60 * 1000)))
     } yield all.size
   }
 
