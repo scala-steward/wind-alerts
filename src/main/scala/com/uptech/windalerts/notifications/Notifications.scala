@@ -51,7 +51,7 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, beaches: Map[L
       usersToBeNotifiedSnoozeFilteredWithCountIO <- toIO(usersToBeNotifiedSnoozeFilteredWithCount)
       log <- IO(logger.info(s"usersToBeNotifiedSnoozeFilteredWithCountIO $usersToBeNotifiedSnoozeFilteredWithCountIO"))
 
-      alertsByUserNotificationSettings <- IO(usersToBeNotifiedSnoozeFilteredWithCountIO.filter(x => x._2 < x._1.alert.notificationsPerHour).map(x => x._1))
+      alertsByUserNotificationSettings <- IO(usersToBeNotifiedSnoozeFilteredWithCountIO.filter(x => x._2 < x._1.user.notificationsPerHour).map(x => x._1))
 
       log <- IO(logger.info(s"alertsByUserNotificationSettings $alertsByUserNotificationSettings"))
       save <- IO(alertsByUserNotificationSettings.map(u => {
@@ -73,7 +73,7 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, beaches: Map[L
         .setNotification(new com.google.firebase.messaging.Notification(title, body))
         .setToken(u.deviceToken)
         .build())
-      val s = notificationsRepository.create(com.uptech.windalerts.domain.domain.Notification(None, a.id, u.deviceToken, title, body, System.currentTimeMillis()))
+      val s = notificationsRepository.create(com.uptech.windalerts.domain.domain.Notification(None, a.id, a.owner, u.deviceToken, title, body, System.currentTimeMillis()))
       logger.warn(s"${s.unsafeRunSync()}")
 
       logger.warn(s" sent ${sent}")

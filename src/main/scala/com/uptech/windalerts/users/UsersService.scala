@@ -60,7 +60,7 @@ class UserService(userRepo: UserRepositoryAlgebra,
       _ <- doesNotExist(facebookUser.getEmail, rr.deviceType)
 
       savedCreds <- EitherT.liftF(facebookCredentialsRepo.create(FacebookCredentials(None, facebookUser.getEmail, rr.accessToken, rr.deviceType)))
-      savedUser <- EitherT.liftF(userRepo.create(User(savedCreds.id.get, facebookUser.getEmail, facebookUser.getName, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Trial.value, -1)))
+      savedUser <- EitherT.liftF(userRepo.create(User(savedCreds.id.get, facebookUser.getEmail, facebookUser.getName, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Trial.value, -1, 4)))
     } yield (savedUser, savedCreds)
   }
 
@@ -69,7 +69,7 @@ class UserService(userRepo: UserRepositoryAlgebra,
     for {
       _ <- doesNotExist(credentials.email, credentials.deviceType)
       savedCreds <- EitherT.liftF(credentialsRepo.create(credentials))
-      saved <- EitherT.liftF(userRepo.create(User(savedCreds.id.get, rr.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Registered.value, -1)))
+      saved <- EitherT.liftF(userRepo.create(User(savedCreds.id.get, rr.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Registered.value, -1, 4)))
     } yield saved
   }
 
