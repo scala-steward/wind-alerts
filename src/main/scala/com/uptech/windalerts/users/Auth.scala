@@ -15,6 +15,7 @@ import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim}
 import scala.util.Random
 
 class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra) {
+
   val REFRESH_TOKEN_EXPIRY = 7L * 24L * 60L * 60L * 1000L
 
   case class AccessTokenWithExpiry(accessToken: String, expiredAt: Long)
@@ -57,7 +58,7 @@ class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra) {
     OptionT.liftF(IO(decodedToken))
   }
 
-  def createVerification(userId: String, expirationInDays: Int, email: String): EitherT[IO, ValidationError, AccessTokenWithExpiry] = {
+  def createVerificationToken(userId: String, expirationInDays: Int, email: String): EitherT[IO, ValidationError, AccessTokenWithExpiry] = {
     val current = System.currentTimeMillis()
     val expiry = current / 1000 + TimeUnit.DAYS.toSeconds(expirationInDays)
     val claims = JwtClaim(
@@ -86,6 +87,14 @@ class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra) {
   def tokens(accessToken: String, refreshToken: RefreshToken, expiredAt: Long, user:User): EitherT[IO, ValidationError, TokensWithUser] =
     EitherT.right(IO(domain.TokensWithUser(accessToken, refreshToken.refreshToken, expiredAt, user)))
 
+  def createOtp(n: Int) = {
+    val alpha = "0123456789"
+    val size = alpha.size
+
+    (1 to n).map(_ => alpha(Random.nextInt.abs % size)).mkString
+  }
+
+
   def generateRandomString(n: Int) = {
     val alpha = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     val size = alpha.size
@@ -97,7 +106,7 @@ class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra) {
     val either = if (UserType(user.userType) == UserType.Premium || UserType(user.userType) == UserType.Trial) {
       Right(user)
     } else {
-      Left(OperationNotAllowed(s"Only ${Premium.value} and ${Trial.value} can perform this action"))
+      Left(OperationNotAllowed(s"Only ${Premium.value} and ${Trial.value} users can perform this action"))
     }
     EitherT.fromEither(either)
   }

@@ -28,15 +28,15 @@ class UserService(userRepo: UserRepositoryAlgebra,
   }
 
 
-  def updateUserProfile(id: String, name: String, snoozeTill: Long): EitherT[IO, ValidationError, User] = {
+  def updateUserProfile(id: String, name: String, snoozeTill: Long, notificationsPerHour : Long): EitherT[IO, ValidationError, User] = {
     for {
       user <- getUser(id)
-      operationResult <- updateUser(name, snoozeTill, user)
+      operationResult <- updateUser(name, snoozeTill, notificationsPerHour, user)
     } yield operationResult
   }
 
-  private def updateUser(name: String, snoozeTill: Long, user: User): EitherT[IO, ValidationError, User] = {
-    userRepo.update(user.copy(name = name, snoozeTill = snoozeTill)).toRight(CouldNotUpdateUserError())
+  private def updateUser(name: String, snoozeTill: Long, notificationsPerHour : Long, user: User): EitherT[IO, ValidationError, User] = {
+    userRepo.update(user.copy(name = name, snoozeTill = snoozeTill, notificationsPerHour = notificationsPerHour)).toRight(CouldNotUpdateUserError())
   }
 
   def updateDeviceToken(userId: String, deviceToken: String) =

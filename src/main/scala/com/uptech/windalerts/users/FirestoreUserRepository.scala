@@ -35,7 +35,7 @@ class FirestoreUserRepository(db: Firestore, dbops:FirestoreOps)(implicit cs: Co
   override def deleteByUserName(userName: String): OptionT[IO, domain.User] = ???
 
   private def toBean(user: domain.User) = {
-    new UserBean(user.email, user.name, user.deviceId, user.deviceToken, user.deviceType, user.startTrialAt, user.userType, user.snoozeTill)
+    new UserBean(user.email, user.name, user.deviceId, user.deviceToken, user.deviceType, user.startTrialAt, user.userType, user.snoozeTill, user.notificationsPerHour)
   }
 
   override def getByEmailAndDeviceType(email: String, deviceType: String): IO[Option[User]] = {
@@ -80,5 +80,6 @@ class UserBean(
                 @BeanProperty var deviceType: String,
                 @BeanProperty var startTrialAt: Long,
                 @BeanProperty var userType: String,
-                @BeanProperty var snoozeTill: Long
+                @BeanProperty var snoozeTill: Long,
+                @BeanProperty var notificationsPerHour: Long
               ) {}

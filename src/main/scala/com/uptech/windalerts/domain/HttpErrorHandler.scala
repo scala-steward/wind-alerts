@@ -27,6 +27,8 @@ class HttpErrorHandler[F[_] : Monad] extends Http4sDsl[F] {
       BadRequest(s"Refresh token expired")
     case OperationNotAllowed(message) =>
       Forbidden(message)
+    case OtpNotFoundError() =>
+      Forbidden("Invalid or expired OTP")
     case everythingElse => InternalServerError(everythingElse.toString)
   }
 
