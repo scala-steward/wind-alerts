@@ -12,15 +12,30 @@ import org.log4s.getLogger
 class UsersEndpoints(userService: UserService,
                      httpErrorHandler: HttpErrorHandler[IO],
                      refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra,
+                     otpRepository: OtpRepository,
                      auth: Auth) extends Http4sDsl[IO] {
   private val logger = getLogger
 
   def authedService(): AuthedRoutes[UserId, IO] =
     AuthedRoutes {
-      case authReq@PUT -> Root as user => {
+      case authReq@PUT -> Root / "profile" as user => {
         val response: IO[Response[IO]] = authReq.req.decode[UpdateUserRequest] { request =>
           val action = for {
-            updateResult <- userService.updateUserProfile(user.id, request.name,  request.snoozeTill)
+            updateResult <- userService.updateUserProfile(user.id, request.name, request.snoozeTill, request.notificationsPerHour)
+          } yield updateResult
+          action.value.flatMap {
+            case Right(tokens) => Ok(tokens)
+            case Left(error) => httpErrorHandler.handleError(error)
+          }
+        }
+        OptionT.liftF(response)
+      }
+
+      case authReq@POST -> Root / "verifyEmail" as user => {
+        val response: IO[Response[IO]] = authReq.req.decode[OTP] { request =>
+          val action = for {
+            updateResult <- otpRepository.exists(request.otp, user.id)
+            updateResult <- userService.verifyEmail(user.id)
           } yield updateResult
           action.value.flatMap {
             case Right(tokens) => Ok(tokens)
@@ -66,41 +81,26 @@ class UsersEndpoints(userService: UserService,
           case Left(error) => httpErrorHandler.handleError(error)
         }
     }
-
   }
+
 
   def openEndpoints(): HttpRoutes[IO] =
     HttpRoutes.of[IO] {
-      case GET -> Root / "verifyEmail" / jwtToken => {
-        val updatedUser = for {
-          notExpiredTokenUser <- auth.verifyNotExpired(jwtToken)
-          updated <- userService.verifyEmail(notExpiredTokenUser)
-        } yield updated
-
-        updatedUser.value.flatMap {
-          case Right(_) => Ok()
-          case Left(error) => httpErrorHandler.handleError(error)
-        }
-      }
-
       case req@POST -> Root =>
         val action = for {
-          rr <- EitherT.liftF(req.as[RegisterRequest])
-          result <- userService.createUser(rr)
-          emailToken <- auth.createVerification(result.id, 30, result.email)
-          _ <- EitherT.liftF(IO(logger.error(s"emailToken $emailToken")))
+          registerRequest <- EitherT.liftF(req.as[RegisterRequest])
+          createUserResponse <- userService.createUser(registerRequest)
           emailConf <- EitherT.liftF(IO(secrets.read.surfsUp.email))
-          urlConf <- EitherT.liftF(IO(config.read.surfsUp.urls.baseUrl))
-          emailSender <- EitherT.liftF(IO(new EmailSender(emailConf.userName, emailConf.password, urlConf)))
-          _ <- EitherT.liftF(IO(logger.error(s"emailSender $emailSender")))
+          emailSender <- EitherT.liftF(IO(new EmailSender(emailConf.userName, emailConf.password)))
 
-          _ <- EitherT.liftF(IO(emailSender
-            .sendVerificationEmail(result.email, s"${req.uri}/verifyEmail/${emailToken.accessToken}")))
-          dbCredentials <- EitherT.right(IO(Credentials(Some(result.id), rr.email, rr.password, rr.deviceType)))
+          otp <- EitherT.liftF(IO(auth.createOtp(4)))
+          _ <- EitherT.liftF(otpRepository.create(OTPWithExpiry(otp, System.currentTimeMillis() + 5 * 60 * 1000, createUserResponse.id)))
+          _ <- EitherT.liftF(IO(emailSender.sendOtp(createUserResponse.email, otp)))
+          dbCredentials <- EitherT.right(IO(Credentials(Some(createUserResponse.id), registerRequest.email, registerRequest.password, registerRequest.deviceType)))
           accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
           token <- auth.createToken(dbCredentials.id.get, 60, accessTokenId)
           refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbCredentials.id.get, accessTokenId)))
-          tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, result)
+          tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, createUserResponse)
         } yield tokens
         action.value.flatMap {
           case Right(tokens) => Ok(tokens)

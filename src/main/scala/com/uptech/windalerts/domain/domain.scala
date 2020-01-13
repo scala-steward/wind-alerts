@@ -11,7 +11,7 @@ import scala.util.control.NonFatal
 object domain {
   private val logger = getLogger
 
-  case class UpdateUserRequest(name: String, userType: String, snoozeTill: Long)
+  case class UpdateUserRequest(name: String, userType: String, snoozeTill: Long, notificationsPerHour : Long)
 
   case class UserId(id: String)
 
@@ -99,6 +99,26 @@ object domain {
     }
   }
 
+  final case class OTP(otp: String)
+
+  final case class OTPWithExpiry(otp: String, expiry: Long, userId: String)
+
+
+  object OTPWithExpiry {
+    def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[OTPWithExpiry] = try {
+      val values = tuple._2
+      Some(OTPWithExpiry(
+        values("otp").asInstanceOf[String],
+        values("expiry").asInstanceOf[Long],
+        values("userId").asInstanceOf[String]
+      ))
+    }
+    catch {
+      case NonFatal(_) =>
+        None
+    }
+  }
+
   final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, userType: String, snoozeTill: Long, notificationsPerHour: Long) {
     def isTrialEnded() = {
       startTrialAt != -1 && startTrialAt < System.currentTimeMillis() - (30L * 24L * 60L * 60L * 1000L)
@@ -177,6 +197,7 @@ object domain {
   object TideHeightStatus {
 
     object Rising extends TideHeightStatus("Rising")
+
     object Falling extends TideHeightStatus("Falling")
 
     val values = Seq(Rising, Falling)
@@ -276,7 +297,7 @@ object domain {
 
   }
 
-  case class Notification(id: Option[String], alertId: String, userId:String, deviceToken: String, title: String, body: String, sentAt: Long)
+  case class Notification(id: Option[String], alertId: String, userId: String, deviceToken: String, title: String, body: String, sentAt: Long)
 
   object Notification {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Notification] = try {

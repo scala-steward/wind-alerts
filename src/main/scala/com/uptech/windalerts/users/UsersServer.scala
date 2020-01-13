@@ -30,15 +30,17 @@ object UsersServer extends IOApp {
       credentialsRepository <- IO(new FirestoreCredentialsRepository(db, new FirestoreOps()))
       facebookCredentialsRepository <- IO(new FirestoreFacebookCredentialsRepositoryAlgebra(db))
       refreshTokenRepo <- IO(new FirestoreRefreshTokenRepository(db))
-      userRepository <- IO(new FirestoreUserRepository(db, new FirestoreOps()))
+      dbOps <- IO(new FirestoreOps())
+      otpRepo <- IO(new FirestoreOtpRepository(db, dbOps))
+      userRepository <- IO(new FirestoreUserRepository(db, dbOps))
       alertsRepository <- IO(new FirestoreAlertsRepository(db))
       usersService <- IO(new UserService(userRepository, credentialsRepository, facebookCredentialsRepository, alertsRepository, secrets.read.surfsUp.facebook.key))
       refreshTokenRepository <- IO(new FirestoreRefreshTokenRepository(db))
       auth <- IO(new Auth(refreshTokenRepository))
-      endpoints <- IO(new UsersEndpoints(usersService, new HttpErrorHandler[IO], refreshTokenRepo, auth))
+      endpoints <- IO(new UsersEndpoints(usersService, new HttpErrorHandler[IO], refreshTokenRepo, otpRepo, auth))
       httpApp <- IO(
         Router(
-          "/v1/users/profile" -> auth.middleware(endpoints.authedService()),
+          "/v1/users" -> auth.middleware(endpoints.authedService()),
           "/v1/users" -> endpoints.openEndpoints(),
           "/v1/users/social/facebook" -> endpoints.socialEndpoints()
       ).orNotFound)

@@ -128,4 +128,8 @@ object codecs {
   lazy implicit val updateUserRequestEncoder: Encoder[UpdateUserRequest] = deriveEncoder[UpdateUserRequest]
   implicit def updateUserRequestEntityEncoder[F[_] : Applicative]: EntityEncoder[F, UpdateUserRequest] = jsonEncoderOf
 
+  lazy implicit val otpDecoder: Decoder[OTP] = deriveDecoder[OTP]
+  implicit def otpEntityDecoder[F[_] : Sync]: EntityDecoder[F, OTP] = jsonOf
+  lazy implicit val otpEncoder: Encoder[OTP] = deriveEncoder[OTP]
+  implicit def otpEncoder[F[_] : Applicative]: EntityEncoder[F, OTP] = jsonEncoderOf
 }

@@ -6,11 +6,11 @@ import javax.mail.internet.MimeMessage
 import javax.mail._
 import org.log4s.getLogger
 
-class EmailSender(username: String, password: String, baseUrl: String) {
+class EmailSender(username: String, password: String) {
   private val logger = getLogger
 
 
-  def sendVerificationEmail(to: String, token: String) = {
+  def sendOtp(to: String, otp: String) = {
     try {
       val prop = new Properties
       prop.put("mail.smtp.host", "smtp.gmail.com")
@@ -24,10 +24,10 @@ class EmailSender(username: String, password: String, baseUrl: String) {
       val message = new MimeMessage(session)
       message.setRecipients(Message.RecipientType.TO, to)
       message.setSubject("Verify SurfsUp account")
-      message.setText(s"$baseUrl$token")
+      message.setText(s"$otp")
       logger.error(s"message   $message")
       Transport.send(message)
-      logger.error(s"Sent email")
+      logger.error(s"Sent otp to $to")
     } catch {
       case e:Throwable => logger.error(s"Exception sending email $e , ${e.printStackTrace()}")
     }
