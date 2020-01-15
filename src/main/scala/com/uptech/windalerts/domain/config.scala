@@ -1,5 +1,6 @@
 package com.uptech.windalerts.domain
 
+import io.circe.syntax._
 
 import java.io.File
 
@@ -63,13 +64,21 @@ object beaches {
   }
 }
 
+object A extends App {
+  val tryProd = Try(Source.fromFile("/app/resources/beaches-v1.json").getLines.mkString)
+  val jsonContents = tryProd match {
+    case Failure(_) => Source.fromFile("src/main/resources/beaches-v1.json").getLines.mkString
+    case Success(_) => tryProd.get
+  }
+  val all = decode[Beaches](jsonContents).toOption.get.beaches
+  println(Beaches(all.sortBy(f=>f.location)).asJson)
+}
+
 object config {
 
   case class AppConfig(surfsUp: SurfsUp)
 
-  case class SurfsUp(urls: Urls, notifications: Notifications)
-
-  case class Urls(baseUrl: String)
+  case class SurfsUp(notifications: Notifications)
 
   case class Notifications(title: String, body: String)
 
