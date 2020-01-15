@@ -322,4 +322,5 @@ object domain {
 
   def j2sm[K, V](map: util.Map[K, V]): Map[K, V] = JavaConverters.mapAsScalaMap(map).toMap
 
+  case class AppleReceiptValidationRequest(`receipt-data`:String, password:String)
 }

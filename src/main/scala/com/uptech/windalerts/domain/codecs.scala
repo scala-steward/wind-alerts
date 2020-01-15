@@ -132,4 +132,9 @@ object codecs {
   implicit def otpEntityDecoder[F[_] : Sync]: EntityDecoder[F, OTP] = jsonOf
   lazy implicit val otpEncoder: Encoder[OTP] = deriveEncoder[OTP]
   implicit def otpEncoder[F[_] : Applicative]: EntityEncoder[F, OTP] = jsonEncoderOf
+
+  lazy implicit val appleReceiptValidationRequestDecoder: Decoder[AppleReceiptValidationRequest] = deriveDecoder[AppleReceiptValidationRequest]
+  implicit def appleReceiptValidationRequestEntityDecoder[F[_] : Sync]: EntityDecoder[F, AppleReceiptValidationRequest] = jsonOf
+  lazy implicit val appleReceiptValidationRequestEncoder: Encoder[AppleReceiptValidationRequest] = deriveEncoder[AppleReceiptValidationRequest]
+  implicit def appleReceiptValidationRequestEncoder[F[_] : Applicative]: EntityEncoder[F, AppleReceiptValidationRequest] = jsonEncoderOf
 }
