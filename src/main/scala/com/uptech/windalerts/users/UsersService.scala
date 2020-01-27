@@ -24,7 +24,7 @@ class UserService(userRepo: UserRepositoryAlgebra,
   }
 
   private def updateUserType(user: User): EitherT[IO, ValidationError, User] = {
-    userRepo.update(user.copy(userType = Trial.value)).toRight(CouldNotUpdateUserError())
+    userRepo.update(user.copy(userType = Trial.value, lastPaymentAt = -1, nextPaymentAt = -1)).toRight(CouldNotUpdateUserError())
   }
 
 
@@ -36,7 +36,7 @@ class UserService(userRepo: UserRepositoryAlgebra,
   }
 
   private def updateUser(name: String, snoozeTill: Long, notificationsPerHour : Long, user: User): EitherT[IO, ValidationError, User] = {
-    userRepo.update(user.copy(name = name, snoozeTill = snoozeTill, notificationsPerHour = notificationsPerHour)).toRight(CouldNotUpdateUserError())
+    userRepo.update(user.copy(name = name, snoozeTill = snoozeTill, notificationsPerHour = notificationsPerHour, lastPaymentAt = -1, nextPaymentAt = -1)).toRight(CouldNotUpdateUserError())
   }
 
   def updateDeviceToken(userId: String, deviceToken: String) =
@@ -60,7 +60,7 @@ class UserService(userRepo: UserRepositoryAlgebra,
       _ <- doesNotExist(facebookUser.getEmail, rr.deviceType)
 
       savedCreds <- EitherT.liftF(facebookCredentialsRepo.create(FacebookCredentials(None, facebookUser.getEmail, rr.accessToken, rr.deviceType)))
-      savedUser <- EitherT.liftF(userRepo.create(User(savedCreds.id.get, facebookUser.getEmail, facebookUser.getName, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Trial.value, -1, 4)))
+      savedUser <- EitherT.liftF(userRepo.create(new User(savedCreds.id.get, facebookUser.getEmail, facebookUser.getName, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Trial.value, -1, 4)))
     } yield (savedUser, savedCreds)
   }
 
@@ -69,7 +69,7 @@ class UserService(userRepo: UserRepositoryAlgebra,
     for {
       _ <- doesNotExist(credentials.email, credentials.deviceType)
       savedCreds <- EitherT.liftF(credentialsRepo.create(credentials))
-      saved <- EitherT.liftF(userRepo.create(User(savedCreds.id.get, rr.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Registered.value, -1, 4)))
+      saved <- EitherT.liftF(userRepo.create(new User(savedCreds.id.get, rr.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Registered.value, -1, 4)))
     } yield saved
   }
 
@@ -98,7 +98,7 @@ class UserService(userRepo: UserRepositoryAlgebra,
   private def updateRole(eitherUser: User): EitherT[IO, UserNotFoundError, User] = {
     if (UserType(eitherUser.userType) == Trial && eitherUser.isTrialEnded()) {
       for {
-        updated <- update(eitherUser.copy(userType = UserType.TrialExpired.value))
+        updated <- update(eitherUser.copy(userType = UserType.TrialExpired.value, lastPaymentAt = -1, nextPaymentAt = -1))
         _ <- EitherT.liftF(alertsRepository.disableAllButOneAlerts(updated.id))
       } yield updated
     } else {
