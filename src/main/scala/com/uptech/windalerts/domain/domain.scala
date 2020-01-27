@@ -117,18 +117,20 @@ object domain {
       case NonFatal(_) =>
         None
     }
-  }
+}
 
-  final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, userType: String, snoozeTill: Long, notificationsPerHour: Long) {
+  final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long) {
+    def this(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long,  userType: String, snoozeTill: Long, notificationsPerHour: Long) =
+        this(id, email, name, deviceId, deviceToken, deviceType, startTrialAt, if (startTrialAt == -1) -1L else (startTrialAt + (30L * 24L * 60L * 60L * 1000L)), userType, snoozeTill, notificationsPerHour)
     def isTrialEnded() = {
-      startTrialAt != -1 && startTrialAt < System.currentTimeMillis() - (30L * 24L * 60L * 60L * 1000L)
+      startTrialAt != -1 && endTrialAt < System.currentTimeMillis()
     }
   }
 
   object User {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[User] = try {
       val values = tuple._2
-      Some(User(
+      Some(new User(
         tuple._1,
         values("email").asInstanceOf[String],
         values("name").asInstanceOf[String],
