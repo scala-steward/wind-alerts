@@ -121,7 +121,7 @@ object domain {
 
   final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long) {
     def this(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long,  userType: String, snoozeTill: Long, notificationsPerHour: Long) =
-        this(id, email, name, deviceId, deviceToken, deviceType, startTrialAt, if (startTrialAt == -1) -1L else (startTrialAt + (30L * 24L * 60L * 60L * 1000L)), userType, snoozeTill, notificationsPerHour)
+        this(id, email, name, deviceId, deviceToken, deviceType, startTrialAt, if (startTrialAt == -1) -1L else (startTrialAt + (30L * 24L * 60L * 60L * 1000L)), userType, snoozeTill, notificationsPerHour, -1, -1)
     def isTrialEnded() = {
       startTrialAt != -1 && endTrialAt < System.currentTimeMillis()
     }
