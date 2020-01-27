@@ -15,6 +15,7 @@ import com.uptech.windalerts.domain.domain
 import com.uptech.windalerts.domain.domain.BeachId
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder, Json, parser}
+import org.http4s
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
 
@@ -62,7 +63,7 @@ class UsersEndpoints(userService: UserService,
   def socialEndpoints(): HttpRoutes[IO] = {
     HttpRoutes.of[IO] {
 
-      case req@POST -> Root =>
+      case req@POST -> Root => {
         val action = for {
           rr <- EitherT.liftF(req.as[FacebookRegisterRequest])
           result <- userService.createUser(rr)
@@ -75,6 +76,10 @@ class UsersEndpoints(userService: UserService,
           case Right(tokens) => Ok(tokens)
           case Left(error) => httpErrorHandler.handleError(error)
         }
+
+
+      }
+
 
       case req@POST -> Root / "login" =>
         val action = for {
@@ -93,7 +98,6 @@ class UsersEndpoints(userService: UserService,
         }
     }
   }
-
 
   def openEndpoints(): HttpRoutes[IO] =
     HttpRoutes.of[IO] {

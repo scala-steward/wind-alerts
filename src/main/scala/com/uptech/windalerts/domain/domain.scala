@@ -2,6 +2,7 @@ package com.uptech.windalerts.domain
 
 import java.util
 
+import cats.data.EitherT
 import org.log4s.getLogger
 
 import scala.beans.BeanProperty
@@ -9,6 +10,8 @@ import scala.collection.JavaConverters
 import scala.util.control.NonFatal
 
 object domain {
+  type EitherX[F[_], T] = EitherT[F, String, T]
+
   private val logger = getLogger
 
   case class UpdateUserRequest(name: String, userType: String, snoozeTill: Long, notificationsPerHour : Long)
