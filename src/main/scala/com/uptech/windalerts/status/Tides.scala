@@ -16,7 +16,7 @@ import io.circe.{Decoder, Encoder, parser}
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
 
-class TidesService[F[_] : Sync](apiKey: String)(implicit backend: HttpURLConnectionBackend) {
+class TidesService[F[_] : Sync](apiKey: String)(implicit backend: SttpBackend[Id, Nothing]) {
   def get(beachId: BeachId)(implicit F: Functor[F]): EitherT[F, Exception, domain.TideHeight] =
     EitherT.fromEither(getFromWillyWeatther(apiKey, beachId))
 

@@ -19,7 +19,7 @@ import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
 
 
-class SwellsService[F[_] : Sync](apiKey: String, adjustments: Adjustments)(implicit backend: HttpURLConnectionBackend) {
+class SwellsService[F[_] : Sync](apiKey: String, adjustments: Adjustments)(implicit backend: SttpBackend[Id, Nothing]) {
   def get(beachId: BeachId)(implicit F: Functor[F]): EitherT[F, Exception, domain.Swell] =
     EitherT.fromEither(getFromWillyWeatther(apiKey, beachId))
 

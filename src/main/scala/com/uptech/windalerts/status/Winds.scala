@@ -32,7 +32,7 @@ object Wind {
     jsonEncoderOf
 }
 
-class WindsService[F[_] : Sync](apiKey: String)(implicit backend: HttpURLConnectionBackend) {
+class WindsService[F[_] : Sync](apiKey: String)(implicit backend: SttpBackend[Id, Nothing]) {
   def get(beachId: BeachId)(implicit F: Functor[F]): EitherT[F, Exception, domain.Wind] =
     EitherT.fromEither(getFromWillyWeatther(apiKey, beachId))
 
