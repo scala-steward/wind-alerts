@@ -56,7 +56,9 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, beaches: Map[L
       log <- IO(logger.info(s"alertsByUserNotificationSettings $alertsByUserNotificationSettings"))
       save <- IO(alertsByUserNotificationSettings.map(u => {
         val beachName = beaches(u.alert.beachId).location
-        tryS(u.alert.beachId, config.surfsUp.notifications.title.replaceAll("BEACH_NAME", beachName),
+        val body = config.surfsUp.notifications.title.replaceAll("BEACH_NAME", beachName)
+        val fullBody = s"$body ${u.alert}"
+        tryS(u.alert.beachId, fullBody ,
           config.surfsUp.notifications.body, u.user, u.alert)
       }
       )
@@ -68,19 +70,20 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, beaches: Map[L
 
   private def tryS(beachId:Long, title: String, body: String, u: User, a: Alert): Either[Exception, String] = {
     try Right {
+      logger.warn(s" sending to ${u.email} for ${a.id}")
+
       val sent = firebaseMessaging.send(Message.builder()
         .putData("beachId", s"$beachId")
         .setNotification(new com.google.firebase.messaging.Notification(title, body))
         .setToken(u.deviceToken)
         .build())
       val s = notificationsRepository.create(com.uptech.windalerts.domain.domain.Notification(None, a.id, a.owner, u.deviceToken, title, body, System.currentTimeMillis()))
-      logger.warn(s"${s.unsafeRunSync()}")
+      logger.warn(s"unsafeRunSync ${s.unsafeRunSync()}")
 
-      logger.warn(s" sent ${sent}")
+      logger.warn(s" sending to ${u.email} for ${a.id} status : ${sent}")
 
       sent
     }
-
     catch {
       case e: Exception => {
         logger.error(s"Error $e")
