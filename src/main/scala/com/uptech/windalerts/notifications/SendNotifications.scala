@@ -69,6 +69,7 @@ object SendNotifications extends IOApp {
     BlazeServerBuilder[IO]
       .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
       .withResponseHeaderTimeout(Duration(5, "min"))
+      .withIdleTimeout(Duration(8, "min"))
       .withHttpApp(allRoutes(alerts, beachesService, usersRepo, dbWithAuth._2, httpErrorHandler))
       .serve
       .compile
