@@ -1,6 +1,7 @@
 package com.uptech.windalerts.notifications
 
 import java.io.FileInputStream
+
 import cats.effect.{ExitCode, IO, IOApp}
 import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
@@ -18,6 +19,7 @@ import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
 
+import scala.concurrent.duration.Duration
 import scala.util.Try
 
 object SendNotifications extends IOApp {
@@ -66,6 +68,7 @@ object SendNotifications extends IOApp {
 
     BlazeServerBuilder[IO]
       .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
+      .withResponseHeaderTimeout(Duration(5, "min"))
       .withHttpApp(allRoutes(alerts, beachesService, usersRepo, dbWithAuth._2, httpErrorHandler))
       .serve
       .compile
