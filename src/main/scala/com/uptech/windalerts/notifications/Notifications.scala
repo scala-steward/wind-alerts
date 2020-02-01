@@ -67,12 +67,20 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, beaches: Map[L
             l.map(u => {
               logger.info("Submitting " + u)
 
-              Thread.sleep(1000)
+              Thread.sleep(2000)
               logger.info("Submitting " + u)
               val beachName = beaches(u.alert.beachId).location
               val body = config.surfsUp.notifications.title.replaceAll("BEACH_NAME", beachName)
-              val fullBody = s"$body ${u.alert}"
-              tryS(u.alert.beachId, fullBody, config.surfsUp.notifications.body, u.user, u.alert)
+              val fullBody = s"""Your alert
+                Tide height status : ${u.alert.tideHeightStatuses.mkString(", ")}
+                days : ${u.alert.days.mkString(", ")}
+                swellDirections : ${u.alert.swellDirections.mkString(", ")}
+                waveHeightFrom : ${u.alert.waveHeightFrom}
+                waveHeightTo : ${u.alert.waveHeightTo}
+                timeRanges : ${u.alert.timeRanges.mkString(", ")}
+                """
+
+              tryS(u.alert.beachId, body, fullBody, u.user, u.alert)
             }
 
           )}
