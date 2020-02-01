@@ -9,6 +9,7 @@ import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder, Json, parser}
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
+import org.log4s.getLogger
 
 
 
@@ -17,6 +18,7 @@ trait Winds extends Serializable {
 }
 
 object Winds {
+  private val logger = getLogger
 
   trait Service {
     def get(beachId: BeachId): IO[domain.Wind]
@@ -35,7 +37,10 @@ object Winds {
     })
 
     val throwableEither = eitherResponse match {
-      case Left(s) => Left(new RuntimeException(s))
+      case Left(s) => {
+        logger.error(s)
+        Left(new RuntimeException(s))
+      }
       case Right(s) => Right(s)
     }
     IO.fromEither(throwableEither)  }

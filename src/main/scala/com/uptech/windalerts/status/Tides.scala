@@ -14,6 +14,7 @@ import io.circe.{Decoder, Encoder, Json, parser}
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
 import io.circe.optics.JsonPath._
+import org.log4s.getLogger
 
 
 trait Tides extends Serializable {
@@ -21,6 +22,7 @@ trait Tides extends Serializable {
 }
 
 object Tides {
+  private val logger = getLogger
 
   trait Service {
     def get(beachId: BeachId): IO[domain.TideHeight]
@@ -56,7 +58,10 @@ object Tides {
     })
 
     val throwableEither = eitherResponse match {
-      case Left(s) => Left(new RuntimeException(s))
+      case Left(s) => {
+        logger.error(s)
+        Left(new RuntimeException(s))
+      }
       case Right(s) => Right(s)
     }
     IO.fromEither(throwableEither)
