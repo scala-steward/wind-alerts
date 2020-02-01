@@ -1,8 +1,8 @@
 package com.uptech.windalerts.notifications
 
 import java.util.regex.Pattern
-import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import cats.effect.IO
 import cats.implicits._
 import com.google.firebase.messaging.{FirebaseMessaging, Message}
@@ -10,7 +10,7 @@ import com.uptech.windalerts.alerts.AlertsService
 import com.uptech.windalerts.domain.beaches.Beach
 import com.uptech.windalerts.domain.config.AppConfig
 import com.uptech.windalerts.domain.conversions.toIO
-import com.uptech.windalerts.domain.domain.{Alert, BeachId, User}
+import com.uptech.windalerts.domain.domain.{Alert, AlertWithBeach, BeachId, User}
 import com.uptech.windalerts.domain.{HttpErrorHandler, beaches, config, domain}
 import com.uptech.windalerts.status.Beaches
 import com.uptech.windalerts.users.UserRepositoryAlgebra
@@ -31,13 +31,19 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, beaches: Map[L
         }))
       asIOMap <- toIOMap(alertsByBeaches)
       _ <- IO(logger.info(s"alertsByBeaches $alertsByBeaches"))
-      alertsToBeNotified <- IO(asIOMap.map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)))))
+      alertsToBeNotified <- IO(asIOMap.map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)).map(a => domain.AlertWithBeach(a, kv._1)))))
       _ <- IO(logger.info(s"alertsToBeNotified ${alertsToBeNotified}"))
 
+      //      usersToBeNotified <- IO(alertsToBeNotified.map(k=>(k._1,k._2)).values.flatMap(elem => elem).map(alert => {
+      //        val maybeUser = UR.getByUserId(alert._2.owner)
+      //        logger.info(s"Maybe user $maybeUser")
+      //        maybeUser.map(userIO => userIO.map(user => domain.AlertWithUser(alert, user)))
+      //      }).toList)
+
       usersToBeNotified <- IO(alertsToBeNotified.values.flatMap(elem => elem).map(alert => {
-        val maybeUser = UR.getByUserId(alert.owner)
+        val maybeUser = UR.getByUserId(alert.alert.owner)
         logger.info(s"Maybe user $maybeUser")
-        maybeUser.map(userIO => userIO.map(user => domain.AlertWithUser(alert, user)))
+        maybeUser.map(userIO => userIO.map(user => domain.AlertWithUserWithBeach(alert.alert, user, alert.beach)))
       }).toList)
 
       usersToBeNotifiedSeq <- usersToBeNotified.sequence
@@ -67,24 +73,30 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, beaches: Map[L
             l.map(u => {
               logger.info("Submitting " + u)
 
+              //              swellDirections.contains(beach.tide.swell.directionText) &&
+              //                waveHeightFrom <= beach.tide.swell.height && waveHeightTo >= beach.tide.swell.height &&
+              //                windDirections.contains(beach.wind.directionText) &&
+              //                tideHeightStatuses.contains(beach.tide.height.status)
+
               Thread.sleep(2000)
               logger.info("Submitting " + u)
               val beachName = beaches(u.alert.beachId).location
               val body = config.surfsUp.notifications.title.replaceAll("BEACH_NAME", beachName)
-              val fullBody = s"""Your alert
-                Tide height status : ${u.alert.tideHeightStatuses.mkString(", ")}
+              val fullBody =
+                s"""windDirections : ${u.alert.windDirections.mkString(", ")} - ${u.beach.wind.directionText}
+                tideHeightStatuses : ${u.alert.tideHeightStatuses.mkString(", ")} - ${u.beach.tide.height}
                 days : ${u.alert.days.mkString(", ")}
-                swellDirections : ${u.alert.swellDirections.mkString(", ")}
-                waveHeightFrom : ${u.alert.waveHeightFrom}
-                waveHeightTo : ${u.alert.waveHeightTo}
+                swellDirections : ${u.alert.swellDirections.mkString(", ")}  - ${u.beach.tide.swell.directionText}
+                waveHeightFrom : ${u.alert.waveHeightFrom} - ${u.beach.tide.swell.height}
+                waveHeightTo : ${u.alert.waveHeightTo} - ${u.beach.tide.swell.height}
                 timeRanges : ${u.alert.timeRanges.mkString(", ")}
-                windDirections : ${u.alert.windDirections.mkString(", ")}
                 """
 
               tryS(u.alert.beachId, body, fullBody, u.user, u.alert)
             }
 
-          )}
+            )
+          }
         })
       a2: Unit = a1.onComplete(s => {
         logger.info("Result : " + s.toEither.toOption)
