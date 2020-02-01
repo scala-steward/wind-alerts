@@ -150,6 +150,8 @@ object domain {
   }
 
   final case class AlertWithUser(alert: Alert, user: User)
+  final case class AlertWithBeach(alert: Alert, beach: domain.Beach)
+  final case class AlertWithUserWithBeach(alert: Alert, user: User, beach: domain.Beach)
 
   final case class DeviceRequest(deviceId: String)
 
