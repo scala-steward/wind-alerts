@@ -78,6 +78,7 @@ class Notifications(A: AlertsService.Service, B: Beaches.Service, beaches: Map[L
                 waveHeightFrom : ${u.alert.waveHeightFrom}
                 waveHeightTo : ${u.alert.waveHeightTo}
                 timeRanges : ${u.alert.timeRanges.mkString(", ")}
+                windDirections : ${u.alert.windDirections.mkString(", ")}
                 """
 
               tryS(u.alert.beachId, body, fullBody, u.user, u.alert)
