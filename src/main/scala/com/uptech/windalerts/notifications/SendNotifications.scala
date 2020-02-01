@@ -45,7 +45,7 @@ object SendNotifications extends IOApp {
   val conf = secrets.read
   val key = conf.surfsUp.willyWeather.key
   val beachSeq = beaches.read
-  logger.error(beachSeq)
+  logger.error(s"beachSeq $beachSeq")
   val adjustments = swellAdjustments.read
   val beachesService = Beaches.ServiceImpl(Winds.impl(key), Swells.impl(key, adjustments), Tides.impl(key))
   val alertsRepo: AlertsRepository.Repository = new AlertsRepository.FirestoreAlertsRepository(dbWithAuth._1)
