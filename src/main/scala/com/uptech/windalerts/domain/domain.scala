@@ -270,7 +270,6 @@ object domain {
 
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Alert] = try {
       val values = tuple._2
-      println(values)
       Some(Alert(
         tuple._1,
         values("owner").asInstanceOf[String],

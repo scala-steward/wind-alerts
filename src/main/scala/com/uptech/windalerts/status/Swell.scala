@@ -15,12 +15,14 @@ import io.circe.optics.JsonPath._
 import io.circe.{Decoder, Encoder, Json, parser}
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
+import org.log4s.getLogger
 
 trait Swells extends Serializable {
   val alerts: Swells.Service
 }
 
 object Swells {
+  private val logger = getLogger
 
   trait Service {
     def get(beachId: BeachId): IO[domain.Swell]
@@ -49,7 +51,10 @@ object Swells {
     ).map(swell => domain.Swell(swell.height, swell.direction, swell.directionText))
 
     val throwableEither = eitherResponse match {
-      case Left(s) => Left(new RuntimeException(s))
+      case Left(s) => {
+        logger.error(s)
+        Left(new RuntimeException(s))
+      }
       case Right(s) => Right(s)
     }
     IO.fromEither(throwableEither)
