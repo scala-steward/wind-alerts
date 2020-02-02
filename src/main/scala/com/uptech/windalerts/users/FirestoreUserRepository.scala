@@ -2,12 +2,13 @@ package com.uptech.windalerts.users
 
 import java.util
 
-import cats.data.OptionT
+import cats.data.{EitherT, OptionT}
 import cats.effect.{ContextShift, IO}
 import com.google.cloud.firestore
 import com.google.cloud.firestore.{CollectionReference, Firestore, QueryDocumentSnapshot}
 import com.uptech.windalerts.domain.conversions._
 import com.uptech.windalerts.domain.domain.User
+import com.uptech.windalerts.domain.errors.UserNotFound
 import com.uptech.windalerts.domain.{FirestoreOps, domain}
 
 import scala.beans.BeanProperty
@@ -41,6 +42,11 @@ class FirestoreUserRepository(db: Firestore, dbops:FirestoreOps)(implicit cs: Co
   override def getByEmailAndDeviceType(email: String, deviceType: String): IO[Option[User]] = {
     getByQuery(usersCollection.whereEqualTo("email", email).whereEqualTo("deviceType", deviceType))
   }
+
+  def getByUserIdEitherT(userId: String): EitherT[IO, Exception, User] = {
+    EitherT.fromOptionF(getByUserId(userId), UserNotFound(userId))
+  }
+
 
   override def getByUserId(userId: String): IO[Option[User]] = {
     for {

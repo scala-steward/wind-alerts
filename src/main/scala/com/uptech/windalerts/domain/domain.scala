@@ -120,18 +120,20 @@ object domain {
       case NonFatal(_) =>
         None
     }
-  }
+}
 
-  final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, userType: String, snoozeTill: Long, notificationsPerHour: Long) {
+  final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long) {
+    def this(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long,  userType: String, snoozeTill: Long, notificationsPerHour: Long) =
+        this(id, email, name, deviceId, deviceToken, deviceType, startTrialAt, if (startTrialAt == -1) -1L else (startTrialAt + (30L * 24L * 60L * 60L * 1000L)), userType, snoozeTill, notificationsPerHour, -1, -1)
     def isTrialEnded() = {
-      startTrialAt != -1 && startTrialAt < System.currentTimeMillis() - (30L * 24L * 60L * 60L * 1000L)
+      startTrialAt != -1 && endTrialAt < System.currentTimeMillis()
     }
   }
 
   object User {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[User] = try {
       val values = tuple._2
-      Some(User(
+      Some(new User(
         tuple._1,
         values("email").asInstanceOf[String],
         values("name").asInstanceOf[String],
@@ -151,6 +153,9 @@ object domain {
   }
 
   final case class AlertWithUser(alert: Alert, user: User)
+  final case class AlertWithBeach(alert: Alert, beach: domain.Beach)
+  final case class AlertWithUserWithBeach(alert: Alert, user: User, beach: domain.Beach)
+  final case class UserWithCount(userId:String, count:Int)
 
   final case class DeviceRequest(deviceId: String)
 
@@ -168,7 +173,7 @@ object domain {
 
   case class ChangePasswordRequest(email: String, oldPassword: String, newPassword: String, deviceType: String)
 
-  final case class BeachId(id: Int) extends AnyVal
+  final case class BeachId(id: Long) extends AnyVal
 
   final case class Wind(direction: Double = 0, speed: Double = 0, directionText: String)
 
@@ -180,7 +185,7 @@ object domain {
 
   final case class Tide(height: TideHeight, swell: SwellOutput)
 
-  final case class Beach(wind: Wind, tide: Tide)
+  final case class Beach(beachId: BeachId, wind: Wind, tide: Tide)
 
   case class TimeRange(@BeanProperty from: Int, @BeanProperty to: Int) {
     def isWithinRange(hourAndMinutes: Int): Boolean = from <= hourAndMinutes && to > hourAndMinutes
@@ -271,7 +276,6 @@ object domain {
 
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Alert] = try {
       val values = tuple._2
-      println(values)
       Some(Alert(
         tuple._1,
         values("owner").asInstanceOf[String],

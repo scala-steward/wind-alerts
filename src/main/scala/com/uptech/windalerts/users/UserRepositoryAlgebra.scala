@@ -1,11 +1,13 @@
 package com.uptech.windalerts.users
 
 
-import cats.data.OptionT
+import cats.data.{EitherT, OptionT}
 import cats.effect.IO
 import com.uptech.windalerts.domain.domain.User
 
 trait UserRepositoryAlgebra {
+
+  def getByUserIdEitherT(userId: String): EitherT[IO, Exception, User]
 
   def getByUserId(userId: String): IO[Option[User]]
 

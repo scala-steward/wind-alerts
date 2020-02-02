@@ -1,7 +1,8 @@
 package com.uptech.windalerts.status
 
 import cats.data.EitherT
-import cats.effect.{IO, Sync}
+import cats.effect.Sync
+import cats.implicits._
 import com.uptech.windalerts.domain.domain.{Beach, BeachId, SwellOutput, Tide}
 
 
@@ -14,15 +15,17 @@ class BeachService[F[_] : Sync](W: WindsService[F],
       wind <- W.get(beachId)
       tide <- T.get(beachId)
       swell <- S.get(beachId)
-    } yield Beach(wind, Tide(tide, SwellOutput(swell.height, swell.direction, swell.directionText)))
+    } yield Beach(beachId, wind, Tide(tide, SwellOutput(swell.height, swell.direction, swell.directionText)))
   }
-//
-//  def get1(beachId: BeachId): IO[Beach] = {
-//    val x = for {
-//      wind <- W.get(beachId)
-//      tide <- T.get(beachId)
-//      swell <- S.get(beachId)
-//    } yield Beach(wind, Tide(tide, SwellOutput(swell.height, swell.direction, swell.directionText)))
-//    IO(x.value)
-//  }
+
+  def getAll(beachIds: Seq[BeachId]): EitherT[F, Exception, Map[BeachId, Beach]] = {
+    beachIds
+      .toList
+      .map(get(_))
+      .sequence
+      .map(_.seq)
+      .map(elem => elem
+        .map(s => (s.beachId, s))
+        .toMap)
+  }
 }

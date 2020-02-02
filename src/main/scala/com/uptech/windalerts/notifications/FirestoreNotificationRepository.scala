@@ -2,12 +2,13 @@ package com.uptech.windalerts.notifications
 
 import java.util
 
+import cats.data.EitherT
 import cats.effect.{ContextShift, IO}
 import com.google.cloud.firestore
 import com.google.cloud.firestore.{CollectionReference, Firestore, QueryDocumentSnapshot}
 import com.uptech.windalerts.domain.conversions.{j2sFuture, j2sMap, j2sm}
 import com.uptech.windalerts.domain.{FirestoreOps, domain}
-import com.uptech.windalerts.domain.domain.{Credentials, Notification}
+import com.uptech.windalerts.domain.domain.{Credentials, Notification, UserWithCount}
 
 import scala.beans.BeanProperty
 
@@ -26,9 +27,9 @@ class FirestoreNotificationRepository(db: Firestore, dbops:FirestoreOps)(implici
   }
 
   override def countNotificationInLastHour(userId:String) = {
-    for {
+    EitherT.liftF(for {
       all <- getByQuery(collection.whereEqualTo("userId", userId).whereGreaterThan("sentAt", System.currentTimeMillis() - (60 * 60 * 1000)))
-    } yield all.size
+    } yield UserWithCount(userId, all.size))
   }
 
   private def getByQuery(query: firestore.Query) = {

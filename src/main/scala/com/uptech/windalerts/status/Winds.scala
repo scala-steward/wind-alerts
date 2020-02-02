@@ -39,9 +39,9 @@ class WindsService[F[_] : Sync](apiKey: String)(implicit backend: SttpBackend[Id
   def getFromWillyWeatther(apiKey: String, beachId: BeachId): Either[Exception, domain.Wind] = {
     for {
       body <- sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?observational=true").send()
-                .body
-                .left
-                .map(new RuntimeException(_))
+        .body
+        .left
+        .map(new RuntimeException(_))
       parsed <- parser.parse(body)
       wind <- parsed.hcursor.downField("observational").downField("observations").downField("wind").as[Wind]
     } yield  domain.Wind(wind.direction, wind.speed, wind.directionText)

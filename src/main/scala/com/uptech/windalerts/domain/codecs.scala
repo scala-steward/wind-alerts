@@ -10,6 +10,11 @@ import org.http4s.{EntityDecoder, EntityEncoder}
 
 object codecs {
 
+  lazy implicit val beachIdDecoder: Decoder[BeachId] = deriveDecoder[BeachId]
+  implicit def beachIdEntityDecoder[F[_] : Sync]: EntityDecoder[F, BeachId] = jsonOf
+  lazy implicit val beachIdEncoder: Encoder[BeachId] = deriveEncoder[BeachId]
+  implicit def beachIdEntityEncoder[F[_] : Applicative]: EntityEncoder[F, BeachId] = jsonEncoderOf
+
   lazy implicit val beachDecoder: Decoder[Beach] = deriveDecoder[Beach]
   implicit def beachEntityDecoder[F[_] : Sync]: EntityDecoder[F, Beach] = jsonOf
   lazy implicit val beachEncoder: Encoder[Beach] = deriveEncoder[Beach]
