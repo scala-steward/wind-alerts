@@ -4,61 +4,58 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 
-import cats.Applicative
-import cats.effect.{IO, Sync}
+import cats.data.EitherT
+import cats.effect.Sync
+import cats.{Applicative, Functor}
 import com.softwaremill.sttp._
 import com.uptech.windalerts.domain.domain
 import com.uptech.windalerts.domain.domain.BeachId
-import com.uptech.windalerts.domain.swellAdjustments.{Adjustment, Adjustments}
+import com.uptech.windalerts.domain.swellAdjustments.Adjustments
+import com.uptech.windalerts.status.Swells.Swell
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.optics.JsonPath._
-import io.circe.{Decoder, Encoder, Json, parser}
+import io.circe.{Decoder, Encoder, parser}
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
-import org.log4s.getLogger
 
-trait Swells extends Serializable {
-  val alerts: Swells.Service
-}
 
-object Swells {
-  private val logger = getLogger
+class SwellsService[F[_] : Sync](apiKey: String, adjustments: Adjustments)(implicit backend: SttpBackend[Id, Nothing]) {
+  def get(beachId: BeachId)(implicit F: Functor[F]): EitherT[F, Exception, domain.Swell] =
+    EitherT.fromEither(getFromWillyWeatther(apiKey, beachId))
 
-  trait Service {
-    def get(beachId: BeachId): IO[domain.Swell]
+  def getFromWillyWeatther(apiKey: String, beachId: BeachId): Either[Exception, domain.Swell] = {
+    val body = sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecasts=swell&days=1").send().body
+    body
+      .left.map(new RuntimeException(_))
+      .flatMap(parser.parse(_))
+      .map(root.forecasts.swell.days.each.entries.each.json.getAll(_))
+      .map(
+        _.flatMap(j => j.as[Swell].toSeq.filter(isCurrentHour(body, _)))
+          .map(swell => swell.copy(height = adjustments.adjust(swell.height)))
+          .head)
+      .map(swell => domain.Swell(swell.height, swell.direction, swell.directionText))
+
   }
 
-  def impl(apiKey:String, adjustments: Adjustments): Service = (beachId: BeachId) => {
-
+  private def isCurrentHour(body: Either[String, String], s: Swell) = {
     val sdf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+    val eitherTimezone: Either[Exception, String] =
+      body.left.map(new RuntimeException(_)).flatMap(parser.parse(_)).flatMap(_.hcursor.downField("location").downField("timeZone").as[String])
+    eitherTimezone match {
+      case Left(_) => false
+      case Right(tz) => {
+        val timeZone = TimeZone.getTimeZone(tz)
 
-    val request = sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecasts=swell&days=1")
-    implicit val backend = HttpURLConnectionBackend()
-    val response = request.send()
-
-    val eitherResponse = response.body.map(s => {
-      val timeZoneStr = parser.parse(s).getOrElse(Json.Null).hcursor.downField("location").downField("timeZone").as[String]
-      val timeZone = TimeZone.getTimeZone(timeZoneStr.getOrElse("Australia/Sydney"))
-      val entries = root.forecasts.swell.days.each.entries.each.json.getAll(parser.parse(s).toOption.get)
-
-      entries.flatMap(j => j.as[Swell].toSeq).filter(s => {
         val entry = LocalDateTime.parse(s.dateTime, sdf).atZone(timeZone.toZoneId).withZoneSameInstant(TimeZone.getDefault.toZoneId)
 
         entry.getHour == LocalDateTime.now().getHour
-      }).map(swell=>swell.copy(height = adjustments.adjust(swell.height)))
-        .head
-    }
-    ).map(swell => domain.Swell(swell.height, swell.direction, swell.directionText))
-
-    val throwableEither = eitherResponse match {
-      case Left(s) => {
-        logger.error(s)
-        Left(new RuntimeException(s))
       }
-      case Right(s) => Right(s)
     }
-    IO.fromEither(throwableEither)
   }
+}
+
+object Swells {
+
 
   case class Swell(
                     dateTime: String,

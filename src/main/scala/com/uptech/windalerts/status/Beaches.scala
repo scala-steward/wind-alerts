@@ -1,28 +1,31 @@
 package com.uptech.windalerts.status
 
-import cats.effect.IO
-import com.uptech.windalerts.domain.domain
+import cats.data.EitherT
+import cats.effect.Sync
+import cats.implicits._
 import com.uptech.windalerts.domain.domain.{Beach, BeachId, SwellOutput, Tide}
 
 
-trait Beaches extends Serializable {
-  val beaches: Beaches.Service
-}
+class BeachService[F[_] : Sync](W: WindsService[F],
+                                T: TidesService[F],
+                                S: SwellsService[F]) {
 
-object Beaches {
-
-  trait Service extends Serializable {
-    def get(beachId: BeachId): IO[domain.Beach]
+  def get(beachId: BeachId): EitherT[F, Exception, Beach] = {
+    for {
+      wind <- W.get(beachId)
+      tide <- T.get(beachId)
+      swell <- S.get(beachId)
+    } yield Beach(beachId, wind, Tide(tide, SwellOutput(swell.height, swell.direction, swell.directionText)))
   }
 
-  final case class ServiceImpl[R](W: Winds.Service, S: Swells.Service, T: Tides.Service) extends Service {
-    override def get(beachId: BeachId): IO[Beach] = {
-      for {
-        wind <- W.get(beachId)
-        tide <- T.get(beachId)
-        swell <- S.get(beachId)
-      } yield Beach(wind, Tide(tide, SwellOutput(swell.height, swell.direction, swell.directionText)))
-    }
+  def getAll(beachIds: Seq[BeachId]): EitherT[F, Exception, Map[BeachId, Beach]] = {
+    beachIds
+      .toList
+      .map(get(_))
+      .sequence
+      .map(_.seq)
+      .map(elem => elem
+        .map(s => (s.beachId, s))
+        .toMap)
   }
-
 }

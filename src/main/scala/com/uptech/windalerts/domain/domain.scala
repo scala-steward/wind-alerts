@@ -152,6 +152,7 @@ object domain {
   final case class AlertWithUser(alert: Alert, user: User)
   final case class AlertWithBeach(alert: Alert, beach: domain.Beach)
   final case class AlertWithUserWithBeach(alert: Alert, user: User, beach: domain.Beach)
+  final case class UserWithCount(userId:String, count:Int)
 
   final case class DeviceRequest(deviceId: String)
 
@@ -169,7 +170,7 @@ object domain {
 
   case class ChangePasswordRequest(email: String, oldPassword: String, newPassword: String, deviceType: String)
 
-  final case class BeachId(id: Int) extends AnyVal
+  final case class BeachId(id: Long) extends AnyVal
 
   final case class Wind(direction: Double = 0, speed: Double = 0, directionText: String)
 
@@ -181,7 +182,7 @@ object domain {
 
   final case class Tide(height: TideHeight, swell: SwellOutput)
 
-  final case class Beach(wind: Wind, tide: Tide)
+  final case class Beach(beachId: BeachId, wind: Wind, tide: Tide)
 
   case class TimeRange(@BeanProperty from: Int, @BeanProperty to: Int) {
     def isWithinRange(hourAndMinutes: Int): Boolean = from <= hourAndMinutes && to > hourAndMinutes

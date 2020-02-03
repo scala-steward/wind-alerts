@@ -40,22 +40,22 @@
         <dependency>
             <groupId>org.http4s</groupId>
             <artifactId>http4s-blaze-server_2.12</artifactId>
-            <version>0.21.0-M5</version>
+            <version>0.21.0-RC2</version>
         </dependency>
         <dependency>
             <groupId>org.http4s</groupId>
             <artifactId>http4s-blaze-client_2.12</artifactId>
-            <version>0.21.0-M5</version>
+            <version>0.21.0-RC2</version>
         </dependency>
         <dependency>
             <groupId>org.http4s</groupId>
             <artifactId>http4s-circe_2.12</artifactId>
-            <version>0.21.0-M5</version>
+            <version>0.21.0-RC2</version>
         </dependency>
         <dependency>
             <groupId>org.http4s</groupId>
             <artifactId>http4s-dsl_2.12</artifactId>
-            <version>0.21.0-M5</version>
+            <version>0.21.0-RC2</version>
         </dependency>
         <dependency>
             <groupId>io.circe</groupId>

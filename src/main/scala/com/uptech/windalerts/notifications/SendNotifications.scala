@@ -2,18 +2,20 @@ package com.uptech.windalerts.notifications
 
 import java.io.FileInputStream
 
-import cats.effect.{ExitCode, IO, IOApp}
+import cats.effect.{ExitCode, IO, IOApp, Sync}
 import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
+import com.softwaremill.sttp.HttpURLConnectionBackend
 import com.uptech.windalerts.alerts.{AlertsRepository, AlertsService}
+import com.uptech.windalerts.domain.domain.BeachId
 import com.uptech.windalerts.domain.{FirestoreOps, HttpErrorHandler, beaches, config, secrets, swellAdjustments}
-import com.uptech.windalerts.status.Tides.logger
-import com.uptech.windalerts.status.{Beaches, Swells, Tides, Winds}
+import com.uptech.windalerts.status.{BeachService, Swells, SwellsService, Tides, TidesService, WindsService}
 import com.uptech.windalerts.users.{FirestoreUserRepository, UserRepositoryAlgebra}
 import org.http4s.HttpRoutes
+import org.http4s.dsl.Http4sDsl
 import org.http4s.dsl.impl.Root
 import org.http4s.dsl.io.{->, /, GET, Ok, _}
 import org.http4s.implicits._
@@ -41,13 +43,14 @@ object SendNotifications extends IOApp {
   } yield (db, notifications)
 
   val dbWithAuth = dbWithAuthIO.unsafeRunSync()
+  implicit val backend = HttpURLConnectionBackend()
 
   val conf = secrets.read
   val key = conf.surfsUp.willyWeather.key
   val beachSeq = beaches.read
   logger.error(s"beachSeq $beachSeq")
   val adjustments = swellAdjustments.read
-  val beachesService = Beaches.ServiceImpl(Winds.impl(key), Swells.impl(key, adjustments), Tides.impl(key))
+  val beachesService = new BeachService[IO](new WindsService[IO](key), new TidesService[IO](key), new SwellsService[IO](key, swellAdjustments.read))
   val alertsRepo: AlertsRepository.Repository = new AlertsRepository.FirestoreAlertsRepository(dbWithAuth._1)
 
   val alerts = new AlertsService.ServiceImpl(alertsRepo)
@@ -56,10 +59,10 @@ object SendNotifications extends IOApp {
   implicit val httpErrorHandler: HttpErrorHandler[IO] = new HttpErrorHandler[IO]
   val notifications = new Notifications(alerts, beachesService, beachSeq, usersRepo, dbWithAuth._2, httpErrorHandler, new FirestoreNotificationRepository(dbWithAuth._1, new FirestoreOps()), config.read)
 
-  def allRoutes(A: AlertsService.Service, B: Beaches.Service, UR: UserRepositoryAlgebra, firebaseMessaging: FirebaseMessaging, H: HttpErrorHandler[IO]) = HttpRoutes.of[IO] {
+  def allRoutes(A: AlertsService.Service, B: BeachService[IO], UR: UserRepositoryAlgebra, firebaseMessaging: FirebaseMessaging, H: HttpErrorHandler[IO]) = HttpRoutes.of[IO] {
     case GET -> Root / "notify" => {
       val res = notifications.sendNotification
-      val either = res.unsafeRunSync()
+      val either = res.value.unsafeRunSync()
       Ok()
     }
   }.orNotFound
