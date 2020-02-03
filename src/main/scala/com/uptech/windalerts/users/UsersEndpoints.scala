@@ -3,23 +3,12 @@ package com.uptech.windalerts.users
 import cats.data.{EitherT, OptionT}
 import cats.effect.IO
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
-import com.uptech.windalerts.domain.{HttpErrorHandler, config, secrets}
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
+import com.uptech.windalerts.domain.{HttpErrorHandler, secrets}
 import org.http4s.dsl.Http4sDsl
 import org.http4s.{AuthedRoutes, HttpRoutes, Response}
 import org.log4s.getLogger
-import cats.Applicative
-import cats.effect.{IO, Sync}
-import com.uptech.windalerts.domain.domain
-import com.uptech.windalerts.domain.domain.BeachId
-import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
-import io.circe.{Decoder, Encoder, Json, parser}
-import org.http4s
-import org.http4s.circe.{jsonEncoderOf, jsonOf}
-import org.http4s.{EntityDecoder, EntityEncoder}
-
-import scala.runtime.Nothing$
 
 class UsersEndpoints(userService: UserService,
                      httpErrorHandler: HttpErrorHandler[IO],
@@ -76,10 +65,7 @@ class UsersEndpoints(userService: UserService,
           case Right(tokens) => Ok(tokens)
           case Left(error) => httpErrorHandler.handleError(error)
         }
-
-
       }
-
 
       case req@POST -> Root / "login" =>
         val action = for {

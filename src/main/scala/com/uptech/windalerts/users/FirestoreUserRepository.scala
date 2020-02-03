@@ -47,7 +47,6 @@ class FirestoreUserRepository(db: Firestore, dbops:FirestoreOps)(implicit cs: Co
     EitherT.fromOptionF(getByUserId(userId), UserNotFound(userId))
   }
 
-
   override def getByUserId(userId: String): IO[Option[User]] = {
     for {
       document <- IO.fromFuture(IO(j2sFuture(usersCollection.document(userId).get())))

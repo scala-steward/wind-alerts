@@ -62,11 +62,8 @@ object SendNotifications extends IOApp {
   def allRoutes(A: AlertsService.Service, B: BeachService[IO], UR: UserRepositoryAlgebra, firebaseMessaging: FirebaseMessaging, H: HttpErrorHandler[IO]) = HttpRoutes.of[IO] {
     case GET -> Root / "notify" => {
       val res = notifications.sendNotification
-      val either = res
-      either.value.unsafeRunSync() match {
-        case Right(_) => Ok()
-        case Left(error) => H.handleThrowable(error)
-      }
+      val either = res.value.unsafeRunSync()
+      Ok()
     }
   }.orNotFound
 
@@ -84,23 +81,4 @@ object SendNotifications extends IOApp {
       .as(ExitCode.Success)
   }
 
-}
-
-class NotificationEndPoints[F[_] : Sync](B: BeachService[F], H: HttpErrorHandler[F]) extends Http4sDsl[F] {
-  def allRoutes() = HttpRoutes.of[F] {
-    case GET -> Root / "notify" => {
-      getStatus(B, id, H)
-    case GET -> Root / "v1" / "beaches" / IntVar(id) / "currentStatus" =>
-      getStatus(B, id, H)
-  }
-
-  private def getStatus(B: BeachService[F], id: Int, H: HttpErrorHandler[F]) = {
-    val eitherStatus = for {
-      status <- B.get(BeachId(id))
-    } yield status
-    eitherStatus.value.flatMap {
-      case Right(_) => Ok()
-      case Left(error) => H.handleThrowable(error)
-    }
-  }
 }
