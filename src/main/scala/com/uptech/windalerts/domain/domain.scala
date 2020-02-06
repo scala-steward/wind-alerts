@@ -3,6 +3,7 @@ package com.uptech.windalerts.domain
 import java.util
 
 import org.log4s.getLogger
+import org.mongodb.scala.bson.ObjectId
 
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters
@@ -299,6 +300,12 @@ object domain {
       case NonFatal(_) => None
     }
 
+  }
+
+  case class MNotification(_id: ObjectId, alertId: String, userId: String, deviceToken: String, title: String, body: String, sentAt: Long)
+  object MNotification {
+    def apply( alertId: String, userId: String, deviceToken: String, title: String, body: String, sentAt: Long): MNotification
+    = new MNotification(new ObjectId(), alertId, userId, deviceToken, title, body, sentAt)
   }
 
   case class Notification(id: Option[String], alertId: String, userId: String, deviceToken: String, title: String, body: String, sentAt: Long)

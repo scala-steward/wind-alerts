@@ -12,13 +12,15 @@ import com.uptech.windalerts.domain.{HttpErrorHandler, domain}
 import com.uptech.windalerts.status.BeachService
 import com.uptech.windalerts.users.UserRepositoryAlgebra
 import org.log4s.getLogger
+import org.mongodb.scala.MongoClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class Notifications(A: AlertsService.Service, B: BeachService[IO], beaches: Map[Long, Beach], UR: UserRepositoryAlgebra, firebaseMessaging: FirebaseMessaging, H: HttpErrorHandler[IO], notificationsRepository: NotificationRepository,
+class Notifications(A: AlertsService.Service, B: BeachService[IO], beaches: Map[Long, Beach], UR: UserRepositoryAlgebra, firebaseMessaging: FirebaseMessaging, H: HttpErrorHandler[IO], notificationsRepository: MongoNotificationsRepository,
                     config: AppConfig) {
   private val logger = getLogger
+
 
   def sendNotification = {
     val usersToBeNotifiedEitherT = for {
@@ -75,7 +77,7 @@ class Notifications(A: AlertsService.Service, B: BeachService[IO], beaches: Map[
         .setNotification(new com.google.firebase.messaging.Notification(title, body))
         .setToken(u.deviceToken)
         .build())
-      val s = notificationsRepository.create(com.uptech.windalerts.domain.domain.Notification(None, a.id, a.owner, u.deviceToken, title, body, System.currentTimeMillis()))
+      val s = notificationsRepository.create(com.uptech.windalerts.domain.domain.MNotification(a.id, a.owner, u.deviceToken, title, body, System.currentTimeMillis()))
       logger.warn(s"unsafeRunSync ${s.unsafeRunSync()}")
 
       logger.warn(s" sending to ${u.email} for ${a.id} status : ${sent}")

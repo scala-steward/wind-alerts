@@ -11,7 +11,7 @@ import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.softwaremill.sttp.HttpURLConnectionBackend
 import com.uptech.windalerts.alerts.{AlertsRepository, AlertsService}
 import com.uptech.windalerts.domain.domain.BeachId
-import com.uptech.windalerts.domain.{FirestoreOps, HttpErrorHandler, beaches, config, secrets, swellAdjustments}
+import com.uptech.windalerts.domain.{FirestoreOps, HttpErrorHandler, beaches, config, domain, secrets, swellAdjustments}
 import com.uptech.windalerts.status.{BeachService, Swells, SwellsService, Tides, TidesService, WindsService}
 import com.uptech.windalerts.users.{FirestoreUserRepository, UserRepositoryAlgebra}
 import org.http4s.HttpRoutes
@@ -21,6 +21,7 @@ import org.http4s.dsl.io.{->, /, GET, Ok, _}
 import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
+import org.mongodb.scala.{MongoClient, MongoCollection, MongoDatabase}
 
 import scala.concurrent.duration.Duration
 import scala.util.Try
@@ -57,7 +58,15 @@ object SendNotifications extends IOApp {
   val usersRepo = new FirestoreUserRepository(dbWithAuth._1, new FirestoreOps())
 
   implicit val httpErrorHandler: HttpErrorHandler[IO] = new HttpErrorHandler[IO]
-  val notifications = new Notifications(alerts, beachesService, beachSeq, usersRepo, dbWithAuth._2, httpErrorHandler, new FirestoreNotificationRepository(dbWithAuth._1, new FirestoreOps()), config.read)
+
+
+  val uri: String = "mongodb+srv://surfsup:AtZivUs9ClOwwiJO@cluster0-ovdvf.gcp.mongodb.net/test?retryWrites=true&w=majority"
+  System.setProperty("org.mongodb.async.type", "netty")
+  val client: MongoClient = MongoClient(uri)
+  val db: MongoDatabase = client.getDatabase("surfsup").withCodecRegistry(com.uptech.windalerts.domain.codecs.mNotificationCodecRegistry)
+
+  private val coll: MongoCollection[domain.MNotification] = db.getCollection("notifications")
+  val notifications = new Notifications(alerts, beachesService, beachSeq, usersRepo, dbWithAuth._2, httpErrorHandler, notificationsRepository = new MongoNotificationsRepository(coll), config = config.read)
 
   def allRoutes(A: AlertsService.Service, B: BeachService[IO], UR: UserRepositoryAlgebra, firebaseMessaging: FirebaseMessaging, H: HttpErrorHandler[IO]) = HttpRoutes.of[IO] {
     case GET -> Root / "notify" => {
