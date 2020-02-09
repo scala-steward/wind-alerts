@@ -176,6 +176,10 @@ class UsersEndpoints(userService: UserService,
           case Left(error) => httpErrorHandler.handleError((OtpNotFoundError()))
         }
 
+//      case req@POST -> Root / "purchase" / "apple" =>
+//          AndroidPublisherHelper.init(
+//            ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL);
+//        Ok()
 
     }
 
