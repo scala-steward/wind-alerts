@@ -7,8 +7,13 @@ import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
-
+import org.mongodb.scala.bson.codecs.Macros._
+import org.mongodb.scala.bson.codecs.DEFAULT_CODEC_REGISTRY
+import org.bson.codecs.configuration.CodecRegistries.{fromRegistries, fromProviders}
 object codecs {
+
+  val mNotificationCodecRegistry = fromRegistries(fromProviders(classOf[Notification]), DEFAULT_CODEC_REGISTRY )
+
 
   lazy implicit val beachIdDecoder: Decoder[BeachId] = deriveDecoder[BeachId]
   implicit def beachIdEntityDecoder[F[_] : Sync]: EntityDecoder[F, BeachId] = jsonOf
