@@ -102,23 +102,10 @@ object domain {
 
   final case class OTP(otp: String)
 
-  final case class OTPWithExpiry(otp: String, expiry: Long, userId: String)
-
-
+  case class OTPWithExpiry(_id: ObjectId, otp: String, expiry: Long, userId: String)
   object OTPWithExpiry {
-    def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[OTPWithExpiry] = try {
-      val values = tuple._2
-      Some(OTPWithExpiry(
-        values("otp").asInstanceOf[String],
-        values("expiry").asInstanceOf[Long],
-        values("userId").asInstanceOf[String]
-      ))
-    }
-    catch {
-      case NonFatal(_) =>
-        None
-    }
-}
+    def apply(otp: String, expiry: Long, userId: String): OTPWithExpiry = new OTPWithExpiry(new ObjectId(), otp, expiry, userId)
+  }
 
   final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long) {
     def this(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long,  userType: String, snoozeTill: Long, notificationsPerHour: Long) =

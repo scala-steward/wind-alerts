@@ -12,7 +12,10 @@ import org.mongodb.scala.bson.codecs.DEFAULT_CODEC_REGISTRY
 import org.bson.codecs.configuration.CodecRegistries.{fromRegistries, fromProviders}
 object codecs {
 
-  val mNotificationCodecRegistry = fromRegistries(fromProviders(classOf[Notification]), DEFAULT_CODEC_REGISTRY )
+  val mNotificationCodecRegistry = fromRegistries(
+    fromProviders(classOf[Notification]),
+    fromProviders(classOf[OTPWithExpiry]),
+    DEFAULT_CODEC_REGISTRY )
 
 
   lazy implicit val beachIdDecoder: Decoder[BeachId] = deriveDecoder[BeachId]
