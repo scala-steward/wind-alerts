@@ -3,16 +3,15 @@ package com.uptech.windalerts.notifications
 import cats.data.EitherT
 import cats.effect.{ContextShift, IO}
 import com.uptech.windalerts.domain.domain
-import com.uptech.windalerts.domain.domain.{MNotification, UserWithCount}
+import com.uptech.windalerts.domain.domain.{Notification, UserWithCount}
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.model.Filters._
 
-class MongoNotificationsRepository(notifications: MongoCollection[MNotification])(implicit cs: ContextShift[IO]) {
-  def create(notification: domain.MNotification) = {
-    IO({
-      notifications.insertOne(notification).toFuture().value.get
-      notification
-    })
+import scala.concurrent.ExecutionContext.Implicits.global
+
+class MongoNotificationsRepository(notifications: MongoCollection[Notification])(implicit cs: ContextShift[IO]) extends  NotificationRepository {
+  def create(notification: domain.Notification) = {
+    IO.fromFuture(IO(notifications.insertOne(notification).toFuture().map(_=>notification)))
   }
 
   def countNotificationInLastHour(userId: String): EitherT[IO, Exception, domain.UserWithCount] = {

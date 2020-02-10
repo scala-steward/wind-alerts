@@ -77,7 +77,7 @@ class Notifications(A: AlertsService.Service, B: BeachService[IO], beaches: Map[
         .setNotification(new com.google.firebase.messaging.Notification(title, body))
         .setToken(u.deviceToken)
         .build())
-      val s = notificationsRepository.create(com.uptech.windalerts.domain.domain.MNotification(a.id, a.owner, u.deviceToken, title, body, System.currentTimeMillis()))
+      val s = notificationsRepository.create(com.uptech.windalerts.domain.domain.Notification(a.id, a.owner, u.deviceToken, title, body, System.currentTimeMillis()))
       logger.warn(s"unsafeRunSync ${s.unsafeRunSync()}")
 
       logger.warn(s" sending to ${u.email} for ${a.id} status : ${sent}")

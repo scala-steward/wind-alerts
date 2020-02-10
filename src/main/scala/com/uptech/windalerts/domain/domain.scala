@@ -302,31 +302,10 @@ object domain {
 
   }
 
-  case class MNotification(_id: ObjectId, alertId: String, userId: String, deviceToken: String, title: String, body: String, sentAt: Long)
-  object MNotification {
-    def apply( alertId: String, userId: String, deviceToken: String, title: String, body: String, sentAt: Long): MNotification
-    = new MNotification(new ObjectId(), alertId, userId, deviceToken, title, body, sentAt)
-  }
-
-  case class Notification(id: Option[String], alertId: String, userId: String, deviceToken: String, title: String, body: String, sentAt: Long)
-
+  case class Notification(_id: ObjectId, alertId: String, userId: String, deviceToken: String, title: String, body: String, sentAt: Long)
   object Notification {
-    def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Notification] = try {
-      val values = tuple._2
-      Some(Notification(
-        Some(tuple._1),
-        values("alertId").asInstanceOf[String],
-        values("userId").asInstanceOf[String],
-        values("deviceToken").asInstanceOf[String],
-        values("title").asInstanceOf[String],
-        values("body").asInstanceOf[String],
-        values("sentAt").asInstanceOf[Long]
-      ))
-    }
-    catch {
-      case NonFatal(_) =>
-        None
-    }
+    def apply( alertId: String, userId: String, deviceToken: String, title: String, body: String, sentAt: Long): Notification
+    = new Notification(new ObjectId(), alertId, userId, deviceToken, title, body, sentAt)
   }
 
   def j2s[A](inputList: util.List[A]): Seq[A] = JavaConverters.asScalaIteratorConverter(inputList.iterator).asScala.toSeq

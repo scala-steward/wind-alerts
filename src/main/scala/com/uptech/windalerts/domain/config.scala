@@ -78,9 +78,11 @@ object config {
 
   case class AppConfig(surfsUp: SurfsUp)
 
-  case class SurfsUp(notifications: Notifications)
+  case class SurfsUp(notifications: Notifications, mongodb: Mongodb)
 
   case class Notifications(title: String, body: String)
+
+  case class Mongodb(url: String)
 
   def read: AppConfig = {
     Option(parser.decodeFile[AppConfig](new File(s"/app/resources/application.conf")).toOption
