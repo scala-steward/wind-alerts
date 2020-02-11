@@ -8,11 +8,14 @@ import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.uptech.windalerts.alerts.AlertsRepository.FirestoreAlertsRepository
-import com.uptech.windalerts.domain.{FirestoreOps, HttpErrorHandler, secrets}
+import com.uptech.windalerts.domain.domain.OTPWithExpiry
+import com.uptech.windalerts.domain.{FirestoreOps, HttpErrorHandler, domain, secrets}
+import com.uptech.windalerts.notifications.MongoNotificationsRepository
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
+import org.mongodb.scala.{MongoClient, MongoCollection, MongoDatabase}
 
 import scala.util.Try
 
@@ -31,7 +34,12 @@ object UsersServer extends IOApp {
       facebookCredentialsRepository <- IO(new FirestoreFacebookCredentialsRepositoryAlgebra(db))
       refreshTokenRepo <- IO(new FirestoreRefreshTokenRepository(db))
       dbOps <- IO(new FirestoreOps())
-      otpRepo <- IO(new FirestoreOtpRepository(db, dbOps))
+      client <- IO.pure(MongoClient(com.uptech.windalerts.domain.config.read.surfsUp.mongodb.url))
+      mongoDb <- IO(client.getDatabase("surfsup").withCodecRegistry(com.uptech.windalerts.domain.codecs.mNotificationCodecRegistry))
+
+      coll  <- IO( mongoDb.getCollection[OTPWithExpiry]("otp"))
+
+      otpRepo <- IO( new MongoOtpRepository(coll))
       userRepository <- IO(new FirestoreUserRepository(db, dbOps))
       alertsRepository <- IO(new FirestoreAlertsRepository(db))
       usersService <- IO(new UserService(userRepository, credentialsRepository, facebookCredentialsRepository, alertsRepository, secrets.read.surfsUp.facebook.key))
