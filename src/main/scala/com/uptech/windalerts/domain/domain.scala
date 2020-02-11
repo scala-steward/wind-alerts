@@ -3,6 +3,7 @@ package com.uptech.windalerts.domain
 import java.util
 
 import org.log4s.getLogger
+import org.mongodb.scala.bson.ObjectId
 
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters
@@ -101,23 +102,10 @@ object domain {
 
   final case class OTP(otp: String)
 
-  final case class OTPWithExpiry(otp: String, expiry: Long, userId: String)
-
-
+  case class OTPWithExpiry(_id: ObjectId, otp: String, expiry: Long, userId: String)
   object OTPWithExpiry {
-    def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[OTPWithExpiry] = try {
-      val values = tuple._2
-      Some(OTPWithExpiry(
-        values("otp").asInstanceOf[String],
-        values("expiry").asInstanceOf[Long],
-        values("userId").asInstanceOf[String]
-      ))
-    }
-    catch {
-      case NonFatal(_) =>
-        None
-    }
-}
+    def apply(otp: String, expiry: Long, userId: String): OTPWithExpiry = new OTPWithExpiry(new ObjectId(), otp, expiry, userId)
+  }
 
   final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long) {
     def this(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long,  userType: String, snoozeTill: Long, notificationsPerHour: Long) =
@@ -301,25 +289,10 @@ object domain {
 
   }
 
-  case class Notification(id: Option[String], alertId: String, userId: String, deviceToken: String, title: String, body: String, sentAt: Long)
-
+  case class Notification(_id: ObjectId, alertId: String, userId: String, deviceToken: String, title: String, body: String, sentAt: Long)
   object Notification {
-    def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Notification] = try {
-      val values = tuple._2
-      Some(Notification(
-        Some(tuple._1),
-        values("alertId").asInstanceOf[String],
-        values("userId").asInstanceOf[String],
-        values("deviceToken").asInstanceOf[String],
-        values("title").asInstanceOf[String],
-        values("body").asInstanceOf[String],
-        values("sentAt").asInstanceOf[Long]
-      ))
-    }
-    catch {
-      case NonFatal(_) =>
-        None
-    }
+    def apply( alertId: String, userId: String, deviceToken: String, title: String, body: String, sentAt: Long): Notification
+    = new Notification(new ObjectId(), alertId, userId, deviceToken, title, body, sentAt)
   }
 
   def j2s[A](inputList: util.List[A]): Seq[A] = JavaConverters.asScalaIteratorConverter(inputList.iterator).asScala.toSeq
