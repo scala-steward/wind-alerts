@@ -37,6 +37,7 @@ object UsersServer extends IOApp {
       client <- IO.pure(MongoClient(com.uptech.windalerts.domain.config.read.surfsUp.mongodb.url))
       mongoDb <- IO(client.getDatabase("surfsup").withCodecRegistry(com.uptech.windalerts.domain.codecs.mNotificationCodecRegistry))
 
+      androidPublisher <- IO(AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL))
       coll  <- IO( mongoDb.getCollection[OTPWithExpiry]("otp"))
 
       otpRepo <- IO( new MongoOtpRepository(coll))
@@ -45,7 +46,7 @@ object UsersServer extends IOApp {
       usersService <- IO(new UserService(userRepository, credentialsRepository, facebookCredentialsRepository, alertsRepository, secrets.read.surfsUp.facebook.key))
       refreshTokenRepository <- IO(new FirestoreRefreshTokenRepository(db))
       auth <- IO(new Auth(refreshTokenRepository))
-      endpoints <- IO(new UsersEndpoints(usersService, new HttpErrorHandler[IO], refreshTokenRepo, otpRepo, auth))
+      endpoints <- IO(new UsersEndpoints(usersService, new HttpErrorHandler[IO], refreshTokenRepo, otpRepo, auth, androidPublisher))
       httpApp <- IO(
         Router(
           "/v1/users" -> auth.middleware(endpoints.authedService()),
