@@ -25,16 +25,6 @@
             <artifactId>google-oauth-client-jetty</artifactId>
             <version>1.30.5</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.google.api.client</groupId>-->
-<!--            <artifactId>google-api-client-auth-oauth2</artifactId>-->
-<!--            <version>1.2.3-alpha</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.google.api-client</groupId>-->
-<!--            <artifactId>google-api-client-extensions</artifactId>-->
-<!--            <version>1.6.0-beta</version>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-androidpublisher</artifactId>

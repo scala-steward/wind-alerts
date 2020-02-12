@@ -27,7 +27,7 @@ object AndroidPublisherHelper {
   val MIME_TYPE_APK = "application/vnd.android.package-archive"
 
   /** Path to the private key file (only used for Service Account auth). */
-  private val SRC_RESOURCES_KEY_P12 = "src/resources/key.p12"
+  private val SRC_RESOURCES_KEY_P12 = "src/main/resources/key.p12"
 
   /**
    * Path to the client secrets file (only used for Installed Application

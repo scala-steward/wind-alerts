@@ -6,12 +6,12 @@ object ApplicationConfig {
    * {@code null} or blank, the application will log a warning. Suggested
    * format is "MyCompany-Application/1.0".
    */
-  val APPLICATION_NAME = ""
+  val APPLICATION_NAME = "Surfsup"
 
   /**
    * Specify the package name of the app.
    */
-  val PACKAGE_NAME = ""
+  val PACKAGE_NAME = "com.passiondigital.surfsup.android"
 
   /**
    * Authentication.
@@ -24,7 +24,7 @@ object ApplicationConfig {
    * account email and add your key.p12 file to the resources directory.
    * </p>
    */
-  val SERVICE_ACCOUNT_EMAIL = ""
+  val SERVICE_ACCOUNT_EMAIL = "surfsup@api-6341048924876312710-295959.iam.gserviceaccount.com"
 
   /**
    * Specify the apk file path of the apk to upload, i.e. /resources/your_apk.apk

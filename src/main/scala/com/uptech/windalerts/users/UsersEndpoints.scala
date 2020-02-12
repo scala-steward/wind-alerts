@@ -2,6 +2,8 @@ package com.uptech.windalerts.users
 
 import cats.data.{EitherT, OptionT}
 import cats.effect.IO
+import com.google.api.services.androidpublisher.AndroidPublisher
+import com.google.api.services.androidpublisher.model.SubscriptionPurchasesAcknowledgeRequest
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
@@ -14,7 +16,8 @@ class UsersEndpoints(userService: UserService,
                      httpErrorHandler: HttpErrorHandler[IO],
                      refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra,
                      otpRepository: OtpRepository,
-                     auth: Auth) extends Http4sDsl[IO] {
+                     auth: Auth,
+                     androidPublisher: AndroidPublisher) extends Http4sDsl[IO] {
   private val logger = getLogger
 
   def authedService(): AuthedRoutes[UserId, IO] =
@@ -176,10 +179,18 @@ class UsersEndpoints(userService: UserService,
           case Left(error) => httpErrorHandler.handleError((OtpNotFoundError()))
         }
 
-//      case req@POST -> Root / "purchase" / "apple" =>
-//          AndroidPublisherHelper.init(
-//            ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL);
-//        Ok()
+      case req@POST -> Root / "purchase" / "android" =>
+        val action = for {
+          reciptData <- EitherT.liftF(req.as[AndroidReceiptValidationRequest])
+          response = EitherT.pure(androidPublisher.purchases().subscriptions().acknowledge(ApplicationConfig.PACKAGE_NAME,
+            reciptData.subscriptionId,
+            reciptData.token,
+            new SubscriptionPurchasesAcknowledgeRequest().setDeveloperPayload(reciptData.content)))
+        } yield response
+        action.value.flatMap {
+          case Right(x) => Ok()
+          case Left(error) => httpErrorHandler.handleError((OtpNotFoundError()))
+        }
 
     }
 

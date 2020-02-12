@@ -13,9 +13,9 @@ import org.bson.codecs.configuration.CodecRegistries.{fromRegistries, fromProvid
 object codecs {
 
   val mNotificationCodecRegistry = fromRegistries(
-    fromProviders(classOf[Notification]),
-    fromProviders(classOf[OTPWithExpiry]),
-    DEFAULT_CODEC_REGISTRY )
+  fromProviders(classOf[Notification]),
+  fromProviders(classOf[OTPWithExpiry]),
+  DEFAULT_CODEC_REGISTRY )
 
 
   lazy implicit val beachIdDecoder: Decoder[BeachId] = deriveDecoder[BeachId]
@@ -150,4 +150,9 @@ object codecs {
   implicit def appleReceiptValidationRequestEntityDecoder[F[_] : Sync]: EntityDecoder[F, AppleReceiptValidationRequest] = jsonOf
   lazy implicit val appleReceiptValidationRequestEncoder: Encoder[AppleReceiptValidationRequest] = deriveEncoder[AppleReceiptValidationRequest]
   implicit def appleReceiptValidationRequestEncoder[F[_] : Applicative]: EntityEncoder[F, AppleReceiptValidationRequest] = jsonEncoderOf
+
+  lazy implicit val androidReceiptValidationRequestDecoder: Decoder[AndroidReceiptValidationRequest] = deriveDecoder[AndroidReceiptValidationRequest]
+  implicit def androidReceiptValidationRequestEntityDecoder[F[_] : Sync]: EntityDecoder[F, AndroidReceiptValidationRequest] = jsonOf
+  lazy implicit val androidReceiptValidationRequestEncoder: Encoder[AndroidReceiptValidationRequest] = deriveEncoder[AndroidReceiptValidationRequest]
+  implicit def androidReceiptValidationRequestEncoder[F[_] : Applicative]: EntityEncoder[F, AndroidReceiptValidationRequest] = jsonEncoderOf
 }
