@@ -3,7 +3,7 @@ package com.uptech.windalerts.users
 import cats.data.{EitherT, OptionT}
 import cats.effect.IO
 import com.google.api.services.androidpublisher.AndroidPublisher
-import com.google.api.services.androidpublisher.model.SubscriptionPurchasesAcknowledgeRequest
+import com.google.api.services.androidpublisher.model.{ProductPurchase, ProductPurchasesAcknowledgeRequest, SubscriptionPurchase, SubscriptionPurchasesAcknowledgeRequest}
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
@@ -182,17 +182,31 @@ class UsersEndpoints(userService: UserService,
       case req@POST -> Root / "purchase" / "android" =>
         val action = for {
           reciptData <- EitherT.liftF(req.as[AndroidReceiptValidationRequest])
-          response = EitherT.pure(androidPublisher.purchases().subscriptions().acknowledge(ApplicationConfig.PACKAGE_NAME,
-            reciptData.subscriptionId,
+//          product = EitherT.pure(androidPublisher.purchases().products().get( ApplicationConfig.PACKAGE_NAME,
+//            reciptData.productId, reciptData.token).execute())
+          product = EitherT.pure(androidPublisher.inappproducts().get(
+            ApplicationConfig.PACKAGE_NAME,
+            reciptData.productId).execute())
+          a1 = product.value.right.get.getStatus
+          l1 = EitherT.pure(logger.info(s"product $product"))
+
+          acknowlede = EitherT.pure( androidPublisher.purchases().subscriptions().acknowledge(
+            ApplicationConfig.PACKAGE_NAME,reciptData.productId,
             reciptData.token,
-            new SubscriptionPurchasesAcknowledgeRequest().setDeveloperPayload(reciptData.content)))
-        } yield response
+            new SubscriptionPurchasesAcknowledgeRequest()).execute())
+          acknowledged <- getAndroidStatus(reciptData)
+         l2 = EitherT.pure(logger.info(s"acknowledged $acknowledged"))
+        } yield acknowledged.getAcknowledgementState
         action.value.flatMap {
           case Right(x) => Ok()
-          case Left(error) => httpErrorHandler.handleError((OtpNotFoundError()))
+          case Left(error) => httpErrorHandler.handleThrowable(error)
         }
 
     }
+
+  private def getAndroidStatus(reciptData: AndroidReceiptValidationRequest):EitherT[IO, Exception, SubscriptionPurchase]  = {
+    EitherT.liftF(IO(androidPublisher.purchases().subscriptions().get(ApplicationConfig.PACKAGE_NAME, reciptData.productId, reciptData.token).execute()))
+  }
 
   private def verifyApple(receiptData:String, password:String):EitherT[IO, String, String]  = {
     implicit val backend = HttpURLConnectionBackend()
