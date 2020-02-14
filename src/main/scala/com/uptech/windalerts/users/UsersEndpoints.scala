@@ -35,7 +35,28 @@ class UsersEndpoints(userService: UserService,
         OptionT.liftF(response)
       }
 
-      case authReq@POST -> Root / "verifyEmail" as user => {
+      case authReq@POST -> Root / "sendOTP" as user => {
+        val action = for {
+          emailConf <- EitherT.liftF(IO(secrets.read.surfsUp.email))
+          emailSender <- EitherT.liftF(IO(new EmailSender(emailConf.userName, emailConf.password)))
+          userFromDb <- userService.getUser(user.id)
+          otp <- createOTP
+          updated <- otpWithExpiry(user, otp)
+
+          sent <- send(emailSender, userFromDb, otp)
+
+        } yield sent
+        val response = action.value.flatMap {
+          case Right(tokens) => Ok()
+          //            case Right(tokens) => Ok()
+          case Left(error) => httpErrorHandler.handleError(error)
+        }
+        OptionT.liftF(response)
+      }
+
+      case authReq
+        @POST -> Root / "verifyEmail" as user
+      => {
         val response: IO[Response[IO]] = authReq.req.decode[OTP] { request =>
           val action = for {
             updateResult <- otpRepository.exists(request.otp, user.id)
@@ -51,6 +72,21 @@ class UsersEndpoints(userService: UserService,
 
     }
 
+
+  private def send(emailSender: EmailSender, userFromDb: User, otp: String): EitherT[IO, ValidationError, String] = {
+    EitherT.liftF(IO({
+      emailSender.sendOtp(userFromDb.email, otp)
+      otp
+    }))
+  }
+
+  private def otpWithExpiry(user: UserId, otp: String): EitherT[IO, ValidationError, OTPWithExpiry] = {
+    EitherT.liftF(otpRepository.updateForUser(user.id, OTPWithExpiry(otp, System.currentTimeMillis() + 5 * 60 * 1000, user.id)))
+  }
+
+  private def createOTP: EitherT[IO, ValidationError, String] = {
+    EitherT.liftF(IO(auth.createOtp(4)))
+  }
 
   def socialEndpoints(): HttpRoutes[IO] = {
     HttpRoutes.of[IO] {
@@ -98,7 +134,7 @@ class UsersEndpoints(userService: UserService,
           emailConf <- EitherT.liftF(IO(secrets.read.surfsUp.email))
           emailSender <- EitherT.liftF(IO(new EmailSender(emailConf.userName, emailConf.password)))
 
-          otp <- EitherT.liftF(IO(auth.createOtp(4)))
+          otp <- createOTP
           _ <- EitherT.liftF(otpRepository.create(OTPWithExpiry(otp, System.currentTimeMillis() + 5 * 60 * 1000, createUserResponse.id)))
           _ <- EitherT.liftF(IO(emailSender.sendOtp(createUserResponse.email, otp)))
           dbCredentials <- EitherT.right(IO(Credentials(Some(createUserResponse.id), registerRequest.email, registerRequest.password, registerRequest.deviceType)))
@@ -176,7 +212,7 @@ class UsersEndpoints(userService: UserService,
         } yield response
         action.value.flatMap {
           case Right(x) => Ok(x)
-          case Left(error) => httpErrorHandler.handleError((OtpNotFoundError()))
+          case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
         }
 
       case req@POST -> Root / "purchase" / "android" =>
@@ -189,12 +225,12 @@ class UsersEndpoints(userService: UserService,
         } yield response
         action.value.flatMap {
           case Right(x) => Ok()
-          case Left(error) => httpErrorHandler.handleError((OtpNotFoundError()))
+          case Left(error) => httpErrorHandler.handleThrowable(error)
         }
 
     }
 
-  private def verifyApple(receiptData:String, password:String):EitherT[IO, String, String]  = {
+  private def verifyApple(receiptData: String, password: String): EitherT[IO, String, String] = {
     implicit val backend = HttpURLConnectionBackend()
 
     EitherT.fromEither(sttp.body(Map("receipt-data" -> "receiptData"))
