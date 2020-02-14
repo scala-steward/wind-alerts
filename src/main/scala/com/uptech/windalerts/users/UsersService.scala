@@ -28,15 +28,15 @@ class UserService(userRepo: UserRepositoryAlgebra,
   }
 
 
-  def updateUserProfile(id: String, name: String, snoozeTill: Long, notificationsPerHour : Long): EitherT[IO, ValidationError, User] = {
+  def updateUserProfile(id: String, name: String, snoozeTill: Long, disableAllAlerts:Boolean,notificationsPerHour : Long): EitherT[IO, ValidationError, User] = {
     for {
       user <- getUser(id)
-      operationResult <- updateUser(name, snoozeTill, notificationsPerHour, user)
+      operationResult <- updateUser(name, snoozeTill, disableAllAlerts, notificationsPerHour, user)
     } yield operationResult
   }
 
-  private def updateUser(name: String, snoozeTill: Long, notificationsPerHour : Long, user: User): EitherT[IO, ValidationError, User] = {
-    userRepo.update(user.copy(name = name, snoozeTill = snoozeTill, notificationsPerHour = notificationsPerHour, lastPaymentAt = -1, nextPaymentAt = -1)).toRight(CouldNotUpdateUserError())
+  private def updateUser(name: String, snoozeTill: Long, disableAllAlerts:Boolean, notificationsPerHour : Long, user: User): EitherT[IO, ValidationError, User] = {
+    userRepo.update(user.copy(name = name, snoozeTill = snoozeTill, disableAllAlerts = disableAllAlerts, notificationsPerHour = notificationsPerHour, lastPaymentAt = -1, nextPaymentAt = -1)).toRight(CouldNotUpdateUserError())
   }
 
   def updateDeviceToken(userId: String, deviceToken: String) =
@@ -60,7 +60,7 @@ class UserService(userRepo: UserRepositoryAlgebra,
       _ <- doesNotExist(facebookUser.getEmail, rr.deviceType)
 
       savedCreds <- EitherT.liftF(facebookCredentialsRepo.create(FacebookCredentials(None, facebookUser.getEmail, rr.accessToken, rr.deviceType)))
-      savedUser <- EitherT.liftF(userRepo.create(new User(savedCreds.id.get, facebookUser.getEmail, facebookUser.getName, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Trial.value, -1, 4)))
+      savedUser <- EitherT.liftF(userRepo.create(new User(savedCreds.id.get, facebookUser.getEmail, facebookUser.getName, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Trial.value, -1, false, 4)))
     } yield (savedUser, savedCreds)
   }
 
@@ -69,7 +69,7 @@ class UserService(userRepo: UserRepositoryAlgebra,
     for {
       _ <- doesNotExist(credentials.email, credentials.deviceType)
       savedCreds <- EitherT.liftF(credentialsRepo.create(credentials))
-      saved <- EitherT.liftF(userRepo.create(new User(savedCreds.id.get, rr.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Registered.value, -1, 4)))
+      saved <- EitherT.liftF(userRepo.create(new User(savedCreds.id.get, rr.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Registered.value, -1, false, 4)))
     } yield saved
   }
 

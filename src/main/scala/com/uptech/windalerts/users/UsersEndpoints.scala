@@ -25,7 +25,7 @@ class UsersEndpoints(userService: UserService,
       case authReq@PUT -> Root / "profile" as user => {
         val response: IO[Response[IO]] = authReq.req.decode[UpdateUserRequest] { request =>
           val action = for {
-            updateResult <- userService.updateUserProfile(user.id, request.name, request.snoozeTill, request.notificationsPerHour)
+            updateResult <- userService.updateUserProfile(user.id, request.name, request.snoozeTill, request.disableAllAlerts, request.notificationsPerHour)
           } yield updateResult
           action.value.flatMap {
             case Right(tokens) => Ok(tokens)
@@ -90,7 +90,6 @@ class UsersEndpoints(userService: UserService,
 
   def socialEndpoints(): HttpRoutes[IO] = {
     HttpRoutes.of[IO] {
-
       case req@POST -> Root => {
         val action = for {
           rr <- EitherT.liftF(req.as[FacebookRegisterRequest])
