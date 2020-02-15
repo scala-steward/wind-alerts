@@ -184,19 +184,23 @@ class UsersEndpoints(userService: UserService,
           reciptData <- EitherT.liftF(req.as[AndroidReceiptValidationRequest])
 //          product = EitherT.pure(androidPublisher.purchases().products().get( ApplicationConfig.PACKAGE_NAME,
 //            reciptData.productId, reciptData.token).execute())
-          product = EitherT.pure(androidPublisher.inappproducts().get(
+          product = EitherT.pure(androidPublisher.purchases().products().get(
             ApplicationConfig.PACKAGE_NAME,
-            reciptData.productId).execute())
-          a1 = product.value.right.get.getStatus
-          l1 = EitherT.pure(logger.info(s"product $product"))
+            reciptData.productId, reciptData.token).execute())
+          ack = println(product.value.right.get)
+//          product = EitherT.pure(androidPublisher.inappproducts().get(ApplicationConfig.PACKAGE_NAME, reciptData.productId).execute())
+          //product = EitherT.pure(androidPublisher.purchases().subscriptions().g())
 
-          acknowlede = EitherT.pure( androidPublisher.purchases().subscriptions().acknowledge(
-            ApplicationConfig.PACKAGE_NAME,reciptData.productId,
-            reciptData.token,
-            new SubscriptionPurchasesAcknowledgeRequest()).execute())
-          acknowledged <- getAndroidStatus(reciptData)
-         l2 = EitherT.pure(logger.info(s"acknowledged $acknowledged"))
-        } yield acknowledged.getAcknowledgementState
+//          a1 = product.value.right.get.getStatus
+//          l1 = EitherT.pure(logger.info(s"product $product"))
+//
+//          acknowlede = EitherT.pure( androidPublisher.purchases().subscriptions().acknowledge(
+//            ApplicationConfig.PACKAGE_NAME,reciptData.productId,
+//            reciptData.token,
+//            new SubscriptionPurchasesAcknowledgeRequest()).execute())
+//          acknowledged <- getAndroidStatus(reciptData)
+//         l2 = EitherT.pure(logger.info(s"acknowledged $acknowledged"))
+        } yield product
         action.value.flatMap {
           case Right(x) => Ok()
           case Left(error) => httpErrorHandler.handleThrowable(error)
