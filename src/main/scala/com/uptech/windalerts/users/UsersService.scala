@@ -27,12 +27,12 @@ class UserService(userRepo: UserRepositoryAlgebra,
   def makeUserPremium(id: String) = {
     for {
       user <- getUser(id)
-      operationResult <- updateUserType(user, Premium.value)
+      operationResult <- updateUserType(user, Premium.value, System.currentTimeMillis(), System.currentTimeMillis()  + (30L * 24L * 60L * 60L * 1000L))
     } yield operationResult
   }
 
-  private def updateUserType(user: User, userType:String): EitherT[IO, ValidationError, User] = {
-    userRepo.update(user.copy(userType = userType, lastPaymentAt = -1, nextPaymentAt = -1)).toRight(CouldNotUpdateUserError())
+  private def updateUserType(user: User, userType:String, lastPaymentAt:Long = -1, nextPaymentAt:Long = -1): EitherT[IO, ValidationError, User] = {
+    userRepo.update(user.copy(userType = userType, lastPaymentAt = lastPaymentAt, nextPaymentAt = nextPaymentAt)).toRight(CouldNotUpdateUserError())
   }
 
 
