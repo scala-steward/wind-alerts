@@ -8,7 +8,7 @@ import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.uptech.windalerts.alerts.AlertsRepository.FirestoreAlertsRepository
-import com.uptech.windalerts.domain.domain.OTPWithExpiry
+import com.uptech.windalerts.domain.domain.{AndroidPurchase, OTPWithExpiry}
 import com.uptech.windalerts.domain.{FirestoreOps, HttpErrorHandler, domain, secrets}
 import com.uptech.windalerts.notifications.MongoNotificationsRepository
 import org.http4s.implicits._
@@ -38,15 +38,18 @@ object UsersServer extends IOApp {
       mongoDb <- IO(client.getDatabase("surfsup").withCodecRegistry(com.uptech.windalerts.domain.codecs.mNotificationCodecRegistry))
 
       androidPublisher <- IO(AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL))
-      coll  <- IO( mongoDb.getCollection[OTPWithExpiry]("otp"))
+      otpColl  <- IO( mongoDb.getCollection[OTPWithExpiry]("otp"))
+      androidPurchaseRepoColl  <- IO( mongoDb.getCollection[AndroidPurchase]("androidPurchases"))
 
-      otpRepo <- IO( new MongoOtpRepository(coll))
+      otpRepo <- IO( new MongoOtpRepository(otpColl))
+      androidPurchaseRepo <- IO( new MongoAndroidPurchaseRepository(androidPurchaseRepoColl))
+
       userRepository <- IO(new FirestoreUserRepository(db, dbOps))
       alertsRepository <- IO(new FirestoreAlertsRepository(db))
       usersService <- IO(new UserService(userRepository, credentialsRepository, facebookCredentialsRepository, alertsRepository, secrets.read.surfsUp.facebook.key))
       refreshTokenRepository <- IO(new FirestoreRefreshTokenRepository(db))
       auth <- IO(new Auth(refreshTokenRepository))
-      endpoints <- IO(new UsersEndpoints(usersService, new HttpErrorHandler[IO], refreshTokenRepo, otpRepo, auth, androidPublisher))
+      endpoints <- IO(new UsersEndpoints(usersService, new HttpErrorHandler[IO], refreshTokenRepo, otpRepo, androidPurchaseRepo, auth, androidPublisher))
       httpApp <- IO(
         Router(
           "/v1/users" -> auth.middleware(endpoints.authedService()),

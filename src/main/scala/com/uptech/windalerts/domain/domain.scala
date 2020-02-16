@@ -10,9 +10,10 @@ import scala.collection.JavaConverters
 import scala.util.control.NonFatal
 
 object domain {
+
   private val logger = getLogger
 
-  case class UpdateUserRequest(name: String, userType: String, snoozeTill: Long, notificationsPerHour : Long)
+  case class UpdateUserRequest(name: String, userType: String, snoozeTill: Long, disableAllAlerts:Boolean, notificationsPerHour : Long)
 
   case class UserId(id: String)
 
@@ -107,9 +108,9 @@ object domain {
     def apply(otp: String, expiry: Long, userId: String): OTPWithExpiry = new OTPWithExpiry(new ObjectId(), otp, expiry, userId)
   }
 
-  final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long) {
-    def this(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long,  userType: String, snoozeTill: Long, notificationsPerHour: Long) =
-        this(id, email, name, deviceId, deviceToken, deviceType, startTrialAt, if (startTrialAt == -1) -1L else (startTrialAt + (30L * 24L * 60L * 60L * 1000L)), userType, snoozeTill, notificationsPerHour, -1, -1)
+  final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts:Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long) {
+    def this(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long,  userType: String, snoozeTill: Long, disableAllAlerts:Boolean, notificationsPerHour: Long) =
+        this(id, email, name, deviceId, deviceToken, deviceType, startTrialAt, if (startTrialAt == -1) -1L else (startTrialAt + (30L * 24L * 60L * 60L * 1000L)), userType, snoozeTill, disableAllAlerts, notificationsPerHour, -1, -1)
     def isTrialEnded() = {
       startTrialAt != -1 && endTrialAt < System.currentTimeMillis()
     }
@@ -128,6 +129,7 @@ object domain {
         values("startTrialAt").asInstanceOf[Long],
         UserType(values("userType").asInstanceOf[String]).value,
         values("snoozeTill").asInstanceOf[Long],
+        values("disableAllAlerts").asInstanceOf[Boolean],
         values("notificationsPerHour").asInstanceOf[Long]
       ))
     }
@@ -301,5 +303,19 @@ object domain {
 
   case class AppleReceiptValidationRequest(`receipt-data`:String, password:String)
   case class AndroidReceiptValidationRequest(productId:String, token:String)
-
+  case class AndroidPurchase(_id: ObjectId,
+                             userId:String,
+                             acknowledgementState:Int,
+                             consumptionState:Int,
+                             developerPayload:String,
+                             kind:String,
+                             orderId:String,
+                             purchaseState:Int,
+                             purchaseTimeMillis:Long,
+                             purchaseType:Int
+                            )
+  object AndroidPurchase {
+    def apply(userId:String, acknowledgementState: Int, consumptionState: Int, developerPayload: String, kind: String, orderId: String, purchaseState: Int, purchaseTimeMillis: Long, purchaseType: Int): AndroidPurchase
+    = new AndroidPurchase(new ObjectId(), userId, acknowledgementState, consumptionState, developerPayload, kind, orderId, purchaseState, purchaseTimeMillis, purchaseType)
+  }
 }

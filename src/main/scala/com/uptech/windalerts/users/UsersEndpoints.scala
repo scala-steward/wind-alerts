@@ -12,10 +12,12 @@ import org.http4s.dsl.Http4sDsl
 import org.http4s.{AuthedRoutes, HttpRoutes, Response}
 import org.log4s.getLogger
 
+
 class UsersEndpoints(userService: UserService,
                      httpErrorHandler: HttpErrorHandler[IO],
                      refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra,
                      otpRepository: OtpRepository,
+                     androidPurchaseRepository: AndroidPurchaseRepository,
                      auth: Auth,
                      androidPublisher: AndroidPublisher) extends Http4sDsl[IO] {
   private val logger = getLogger
@@ -25,12 +27,30 @@ class UsersEndpoints(userService: UserService,
       case authReq@PUT -> Root / "profile" as user => {
         val response: IO[Response[IO]] = authReq.req.decode[UpdateUserRequest] { request =>
           val action = for {
-            updateResult <- userService.updateUserProfile(user.id, request.name, request.snoozeTill, request.notificationsPerHour)
+            updateResult <- userService.updateUserProfile(user.id, request.name, request.snoozeTill, request.disableAllAlerts, request.notificationsPerHour)
           } yield updateResult
           action.value.flatMap {
             case Right(tokens) => Ok(tokens)
             case Left(error) => httpErrorHandler.handleError(error)
           }
+        }
+        OptionT.liftF(response)
+      }
+
+      case authReq@POST -> Root / "sendOTP" as user => {
+        val action = for {
+          emailConf <- EitherT.liftF(IO(secrets.read.surfsUp.email))
+          emailSender <- EitherT.liftF(IO(new EmailSender(emailConf.userName, emailConf.password)))
+          userFromDb <- userService.getUser(user.id)
+          otp <- createOTP
+          updated <- otpWithExpiry(user, otp)
+
+          sent <- send(emailSender, userFromDb, otp)
+
+        } yield sent
+        val response = action.value.flatMap {
+          case Right(_) => Ok()
+          case Left(error) => httpErrorHandler.handleError(error)
         }
         OptionT.liftF(response)
       }
@@ -49,12 +69,63 @@ class UsersEndpoints(userService: UserService,
         OptionT.liftF(response)
       }
 
+
+      case authReq@POST -> Root /  "purchase" / "android" as user => {
+        val response: IO[Response[IO]] = authReq.req.decode[AndroidReceiptValidationRequest] { request =>
+          val action = for {
+            purchase <- getPurchase(request)
+            savedToken <- androidPurchaseRepository.create(
+              AndroidPurchase(user.id, purchase.getAcknowledgementState, purchase.getConsumptionState, purchase.getDeveloperPayload, purchase.getKind, purchase.getOrderId, purchase.getPurchaseState,
+                purchase.getPurchaseTimeMillis, purchase.getPurchaseType))
+            premiumUser <- userService.makeUserPremium(user.id)
+          } yield premiumUser
+          action.value.flatMap {
+            case Right(premiumUser) => Ok(premiumUser)
+            case Left(error) => httpErrorHandler.handleError(error)
+          }
+        }
+        OptionT.liftF(response)
+      }
+
     }
 
 
+  private def getPurchase(request: AndroidReceiptValidationRequest):EitherT[IO, ValidationError, ProductPurchase] = {
+    EitherT.liftF(IO({
+      val purchase = androidPublisher.purchases().products().get(ApplicationConfig.PACKAGE_NAME, request.productId, request.token).execute()
+      logger.info(s"purchase $purchase")
+      purchase
+    }))
+  }
+
+  private def acknowledge(request: AndroidReceiptValidationRequest):EitherT[IO, ValidationError, Unit] = {
+    EitherT.liftF(IO({
+      val purchase = androidPublisher.purchases().products()
+        .acknowledge(ApplicationConfig.PACKAGE_NAME,
+          request.productId,
+          request.token,
+          new ProductPurchasesAcknowledgeRequest()).execute()
+      logger.info(s"purchase $purchase")
+    }))
+  }
+
+  private def send(emailSender: EmailSender, userFromDb: User, otp: String): EitherT[IO, ValidationError, String] = {
+    EitherT.liftF(IO({
+      emailSender.sendOtp(userFromDb.email, otp)
+      otp
+    }))
+  }
+
+  private def otpWithExpiry(user: UserId, otp: String): EitherT[IO, ValidationError, OTPWithExpiry] = {
+    EitherT.liftF(otpRepository.updateForUser(user.id, OTPWithExpiry(otp, System.currentTimeMillis() + 5 * 60 * 1000, user.id)))
+  }
+
+  private def createOTP: EitherT[IO, ValidationError, String] = {
+    EitherT.liftF(IO(auth.createOtp(4)))
+  }
+
   def socialEndpoints(): HttpRoutes[IO] = {
     HttpRoutes.of[IO] {
-
       case req@POST -> Root => {
         val action = for {
           rr <- EitherT.liftF(req.as[FacebookRegisterRequest])
@@ -98,7 +169,7 @@ class UsersEndpoints(userService: UserService,
           emailConf <- EitherT.liftF(IO(secrets.read.surfsUp.email))
           emailSender <- EitherT.liftF(IO(new EmailSender(emailConf.userName, emailConf.password)))
 
-          otp <- EitherT.liftF(IO(auth.createOtp(4)))
+          otp <- createOTP
           _ <- EitherT.liftF(otpRepository.create(OTPWithExpiry(otp, System.currentTimeMillis() + 5 * 60 * 1000, createUserResponse.id)))
           _ <- EitherT.liftF(IO(emailSender.sendOtp(createUserResponse.email, otp)))
           dbCredentials <- EitherT.right(IO(Credentials(Some(createUserResponse.id), registerRequest.email, registerRequest.password, registerRequest.deviceType)))
@@ -176,34 +247,7 @@ class UsersEndpoints(userService: UserService,
         } yield response
         action.value.flatMap {
           case Right(x) => Ok(x)
-          case Left(error) => httpErrorHandler.handleError((OtpNotFoundError()))
-        }
-
-      case req@POST -> Root / "purchase" / "android" =>
-        val action = for {
-          reciptData <- EitherT.liftF(req.as[AndroidReceiptValidationRequest])
-//          product = EitherT.pure(androidPublisher.purchases().products().get( ApplicationConfig.PACKAGE_NAME,
-//            reciptData.productId, reciptData.token).execute())
-          product = EitherT.pure(androidPublisher.purchases().products().get(
-            ApplicationConfig.PACKAGE_NAME,
-            reciptData.productId, reciptData.token).execute())
-          ack = println(product.value.right.get)
-//          product = EitherT.pure(androidPublisher.inappproducts().get(ApplicationConfig.PACKAGE_NAME, reciptData.productId).execute())
-          //product = EitherT.pure(androidPublisher.purchases().subscriptions().g())
-
-//          a1 = product.value.right.get.getStatus
-//          l1 = EitherT.pure(logger.info(s"product $product"))
-//
-//          acknowlede = EitherT.pure( androidPublisher.purchases().subscriptions().acknowledge(
-//            ApplicationConfig.PACKAGE_NAME,reciptData.productId,
-//            reciptData.token,
-//            new SubscriptionPurchasesAcknowledgeRequest()).execute())
-//          acknowledged <- getAndroidStatus(reciptData)
-//         l2 = EitherT.pure(logger.info(s"acknowledged $acknowledged"))
-        } yield product
-        action.value.flatMap {
-          case Right(x) => Ok()
-          case Left(error) => httpErrorHandler.handleThrowable(error)
+          case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
         }
 
     }
@@ -212,7 +256,7 @@ class UsersEndpoints(userService: UserService,
     EitherT.liftF(IO(androidPublisher.purchases().subscriptions().get(ApplicationConfig.PACKAGE_NAME, reciptData.productId, reciptData.token).execute()))
   }
 
-  private def verifyApple(receiptData:String, password:String):EitherT[IO, String, String]  = {
+  private def verifyApple(receiptData: String, password: String): EitherT[IO, String, String] = {
     implicit val backend = HttpURLConnectionBackend()
 
     EitherT.fromEither(sttp.body(Map("receipt-data" -> "receiptData"))
