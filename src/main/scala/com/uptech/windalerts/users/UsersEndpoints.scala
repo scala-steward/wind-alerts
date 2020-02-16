@@ -3,7 +3,7 @@ package com.uptech.windalerts.users
 import cats.data.{EitherT, OptionT}
 import cats.effect.IO
 import com.google.api.services.androidpublisher.AndroidPublisher
-import com.google.api.services.androidpublisher.model.SubscriptionPurchasesAcknowledgeRequest
+import com.google.api.services.androidpublisher.model.{ProductPurchase, ProductPurchasesAcknowledgeRequest, SubscriptionPurchase, SubscriptionPurchasesAcknowledgeRequest}
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
@@ -12,10 +12,12 @@ import org.http4s.dsl.Http4sDsl
 import org.http4s.{AuthedRoutes, HttpRoutes, Response}
 import org.log4s.getLogger
 
+
 class UsersEndpoints(userService: UserService,
                      httpErrorHandler: HttpErrorHandler[IO],
                      refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra,
                      otpRepository: OtpRepository,
+                     androidPurchaseRepository: AndroidPurchaseRepository,
                      auth: Auth,
                      androidPublisher: AndroidPublisher) extends Http4sDsl[IO] {
   private val logger = getLogger
@@ -47,16 +49,13 @@ class UsersEndpoints(userService: UserService,
 
         } yield sent
         val response = action.value.flatMap {
-          case Right(tokens) => Ok()
-          //            case Right(tokens) => Ok()
+          case Right(_) => Ok()
           case Left(error) => httpErrorHandler.handleError(error)
         }
         OptionT.liftF(response)
       }
 
-      case authReq
-        @POST -> Root / "verifyEmail" as user
-      => {
+      case authReq@POST -> Root / "verifyEmail" as user => {
         val response: IO[Response[IO]] = authReq.req.decode[OTP] { request =>
           val action = for {
             updateResult <- otpRepository.exists(request.otp, user.id)
@@ -70,8 +69,45 @@ class UsersEndpoints(userService: UserService,
         OptionT.liftF(response)
       }
 
+
+      case authReq@POST -> Root /  "purchase" / "android" as user => {
+        val response: IO[Response[IO]] = authReq.req.decode[AndroidReceiptValidationRequest] { request =>
+          val action = for {
+            purchase <- getPurchase(request)
+            savedToken <- androidPurchaseRepository.create(
+              AndroidPurchase(user.id, purchase.getAcknowledgementState, purchase.getConsumptionState, purchase.getDeveloperPayload, purchase.getKind, purchase.getOrderId, purchase.getPurchaseState,
+                purchase.getPurchaseTimeMillis, purchase.getPurchaseType))
+            premiumUser <- userService.makeUserPremium(user.id)
+          } yield premiumUser
+          action.value.flatMap {
+            case Right(premiumUser) => Ok(premiumUser)
+            case Left(error) => httpErrorHandler.handleError(error)
+          }
+        }
+        OptionT.liftF(response)
+      }
+
     }
 
+
+  private def getPurchase(request: AndroidReceiptValidationRequest):EitherT[IO, ValidationError, ProductPurchase] = {
+    EitherT.liftF(IO({
+      val purchase = androidPublisher.purchases().products().get(ApplicationConfig.PACKAGE_NAME, request.productId, request.token).execute()
+      logger.info(s"purchase $purchase")
+      purchase
+    }))
+  }
+
+  private def acknowledge(request: AndroidReceiptValidationRequest):EitherT[IO, ValidationError, Unit] = {
+    EitherT.liftF(IO({
+      val purchase = androidPublisher.purchases().products()
+        .acknowledge(ApplicationConfig.PACKAGE_NAME,
+          request.productId,
+          request.token,
+          new ProductPurchasesAcknowledgeRequest()).execute()
+      logger.info(s"purchase $purchase")
+    }))
+  }
 
   private def send(emailSender: EmailSender, userFromDb: User, otp: String): EitherT[IO, ValidationError, String] = {
     EitherT.liftF(IO({
@@ -214,20 +250,11 @@ class UsersEndpoints(userService: UserService,
           case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
         }
 
-      case req@POST -> Root / "purchase" / "android" =>
-        val action = for {
-          reciptData <- EitherT.liftF(req.as[AndroidReceiptValidationRequest])
-          response = EitherT.pure(androidPublisher.purchases().subscriptions().acknowledge(ApplicationConfig.PACKAGE_NAME,
-            reciptData.subscriptionId,
-            reciptData.token,
-            new SubscriptionPurchasesAcknowledgeRequest().setDeveloperPayload(reciptData.content)))
-        } yield response
-        action.value.flatMap {
-          case Right(x) => Ok()
-          case Left(error) => httpErrorHandler.handleThrowable(error)
-        }
-
     }
+
+  private def getAndroidStatus(reciptData: AndroidReceiptValidationRequest):EitherT[IO, Exception, SubscriptionPurchase]  = {
+    EitherT.liftF(IO(androidPublisher.purchases().subscriptions().get(ApplicationConfig.PACKAGE_NAME, reciptData.productId, reciptData.token).execute()))
+  }
 
   private def verifyApple(receiptData: String, password: String): EitherT[IO, String, String] = {
     implicit val backend = HttpURLConnectionBackend()

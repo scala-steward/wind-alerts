@@ -10,6 +10,7 @@ import scala.collection.JavaConverters
 import scala.util.control.NonFatal
 
 object domain {
+
   private val logger = getLogger
 
   case class UpdateUserRequest(name: String, userType: String, snoozeTill: Long, disableAllAlerts:Boolean, notificationsPerHour : Long)
@@ -301,6 +302,20 @@ object domain {
   def j2sm[K, V](map: util.Map[K, V]): Map[K, V] = JavaConverters.mapAsScalaMap(map).toMap
 
   case class AppleReceiptValidationRequest(`receipt-data`:String, password:String)
-  case class AndroidReceiptValidationRequest(purchaseToken:String, subscriptionId:String, token:String, content:String)
-
+  case class AndroidReceiptValidationRequest(productId:String, token:String)
+  case class AndroidPurchase(_id: ObjectId,
+                             userId:String,
+                             acknowledgementState:Int,
+                             consumptionState:Int,
+                             developerPayload:String,
+                             kind:String,
+                             orderId:String,
+                             purchaseState:Int,
+                             purchaseTimeMillis:Long,
+                             purchaseType:Int
+                            )
+  object AndroidPurchase {
+    def apply(userId:String, acknowledgementState: Int, consumptionState: Int, developerPayload: String, kind: String, orderId: String, purchaseState: Int, purchaseTimeMillis: Long, purchaseType: Int): AndroidPurchase
+    = new AndroidPurchase(new ObjectId(), userId, acknowledgementState, consumptionState, developerPayload, kind, orderId, purchaseState, purchaseTimeMillis, purchaseType)
+  }
 }
