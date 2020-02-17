@@ -41,16 +41,6 @@ object UsersServer extends IOApp {
 
     mongoDb <- IO(client.getDatabase("surfsup").withCodecRegistry(com.uptech.windalerts.domain.codecs.mNotificationCodecRegistry))
 
-    loggerContext <- IO(LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext])
-    rootLogger <- IO(loggerContext.getLogger("org.mongodb.driver"))
-    _ <- IO(rootLogger.setLevel(Level.OFF))
-
-    grpcLogger <- IO(loggerContext.getLogger("io.grpc"))
-    _ <- IO(grpcLogger.setLevel(Level.OFF))
-
-    http4sLogger <- IO(loggerContext.getLogger("org.http4s"))
-    _ <- IO(http4sLogger.setLevel(Level.OFF))
-
     androidPublisher <- IO(AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL))
     otpColl  <- IO( mongoDb.getCollection[OTPWithExpiry]("otp"))
     androidPurchaseRepoColl  <- IO( mongoDb.getCollection[AndroidPurchase]("androidPurchases"))
