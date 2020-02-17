@@ -61,14 +61,14 @@ object AndroidPublisherHelper {
   @throws[GeneralSecurityException]
   @throws[IOException]
   private def authorizeWithServiceAccount(serviceAccountEmail: String) = {
+    val keyFile = if (new File("/app/resources/key.p12").exists()) "/app/resources/key.p12" else SRC_RESOURCES_KEY_P12
     new GoogleCredential
       .Builder()
       .setTransport(HTTP_TRANSPORT)
       .setJsonFactory(JSON_FACTORY)
       .setServiceAccountId(serviceAccountEmail)
       .setServiceAccountScopes(singleton(AndroidPublisherScopes.ANDROIDPUBLISHER))
-      .setServiceAccountPrivateKeyFromP12File(new File(SRC_RESOURCES_KEY_P12)).build
-
+      .setServiceAccountPrivateKeyFromP12File(new File(keyFile)).build
   }
 
   /**
