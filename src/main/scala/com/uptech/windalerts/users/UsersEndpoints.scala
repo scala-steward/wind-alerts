@@ -252,10 +252,6 @@ class UsersEndpoints(userService: UserService,
 
     }
 
-  private def getAndroidStatus(reciptData: AndroidReceiptValidationRequest):EitherT[IO, Exception, SubscriptionPurchase]  = {
-    EitherT.liftF(IO(androidPublisher.purchases().subscriptions().get(ApplicationConfig.PACKAGE_NAME, reciptData.productId, reciptData.token).execute()))
-  }
-
   private def verifyApple(receiptData: String, password: String): EitherT[IO, String, String] = {
     implicit val backend = HttpURLConnectionBackend()
 

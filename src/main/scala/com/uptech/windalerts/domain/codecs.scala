@@ -17,7 +17,7 @@ object codecs {
     fromProviders(classOf[Notification]),
     fromProviders(classOf[OTPWithExpiry]),
     fromProviders(classOf[AndroidPurchase]),
-
+    fromProviders(classOf[RefreshToken]),
     DEFAULT_CODEC_REGISTRY)
 
   lazy implicit val beachIdDecoder: Decoder[BeachId] = deriveDecoder[BeachId]

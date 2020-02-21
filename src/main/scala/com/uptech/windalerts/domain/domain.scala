@@ -23,24 +23,12 @@ object domain {
 
   case class AccessTokenRequest(refreshToken: String)
 
-  case class RefreshToken(refreshToken: String, expiry: Long, userId: String, accessTokenId: String) {
+  case class RefreshToken(_id: ObjectId, refreshToken: String, expiry: Long, userId: String, accessTokenId: String) {
     def isExpired() = System.currentTimeMillis() > expiry
   }
 
   object RefreshToken {
-    def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[RefreshToken] = try {
-      val values = tuple._2
-      Some(RefreshToken(
-        values("refreshToken").asInstanceOf[String],
-        values("expiry").asInstanceOf[Long],
-        values("userId").asInstanceOf[String],
-        values("accessTokenId").asInstanceOf[String]
-      ))
-    }
-    catch {
-      case NonFatal(_) =>
-        None
-    }
+    def apply(refreshToken: String, expiry: Long, userId: String, accessTokenId: String): RefreshToken = new RefreshToken(new ObjectId(), refreshToken, expiry, userId, accessTokenId)
   }
 
   case class FacebookCredentials(id: Option[String], email: String, accessToken: String, deviceType: String)

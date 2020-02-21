@@ -8,7 +8,7 @@ import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.uptech.windalerts.alerts.AlertsRepository.FirestoreAlertsRepository
-import com.uptech.windalerts.domain.domain.{AndroidPurchase, OTPWithExpiry}
+import com.uptech.windalerts.domain.domain.{AndroidPurchase, OTPWithExpiry, RefreshToken}
 import com.uptech.windalerts.domain.{FirestoreOps, HttpErrorHandler, domain, secrets}
 import com.uptech.windalerts.notifications.MongoNotificationsRepository
 import org.http4s.implicits._
@@ -21,6 +21,7 @@ import ch.qos.logback.classic.LoggerContext
 import org.slf4j.LoggerFactory
 import ch.qos.logback.classic.LoggerContext
 import org.slf4j.LoggerFactory
+
 import scala.util.Try
 
 object UsersServer extends IOApp {
@@ -35,24 +36,26 @@ object UsersServer extends IOApp {
     db <- IO(FirestoreClient.getFirestore)
     credentialsRepository <- IO(new FirestoreCredentialsRepository(db, new FirestoreOps()))
     facebookCredentialsRepository <- IO(new FirestoreFacebookCredentialsRepositoryAlgebra(db))
-    refreshTokenRepo <- IO(new FirestoreRefreshTokenRepository(db))
     dbOps <- IO(new FirestoreOps())
-    client <- IO.pure(MongoClient(com.uptech.windalerts.domain.config.read.surfsUp.mongodb.url))
 
+    client <- IO.pure(MongoClient(com.uptech.windalerts.domain.config.read.surfsUp.mongodb.url))
     mongoDb <- IO(client.getDatabase("surfsup").withCodecRegistry(com.uptech.windalerts.domain.codecs.mNotificationCodecRegistry))
+    otpColl  <- IO( mongoDb.getCollection[OTPWithExpiry]("otp"))
+    otpRepo <- IO( new MongoOtpRepository(otpColl))
+
+    refreshTokensColl  <- IO( mongoDb.getCollection[RefreshToken]("refreshTokens"))
+    refreshTokenRepo <- IO( new MongoRefreshTokenRepositoryAlgebra(refreshTokensColl))
 
     androidPublisher <- IO(AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL))
-    otpColl  <- IO( mongoDb.getCollection[OTPWithExpiry]("otp"))
     androidPurchaseRepoColl  <- IO( mongoDb.getCollection[AndroidPurchase]("androidPurchases"))
 
-    otpRepo <- IO( new MongoOtpRepository(otpColl))
+
     androidPurchaseRepo <- IO( new MongoAndroidPurchaseRepository(androidPurchaseRepoColl))
 
     userRepository <- IO(new FirestoreUserRepository(db, dbOps))
     alertsRepository <- IO(new FirestoreAlertsRepository(db))
     usersService <- IO(new UserService(userRepository, credentialsRepository, facebookCredentialsRepository, alertsRepository, secrets.read.surfsUp.facebook.key))
-    refreshTokenRepository <- IO(new FirestoreRefreshTokenRepository(db))
-    auth <- IO(new Auth(refreshTokenRepository))
+    auth <- IO(new Auth(refreshTokenRepo))
     endpoints <- IO(new UsersEndpoints(usersService, new HttpErrorHandler[IO], refreshTokenRepo, otpRepo, androidPurchaseRepo, auth, androidPublisher))
     httpApp <- IO(
       Router(
