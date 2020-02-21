@@ -7,12 +7,14 @@ import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
+import com.uptech.windalerts.domain.domain.{OTPWithExpiry, RefreshToken}
 import com.uptech.windalerts.domain.{FirestoreOps, HttpErrorHandler, secrets}
-import com.uptech.windalerts.users.{Auth, FirestoreCredentialsRepository, FirestoreFacebookCredentialsRepositoryAlgebra, FirestoreRefreshTokenRepository, FirestoreUserRepository, UserService}
+import com.uptech.windalerts.users.{Auth, FirestoreCredentialsRepository, FirestoreFacebookCredentialsRepositoryAlgebra, FirestoreUserRepository, MongoOtpRepository, MongoRefreshTokenRepositoryAlgebra, UserService}
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
+import org.mongodb.scala.MongoClient
 
 import scala.util.Try
 
@@ -29,12 +31,17 @@ object AlertsServer extends IOApp {
       alertsRepo <- IO(new AlertsRepository.FirestoreAlertsRepository(db))
       alertService <- IO(new AlertsService.ServiceImpl(alertsRepo))
       httpErrorHandler <- IO(new HttpErrorHandler[IO])
-      refreshTokenRepository <- IO(new FirestoreRefreshTokenRepository(db))
       userRepository <- IO(new FirestoreUserRepository(db, new FirestoreOps()))
       credentialsRepository <- IO(new FirestoreCredentialsRepository(db, new FirestoreOps()))
       fbCredentialsRepository <- IO(new FirestoreFacebookCredentialsRepositoryAlgebra(db))
 
-      auth <- IO(new Auth(refreshTokenRepository))
+      client <- IO.pure(MongoClient(com.uptech.windalerts.domain.config.read.surfsUp.mongodb.url))
+      mongoDb <- IO(client.getDatabase("surfsup").withCodecRegistry(com.uptech.windalerts.domain.codecs.mNotificationCodecRegistry))
+      refreshTokensCollection  <- IO( mongoDb.getCollection[RefreshToken]("refreshTokens"))
+      refreshTokensRepo <- IO( new MongoRefreshTokenRepositoryAlgebra(refreshTokensCollection))
+
+
+      auth <- IO(new Auth(refreshTokensRepo))
       usersService <- IO( new UserService(userRepository, credentialsRepository, fbCredentialsRepository, alertsRepo, secrets.read.surfsUp.facebook.key))
       alertsEndPoints <- IO(new AlertsEndpoints(alertService, usersService, auth, httpErrorHandler))
       httpApp <- IO(Router(

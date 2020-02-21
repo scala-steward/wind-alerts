@@ -6,7 +6,7 @@ import cats.data.{EitherT, OptionT}
 import cats.effect.IO
 import com.uptech.windalerts.domain.domain
 import com.uptech.windalerts.domain.domain.UserType.{Premium, Trial}
-import com.uptech.windalerts.domain.domain.{RefreshToken, TokensWithUser, User, UserId, UserType}
+import com.uptech.windalerts.domain.domain._
 import dev.profunktor.auth.JwtAuthMiddleware
 import dev.profunktor.auth.jwt.{JwtAuth, JwtSecretKey}
 import io.circe.parser._
