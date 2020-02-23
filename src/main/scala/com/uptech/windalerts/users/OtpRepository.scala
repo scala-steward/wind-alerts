@@ -3,11 +3,8 @@ package com.uptech.windalerts.users
 import cats.data.EitherT
 import cats.effect.{ContextShift, IO}
 import com.uptech.windalerts.domain.domain.OTPWithExpiry
-import org.bson.types.ObjectId
 import org.mongodb.scala.MongoCollection
-import org.mongodb.scala.bson.ObjectId
 import org.mongodb.scala.model.Filters.{and, equal}
-import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Updates._
 
 import scala.concurrent.ExecutionContext.Implicits.global

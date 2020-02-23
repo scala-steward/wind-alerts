@@ -132,8 +132,8 @@ class UsersEndpoints(userService: UserService,
           rr <- EitherT.liftF(req.as[FacebookRegisterRequest])
           result <- userService.createUser(rr)
           accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
-          token <- auth.createToken(result._2.id.get, 60, accessTokenId)
-          refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), result._2.id.get, accessTokenId)))
+          token <- auth.createToken(result._2._id.toHexString, 60, accessTokenId)
+          refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), result._2._id.toHexString, accessTokenId)))
           tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, result._1)
         } yield tokens
         action.value.flatMap {

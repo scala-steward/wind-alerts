@@ -62,14 +62,14 @@ class UserService(userRepo: UserRepositoryAlgebra,
     } yield dbUser
   }
 
-  def createUser(rr: FacebookRegisterRequest): EitherT[IO, UserAlreadyExistsError, (UserT, FacebookCredentials)] = {
+  def createUser(rr: FacebookRegisterRequest): EitherT[IO, UserAlreadyExistsError, (UserT, FacebookCredentialsT)] = {
     for {
       facebookClient <- EitherT.liftF(IO(new DefaultFacebookClient(rr.accessToken, facebookSecretKey, Version.LATEST)))
       facebookUser <- EitherT.liftF(IO(facebookClient.fetchObject("me", classOf[com.restfb.types.User], Parameter.`with`("fields", "name,id,email"))))
       _ <- doesNotExist(facebookUser.getEmail, rr.deviceType)
 
-      savedCreds <- EitherT.liftF(facebookCredentialsRepo.create(FacebookCredentials(None, facebookUser.getEmail, rr.accessToken, rr.deviceType)))
-      savedUser <- EitherT.liftF(userRepo.create(UserT.create(new ObjectId(savedCreds.id.get), facebookUser.getEmail, facebookUser.getName, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Trial.value, -1, false, 4)))
+      savedCreds <- EitherT.liftF(facebookCredentialsRepo.create(FacebookCredentialsT(facebookUser.getEmail, rr.accessToken, rr.deviceType)))
+      savedUser <- EitherT.liftF(userRepo.create(UserT.create(new ObjectId(savedCreds._id.toHexString), facebookUser.getEmail, facebookUser.getName, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Trial.value, -1, false, 4)))
     } yield (savedUser, savedCreds)
   }
 
@@ -84,15 +84,19 @@ class UserService(userRepo: UserRepositoryAlgebra,
 
 
   def doesNotExist(email: String, deviceType: String) = {
-    val value:EitherT[IO, UserAlreadyExistsError, Unit] = EitherT.liftF(credentialsRepo.count(email, deviceType)).flatMap(c => {
-      val e:Either[UserAlreadyExistsError, Unit] = if (c > 0) Left(UserAlreadyExistsError("", ""))
+    for {
+      emailDoesNotExist <- countToEither(credentialsRepo.count(email, deviceType))
+      facebookDoesNotExist <- countToEither(facebookCredentialsRepo.count(email, deviceType))
+    } yield (emailDoesNotExist, facebookDoesNotExist)
+  }
+
+  private def countToEither(fbCount: IO[Int]) = {
+    val fbcredentialDoesNotExist: EitherT[IO, UserAlreadyExistsError, Unit] = EitherT.liftF(fbCount).flatMap(c => {
+      val e: Either[UserAlreadyExistsError, Unit] = if (c > 0) Left(UserAlreadyExistsError("", ""))
       else Right(())
       EitherT(IO(e))
     })
-    for {
-      emailDoesNotExist <- value
-      facebookDoesNotExist <- facebookCredentialsRepo.doesNotExist(email, deviceType)
-    } yield (emailDoesNotExist, facebookDoesNotExist)
+    fbcredentialDoesNotExist
   }
 
   def getUserAndUpdateRole(userId: String): EitherT[IO, UserNotFoundError, UserT] = {
