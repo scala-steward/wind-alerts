@@ -12,7 +12,6 @@ import com.uptech.windalerts.domain.{HttpErrorHandler, domain}
 import com.uptech.windalerts.status.BeachService
 import com.uptech.windalerts.users.UserRepositoryAlgebra
 import org.log4s.getLogger
-import org.mongodb.scala.MongoClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -36,7 +35,7 @@ class Notifications(A: AlertsService.Service, B: BeachService[IO], beaches: Map[
       alertWithUserWithBeach          =  alertsToBeNotified.values.flatten.map(v => AlertWithUserWithBeach(v.alert, userIdToUser(v.alert.owner), v.beach))
       _                               <- EitherT.liftF(IO(logger.info(s"alertWithUserWithBeach $alertWithUserWithBeach")))
       usersToBeDisabledAlertsFiltered =  alertWithUserWithBeach.filterNot(f => f.user.disableAllAlerts)
-      usersToBeNotifiedSnoozeFiltered =  alertWithUserWithBeach.filterNot(f => f.user.snoozeTill > System.currentTimeMillis())
+      usersToBeNotifiedSnoozeFiltered =  usersToBeDisabledAlertsFiltered.filterNot(f => f.user.snoozeTill > System.currentTimeMillis())
       usersWithCounts                 <- usersToBeNotifiedSnoozeFiltered.map(u => notificationsRepository.countNotificationInLastHour(u.user._id.toHexString)).toList.sequence
       usersWithCountsMap              =  usersWithCounts.map(u => (u.userId, u.count)).toMap
       usersToBeFilteredWithCount      =  usersToBeNotifiedSnoozeFiltered.filter(u => usersWithCountsMap(u.user._id.toHexString) < u.user.notificationsPerHour)
@@ -88,14 +87,6 @@ class Notifications(A: AlertsService.Service, B: BeachService[IO], beaches: Map[
         logger.error(s"Error $e")
 
       }
-    }
-  }
-
-  private def toIOMap(m: Map[IO[domain.Beach], Seq[domain.Alert]]) = {
-    m.toList.traverse {
-      case (io, s) => io.map(s2 => (s2, s))
-    }.map {
-      _.toMap
     }
   }
 

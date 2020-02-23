@@ -31,22 +31,9 @@ object domain {
     def apply(refreshToken: String, expiry: Long, userId: String, accessTokenId: String): RefreshToken = new RefreshToken(new ObjectId(), refreshToken, expiry, userId, accessTokenId)
   }
 
-  case class FacebookCredentials(id: Option[String], email: String, accessToken: String, deviceType: String)
-
-  object FacebookCredentials {
-    def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Credentials] = try {
-      val values = tuple._2
-      Some(Credentials(
-        new ObjectId(tuple._1),
-        values("email").asInstanceOf[String],
-        values("accessToken").asInstanceOf[String],
-        values("deviceType").asInstanceOf[String]
-      ))
-    }
-    catch {
-      case NonFatal(_) =>
-        None
-    }
+  case class FacebookCredentialsT(_id: ObjectId, email: String, accessToken: String, deviceType: String)
+  object FacebookCredentialsT {
+    def apply( email: String, accessToken: String, deviceType: String): FacebookCredentialsT = new FacebookCredentialsT(new ObjectId(), email, accessToken, deviceType)
   }
 
   case class Credentials(_id: ObjectId, email: String, password: String, deviceType: String)

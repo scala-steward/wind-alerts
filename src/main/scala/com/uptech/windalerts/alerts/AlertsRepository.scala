@@ -35,8 +35,6 @@ object AlertsRepository {
 
     def save(alert: AlertRequest, user: String): IO[Alert]
 
-    def delete(alertId: String): IO[WriteResult]
-
     def delete(requester: String, id: String): IO[Either[WindAlertError, WriteResult]]
 
     def update(requester: String, alertId: String, updateAlertRequest: AlertRequest): IO[Either[RuntimeException, IO[Alert]]]
@@ -67,10 +65,6 @@ object AlertsRepository {
         document <- IO.fromFuture(IO(j2s(alerts.add(toBean(Alert(alertRequest, user))))))
         alert <- IO(Alert(alertRequest, user).copy(id = document.getId))
       } yield alert
-    }
-
-    override def delete(alertId: String): IO[WriteResult] = {
-      IO.fromFuture(IO(j2s(alerts.document(alertId).delete())))
     }
 
     override def delete(requestor:String, alertId: String): IO[Either[WindAlertError, WriteResult]] = {

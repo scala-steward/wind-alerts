@@ -8,19 +8,13 @@ import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.uptech.windalerts.alerts.AlertsRepository.FirestoreAlertsRepository
-import com.uptech.windalerts.domain.domain.{AndroidPurchase, Credentials, OTPWithExpiry, RefreshToken, UserT}
-import com.uptech.windalerts.domain.{FirestoreOps, HttpErrorHandler, domain, secrets}
-import com.uptech.windalerts.notifications.MongoNotificationsRepository
+import com.uptech.windalerts.domain.domain._
+import com.uptech.windalerts.domain.{HttpErrorHandler, secrets}
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
-import org.mongodb.scala.{MongoClient, MongoCollection, MongoDatabase}
-import ch.qos.logback.classic.Level
-import ch.qos.logback.classic.LoggerContext
-import org.slf4j.LoggerFactory
-import ch.qos.logback.classic.LoggerContext
-import org.slf4j.LoggerFactory
+import org.mongodb.scala.MongoClient
 
 import scala.util.Try
 
@@ -34,10 +28,6 @@ object UsersServer extends IOApp {
     options <- IO(new FirebaseOptions.Builder().setCredentials(credentials).setProjectId(projectId).build)
     _ <- IO(FirebaseApp.initializeApp(options))
     db <- IO(FirestoreClient.getFirestore)
-
-
-    facebookCredentialsRepository <- IO(new FirestoreFacebookCredentialsRepositoryAlgebra(db))
-    dbOps <- IO(new FirestoreOps())
 
     client <- IO.pure(MongoClient(com.uptech.windalerts.domain.config.read.surfsUp.mongodb.url))
     mongoDb <- IO(client.getDatabase("surfsup").withCodecRegistry(com.uptech.windalerts.domain.codecs.mNotificationCodecRegistry))
@@ -57,9 +47,11 @@ object UsersServer extends IOApp {
     androidPurchaseRepoColl  <- IO( mongoDb.getCollection[AndroidPurchase]("androidPurchases"))
 
     androidPurchaseRepo <- IO( new MongoAndroidPurchaseRepository(androidPurchaseRepoColl))
+    fbcredentialsCollection  <- IO( mongoDb.getCollection[FacebookCredentialsT]("facebookCredentials"))
+    fbcredentialsRepository <- IO( new MongoFacebookCredentialsRepositoryAlgebra(fbcredentialsCollection))
 
     alertsRepository <- IO(new FirestoreAlertsRepository(db))
-    usersService <- IO(new UserService(userRepository, credentialsRepository, facebookCredentialsRepository, alertsRepository, secrets.read.surfsUp.facebook.key))
+    usersService <- IO(new UserService(userRepository, credentialsRepository, fbcredentialsRepository, alertsRepository, secrets.read.surfsUp.facebook.key))
     auth <- IO(new Auth(refreshTokenRepo))
     endpoints <- IO(new UsersEndpoints(usersService, new HttpErrorHandler[IO], refreshTokenRepo, otpRepo, androidPurchaseRepo, auth, androidPublisher))
     httpApp <- IO(
