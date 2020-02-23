@@ -18,6 +18,8 @@ object codecs {
     fromProviders(classOf[OTPWithExpiry]),
     fromProviders(classOf[AndroidPurchase]),
     fromProviders(classOf[RefreshToken]),
+    fromProviders(classOf[UserT]),
+    fromProviders(classOf[Credentials]),
     DEFAULT_CODEC_REGISTRY)
 
   lazy implicit val beachIdDecoder: Decoder[BeachId] = deriveDecoder[BeachId]
@@ -94,13 +96,13 @@ object codecs {
 
   implicit def timeRangeEntityEncoder[F[_] : Applicative]: EntityEncoder[F, TimeRange] = jsonEncoderOf
 
-  lazy implicit val userDecoder: Decoder[User] = deriveDecoder[User]
+  lazy implicit val userDecoder: Decoder[UserDTO] = deriveDecoder[UserDTO]
 
-  implicit def userEntityDecoder[F[_] : Sync]: EntityDecoder[F, User] = jsonOf
+  implicit def userEntityDecoder[F[_] : Sync]: EntityDecoder[F, UserDTO] = jsonOf
 
-  lazy implicit val userEncoder: Encoder[User] = deriveEncoder[User]
+  lazy implicit val userEncoder: Encoder[UserDTO] = deriveEncoder[UserDTO]
 
-  implicit def userEntityEncoder[F[_] : Applicative]: EntityEncoder[F, User] = jsonEncoderOf
+  implicit def userEntityEncoder[F[_] : Applicative]: EntityEncoder[F, UserDTO] = jsonEncoderOf
 
   lazy implicit val userDeviceDecoder: Decoder[UserDevice] = deriveDecoder[UserDevice]
 
@@ -166,14 +168,6 @@ object codecs {
   lazy implicit val rEncoder: Encoder[RegisterRequest] = deriveEncoder[RegisterRequest]
 
   implicit def rEntityEncoder[F[_] : Applicative]: EntityEncoder[F, RegisterRequest] = jsonEncoderOf
-
-  lazy implicit val credentialDecoder: Decoder[Credentials] = deriveDecoder[Credentials]
-
-  implicit def credentialEntityDecoder[F[_] : Sync]: EntityDecoder[F, Credentials] = jsonOf
-
-  lazy implicit val credentialEncoder: Encoder[Credentials] = deriveEncoder[Credentials]
-
-  implicit def credentialEntityEncoder[F[_] : Applicative]: EntityEncoder[F, Credentials] = jsonEncoderOf
 
   lazy implicit val tokensDecoder: Decoder[TokensWithUser] = deriveDecoder[TokensWithUser]
 

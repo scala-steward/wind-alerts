@@ -8,7 +8,7 @@ import org.http4s.dsl.Http4sDsl
 
 class HttpErrorHandler[F[_] : Monad] extends Http4sDsl[F] {
   val handleThrowable: Throwable => F[Response[F]] = {
-
+    case e: ValidationError => handleError(e)
     case e: errors.OperationNotPermitted => Forbidden(e.message)
     case e: errors.RecordNotFound => NotFound(e.message)
     case e: errors.HeaderNotPresent => BadRequest(e.message)

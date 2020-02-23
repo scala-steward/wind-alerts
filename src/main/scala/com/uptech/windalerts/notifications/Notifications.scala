@@ -7,7 +7,7 @@ import com.google.firebase.messaging.{FirebaseMessaging, Message}
 import com.uptech.windalerts.alerts.AlertsService
 import com.uptech.windalerts.domain.beaches.Beach
 import com.uptech.windalerts.domain.config.AppConfig
-import com.uptech.windalerts.domain.domain.{Alert, AlertWithUserWithBeach, BeachId, User}
+import com.uptech.windalerts.domain.domain.{Alert, AlertWithUserWithBeach, BeachId, UserT}
 import com.uptech.windalerts.domain.{HttpErrorHandler, domain}
 import com.uptech.windalerts.status.BeachService
 import com.uptech.windalerts.users.UserRepositoryAlgebra
@@ -32,14 +32,14 @@ class Notifications(A: AlertsService.Service, B: BeachService[IO], beaches: Map[
       alertsToBeNotified              =  x.map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)).map(a => domain.AlertWithBeach(a, kv._1))))
       _                               <- EitherT.liftF(IO(logger.info(s"alertsToBeNotified $alertsToBeNotified")))
       usersToBeNotified               <- alertsToBeNotified.values.flatten.map(v => UR.getByUserIdEitherT(v.alert.owner)).toList.sequence
-      userIdToUser                    =  usersToBeNotified.map(u => (u.id, u)).toMap
+      userIdToUser                    =  usersToBeNotified.map(u => (u._id.toHexString, u)).toMap
       alertWithUserWithBeach          =  alertsToBeNotified.values.flatten.map(v => AlertWithUserWithBeach(v.alert, userIdToUser(v.alert.owner), v.beach))
       _                               <- EitherT.liftF(IO(logger.info(s"alertWithUserWithBeach $alertWithUserWithBeach")))
       usersToBeDisabledAlertsFiltered =  alertWithUserWithBeach.filterNot(f => f.user.disableAllAlerts)
       usersToBeNotifiedSnoozeFiltered =  alertWithUserWithBeach.filterNot(f => f.user.snoozeTill > System.currentTimeMillis())
-      usersWithCounts                 <- usersToBeNotifiedSnoozeFiltered.map(u => notificationsRepository.countNotificationInLastHour(u.user.id)).toList.sequence
+      usersWithCounts                 <- usersToBeNotifiedSnoozeFiltered.map(u => notificationsRepository.countNotificationInLastHour(u.user._id.toHexString)).toList.sequence
       usersWithCountsMap              =  usersWithCounts.map(u => (u.userId, u.count)).toMap
-      usersToBeFilteredWithCount      =  usersToBeNotifiedSnoozeFiltered.filter(u => usersWithCountsMap(u.user.id) < u.user.notificationsPerHour)
+      usersToBeFilteredWithCount      =  usersToBeNotifiedSnoozeFiltered.filter(u => usersWithCountsMap(u.user._id.toHexString) < u.user.notificationsPerHour)
     } yield usersToBeFilteredWithCount
 
     for {
@@ -69,7 +69,7 @@ class Notifications(A: AlertsService.Service, B: BeachService[IO], beaches: Map[
     tryS(u.alert.beachId, body, fullBody, u.user, u.alert)
   }
 
-  private def tryS(beachId: Long, title: String, body: String, u: User, a: Alert) = {
+  private def tryS(beachId: Long, title: String, body: String, u: UserT, a: Alert) = {
     try {
       logger.warn(s" sending to ${u.email} for ${a.id}")
 

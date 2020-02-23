@@ -8,7 +8,7 @@ import com.google.cloud.firestore
 import com.google.cloud.firestore.{CollectionReference, Firestore}
 import com.uptech.windalerts.domain.conversions.{j2sFuture, j2sMap, j2sm}
 import com.uptech.windalerts.domain.domain
-import com.uptech.windalerts.domain.domain.{Credentials, FacebookCredentials}
+import com.uptech.windalerts.domain.domain.{ FacebookCredentials}
 
 import scala.beans.BeanProperty
 

@@ -7,9 +7,9 @@ import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
-import com.uptech.windalerts.domain.domain.{OTPWithExpiry, RefreshToken}
+import com.uptech.windalerts.domain.domain.{Credentials, OTPWithExpiry, RefreshToken, UserT}
 import com.uptech.windalerts.domain.{FirestoreOps, HttpErrorHandler, secrets}
-import com.uptech.windalerts.users.{Auth, FirestoreCredentialsRepository, FirestoreFacebookCredentialsRepositoryAlgebra, FirestoreUserRepository, MongoOtpRepository, MongoRefreshTokenRepositoryAlgebra, UserService}
+import com.uptech.windalerts.users.{Auth, FirestoreFacebookCredentialsRepositoryAlgebra, MongoCredentialsRepository, MongoOtpRepository, MongoRefreshTokenRepositoryAlgebra, MongoUserRepository, UserService}
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
@@ -31,15 +31,16 @@ object AlertsServer extends IOApp {
       alertsRepo <- IO(new AlertsRepository.FirestoreAlertsRepository(db))
       alertService <- IO(new AlertsService.ServiceImpl(alertsRepo))
       httpErrorHandler <- IO(new HttpErrorHandler[IO])
-      userRepository <- IO(new FirestoreUserRepository(db, new FirestoreOps()))
-      credentialsRepository <- IO(new FirestoreCredentialsRepository(db, new FirestoreOps()))
       fbCredentialsRepository <- IO(new FirestoreFacebookCredentialsRepositoryAlgebra(db))
 
       client <- IO.pure(MongoClient(com.uptech.windalerts.domain.config.read.surfsUp.mongodb.url))
       mongoDb <- IO(client.getDatabase("surfsup").withCodecRegistry(com.uptech.windalerts.domain.codecs.mNotificationCodecRegistry))
       refreshTokensCollection  <- IO( mongoDb.getCollection[RefreshToken]("refreshTokens"))
       refreshTokensRepo <- IO( new MongoRefreshTokenRepositoryAlgebra(refreshTokensCollection))
-
+      usersCollection  <- IO( mongoDb.getCollection[UserT]("users"))
+      userRepository <- IO( new MongoUserRepository(usersCollection))
+      credentialsCollection  <- IO( mongoDb.getCollection[Credentials]("credentials"))
+      credentialsRepository <- IO( new MongoCredentialsRepository(credentialsCollection))
 
       auth <- IO(new Auth(refreshTokensRepo))
       usersService <- IO( new UserService(userRepository, credentialsRepository, fbCredentialsRepository, alertsRepo, secrets.read.surfsUp.facebook.key))

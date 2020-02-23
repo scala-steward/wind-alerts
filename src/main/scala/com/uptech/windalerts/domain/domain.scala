@@ -19,7 +19,7 @@ object domain {
 
   case class UserSettings(userId: String)
 
-  case class TokensWithUser(accessToken: String, refreshToken: String, expiredAt: Long, user: User)
+  case class TokensWithUser(accessToken: String, refreshToken: String, expiredAt: Long, user: UserDTO)
 
   case class AccessTokenRequest(refreshToken: String)
 
@@ -37,7 +37,7 @@ object domain {
     def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Credentials] = try {
       val values = tuple._2
       Some(Credentials(
-        Some(tuple._1),
+        new ObjectId(tuple._1),
         values("email").asInstanceOf[String],
         values("accessToken").asInstanceOf[String],
         values("deviceType").asInstanceOf[String]
@@ -49,23 +49,11 @@ object domain {
     }
   }
 
-  case class Credentials(id: Option[String], email: String, password: String, deviceType: String)
-
+  case class Credentials(_id: ObjectId, email: String, password: String, deviceType: String)
   object Credentials {
-    def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Credentials] = try {
-      val values = tuple._2
-      Some(Credentials(
-        Some(tuple._1),
-        values("email").asInstanceOf[String],
-        values("password").asInstanceOf[String],
-        values("deviceType").asInstanceOf[String]
-      ))
-    }
-    catch {
-      case NonFatal(_) =>
-        None
-    }
+    def apply(email: String, password: String, deviceType: String): Credentials = new Credentials(new ObjectId(), email, password, deviceType)
   }
+
 
   sealed case class UserType(value: String)
 
@@ -96,40 +84,28 @@ object domain {
     def apply(otp: String, expiry: Long, userId: String): OTPWithExpiry = new OTPWithExpiry(new ObjectId(), otp, expiry, userId)
   }
 
-  final case class User(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts:Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long) {
+  final case class UserDTO(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts:Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long) {
     def this(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long,  userType: String, snoozeTill: Long, disableAllAlerts:Boolean, notificationsPerHour: Long) =
         this(id, email, name, deviceId, deviceToken, deviceType, startTrialAt, if (startTrialAt == -1) -1L else (startTrialAt + (30L * 24L * 60L * 60L * 1000L)), userType, snoozeTill, disableAllAlerts, notificationsPerHour, -1, -1)
+
+  }
+
+
+  case class UserT(_id: ObjectId, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts:Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long) {
     def isTrialEnded() = {
       startTrialAt != -1 && endTrialAt < System.currentTimeMillis()
     }
   }
+  object UserT {
+    def create(_id: ObjectId, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long,  userType: String, snoozeTill: Long, disableAllAlerts:Boolean, notificationsPerHour: Long) =
+      UserT(_id, email, name, deviceId, deviceToken, deviceType, startTrialAt, if (startTrialAt == -1) -1L else (startTrialAt + (30L * 24L * 60L * 60L * 1000L)), userType, snoozeTill, disableAllAlerts, notificationsPerHour, -1, -1)
 
-  object User {
-    def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[User] = try {
-      val values = tuple._2
-      Some(new User(
-        tuple._1,
-        values("email").asInstanceOf[String],
-        values("name").asInstanceOf[String],
-        values("deviceId").asInstanceOf[String],
-        values("deviceToken").asInstanceOf[String],
-        values("deviceType").asInstanceOf[String],
-        values("startTrialAt").asInstanceOf[Long],
-        UserType(values("userType").asInstanceOf[String]).value,
-        values("snoozeTill").asInstanceOf[Long],
-        values("disableAllAlerts").asInstanceOf[Boolean],
-        values("notificationsPerHour").asInstanceOf[Long]
-      ))
-    }
-    catch {
-      case NonFatal(_) =>
-        None
-    }
+    def apply( email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long): UserT = new UserT(new ObjectId(), email, name, deviceId, deviceToken, deviceType, startTrialAt, endTrialAt, userType, snoozeTill, disableAllAlerts, notificationsPerHour, lastPaymentAt, nextPaymentAt)
   }
 
-  final case class AlertWithUser(alert: Alert, user: User)
+  final case class AlertWithUser(alert: Alert, user: UserT)
   final case class AlertWithBeach(alert: Alert, beach: domain.Beach)
-  final case class AlertWithUserWithBeach(alert: Alert, user: User, beach: domain.Beach)
+  final case class AlertWithUserWithBeach(alert: Alert, user: UserT, beach: domain.Beach)
   final case class UserWithCount(userId:String, count:Int)
 
   final case class DeviceRequest(deviceId: String)

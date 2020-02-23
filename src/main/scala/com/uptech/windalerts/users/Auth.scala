@@ -11,6 +11,7 @@ import dev.profunktor.auth.JwtAuthMiddleware
 import dev.profunktor.auth.jwt.{JwtAuth, JwtSecretKey}
 import io.circe.parser._
 import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim}
+import io.scalaland.chimney.dsl._
 
 import scala.util.Random
 
@@ -84,8 +85,8 @@ class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra) {
     EitherT.right(IO(AccessTokenWithExpiry(Jwt.encode(claims, key.value, JwtAlgorithm.HS256), expiry)))
   }
 
-  def tokens(accessToken: String, refreshToken: RefreshToken, expiredAt: Long, user:User): EitherT[IO, ValidationError, TokensWithUser] =
-    EitherT.right(IO(domain.TokensWithUser(accessToken, refreshToken.refreshToken, expiredAt, user)))
+  def tokens(accessToken: String, refreshToken: RefreshToken, expiredAt: Long, user:UserT): EitherT[IO, ValidationError, TokensWithUser] =
+    EitherT.right(IO(domain.TokensWithUser(accessToken, refreshToken.refreshToken, expiredAt, user.into[UserDTO].withFieldComputed(_.id, u=>u._id.toHexString).transform)))
 
   def createOtp(n: Int) = {
     val alpha = "0123456789"
@@ -102,7 +103,7 @@ class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra) {
     (1 to n).map(_ => alpha(Random.nextInt.abs % size)).mkString
   }
 
-  def authorizePremiumUsers(user: domain.User):EitherT[IO, ValidationError, User] = {
+  def authorizePremiumUsers(user: domain.UserT):EitherT[IO, ValidationError, UserT] = {
     val either = if (UserType(user.userType) == UserType.Premium || UserType(user.userType) == UserType.Trial) {
       Right(user)
     } else {
