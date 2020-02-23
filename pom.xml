@@ -16,6 +16,11 @@
     </properties>
     <dependencies>
         <dependency>
+            <groupId>io.scalaland</groupId>
+            <artifactId>chimney_2.12</artifactId>
+            <version>0.4.1</version>
+        </dependency>
+        <dependency>
             <groupId>com.google.oauth-client</groupId>
             <artifactId>google-oauth-client-java6</artifactId>
             <version>1.30.5</version>

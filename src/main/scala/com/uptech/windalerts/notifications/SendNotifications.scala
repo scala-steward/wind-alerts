@@ -11,8 +11,9 @@ import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.softwaremill.sttp.HttpURLConnectionBackend
 import com.uptech.windalerts.alerts.{AlertsRepository, AlertsService}
 import com.uptech.windalerts.domain._
+import com.uptech.windalerts.domain.domain.UserT
 import com.uptech.windalerts.status.{BeachService, SwellsService, TidesService, WindsService}
-import com.uptech.windalerts.users.{FirestoreUserRepository, UserRepositoryAlgebra}
+import com.uptech.windalerts.users.{MongoUserRepository, UserRepositoryAlgebra}
 import org.http4s.HttpRoutes
 import org.http4s.dsl.impl.Root
 import org.http4s.dsl.io.{->, /, GET, Ok, _}
@@ -54,7 +55,6 @@ object SendNotifications extends IOApp {
   val alertsRepo: AlertsRepository.Repository = new AlertsRepository.FirestoreAlertsRepository(dbWithAuth._1)
 
   val alerts = new AlertsService.ServiceImpl(alertsRepo)
-  val usersRepo = new FirestoreUserRepository(dbWithAuth._1, new FirestoreOps())
 
   implicit val httpErrorHandler: HttpErrorHandler[IO] = new HttpErrorHandler[IO]
 
@@ -62,7 +62,8 @@ object SendNotifications extends IOApp {
 
   val client: MongoClient = MongoClient(appConf.surfsUp.mongodb.url)
   val db: MongoDatabase = client.getDatabase("surfsup").withCodecRegistry(com.uptech.windalerts.domain.codecs.mNotificationCodecRegistry)
-
+  val usersCollection:MongoCollection[UserT] =  db.getCollection("users")
+  val usersRepo = new MongoUserRepository(usersCollection)
   private val coll: MongoCollection[domain.Notification] = db.getCollection("notifications")
   val notifications = new Notifications(alerts, beachesService, beachSeq, usersRepo, dbWithAuth._2, httpErrorHandler, notificationsRepository = new MongoNotificationsRepository(coll), config = config.read)
 

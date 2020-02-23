@@ -11,6 +11,7 @@ import com.uptech.windalerts.domain.{HttpErrorHandler, secrets}
 import org.http4s.dsl.Http4sDsl
 import org.http4s.{AuthedRoutes, HttpRoutes, Response}
 import org.log4s.getLogger
+import io.scalaland.chimney.dsl._
 
 
 class UsersEndpoints(userService: UserService,
@@ -23,14 +24,14 @@ class UsersEndpoints(userService: UserService,
   private val logger = getLogger
 
   def authedService(): AuthedRoutes[UserId, IO] =
-    AuthedRoutes {
+  AuthedRoutes {
       case authReq@PUT -> Root / "profile" as user => {
         val response: IO[Response[IO]] = authReq.req.decode[UpdateUserRequest] { request =>
           val action = for {
             updateResult <- userService.updateUserProfile(user.id, request.name, request.snoozeTill, request.disableAllAlerts, request.notificationsPerHour)
           } yield updateResult
           action.value.flatMap {
-            case Right(tokens) => Ok(tokens)
+            case Right(tokens) => Ok(tokens.into[UserDTO].withFieldComputed(_.id, u=>u._id.toHexString).transform)
             case Left(error) => httpErrorHandler.handleError(error)
           }
         }
@@ -62,7 +63,7 @@ class UsersEndpoints(userService: UserService,
             updateResult <- userService.verifyEmail(user.id)
           } yield updateResult
           action.value.flatMap {
-            case Right(tokens) => Ok(tokens)
+            case Right(tokens) => Ok(tokens.into[UserDTO].withFieldComputed(_.id, u=>u._id.toHexString).transform)
             case Left(error) => httpErrorHandler.handleError(error)
           }
         }
@@ -80,7 +81,7 @@ class UsersEndpoints(userService: UserService,
             premiumUser <- userService.makeUserPremium(user.id)
           } yield premiumUser
           action.value.flatMap {
-            case Right(premiumUser) => Ok(premiumUser)
+            case Right(premiumUser) => Ok(premiumUser.into[UserDTO].withFieldComputed(_.id, u=>u._id.toHexString).transform)
             case Left(error) => httpErrorHandler.handleError(error)
           }
         }
@@ -109,7 +110,7 @@ class UsersEndpoints(userService: UserService,
     }))
   }
 
-  private def send(emailSender: EmailSender, userFromDb: User, otp: String): EitherT[IO, ValidationError, String] = {
+  private def send(emailSender: EmailSender, userFromDb: UserT, otp: String): EitherT[IO, ValidationError, String] = {
     EitherT.liftF(IO({
       emailSender.sendOtp(userFromDb.email, otp)
       otp
@@ -145,11 +146,11 @@ class UsersEndpoints(userService: UserService,
         val action = for {
           credentials <- EitherT.liftF(req.as[FacebookLoginRequest])
           dbUser <- userService.getFacebookUserByAccessToken(credentials.accessToken, credentials.deviceType)
-          updateDevice <- userService.updateDeviceToken(dbUser.id, credentials.deviceToken).toRight(CouldNotUpdateUserDeviceError())
+          updateDevice <- userService.updateDeviceToken(dbUser._id.toHexString, credentials.deviceToken).toRight(CouldNotUpdateUserDeviceError())
           accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
-          token <- auth.createToken(dbUser.id, 60, accessTokenId)
-          deleteOldTokens <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(dbUser.id))
-          refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbUser.id, accessTokenId)))
+          token <- auth.createToken(dbUser._id.toHexString, 60, accessTokenId)
+          deleteOldTokens <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(dbUser._id.toHexString))
+          refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbUser._id.toHexString, accessTokenId)))
           tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, dbUser)
         } yield tokens
         action.value.flatMap {
@@ -170,12 +171,12 @@ class UsersEndpoints(userService: UserService,
           emailSender <- EitherT.liftF(IO(new EmailSender(emailConf.userName, emailConf.password)))
 
           otp <- createOTP
-          _ <- EitherT.liftF(otpRepository.create(OTPWithExpiry(otp, System.currentTimeMillis() + 5 * 60 * 1000, createUserResponse.id)))
+          _ <- EitherT.liftF(otpRepository.create(OTPWithExpiry(otp, System.currentTimeMillis() + 5 * 60 * 1000, createUserResponse._id.toHexString)))
           _ <- EitherT.liftF(IO(emailSender.sendOtp(createUserResponse.email, otp)))
-          dbCredentials <- EitherT.right(IO(Credentials(Some(createUserResponse.id), registerRequest.email, registerRequest.password, registerRequest.deviceType)))
+          dbCredentials <- EitherT.right(IO(new Credentials(createUserResponse._id, registerRequest.email, registerRequest.password, registerRequest.deviceType)))
           accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
-          token <- auth.createToken(dbCredentials.id.get, 60, accessTokenId)
-          refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbCredentials.id.get, accessTokenId)))
+          token <- auth.createToken(dbCredentials._id.toHexString, 60, accessTokenId)
+          refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbCredentials._id.toHexString, accessTokenId)))
           tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, createUserResponse)
         } yield tokens
         action.value.flatMap {
@@ -188,11 +189,11 @@ class UsersEndpoints(userService: UserService,
           credentials <- EitherT.liftF(req.as[LoginRequest])
           dbCredentials <- userService.getByCredentials(credentials.email, credentials.password, credentials.deviceType)
           dbUser <- userService.getUserAndUpdateRole(dbCredentials.email, dbCredentials.deviceType)
-          updateDevice <- userService.updateDeviceToken(dbCredentials.id.get, credentials.deviceToken).toRight(CouldNotUpdateUserDeviceError())
+          updateDevice <- userService.updateDeviceToken(dbCredentials._id.toHexString, credentials.deviceToken).toRight(CouldNotUpdateUserDeviceError())
           accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
-          token <- auth.createToken(dbCredentials.id.get, 60, accessTokenId)
-          deleteOldTokens <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(dbCredentials.id.get))
-          refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbCredentials.id.get, accessTokenId)))
+          token <- auth.createToken(dbCredentials._id.toHexString, 60, accessTokenId)
+          deleteOldTokens <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(dbCredentials._id.toHexString))
+          refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbCredentials._id.toHexString, accessTokenId)))
           tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, dbUser)
         } yield tokens
         action.value.flatMap {
@@ -232,8 +233,8 @@ class UsersEndpoints(userService: UserService,
         val action = for {
           request <- EitherT.liftF(req.as[ChangePasswordRequest])
           dbCredentials <- userService.getByCredentials(request.email, request.oldPassword, request.deviceType)
-          _ <- userService.updatePassword(dbCredentials.id.get, request.newPassword).toRight(CouldNotUpdateUserDeviceError()).asInstanceOf[EitherT[IO, ValidationError, Unit]]
-          _ <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(dbCredentials.id.get)).asInstanceOf[EitherT[IO, ValidationError, Unit]]
+          _ <- userService.updatePassword(dbCredentials._id.toHexString, request.newPassword).toRight(CouldNotUpdateUserDeviceError()).asInstanceOf[EitherT[IO, ValidationError, Unit]]
+          _ <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(dbCredentials._id.toHexString)).asInstanceOf[EitherT[IO, ValidationError, Unit]]
         } yield ()
         action.value.flatMap {
           case Right(_) => Ok()
