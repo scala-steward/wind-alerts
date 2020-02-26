@@ -5,13 +5,12 @@ import java.io.FileInputStream
 import cats.effect.{ExitCode, IO, IOApp}
 import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
-import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.softwaremill.sttp.HttpURLConnectionBackend
-import com.uptech.windalerts.alerts.{AlertsRepository, AlertsService}
+import com.uptech.windalerts.alerts.{AlertsService, MongoAlertsRepositoryAlgebra}
 import com.uptech.windalerts.domain._
-import com.uptech.windalerts.domain.domain.UserT
+import com.uptech.windalerts.domain.domain.{AlertT, UserT}
 import com.uptech.windalerts.status.{BeachService, SwellsService, TidesService, WindsService}
 import com.uptech.windalerts.users.{MongoUserRepository, UserRepositoryAlgebra}
 import org.http4s.HttpRoutes
@@ -38,7 +37,6 @@ object SendNotifications extends IOApp {
                             .getOrElse(GoogleCredentials.getApplicationDefault))
     options       <- IO(new FirebaseOptions.Builder().setCredentials(credentials).setProjectId(projectId).build)
     _             <- IO(FirebaseApp.initializeApp(options))
-    db            <- IO(FirestoreClient.getFirestore)
     notifications <- IO(FirebaseMessaging.getInstance)
   } yield (db, notifications)
 
@@ -52,9 +50,7 @@ object SendNotifications extends IOApp {
   logger.error(s"beachSeq $beachSeq")
   val adjustments = swellAdjustments.read
   val beachesService = new BeachService[IO](new WindsService[IO](key), new TidesService[IO](key), new SwellsService[IO](key, swellAdjustments.read))
-  val alertsRepo: AlertsRepository.Repository = new AlertsRepository.FirestoreAlertsRepository(dbWithAuth._1)
 
-  val alerts = new AlertsService.ServiceImpl(alertsRepo)
 
   implicit val httpErrorHandler: HttpErrorHandler[IO] = new HttpErrorHandler[IO]
 
@@ -65,6 +61,9 @@ object SendNotifications extends IOApp {
   val usersCollection:MongoCollection[UserT] =  db.getCollection("users")
   val usersRepo = new MongoUserRepository(usersCollection)
   private val coll: MongoCollection[domain.Notification] = db.getCollection("notifications")
+  val alertColl: MongoCollection[AlertT]  = db.getCollection("alerts")
+  val alertsRepo = new MongoAlertsRepositoryAlgebra(alertColl)
+  val alerts = new AlertsService.ServiceImpl(alertsRepo)
   val notifications = new Notifications(alerts, beachesService, beachSeq, usersRepo, dbWithAuth._2, httpErrorHandler, notificationsRepository = new MongoNotificationsRepository(coll), config = config.read)
 
   def allRoutes(A: AlertsService.Service, B: BeachService[IO], UR: UserRepositoryAlgebra, firebaseMessaging: FirebaseMessaging, H: HttpErrorHandler[IO]) = HttpRoutes.of[IO] {

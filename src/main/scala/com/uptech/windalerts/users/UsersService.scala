@@ -6,16 +6,16 @@ import cats.effect.IO
 import cats.syntax.functor._
 import com.github.t3hnar.bcrypt._
 import com.restfb.{DefaultFacebookClient, Parameter, Version}
-import com.uptech.windalerts.alerts.AlertsRepository
+import com.uptech.windalerts.alerts.{AlertsRepositoryT}
 import com.uptech.windalerts.domain.domain.UserType._
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.secrets
 import org.mongodb.scala.bson.ObjectId
 
 class UserService(userRepo: UserRepositoryAlgebra,
-                  credentialsRepo: CredentialsRepositoryAlgebraT,
+                  credentialsRepo: CredentialsRepositoryAlgebra,
                   facebookCredentialsRepo: FacebookCredentialsRepositoryAlgebra,
-                  alertsRepository: AlertsRepository.Repository,
+                  alertsRepository: AlertsRepositoryT,
                   facebookSecretKey: String) {
 
   def verifyEmail(id: String) = {
@@ -163,9 +163,9 @@ class UserService(userRepo: UserRepositoryAlgebra,
 object UserService {
   def apply[IO[_]](
                     usersRepository: UserRepositoryAlgebra,
-                    credentialsRepository: CredentialsRepositoryAlgebraT,
+                    credentialsRepository: CredentialsRepositoryAlgebra,
                     facebookCredentialsRepositoryAlgebra: FacebookCredentialsRepositoryAlgebra,
-                    alertsRepository: AlertsRepository.Repository
+                    alertsRepository: AlertsRepositoryT
                   ): UserService =
     new UserService(usersRepository, credentialsRepository, facebookCredentialsRepositoryAlgebra, alertsRepository, secrets.read.surfsUp.facebook.key)
 }

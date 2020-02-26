@@ -8,6 +8,7 @@ import org.mongodb.scala.bson.ObjectId
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters
 import scala.util.control.NonFatal
+import io.scalaland.chimney.dsl._
 
 object domain {
 
@@ -91,8 +92,8 @@ object domain {
   }
 
   final case class AlertWithUser(alert: Alert, user: UserT)
-  final case class AlertWithBeach(alert: Alert, beach: domain.Beach)
-  final case class AlertWithUserWithBeach(alert: Alert, user: UserT, beach: domain.Beach)
+  final case class AlertWithBeach(alert: AlertT, beach: domain.Beach)
+  final case class AlertWithUserWithBeach(alert: AlertT, user: UserT, beach: domain.Beach)
   final case class UserWithCount(userId:String, count:Int)
 
   final case class DeviceRequest(deviceId: String)
@@ -168,9 +169,10 @@ object domain {
                            timeZone: String = "Australia/Sydney")
 
   case class Alerts(alerts: Seq[Alert])
+  case class AlertsT(alerts: Seq[AlertT])
 
-  case class Alert(
-                    id: String,
+  case class AlertT(
+                    _id: ObjectId,
                     owner: String,
                     beachId: Long,
                     days: Seq[Long],
@@ -195,51 +197,27 @@ object domain {
     def isToBeAlertedAt(minutes: Int): Boolean = timeRanges.exists(_.isWithinRange(minutes))
   }
 
-  object Alert {
-
-    def apply(alertRequest: AlertRequest, user: String): Alert =
-      new Alert(
-        "",
-        user,
-        beachId = alertRequest.beachId,
-        days = alertRequest.days,
-        swellDirections = alertRequest.swellDirections,
-        timeRanges = alertRequest.timeRanges,
-        waveHeightFrom = alertRequest.waveHeightFrom,
-        waveHeightTo = alertRequest.waveHeightTo,
-        windDirections = alertRequest.windDirections,
-        tideHeightStatuses = alertRequest.tideHeightStatuses,
-        enabled = alertRequest.enabled,
-        timeZone = alertRequest.timeZone)
-
-    def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Alert] = try {
-      val values = tuple._2
-      Some(Alert(
-        tuple._1,
-        values("owner").asInstanceOf[String],
-        values("beachId").asInstanceOf[Long],
-        j2s(values("days").asInstanceOf[util.ArrayList[Long]]),
-        j2s(values("swellDirections").asInstanceOf[util.ArrayList[String]]),
-        {
-          val ranges = j2s(values("timeRanges").asInstanceOf[util.ArrayList[util.HashMap[String, Long]]]).map(p => j2sm(p))
-            .map(r => {
-              val TimeRange(tr) = r
-              tr
-            })
-          ranges
-        },
-        values("waveHeightFrom").asInstanceOf[Number].doubleValue(),
-        values("waveHeightTo").asInstanceOf[Number].doubleValue(),
-        j2s(values("windDirections").asInstanceOf[util.ArrayList[String]]),
-        j2s(values("tideHeightStatuses").asInstanceOf[util.ArrayList[String]]),
-        values("enabled").asInstanceOf[Boolean],
-        values.get("timeZone").getOrElse("Australia/Sydney").asInstanceOf[String]
-      ))
+  object AlertT {
+    def apply(owner: String, beachId: Long, days: Seq[Long], swellDirections: Seq[String], timeRanges: Seq[TimeRange], waveHeightFrom: Double, waveHeightTo: Double, windDirections: Seq[String], tideHeightStatuses: Seq[String], enabled: Boolean, timeZone: String): AlertT
+      = new AlertT(new ObjectId(), owner, beachId, days, swellDirections, timeRanges, waveHeightFrom, waveHeightTo, windDirections, tideHeightStatuses, enabled, timeZone)
+    def apply(alertRequest: AlertRequest, user: String): AlertT = {
+      alertRequest.into[AlertT].withFieldComputed(_.owner, u => user).withFieldComputed(_._id, a => new ObjectId()).transform
     }
-    catch {
-      case NonFatal(_) => None
-    }
+  }
 
+  case class Alert(
+                    id: String,
+                    owner: String,
+                    beachId: Long,
+                    days: Seq[Long],
+                    swellDirections: Seq[String],
+                    timeRanges: Seq[TimeRange],
+                    waveHeightFrom: Double,
+                    waveHeightTo: Double,
+                    windDirections: Seq[String],
+                    tideHeightStatuses: Seq[String] = Seq("Rising", "Falling"),
+                    enabled: Boolean,
+                    timeZone: String = "Australia/Sydney") {
   }
 
   case class Notification(_id: ObjectId, alertId: String, userId: String, deviceToken: String, title: String, body: String, sentAt: Long)

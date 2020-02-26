@@ -7,7 +7,7 @@ import com.google.firebase.messaging.{FirebaseMessaging, Message}
 import com.uptech.windalerts.alerts.AlertsService
 import com.uptech.windalerts.domain.beaches.Beach
 import com.uptech.windalerts.domain.config.AppConfig
-import com.uptech.windalerts.domain.domain.{Alert, AlertWithUserWithBeach, BeachId, UserT}
+import com.uptech.windalerts.domain.domain.{ AlertT, AlertWithUserWithBeach, BeachId, UserT}
 import com.uptech.windalerts.domain.{HttpErrorHandler, domain}
 import com.uptech.windalerts.status.BeachService
 import com.uptech.windalerts.users.UserRepositoryAlgebra
@@ -68,19 +68,19 @@ class Notifications(A: AlertsService.Service, B: BeachService[IO], beaches: Map[
     tryS(u.alert.beachId, body, fullBody, u.user, u.alert)
   }
 
-  private def tryS(beachId: Long, title: String, body: String, u: UserT, a: Alert) = {
+  private def tryS(beachId: Long, title: String, body: String, u: UserT, a: AlertT) = {
     try {
-      logger.warn(s" sending to ${u.email} for ${a.id}")
+      logger.warn(s" sending to ${u.email} for ${a._id.toHexString}")
 
       val sent = firebaseMessaging.send(Message.builder()
         .putData("beachId", s"$beachId")
         .setNotification(new com.google.firebase.messaging.Notification(title, body))
         .setToken(u.deviceToken)
         .build())
-      val s = notificationsRepository.create(com.uptech.windalerts.domain.domain.Notification(a.id, a.owner, u.deviceToken, title, body, System.currentTimeMillis()))
+      val s = notificationsRepository.create(com.uptech.windalerts.domain.domain.Notification(a._id.toHexString, a.owner, u.deviceToken, title, body, System.currentTimeMillis()))
       logger.warn(s"unsafeRunSync ${s.unsafeRunSync()}")
 
-      logger.warn(s" sending to ${u.email} for ${a.id} status : ${sent}")
+      logger.warn(s" sending to ${u.email} for ${a._id.toHexString} status : ${sent}")
     }
     catch {
       case e: Exception => {

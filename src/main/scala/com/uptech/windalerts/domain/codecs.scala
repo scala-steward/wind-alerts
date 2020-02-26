@@ -20,6 +20,10 @@ object codecs {
     fromProviders(classOf[RefreshToken]),
     fromProviders(classOf[UserT]),
     fromProviders(classOf[Credentials]),
+    fromProviders(classOf[AlertT]),
+    fromProviders(classOf[AlertsT]),
+    fromProviders(classOf[TimeRange]),
+    fromProviders(classOf[FacebookCredentialsT]),
     DEFAULT_CODEC_REGISTRY)
 
   lazy implicit val beachIdDecoder: Decoder[BeachId] = deriveDecoder[BeachId]
