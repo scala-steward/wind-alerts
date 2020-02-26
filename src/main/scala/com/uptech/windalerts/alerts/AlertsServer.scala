@@ -7,7 +7,7 @@ import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
-import com.uptech.windalerts.domain.domain.{Credentials, FacebookCredentialsT, RefreshToken, UserT}
+import com.uptech.windalerts.domain.domain.{AlertT, Credentials, FacebookCredentialsT, RefreshToken, UserT}
 import com.uptech.windalerts.domain.{HttpErrorHandler, secrets}
 import com.uptech.windalerts.users._
 import org.http4s.implicits._
@@ -28,8 +28,6 @@ object AlertsServer extends IOApp {
       options <- IO(new FirebaseOptions.Builder().setCredentials(credentials).setProjectId(projectId).build)
       _ <- IO(FirebaseApp.initializeApp(options))
       db <- IO(FirestoreClient.getFirestore)
-      alertsRepo <- IO(new AlertsRepository.FirestoreAlertsRepository(db))
-      alertService <- IO(new AlertsService.ServiceImpl(alertsRepo))
       httpErrorHandler <- IO(new HttpErrorHandler[IO])
 
       client <- IO.pure(MongoClient(com.uptech.windalerts.domain.config.read.surfsUp.mongodb.url))
@@ -42,9 +40,11 @@ object AlertsServer extends IOApp {
       credentialsRepository <- IO( new MongoCredentialsRepository(credentialsCollection))
       fbcredentialsCollection  <- IO( mongoDb.getCollection[FacebookCredentialsT]("facebookCredentials"))
       fbcredentialsRepository <- IO( new MongoFacebookCredentialsRepositoryAlgebra(fbcredentialsCollection))
-
+      alertsCollection  <- IO( mongoDb.getCollection[AlertT]("alerts"))
+      alertsRepository <- IO( new MongoAlertsRepositoryAlgebra(alertsCollection))
+      alertService <- IO(new AlertsService.ServiceImpl(alertsRepository))
       auth <- IO(new Auth(refreshTokensRepo))
-      usersService <- IO( new UserService(userRepository, credentialsRepository, fbcredentialsRepository, alertsRepo, secrets.read.surfsUp.facebook.key))
+      usersService <- IO( new UserService(userRepository, credentialsRepository, fbcredentialsRepository, alertsRepository, secrets.read.surfsUp.facebook.key))
       alertsEndPoints <- IO(new AlertsEndpoints(alertService, usersService, auth, httpErrorHandler))
       httpApp <- IO(Router(
         "/v1/users/alerts" -> auth.middleware(alertsEndPoints.allUsersService())

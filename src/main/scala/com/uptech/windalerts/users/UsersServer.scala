@@ -7,7 +7,7 @@ import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
-import com.uptech.windalerts.alerts.AlertsRepository.FirestoreAlertsRepository
+import com.uptech.windalerts.alerts.MongoAlertsRepositoryAlgebra
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.{HttpErrorHandler, secrets}
 import org.http4s.implicits._
@@ -50,7 +50,8 @@ object UsersServer extends IOApp {
     fbcredentialsCollection  <- IO( mongoDb.getCollection[FacebookCredentialsT]("facebookCredentials"))
     fbcredentialsRepository <- IO( new MongoFacebookCredentialsRepositoryAlgebra(fbcredentialsCollection))
 
-    alertsRepository <- IO(new FirestoreAlertsRepository(db))
+    alertsCollection  <- IO( mongoDb.getCollection[AlertT]("alerts"))
+    alertsRepository <- IO( new MongoAlertsRepositoryAlgebra(alertsCollection))
     usersService <- IO(new UserService(userRepository, credentialsRepository, fbcredentialsRepository, alertsRepository, secrets.read.surfsUp.facebook.key))
     auth <- IO(new Auth(refreshTokenRepo))
     endpoints <- IO(new UsersEndpoints(usersService, new HttpErrorHandler[IO], refreshTokenRepo, otpRepo, androidPurchaseRepo, auth, androidPublisher))
