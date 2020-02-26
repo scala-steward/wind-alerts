@@ -218,64 +218,6 @@ object domain {
                     tideHeightStatuses: Seq[String] = Seq("Rising", "Falling"),
                     enabled: Boolean,
                     timeZone: String = "Australia/Sydney") {
-    def isToBeNotified(beach: Beach): Boolean = {
-      logger.error(s"beach to check $beach")
-      logger.error(s"self $swellDirections $waveHeightFrom $waveHeightTo $windDirections")
-
-      swellDirections.contains(beach.tide.swell.directionText) &&
-        waveHeightFrom <= beach.tide.swell.height && waveHeightTo >= beach.tide.swell.height &&
-        windDirections.contains(beach.wind.directionText) &&
-        tideHeightStatuses.contains(beach.tide.height.status)
-    }
-
-    def isToBeAlertedAt(minutes: Int): Boolean = timeRanges.exists(_.isWithinRange(minutes))
-  }
-
-  object Alert {
-
-    def apply(alertRequest: AlertRequest, user: String): Alert =
-      new Alert(
-        "",
-        user,
-        beachId = alertRequest.beachId,
-        days = alertRequest.days,
-        swellDirections = alertRequest.swellDirections,
-        timeRanges = alertRequest.timeRanges,
-        waveHeightFrom = alertRequest.waveHeightFrom,
-        waveHeightTo = alertRequest.waveHeightTo,
-        windDirections = alertRequest.windDirections,
-        tideHeightStatuses = alertRequest.tideHeightStatuses,
-        enabled = alertRequest.enabled,
-        timeZone = alertRequest.timeZone)
-
-    def unapply(tuple: (String, Map[String, util.HashMap[String, String]])): Option[Alert] = try {
-      val values = tuple._2
-      Some(Alert(
-        tuple._1,
-        values("owner").asInstanceOf[String],
-        values("beachId").asInstanceOf[Long],
-        j2s(values("days").asInstanceOf[util.ArrayList[Long]]),
-        j2s(values("swellDirections").asInstanceOf[util.ArrayList[String]]),
-        {
-          val ranges = j2s(values("timeRanges").asInstanceOf[util.ArrayList[util.HashMap[String, Long]]]).map(p => j2sm(p))
-            .map(r => {
-              val TimeRange(tr) = r
-              tr
-            })
-          ranges
-        },
-        values("waveHeightFrom").asInstanceOf[Number].doubleValue(),
-        values("waveHeightTo").asInstanceOf[Number].doubleValue(),
-        j2s(values("windDirections").asInstanceOf[util.ArrayList[String]]),
-        j2s(values("tideHeightStatuses").asInstanceOf[util.ArrayList[String]]),
-        values("enabled").asInstanceOf[Boolean],
-        values.get("timeZone").getOrElse("Australia/Sydney").asInstanceOf[String]
-      ))
-    }
-    catch {
-      case NonFatal(_) => None
-    }
-
   }
 
   case class Notification(_id: ObjectId, alertId: String, userId: String, deviceToken: String, title: String, body: String, sentAt: Long)
