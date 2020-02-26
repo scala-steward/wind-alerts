@@ -5,7 +5,6 @@ import java.io.FileInputStream
 import cats.effect.{ExitCode, IO, IOApp}
 import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
-import com.google.firebase.cloud.FirestoreClient
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.softwaremill.sttp.HttpURLConnectionBackend
@@ -38,7 +37,6 @@ object SendNotifications extends IOApp {
                             .getOrElse(GoogleCredentials.getApplicationDefault))
     options       <- IO(new FirebaseOptions.Builder().setCredentials(credentials).setProjectId(projectId).build)
     _             <- IO(FirebaseApp.initializeApp(options))
-    db            <- IO(FirestoreClient.getFirestore)
     notifications <- IO(FirebaseMessaging.getInstance)
   } yield (db, notifications)
 
