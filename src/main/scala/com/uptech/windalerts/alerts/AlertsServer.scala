@@ -5,7 +5,6 @@ import java.io.FileInputStream
 import cats.effect.{ExitCode, IO, IOApp}
 import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
-import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.uptech.windalerts.domain.domain.{AlertT, Credentials, FacebookCredentialsT, RefreshToken, UserT}
 import com.uptech.windalerts.domain.{HttpErrorHandler, secrets}
 import com.uptech.windalerts.users._
@@ -24,12 +23,10 @@ object AlertsServer extends IOApp {
       projectId <- IO(sys.env("projectId"))
       credentials <- IO(Try(GoogleCredentials.fromStream(new FileInputStream(s"/app/resources/$projectId.json")))
         .getOrElse(GoogleCredentials.getApplicationDefault))
-      options <- IO(new FirebaseOptions.Builder().setCredentials(credentials).setProjectId(projectId).build)
-      _ <- IO(FirebaseApp.initializeApp(options))
       httpErrorHandler <- IO(new HttpErrorHandler[IO])
 
       client <- IO.pure(MongoClient(com.uptech.windalerts.domain.config.read.surfsUp.mongodb.url))
-      mongoDb <- IO(client.getDatabase("surfsup").withCodecRegistry(com.uptech.windalerts.domain.codecs.mNotificationCodecRegistry))
+      mongoDb <- IO(client.getDatabase("surfsup").withCodecRegistry(com.uptech.windalerts.domain.codecs.codecRegistry))
       refreshTokensCollection  <- IO( mongoDb.getCollection[RefreshToken]("refreshTokens"))
       refreshTokensRepo <- IO( new MongoRefreshTokenRepositoryAlgebra(refreshTokensCollection))
       usersCollection  <- IO( mongoDb.getCollection[UserT]("users"))

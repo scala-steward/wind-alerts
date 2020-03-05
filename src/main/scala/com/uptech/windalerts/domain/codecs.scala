@@ -13,7 +13,7 @@ import org.bson.codecs.configuration.CodecRegistries.{fromRegistries, fromProvid
 
 object codecs {
   Notification
-  val mNotificationCodecRegistry = fromRegistries(
+  val codecRegistry = fromRegistries(
     fromProviders(classOf[Notification]),
     fromProviders(classOf[OTPWithExpiry]),
     fromProviders(classOf[AndroidPurchase]),

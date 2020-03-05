@@ -57,7 +57,7 @@ object SendNotifications extends IOApp {
 
 
   val client: MongoClient = MongoClient(appConf.surfsUp.mongodb.url)
-  val db: MongoDatabase = client.getDatabase("surfsup").withCodecRegistry(com.uptech.windalerts.domain.codecs.mNotificationCodecRegistry)
+  val db: MongoDatabase = client.getDatabase("surfsup").withCodecRegistry(com.uptech.windalerts.domain.codecs.codecRegistry)
   val usersCollection:MongoCollection[UserT] =  db.getCollection("users")
   val usersRepo = new MongoUserRepository(usersCollection)
   private val coll: MongoCollection[domain.Notification] = db.getCollection("notifications")

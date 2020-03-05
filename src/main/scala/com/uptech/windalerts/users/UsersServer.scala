@@ -5,7 +5,6 @@ import java.io.FileInputStream
 import cats.effect.{IO, _}
 import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
-import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.uptech.windalerts.alerts.MongoAlertsRepositoryAlgebra
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.{HttpErrorHandler, secrets}
@@ -24,11 +23,9 @@ object UsersServer extends IOApp {
     projectId <- IO(sys.env("projectId"))
     credentials <- IO(Try(GoogleCredentials.fromStream(new FileInputStream(s"/app/resources/$projectId.json")))
       .getOrElse(GoogleCredentials.getApplicationDefault))
-    options <- IO(new FirebaseOptions.Builder().setCredentials(credentials).setProjectId(projectId).build)
-    _ <- IO(FirebaseApp.initializeApp(options))
 
     client <- IO.pure(MongoClient(com.uptech.windalerts.domain.config.read.surfsUp.mongodb.url))
-    mongoDb <- IO(client.getDatabase("surfsup").withCodecRegistry(com.uptech.windalerts.domain.codecs.mNotificationCodecRegistry))
+    mongoDb <- IO(client.getDatabase("surfsup").withCodecRegistry(com.uptech.windalerts.domain.codecs.codecRegistry))
     otpColl  <- IO( mongoDb.getCollection[OTPWithExpiry]("otp"))
     otpRepo <- IO( new MongoOtpRepository(otpColl))
 
