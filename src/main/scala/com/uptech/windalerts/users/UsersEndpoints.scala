@@ -70,6 +70,19 @@ class UsersEndpoints(userService: UserService,
         OptionT.liftF(response)
       }
 
+      case authReq@POST -> Root / "logout" as user => {
+        val response: IO[Response[IO]] = authReq.req.decode[OTP] { request =>
+          val action = for {
+            updateResult <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(user.id))
+          } yield updateResult
+          action.value.flatMap {
+            case Right(_) => Ok()
+            case Left(error) => httpErrorHandler.handleError(error)
+          }
+        }
+        OptionT.liftF(response)
+      }
+
 
       case authReq@POST -> Root /  "purchase" / "android" as user => {
         val response: IO[Response[IO]] = authReq.req.decode[AndroidReceiptValidationRequest] { request =>

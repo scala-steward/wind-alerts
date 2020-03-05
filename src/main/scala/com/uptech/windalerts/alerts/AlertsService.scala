@@ -25,7 +25,6 @@ object AlertsService {
 
     def deleteT(requester: String, alertId: String): EitherT[IO, WindAlertError, Unit]
 
-
     def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest) : EitherT[IO, WindAlertError, AlertT]
 
   }
@@ -36,7 +35,6 @@ object AlertsService {
     }
 
     override def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest) = repo.updateT(requester, alertId, updateAlertRequest)
-
 
     override def getAllForUser(user: String): IO[AlertsT] = repo.getAllForUser(user)
 

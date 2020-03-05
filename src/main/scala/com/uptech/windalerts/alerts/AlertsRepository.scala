@@ -26,7 +26,7 @@ trait AlertsRepositoryT {
 
   def delete(requester: String, id: String): EitherT[IO, WindAlertError, Unit]
 
-  def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest):EitherT[IO, WindAlertError, AlertT]
+  def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest): EitherT[IO, WindAlertError, AlertT]
 }
 
 class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit cs: ContextShift[IO]) extends AlertsRepositoryT {
@@ -74,13 +74,12 @@ class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit
   }
 
   override def delete(requester: String, alertId: String): EitherT[IO, WindAlertError, Unit] = {
-
-    EitherT.liftF(IO(collection.deleteOne(equal("_id", new ObjectId(alertId)))).map(_ => ()))
+    EitherT.liftF(IO.fromFuture(IO(collection.deleteOne(equal("_id", new ObjectId(alertId))).toFuture().map(_=>()))))
   }
 
   override def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest) = {
-    val alert = updateAlertRequest.into[AlertT].withFieldComputed(_._id, u=>new ObjectId(alertId)).withFieldComputed(_.owner, _=>requester).transform
-    EitherT.liftF(IO(collection.replaceOne(equal("_id", new ObjectId(alertId)), alert).toFuture()).map(_=>alert))
+    val alert = updateAlertRequest.into[AlertT].withFieldComputed(_._id, u => new ObjectId(alertId)).withFieldComputed(_.owner, _ => requester).transform
+    EitherT.liftF(IO(collection.replaceOne(equal("_id", new ObjectId(alertId)), alert).toFuture()).map(_ => alert))
   }
 
 }
