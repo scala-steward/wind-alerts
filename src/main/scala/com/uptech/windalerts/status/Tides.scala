@@ -15,15 +15,23 @@ import io.circe.optics.JsonPath._
 import io.circe.{Decoder, Encoder, parser}
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
+import org.log4s.getLogger
 
 class TidesService[F[_] : Sync](apiKey: String)(implicit backend: SttpBackend[Id, Nothing]) {
+  private val logger = getLogger
+
   def get(beachId: BeachId)(implicit F: Functor[F]): EitherT[F, Exception, domain.TideHeight] =
     EitherT.fromEither(getFromWillyWeatther(apiKey, beachId))
 
   def getFromWillyWeatther(apiKey: String, beachId: BeachId): Either[Exception, domain.TideHeight] = {
     val startDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     val startDateFormatted = startDateFormat.format(LocalDateTime.now().minusDays(1))
+    logger.error(s"Duser.timezeone is ${System.getProperty("user.timezone")}")
+
+    logger.error(s"LocalDateTime.now() is ${LocalDateTime.now()}")
     val currentTimeGmt = (System.currentTimeMillis() / 1000) + ZonedDateTime.now.getOffset.getTotalSeconds
+    logger.error(s"currentTimeGmt is $currentTimeGmt")
+
     import TideDecoders._
 
     sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecastGraphs=tides&days=3&startDate=$startDateFormatted").send().body
