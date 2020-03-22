@@ -48,9 +48,9 @@ class TidesService[F[_] : Sync](apiKey: String)(implicit backend: SttpBackend[Id
 
     val interpolated = before.last.interpolateWith(currentTimeGmt, after.head)
     val nextHigh_ = after.filter(_.description == "high").head
-    val nextHigh = nextHigh_.copy(x = nextHigh_.x)
+    val nextHigh = nextHigh_.copy(x = nextHigh_.x - ZonedDateTime.now.getOffset.getTotalSeconds)
     val nextLow_ = after.filter(_.description == "low").head
-    val nextLow = nextLow_.copy(x = nextLow_.x)
+    val nextLow = nextLow_.copy(x = nextLow_.x - ZonedDateTime.now.getOffset.getTotalSeconds)
 
     val status = if (nextLow.x < nextHigh.x) "Falling" else "Rising"
 
