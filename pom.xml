@@ -261,6 +261,9 @@
                 <version>1.5.1</version>
                 <configuration>
                     <container>
+                        <jvmFlags>
+                            <jvmFlag>-Duser.timezone=Australia/Sydeny</jvmFlag>
+                        </jvmFlags>
                         <mainClass>${profile.mainClass}</mainClass>
                     </container>
                 </configuration>
