@@ -9,15 +9,15 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <encoding>UTF-8</encoding>
-        <scala.version>2.12.6</scala.version>
-        <scala.compat.version>2.12</scala.compat.version>
+        <scala.version>2.13.1</scala.version>
+        <scala.compat.version>2.13</scala.compat.version>
         <spec2.version>4.2.0</spec2.version>
         <envProjectId>wind-alerts-staging</envProjectId>
     </properties>
     <dependencies>
         <dependency>
             <groupId>io.scalaland</groupId>
-            <artifactId>chimney_2.12</artifactId>
+            <artifactId>chimney_2.13</artifactId>
             <version>0.4.1</version>
         </dependency>
         <dependency>
@@ -37,17 +37,17 @@
         </dependency>
         <dependency>
             <groupId>org.typelevel</groupId>
-            <artifactId>cats-core_2.12</artifactId>
+            <artifactId>cats-core_2.13</artifactId>
             <version>2.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.typelevel</groupId>
-            <artifactId>cats-effect_2.12</artifactId>
+            <artifactId>cats-effect_2.13</artifactId>
             <version>2.0.0</version>
         </dependency>
         <dependency>
             <groupId>co.fs2</groupId>
-            <artifactId>fs2-core_2.12</artifactId>
+            <artifactId>fs2-core_2.13</artifactId>
             <version>2.0.0</version>
         </dependency>
         <dependency>
@@ -58,47 +58,47 @@
 
         <dependency>
             <groupId>org.http4s</groupId>
-            <artifactId>http4s-blaze-server_2.12</artifactId>
+            <artifactId>http4s-blaze-server_2.13</artifactId>
             <version>0.21.0-RC2</version>
         </dependency>
         <dependency>
             <groupId>org.http4s</groupId>
-            <artifactId>http4s-blaze-client_2.12</artifactId>
+            <artifactId>http4s-blaze-client_2.13</artifactId>
             <version>0.21.0-RC2</version>
         </dependency>
         <dependency>
             <groupId>org.http4s</groupId>
-            <artifactId>http4s-circe_2.12</artifactId>
+            <artifactId>http4s-circe_2.13</artifactId>
             <version>0.21.0-RC2</version>
         </dependency>
         <dependency>
             <groupId>org.http4s</groupId>
-            <artifactId>http4s-dsl_2.12</artifactId>
+            <artifactId>http4s-dsl_2.13</artifactId>
             <version>0.21.0-RC2</version>
         </dependency>
         <dependency>
             <groupId>io.circe</groupId>
-            <artifactId>circe-core_2.12</artifactId>
+            <artifactId>circe-core_2.13</artifactId>
             <version>0.12.1</version>
         </dependency>
         <dependency>
             <groupId>io.circe</groupId>
-            <artifactId>circe-parser_2.12</artifactId>
+            <artifactId>circe-parser_2.13</artifactId>
             <version>0.12.1</version>
         </dependency>
         <dependency>
             <groupId>io.circe</groupId>
-            <artifactId>circe-generic_2.12</artifactId>
+            <artifactId>circe-generic_2.13</artifactId>
             <version>0.12.1</version>
         </dependency>
         <dependency>
             <groupId>io.circe</groupId>
-            <artifactId>circe-optics_2.12</artifactId>
+            <artifactId>circe-optics_2.13</artifactId>
             <version>0.12.0</version>
         </dependency>
         <dependency>
             <groupId>org.mongodb.scala</groupId>
-            <artifactId>mongo-scala-driver_2.12</artifactId>
+            <artifactId>mongo-scala-driver_2.13</artifactId>
             <version>2.8.0</version>
         </dependency>
         <dependency>
@@ -118,7 +118,7 @@
         </dependency>
         <dependency>
             <groupId>com.softwaremill.sttp</groupId>
-            <artifactId>core_2.12</artifactId>
+            <artifactId>core_2.13</artifactId>
             <version>1.6.4</version>
         </dependency>
         <dependency>
@@ -133,7 +133,7 @@
         </dependency>
         <dependency>
             <groupId>com.github.t3hnar</groupId>
-            <artifactId>scala-bcrypt_2.12</artifactId>
+            <artifactId>scala-bcrypt_2.13</artifactId>
             <version>4.1</version>
         </dependency>
         <!-- Test -->
@@ -145,26 +145,27 @@
         </dependency>
         <dependency>
             <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_${scala.compat.version}</artifactId>
-            <version>3.0.5</version>
+            <artifactId>scalatest_2.13</artifactId>
+            <version>3.3.0-SNAP2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.specs2</groupId>
-            <artifactId>specs2-core_${scala.compat.version}</artifactId>
-            <version>${spec2.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.specs2</groupId>
-            <artifactId>specs2-junit_${scala.compat.version}</artifactId>
-            <version>${spec2.version}</version>
+            <artifactId>specs2-junit_2.13</artifactId>
+            <version>4.9.3</version>
             <scope>test</scope>
         </dependency>
 
+<!--        <dependency>-->
+<!--            <groupId>org.specs2</groupId>-->
+<!--            <artifactId>specs2-junit_${scala.compat.version}</artifactId>-->
+<!--            <version>${spec2.version}</version>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
+
         <dependency>
             <groupId>com.pauldijou</groupId>
-            <artifactId>jwt-core_2.12</artifactId>
+            <artifactId>jwt-core_2.13</artifactId>
             <version>4.1.0</version>
             <exclusions>
                 <exclusion>
@@ -175,17 +176,17 @@
         </dependency>
         <dependency>
             <groupId>com.olegpy</groupId>
-            <artifactId>better-monadic-for_2.12</artifactId>
+            <artifactId>better-monadic-for_2.13</artifactId>
             <version>0.3.0</version>
         </dependency>
         <dependency>
             <groupId>org.typelevel</groupId>
-            <artifactId>kind-projector_2.12</artifactId>
+            <artifactId>kind-projector_2.13</artifactId>
             <version>0.10.3</version>
         </dependency>
         <dependency>
             <groupId>dev.profunktor</groupId>
-            <artifactId>http4s-jwt-auth_2.12</artifactId>
+            <artifactId>http4s-jwt-auth_2.13</artifactId>
             <version>0.0.1</version>
             <exclusions>
                 <exclusion>
@@ -196,7 +197,7 @@
         </dependency>
         <dependency>
             <groupId>io.circe</groupId>
-            <artifactId>circe-config_2.12</artifactId>
+            <artifactId>circe-config_2.13</artifactId>
             <version>0.7.0</version>
         </dependency>
         <dependency>
@@ -223,7 +224,7 @@
                             <args>
                                 <arg>-dependencyfile</arg>
                                 <arg>${project.build.directory}/.scala_dependencies</arg>
-                                <arg>-Ypartial-unification</arg>
+<!--                                <arg>-Ypartial-unification</arg>-->
                             </args>
                         </configuration>
                     </execution>
