@@ -1,14 +1,13 @@
 package com.uptech.windalerts.status
-
 import java.time.format.DateTimeFormatter
-import java.time.{LocalDateTime, ZonedDateTime}
+import java.time.{ZoneId, ZonedDateTime}
 
 import cats.data.EitherT
 import cats.effect.Sync
 import cats.{Applicative, Functor}
 import com.softwaremill.sttp._
-import com.uptech.windalerts.domain.domain
 import com.uptech.windalerts.domain.domain.{BeachId, TideHeight}
+import com.uptech.windalerts.domain.{beaches, domain}
 import com.uptech.windalerts.status.Tides.{Datum, TideDecoders}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.optics.JsonPath._
@@ -19,18 +18,25 @@ import org.log4s.getLogger
 
 class TidesService[F[_] : Sync](apiKey: String)(implicit backend: SttpBackend[Id, Nothing]) {
   private val logger = getLogger
+  val startDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
+  val timeZoneForRegion = Map("TAS" ->"Australia/Tasmania",
+                               "WA" -> "Australia/Perth",
+                              "VIC" -> "Australia/Victoria",
+                              "QLD" -> "Australia/Queensland",
+                               "SA" -> "Australia/Adelaide",
+                              "ACT" -> "Australia/ACT",
+                             "NSW"  -> "Australia/NSW",
+                              "NT"  -> "Australia/Darwin")
   def get(beachId: BeachId)(implicit F: Functor[F]): EitherT[F, Exception, domain.TideHeight] =
     EitherT.fromEither(getFromWillyWeatther(apiKey, beachId))
 
   def getFromWillyWeatther(apiKey: String, beachId: BeachId): Either[Exception, domain.TideHeight] = {
-    val startDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-    val startDateFormatted = startDateFormat.format(LocalDateTime.now().minusDays(1))
-    logger.error(s"Duser.timezeone is ${System.getProperty("user.timezone")}")
+    val tz = timeZoneForRegion.getOrElse(beaches.read(beachId.id).region, "Australia/NSW")
+    val tzId = ZoneId.of(tz)
+    val startDateFormatted = startDateFormat.format(ZonedDateTime.now(tzId).minusDays(1))
 
-    logger.error(s"LocalDateTime.now() is ${LocalDateTime.now()}")
-    val currentTimeGmt = (System.currentTimeMillis() / 1000) + ZonedDateTime.now.getOffset.getTotalSeconds
-    logger.error(s"currentTimeGmt is $currentTimeGmt")
+    val currentTimeGmt = (System.currentTimeMillis() / 1000) + ZonedDateTime.now(tzId).getOffset.getTotalSeconds
 
     import TideDecoders._
 
@@ -39,18 +45,18 @@ class TidesService[F[_] : Sync](apiKey: String)(implicit backend: SttpBackend[Id
       .flatMap(parser.parse(_))
       .map(root.forecastGraphs.tides.dataConfig.series.groups.each.points.each.json.getAll(_))
       .map(_.flatMap(j => j.as[Datum].toSeq.sortBy(_.x)))
-      .map(interpolate(currentTimeGmt, _))
+      .map(interpolate(tzId, currentTimeGmt, _))
   }
 
-  private def interpolate(currentTimeGmt: Long, sorted: List[Datum]) = {
+  private def interpolate(zoneId:ZoneId, currentTimeGmt: Long, sorted: List[Datum]) = {
     val before = sorted.filterNot(s => s.x > currentTimeGmt)
     val after = sorted.filter(s => s.x > currentTimeGmt)
 
     val interpolated = before.last.interpolateWith(currentTimeGmt, after.head)
     val nextHigh_ = after.filter(_.description == "high").head
-    val nextHigh = nextHigh_.copy(x = nextHigh_.x - ZonedDateTime.now.getOffset.getTotalSeconds)
+    val nextHigh = nextHigh_.copy(x = nextHigh_.x - ZonedDateTime.now(zoneId).getOffset.getTotalSeconds)
     val nextLow_ = after.filter(_.description == "low").head
-    val nextLow = nextLow_.copy(x = nextLow_.x - ZonedDateTime.now.getOffset.getTotalSeconds)
+    val nextLow = nextLow_.copy(x = nextLow_.x - ZonedDateTime.now(zoneId).getOffset.getTotalSeconds)
 
     val status = if (nextLow.x < nextHigh.x) "Falling" else "Rising"
 
