@@ -60,7 +60,7 @@ object beaches {
       case Failure(_) => Source.fromFile("src/main/resources/beaches-v1.json").getLines.mkString
       case Success(_) => tryProd.get
     }
-    decode[Beaches](jsonContents).toOption.get.beaches.groupBy(_.id).mapValues(v => v.head)
+    decode[Beaches](jsonContents).toOption.get.beaches.groupBy(_.id).toMap.mapValues(x=>x.head).toMap
   }
 }
 
