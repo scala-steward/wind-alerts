@@ -89,8 +89,8 @@ class UsersEndpoints(userService: UserService,
           val action = for {
             purchase <- getPurchase(request)
             savedToken <- androidPurchaseRepository.create(
-              AndroidPurchase(user.id, purchase.getAcknowledgementState, purchase.getConsumptionState, purchase.getDeveloperPayload, purchase.getKind, purchase.getOrderId, purchase.getPurchaseState,
-                purchase.getPurchaseTimeMillis, purchase.getPurchaseType))
+              AndroidPurchase(user.id, purchase.getAcknowledgementState, purchase.getPaymentState, purchase.getDeveloperPayload, purchase.getKind, purchase.getOrderId, purchase.getPaymentState,
+                purchase.getExpiryTimeMillis, purchase.getPurchaseType))
             premiumUser <- userService.makeUserPremium(user.id)
           } yield premiumUser
           action.value.flatMap {
@@ -104,9 +104,9 @@ class UsersEndpoints(userService: UserService,
     }
 
 
-  private def getPurchase(request: AndroidReceiptValidationRequest):EitherT[IO, ValidationError, ProductPurchase] = {
+  private def getPurchase(request: AndroidReceiptValidationRequest):EitherT[IO, ValidationError, SubscriptionPurchase] = {
     EitherT.liftF(IO({
-      val purchase = androidPublisher.purchases().products().get(ApplicationConfig.PACKAGE_NAME, request.productId, request.token).execute()
+      val purchase = androidPublisher.purchases().subscriptions().get(ApplicationConfig.PACKAGE_NAME, request.productId, request.token).execute()
       logger.info(s"purchase $purchase")
       purchase
     }))
@@ -114,11 +114,11 @@ class UsersEndpoints(userService: UserService,
 
   private def acknowledge(request: AndroidReceiptValidationRequest):EitherT[IO, ValidationError, Unit] = {
     EitherT.liftF(IO({
-      val purchase = androidPublisher.purchases().products()
+      val purchase = androidPublisher.purchases().subscriptions()
         .acknowledge(ApplicationConfig.PACKAGE_NAME,
           request.productId,
           request.token,
-          new ProductPurchasesAcknowledgeRequest()).execute()
+          new SubscriptionPurchasesAcknowledgeRequest()).execute()
       logger.info(s"purchase $purchase")
     }))
   }
