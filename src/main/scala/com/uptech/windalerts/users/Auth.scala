@@ -15,7 +15,7 @@ import io.scalaland.chimney.dsl._
 
 import scala.util.Random
 
-class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra) {
+class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra[IO]) {
 
   val REFRESH_TOKEN_EXPIRY = 7L * 24L * 60L * 60L * 1000L
 

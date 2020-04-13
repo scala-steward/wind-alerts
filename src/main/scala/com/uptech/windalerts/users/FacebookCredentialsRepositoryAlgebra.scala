@@ -8,13 +8,13 @@ import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.{and, equal}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait FacebookCredentialsRepositoryAlgebra {
-  def create(credentials: domain.FacebookCredentialsT): IO[FacebookCredentialsT]
+trait FacebookCredentialsRepositoryAlgebra[F[_]] {
+  def create(credentials: domain.FacebookCredentialsT): F[FacebookCredentialsT]
 
-  def count(email: String, deviceType: String): IO[Int]
+  def count(email: String, deviceType: String): F[Int]
 }
 
-class MongoFacebookCredentialsRepositoryAlgebra(collection: MongoCollection[FacebookCredentialsT])(implicit cs: ContextShift[IO]) extends FacebookCredentialsRepositoryAlgebra {
+class MongoFacebookCredentialsRepositoryAlgebra(collection: MongoCollection[FacebookCredentialsT])(implicit cs: ContextShift[IO]) extends FacebookCredentialsRepositoryAlgebra[IO] {
   override def create(credentials: FacebookCredentialsT): IO[FacebookCredentialsT] =
     IO.fromFuture(IO(collection.insertOne(credentials).toFuture().map(_ => credentials)))
 

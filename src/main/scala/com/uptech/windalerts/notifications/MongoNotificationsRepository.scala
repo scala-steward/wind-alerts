@@ -9,7 +9,7 @@ import org.mongodb.scala.model.Filters._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class MongoNotificationsRepository(notifications: MongoCollection[Notification])(implicit cs: ContextShift[IO]) extends  NotificationRepository {
+class MongoNotificationsRepository(notifications: MongoCollection[Notification])(implicit cs: ContextShift[IO]) extends  NotificationRepository[IO] {
   def create(notification: domain.Notification) = {
     IO.fromFuture(IO(notifications.insertOne(notification).toFuture().map(_=>notification)))
   }

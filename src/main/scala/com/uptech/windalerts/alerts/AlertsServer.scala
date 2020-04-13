@@ -23,8 +23,8 @@ object AlertsServer extends IOApp {
       projectId <- IO(sys.env("projectId"))
       httpErrorHandler <- IO(new HttpErrorHandler[IO])
 
-      client <- IO.pure(MongoClient(com.uptech.windalerts.domain.config.read.surfsUp.mongodb.url))
-      mongoDb <- IO(client.getDatabase("surfsup").withCodecRegistry(com.uptech.windalerts.domain.codecs.codecRegistry))
+      client <- IO.pure(MongoClient(com.uptech.windalerts.domain.secrets.read.surfsUp.mongodb.url))
+      mongoDb <- IO(client.getDatabase(sys.env("projectId")).withCodecRegistry(com.uptech.windalerts.domain.codecs.codecRegistry))
       refreshTokensCollection  <- IO( mongoDb.getCollection[RefreshToken]("refreshTokens"))
       refreshTokensRepo <- IO( new MongoRefreshTokenRepositoryAlgebra(refreshTokensCollection))
       usersCollection  <- IO( mongoDb.getCollection[UserT]("users"))

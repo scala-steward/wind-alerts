@@ -9,18 +9,18 @@ import org.mongodb.scala.model.Filters.equal
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait RefreshTokenRepositoryAlgebra {
+trait RefreshTokenRepositoryAlgebra[F[_]] {
 
-  def getByAccessTokenId(accessTokenId: String): OptionT[IO, RefreshToken]
+  def getByAccessTokenId(accessTokenId: String): OptionT[F, RefreshToken]
 
-  def create(refreshToken: RefreshToken): IO[RefreshToken]
+  def create(refreshToken: RefreshToken): F[RefreshToken]
 
-  def getByRefreshToken(refreshToken: String): OptionT[IO, RefreshToken]
+  def getByRefreshToken(refreshToken: String): OptionT[F, RefreshToken]
 
-  def deleteForUserId(uid: String): IO[Unit]
+  def deleteForUserId(uid: String): F[Unit]
 }
 
-class MongoRefreshTokenRepositoryAlgebra(collection: MongoCollection[RefreshToken])(implicit cs: ContextShift[IO]) extends RefreshTokenRepositoryAlgebra {
+class MongoRefreshTokenRepositoryAlgebra(collection: MongoCollection[RefreshToken])(implicit cs: ContextShift[IO]) extends RefreshTokenRepositoryAlgebra[IO] {
   override def getByAccessTokenId(accessTokenId: String): OptionT[IO, RefreshToken] = {
     findByCriteria(equal("accessTokenId", accessTokenId))
   }

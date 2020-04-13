@@ -12,9 +12,9 @@ import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.secrets
 import org.mongodb.scala.bson.ObjectId
 
-class UserService(userRepo: UserRepositoryAlgebra,
-                  credentialsRepo: CredentialsRepositoryAlgebra,
-                  facebookCredentialsRepo: FacebookCredentialsRepositoryAlgebra,
+class UserService(userRepo: UserRepositoryAlgebra[IO],
+                  credentialsRepo: CredentialsRepositoryAlgebra[IO],
+                  facebookCredentialsRepo: FacebookCredentialsRepositoryAlgebra[IO],
                   alertsRepository: AlertsRepositoryT[IO],
                   facebookSecretKey: String) {
 
@@ -161,11 +161,11 @@ class UserService(userRepo: UserRepositoryAlgebra,
 }
 
 object UserService {
-  def apply[IO[_]](
-                    usersRepository: UserRepositoryAlgebra,
-                    credentialsRepository: CredentialsRepositoryAlgebra,
-                    facebookCredentialsRepositoryAlgebra: FacebookCredentialsRepositoryAlgebra,
-                    alertsRepository: AlertsRepositoryT[cats.effect.IO]
+  def apply[F[_]](
+                   usersRepository: UserRepositoryAlgebra[IO],
+                   credentialsRepository: CredentialsRepositoryAlgebra[IO],
+                   facebookCredentialsRepositoryAlgebra: FacebookCredentialsRepositoryAlgebra[IO],
+                   alertsRepository: AlertsRepositoryT[IO]
                   ): UserService =
     new UserService(usersRepository, credentialsRepository, facebookCredentialsRepositoryAlgebra, alertsRepository, secrets.read.surfsUp.facebook.key)
 }

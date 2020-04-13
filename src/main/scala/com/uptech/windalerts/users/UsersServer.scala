@@ -24,8 +24,8 @@ object UsersServer extends IOApp {
     credentials <- IO(Try(GoogleCredentials.fromStream(new FileInputStream(s"/app/resources/$projectId.json")))
       .getOrElse(GoogleCredentials.getApplicationDefault))
 
-    client <- IO.pure(MongoClient(com.uptech.windalerts.domain.config.read.surfsUp.mongodb.url))
-    mongoDb <- IO(client.getDatabase("surfsup").withCodecRegistry(com.uptech.windalerts.domain.codecs.codecRegistry))
+    client <- IO.pure(MongoClient(com.uptech.windalerts.domain.secrets.read.surfsUp.mongodb.url))
+    mongoDb <- IO(client.getDatabase(sys.env("projectId")).withCodecRegistry(com.uptech.windalerts.domain.codecs.codecRegistry))
     otpColl  <- IO( mongoDb.getCollection[OTPWithExpiry]("otp"))
     otpRepo <- IO( new MongoOtpRepository(otpColl))
 
