@@ -16,7 +16,7 @@ import org.log4s.getLogger
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long, Beach], UR: UserRepositoryAlgebra, firebaseMessaging: FirebaseMessaging, H: HttpErrorHandler[IO], notificationsRepository: MongoNotificationsRepository,
+class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long, Beach], UR: UserRepositoryAlgebra[IO], firebaseMessaging: FirebaseMessaging, H: HttpErrorHandler[IO], notificationsRepository: NotificationRepository[IO],
                     config: AppConfig) {
   private val logger = getLogger
 

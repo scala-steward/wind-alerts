@@ -16,8 +16,8 @@ import io.scalaland.chimney.dsl._
 
 class UsersEndpoints(userService: UserService,
                      httpErrorHandler: HttpErrorHandler[IO],
-                     refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra,
-                     otpRepository: OtpRepository,
+                     refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra[IO],
+                     otpRepository: OtpRepository[IO],
                      androidPurchaseRepository: AndroidPurchaseRepository,
                      auth: Auth,
                      androidPublisher: AndroidPublisher) extends Http4sDsl[IO] {

@@ -12,17 +12,17 @@ import org.mongodb.scala.model.Updates.set
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
-trait CredentialsRepositoryAlgebra {
-  def count(email: String, deviceType: String): IO[Int]
+trait CredentialsRepositoryAlgebra[F[_]] {
+  def count(email: String, deviceType: String): F[Int]
 
-  def create(credentials: Credentials): IO[Credentials]
+  def create(credentials: Credentials): F[Credentials]
 
-  def findByCreds(email: String, deviceType: String): OptionT[IO, Credentials]
+  def findByCreds(email: String, deviceType: String): OptionT[F, Credentials]
 
-  def updatePassword(userId: String, password: String): OptionT[IO, Unit]
+  def updatePassword(userId: String, password: String): OptionT[F, Unit]
 }
 
-class MongoCredentialsRepository(collection: MongoCollection[Credentials])(implicit cs: ContextShift[IO]) extends CredentialsRepositoryAlgebra {
+class MongoCredentialsRepository(collection: MongoCollection[Credentials])(implicit cs: ContextShift[IO]) extends CredentialsRepositoryAlgebra[IO] {
   override def count(email: String, deviceType: String): IO[Int] =
     findByCriteria(and(equal("email", email), equal("deviceType", deviceType))).map(_.size)
 

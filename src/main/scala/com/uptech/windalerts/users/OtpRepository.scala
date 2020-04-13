@@ -9,15 +9,15 @@ import org.mongodb.scala.model.Updates._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait OtpRepository {
-  def exists(otp: String, userId: String): EitherT[IO, OtpNotFoundError, OTPWithExpiry]
+trait OtpRepository[F[_]] {
+  def exists(otp: String, userId: String): EitherT[F, OtpNotFoundError, OTPWithExpiry]
 
-  def create(otp: OTPWithExpiry): IO[OTPWithExpiry]
+  def create(otp: OTPWithExpiry): F[OTPWithExpiry]
 
-  def updateForUser(userId:String, otp: OTPWithExpiry): IO[OTPWithExpiry]
+  def updateForUser(userId:String, otp: OTPWithExpiry): F[OTPWithExpiry]
 }
 
-class MongoOtpRepository(collection: MongoCollection[OTPWithExpiry])(implicit cs: ContextShift[IO]) extends OtpRepository {
+class MongoOtpRepository(collection: MongoCollection[OTPWithExpiry])(implicit cs: ContextShift[IO]) extends OtpRepository[IO] {
   def exists(otp: String, userId: String): EitherT[IO, OtpNotFoundError, OTPWithExpiry] = {
     EitherT.fromOptionF(for {
       all <- IO.fromFuture(IO(collection.find(

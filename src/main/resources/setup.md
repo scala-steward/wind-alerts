@@ -7,7 +7,7 @@
 ~~~~ Download firebase config file config file for your project. https://firebase.google.com/docs/admin/setup
 ~~~~ Create KMS keyring and key
 ~~~~ Encrypt secrets.conf.
-    gcloud kms encrypt \
+    gcloud --project={PROJECT_ID} kms encrypt \
       --location global \
       --keyring {PROJECT_ID}-keyring \
       --key {PROJECT_ID}-key \
@@ -15,7 +15,7 @@
       --ciphertext-file {PROJECT_ID}.secrets.enc
 
 ~~~~ Encrypt surfsup.json
-    gcloud kms encrypt \
+    gcloud --project={PROJECT_ID} kms encrypt \
       --location global \
       --keyring {PROJECT_ID}-keyring \
       --key {PROJECT_ID}-key \

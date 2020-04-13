@@ -15,24 +15,24 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 
 
-trait UserRepositoryAlgebra {
+trait UserRepositoryAlgebra[F[_]] {
 
-  def getByUserIdEitherT(userId: String): EitherT[IO, Exception, UserT]
+  def getByUserIdEitherT(userId: String): EitherT[F, Exception, UserT]
 
-  def getByUserId(userId: String): IO[Option[UserT]]
+  def getByUserId(userId: String): F[Option[UserT]]
 
-  def getByEmailAndDeviceType(email: String, deviceType: String): IO[Option[UserT]]
+  def getByEmailAndDeviceType(email: String, deviceType: String): F[Option[UserT]]
 
-  def create(user: UserT): IO[UserT]
+  def create(user: UserT): F[UserT]
 
-  def update(user: UserT): OptionT[IO, UserT]
+  def update(user: UserT): OptionT[F, UserT]
 
-  def updateDeviceToken(userId: String, deviceToken: String): OptionT[IO, Unit]
+  def updateDeviceToken(userId: String, deviceToken: String): OptionT[F, Unit]
 
 }
 
 
-class MongoUserRepository(collection: MongoCollection[UserT])(implicit cs: ContextShift[IO]) extends UserRepositoryAlgebra {
+class MongoUserRepository(collection: MongoCollection[UserT])(implicit cs: ContextShift[IO]) extends UserRepositoryAlgebra[IO] {
   override def getByUserIdEitherT(userId: String): EitherT[IO, Exception, UserT] = {
     OptionT(getByUserId(userId)).toRight(UserNotFoundError())
   }
