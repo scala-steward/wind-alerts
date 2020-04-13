@@ -21,8 +21,6 @@ object AlertsServer extends IOApp {
     for {
       _ <- IO(getLogger.error("Starting"))
       projectId <- IO(sys.env("projectId"))
-      credentials <- IO(Try(GoogleCredentials.fromStream(new FileInputStream(s"/app/resources/$projectId.json")))
-        .getOrElse(GoogleCredentials.getApplicationDefault))
       httpErrorHandler <- IO(new HttpErrorHandler[IO])
 
       client <- IO.pure(MongoClient(com.uptech.windalerts.domain.config.read.surfsUp.mongodb.url))
@@ -37,7 +35,7 @@ object AlertsServer extends IOApp {
       fbcredentialsRepository <- IO( new MongoFacebookCredentialsRepositoryAlgebra(fbcredentialsCollection))
       alertsCollection  <- IO( mongoDb.getCollection[AlertT]("alerts"))
       alertsRepository <- IO( new MongoAlertsRepositoryAlgebra(alertsCollection))
-      alertService <- IO(new AlertsService.ServiceImpl(alertsRepository))
+      alertService <- IO(new AlertsService[IO](alertsRepository))
       auth <- IO(new Auth(refreshTokensRepo))
       usersService <- IO( new UserService(userRepository, credentialsRepository, fbcredentialsRepository, alertsRepository, secrets.read.surfsUp.facebook.key))
       alertsEndPoints <- IO(new AlertsEndpoints(alertService, usersService, auth, httpErrorHandler))
