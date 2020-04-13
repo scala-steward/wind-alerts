@@ -13,28 +13,27 @@ import org.mongodb.scala.model.Filters.equal
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait AlertsRepositoryT {
-  def disableAllButOneAlerts(userId: String): IO[Seq[AlertT]]
+trait AlertsRepositoryT[F[_]] {
+  def disableAllButOneAlerts(userId: String): F[Seq[AlertT]]
 
-  def getById(id: String): IO[Option[AlertT]]
+  def getById(id: String): F[Option[AlertT]]
 
-  def getAllForDay(day: Int): IO[Seq[AlertT]]
+  def getAllForDay(day: Int, p:AlertT=>Boolean): F[Seq[AlertT]]
 
-  def getAllForUser(user: String): IO[domain.AlertsT]
+  def getAllForUser(user: String): F[domain.AlertsT]
 
-  def save(alert: AlertRequest, user: String): IO[AlertT]
+  def save(alert: AlertRequest, user: String): F[AlertT]
 
-  def delete(requester: String, id: String): EitherT[IO, WindAlertError, Unit]
+  def delete(requester: String, id: String): EitherT[F, WindAlertError, Unit]
 
-  def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest): EitherT[IO, WindAlertError, AlertT]
+  def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest): EitherT[F, WindAlertError, AlertT]
 }
 
-class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit cs: ContextShift[IO]) extends AlertsRepositoryT {
+class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit cs: ContextShift[IO]) extends AlertsRepositoryT[IO] {
 
 
   private def findByCriteria(criteria: Bson) =
     IO.fromFuture(IO(collection.find(criteria).toFuture()))
-
 
   override def disableAllButOneAlerts(userId: String): IO[Seq[AlertT]] = {
     for {
@@ -59,8 +58,8 @@ class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit
     findByCriteria(equal("_id", new ObjectId(id))).map(_.headOption)
   }
 
-  override def getAllForDay(day: Int): IO[Seq[AlertT]] = {
-    findByCriteria(equal("days", day))
+  override def getAllForDay(day: Int, p:AlertT=>Boolean): IO[Seq[AlertT]] = {
+    findByCriteria(equal("days", day)).map(s=>s.filter(p))
   }
 
   override def getAllForUser(user: String): IO[AlertsT] = {

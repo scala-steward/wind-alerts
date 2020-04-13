@@ -7,7 +7,7 @@ import com.google.firebase.messaging.{FirebaseMessaging, Message}
 import com.uptech.windalerts.alerts.AlertsService
 import com.uptech.windalerts.domain.beaches.Beach
 import com.uptech.windalerts.domain.config.AppConfig
-import com.uptech.windalerts.domain.domain.{ AlertT, AlertWithUserWithBeach, BeachId, UserT}
+import com.uptech.windalerts.domain.domain.{AlertT, AlertWithUserWithBeach, BeachId, UserT}
 import com.uptech.windalerts.domain.{HttpErrorHandler, domain}
 import com.uptech.windalerts.status.BeachService
 import com.uptech.windalerts.users.UserRepositoryAlgebra
@@ -16,7 +16,7 @@ import org.log4s.getLogger
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class Notifications(A: AlertsService.Service, B: BeachService[IO], beaches: Map[Long, Beach], UR: UserRepositoryAlgebra, firebaseMessaging: FirebaseMessaging, H: HttpErrorHandler[IO], notificationsRepository: MongoNotificationsRepository,
+class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long, Beach], UR: UserRepositoryAlgebra, firebaseMessaging: FirebaseMessaging, H: HttpErrorHandler[IO], notificationsRepository: MongoNotificationsRepository,
                     config: AppConfig) {
   private val logger = getLogger
 

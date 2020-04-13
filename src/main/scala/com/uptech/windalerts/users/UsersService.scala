@@ -15,7 +15,7 @@ import org.mongodb.scala.bson.ObjectId
 class UserService(userRepo: UserRepositoryAlgebra,
                   credentialsRepo: CredentialsRepositoryAlgebra,
                   facebookCredentialsRepo: FacebookCredentialsRepositoryAlgebra,
-                  alertsRepository: AlertsRepositoryT,
+                  alertsRepository: AlertsRepositoryT[IO],
                   facebookSecretKey: String) {
 
   def verifyEmail(id: String) = {
@@ -165,7 +165,7 @@ object UserService {
                     usersRepository: UserRepositoryAlgebra,
                     credentialsRepository: CredentialsRepositoryAlgebra,
                     facebookCredentialsRepositoryAlgebra: FacebookCredentialsRepositoryAlgebra,
-                    alertsRepository: AlertsRepositoryT
+                    alertsRepository: AlertsRepositoryT[cats.effect.IO]
                   ): UserService =
     new UserService(usersRepository, credentialsRepository, facebookCredentialsRepositoryAlgebra, alertsRepository, secrets.read.surfsUp.facebook.key)
 }
