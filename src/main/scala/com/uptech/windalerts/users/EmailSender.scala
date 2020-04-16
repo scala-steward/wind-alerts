@@ -13,10 +13,12 @@ class EmailSender(username: String, password: String) {
   def sendOtp(to: String, otp: String) = {
     try {
       val prop = new Properties
-      prop.put("mail.smtp.host", "smtp.mailgun.org")
+      prop.put("mail.smtp.host", "smtp-relay.sendinblue.com")
       prop.put("mail.smtp.port", "587")
       prop.put("mail.smtp.auth", "true")
       prop.put("mail.smtp.starttls.enable", "true")
+      prop.put("mail.smtp.from", username)
+
       logger.error(s"prop   $prop")
       val session = Session.getInstance(prop, new Authenticator() {
         override protected def getPasswordAuthentication = new PasswordAuthentication(username, password)
@@ -25,6 +27,7 @@ class EmailSender(username: String, password: String) {
       message.setRecipients(Message.RecipientType.TO, to)
       message.setSubject("Verify SurfsUp account")
       message.setText(s"$otp")
+      message.setFrom(username)
       logger.error(s"message   $message")
       Transport.send(message)
       logger.error(s"Sent otp to $to")
