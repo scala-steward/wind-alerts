@@ -86,11 +86,10 @@ class UsersEndpoints(userService: UserService,
         val response: IO[Response[IO]] = authReq.req.decode[AndroidReceiptValidationRequest] { request =>
           val action = for {
             purchase <- userService.getPurchase(request)
-            savedToken <- androidPurchaseRepository.create(AndroidToken(user.id, request.productId, request.token))
-            premiumUser <- userService.updateSubscribedUserRole(user, purchase)
-          } yield premiumUser
+            savedToken <- androidPurchaseRepository.create(AndroidToken(user.id, request.productId, request.token, System.currentTimeMillis()))
+          } yield savedToken
           action.value.flatMap {
-            case Right(premiumUser) => Ok(premiumUser.into[UserDTO].withFieldComputed(_.id, u=>u._id.toHexString).transform)
+            case Right(_) => Ok()
             case Left(error) => httpErrorHandler.handleError(error)
           }
         }
@@ -100,11 +99,12 @@ class UsersEndpoints(userService: UserService,
       case authReq@GET -> Root /  "purchase" / "android" as user => {
         val response: IO[Response[IO]] = {
           val action = for {
-            token <- androidPurchaseRepository.getForUser(user.id)
-            premiumUser <- userService.getPurchase(token.subscriptionId, token.purchaseToken)
+            token <- androidPurchaseRepository.getLastForUser(user.id)
+            purchase <- userService.getPurchase(token.subscriptionId, token.purchaseToken)
+            premiumUser <- userService.updateSubscribedUserRole(user, purchase)
           } yield premiumUser
           action.value.flatMap {
-            case Right(premiumUser) => Ok(premiumUser)
+            case Right(premiumUser) => Ok(premiumUser.into[UserDTO].withFieldComputed(_.id, u=>u._id.toHexString).transform)
             case Left(error) => httpErrorHandler.handleError(error)
           }
         }

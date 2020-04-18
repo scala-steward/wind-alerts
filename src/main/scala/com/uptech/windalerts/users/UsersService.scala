@@ -27,26 +27,26 @@ class UserService(userRepo: UserRepositoryAlgebra[IO],
     } yield operationResult
   }
 
-  def makeUserPremium(id: String) = {
+  def makeUserPremium(id: String, start:Long, expiry: Long) = {
     for {
       user <- getUser(id)
-      operationResult <- updateUserType(user, Premium.value, System.currentTimeMillis(), System.currentTimeMillis()  + (30L * 24L * 60L * 60L * 1000L))
+      operationResult <- updateUserType(user, Premium.value, start, expiry)
     } yield operationResult
   }
 
-  private def updateUserType(user: UserT, userType:String, lastPaymentAt:Long = -1, nextPaymentAt:Long = -1): EitherT[IO, ValidationError, UserT] = {
+  private def updateUserType(user: UserT, userType: String, lastPaymentAt: Long = -1, nextPaymentAt: Long = -1): EitherT[IO, ValidationError, UserT] = {
     userRepo.update(user.copy(userType = userType, lastPaymentAt = lastPaymentAt, nextPaymentAt = nextPaymentAt)).toRight(CouldNotUpdateUserError())
   }
 
 
-  def updateUserProfile(id: String, name: String, snoozeTill: Long, disableAllAlerts:Boolean,notificationsPerHour : Long): EitherT[IO, ValidationError, UserT] = {
+  def updateUserProfile(id: String, name: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long): EitherT[IO, ValidationError, UserT] = {
     for {
       user <- getUser(id)
       operationResult <- updateUser(name, snoozeTill, disableAllAlerts, notificationsPerHour, user)
     } yield operationResult
   }
 
-  private def updateUser(name: String, snoozeTill: Long, disableAllAlerts:Boolean, notificationsPerHour : Long, user: UserT): EitherT[IO, ValidationError, UserT] = {
+  private def updateUser(name: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, user: UserT): EitherT[IO, ValidationError, UserT] = {
     userRepo.update(user.copy(name = name, snoozeTill = snoozeTill, disableAllAlerts = disableAllAlerts, notificationsPerHour = notificationsPerHour, lastPaymentAt = -1, nextPaymentAt = -1)).toRight(CouldNotUpdateUserError())
   }
 
@@ -80,7 +80,7 @@ class UserService(userRepo: UserRepositoryAlgebra[IO],
     for {
       _ <- doesNotExist(credentials.email, credentials.deviceType)
       savedCreds <- EitherT.liftF(credentialsRepo.create(credentials))
-      saved <- EitherT.liftF(userRepo.create( UserT.create(new ObjectId(savedCreds._id.toHexString), rr.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Registered.value, -1, false, 4)))
+      saved <- EitherT.liftF(userRepo.create(UserT.create(new ObjectId(savedCreds._id.toHexString), rr.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Registered.value, -1, false, 4)))
     } yield saved
   }
 
@@ -145,7 +145,7 @@ class UserService(userRepo: UserRepositoryAlgebra[IO],
     } yield passwordMatched
 
 
-  private def isPasswordMatch(password: String, creds: Credentials):EitherT[IO, ValidationError, Credentials] = {
+  private def isPasswordMatch(password: String, creds: Credentials): EitherT[IO, ValidationError, Credentials] = {
     val passwordMatch =
       if (password.isBcrypted(creds.password)) {
         Right(creds)
@@ -161,25 +161,21 @@ class UserService(userRepo: UserRepositoryAlgebra[IO],
     } yield saved
 
 
-  def getPurchase(request: AndroidReceiptValidationRequest):EitherT[IO, ValidationError, domain.SubscriptionPurchase] = {
+  def getPurchase(request: AndroidReceiptValidationRequest): EitherT[IO, ValidationError, domain.SubscriptionPurchase] = {
     getPurchase(request.productId, request.token)
   }
 
-  def getPurchase(productId: String, token:String):EitherT[IO, ValidationError, domain.SubscriptionPurchase] = {
+  def getPurchase(productId: String, token: String): EitherT[IO, ValidationError, domain.SubscriptionPurchase] = {
     EitherT.liftF(IO({
       androidPublisher.purchases().subscriptions().get(ApplicationConfig.PACKAGE_NAME, productId, token).execute().into[domain.SubscriptionPurchase].enableBeanGetters
         .withFieldComputed(_.expiryTimeMillis, _.getExpiryTimeMillis.toLong)
-        .withFieldComputed(_.paymentState, _.getPaymentState.toInt)
-        .withFieldComputed(_.acknowledgementState, _.getAcknowledgementState.toInt).transform
+        .withFieldComputed(_.startTimeMillis, _.getStartTimeMillis.toLong).transform
     }))
   }
 
   def updateSubscribedUserRole(user: UserId, purchase: domain.SubscriptionPurchase) = {
-    if (purchase.acknowledgementState == 1 &&
-      purchase.expiryTimeMillis > System.currentTimeMillis() &&
-      purchase.paymentState == 1
-    ) {
-      makeUserPremium(user.id)
+    if (purchase.expiryTimeMillis > System.currentTimeMillis()) {
+      makeUserPremium(user.id, purchase.startTimeMillis, purchase.expiryTimeMillis)
     } else {
       getUser(user.id)
     }
@@ -193,6 +189,6 @@ object UserService {
                    facebookCredentialsRepositoryAlgebra: FacebookCredentialsRepositoryAlgebra[IO],
                    alertsRepository: AlertsRepositoryT[IO],
                    androidPublisher: AndroidPublisher
-                  ): UserService =
+                 ): UserService =
     new UserService(usersRepository, credentialsRepository, facebookCredentialsRepositoryAlgebra, alertsRepository, secrets.read.surfsUp.facebook.key, androidPublisher)
 }
