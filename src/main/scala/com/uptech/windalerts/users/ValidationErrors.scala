@@ -4,6 +4,8 @@ sealed trait ValidationError extends Exception with Serializable
 case class TokenExpiredError() extends ValidationError
 case class UserNotFoundError() extends ValidationError
 case class OtpNotFoundError() extends ValidationError
+case class TokenNotFoundError() extends ValidationError
+
 case class UserAlreadyExistsError(email: String, deviceType:String) extends ValidationError
 case class UserAuthenticationFailedError(email: String) extends ValidationError
 case class RefreshTokenNotFoundError() extends ValidationError

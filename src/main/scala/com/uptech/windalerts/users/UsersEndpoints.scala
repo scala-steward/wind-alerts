@@ -5,22 +5,21 @@ import cats.effect.IO
 import com.google.api.services.androidpublisher.AndroidPublisher
 import com.google.api.services.androidpublisher.model.{ProductPurchase, ProductPurchasesAcknowledgeRequest, SubscriptionPurchase, SubscriptionPurchasesAcknowledgeRequest}
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
-import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.{HttpErrorHandler, secrets}
 import org.http4s.dsl.Http4sDsl
 import org.http4s.{AuthedRoutes, HttpRoutes, Response}
 import org.log4s.getLogger
 import io.scalaland.chimney.dsl._
+import com.uptech.windalerts.domain.codecs._
 
 
 class UsersEndpoints(userService: UserService,
                      httpErrorHandler: HttpErrorHandler[IO],
                      refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra[IO],
                      otpRepository: OtpRepository[IO],
-                     androidPurchaseRepository: AndroidPurchaseRepository,
-                     auth: Auth,
-                     androidPublisher: AndroidPublisher) extends Http4sDsl[IO] {
+                     androidPurchaseRepository: AndroidTokenRepository,
+                     auth: Auth) extends Http4sDsl[IO] {
   private val logger = getLogger
 
   def authedService(): AuthedRoutes[UserId, IO] =
@@ -83,15 +82,12 @@ class UsersEndpoints(userService: UserService,
         OptionT.liftF(response)
       }
 
-
       case authReq@POST -> Root /  "purchase" / "android" as user => {
         val response: IO[Response[IO]] = authReq.req.decode[AndroidReceiptValidationRequest] { request =>
           val action = for {
-            purchase <- getPurchase(request)
-            savedToken <- androidPurchaseRepository.create(
-              AndroidPurchase(user.id, purchase.getAcknowledgementState, purchase.getPaymentState, purchase.getDeveloperPayload, purchase.getKind, purchase.getOrderId, purchase.getPaymentState,
-                purchase.getExpiryTimeMillis, purchase.getPurchaseType))
-            premiumUser <- userService.makeUserPremium(user.id)
+            purchase <- userService.getPurchase(request)
+            savedToken <- androidPurchaseRepository.create(AndroidToken(user.id, request.productId, request.token))
+            premiumUser <- userService.updateSubscribedUserRole(user, purchase)
           } yield premiumUser
           action.value.flatMap {
             case Right(premiumUser) => Ok(premiumUser.into[UserDTO].withFieldComputed(_.id, u=>u._id.toHexString).transform)
@@ -101,27 +97,21 @@ class UsersEndpoints(userService: UserService,
         OptionT.liftF(response)
       }
 
+      case authReq@GET -> Root /  "purchase" / "android" as user => {
+        val response: IO[Response[IO]] = {
+          val action = for {
+            token <- androidPurchaseRepository.getForUser(user.id)
+            premiumUser <- userService.getPurchase(token.subscriptionId, token.purchaseToken)
+          } yield premiumUser
+          action.value.flatMap {
+            case Right(premiumUser) => Ok(premiumUser)
+            case Left(error) => httpErrorHandler.handleError(error)
+          }
+        }
+        OptionT.liftF(response)
+      }
+
     }
-
-
-  private def getPurchase(request: AndroidReceiptValidationRequest):EitherT[IO, ValidationError, SubscriptionPurchase] = {
-    EitherT.liftF(IO({
-      val purchase = androidPublisher.purchases().subscriptions().get(ApplicationConfig.PACKAGE_NAME, request.productId, request.token).execute()
-      logger.info(s"purchase $purchase")
-      purchase
-    }))
-  }
-
-  private def acknowledge(request: AndroidReceiptValidationRequest):EitherT[IO, ValidationError, Unit] = {
-    EitherT.liftF(IO({
-      val purchase = androidPublisher.purchases().subscriptions()
-        .acknowledge(ApplicationConfig.PACKAGE_NAME,
-          request.productId,
-          request.token,
-          new SubscriptionPurchasesAcknowledgeRequest()).execute()
-      logger.info(s"purchase $purchase")
-    }))
-  }
 
   private def send(emailSender: EmailSender, userFromDb: UserT, otp: String): EitherT[IO, ValidationError, String] = {
     EitherT.liftF(IO({

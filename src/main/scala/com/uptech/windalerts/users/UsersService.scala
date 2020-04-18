@@ -1,22 +1,24 @@
 package com.uptech.windalerts.users
 
-import cats.Functor
 import cats.data._
 import cats.effect.IO
-import cats.syntax.functor._
 import com.github.t3hnar.bcrypt._
+import com.google.api.services.androidpublisher.AndroidPublisher
+import com.google.api.services.androidpublisher.model.SubscriptionPurchase
 import com.restfb.{DefaultFacebookClient, Parameter, Version}
-import com.uptech.windalerts.alerts.{AlertsRepositoryT}
+import com.uptech.windalerts.alerts.AlertsRepositoryT
 import com.uptech.windalerts.domain.domain.UserType._
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.secrets
+import com.uptech.windalerts.domain.{domain, secrets}
 import org.mongodb.scala.bson.ObjectId
+import io.scalaland.chimney.dsl._
 
 class UserService(userRepo: UserRepositoryAlgebra[IO],
                   credentialsRepo: CredentialsRepositoryAlgebra[IO],
                   facebookCredentialsRepo: FacebookCredentialsRepositoryAlgebra[IO],
                   alertsRepository: AlertsRepositoryT[IO],
-                  facebookSecretKey: String) {
+                  facebookSecretKey: String,
+                  androidPublisher: AndroidPublisher) {
 
   def verifyEmail(id: String) = {
     for {
@@ -158,6 +160,30 @@ class UserService(userRepo: UserRepositoryAlgebra[IO],
       saved <- userRepo.update(user).toRight(UserNotFoundError())
     } yield saved
 
+
+  def getPurchase(request: AndroidReceiptValidationRequest):EitherT[IO, ValidationError, domain.SubscriptionPurchase] = {
+    getPurchase(request.productId, request.token)
+  }
+
+  def getPurchase(productId: String, token:String):EitherT[IO, ValidationError, domain.SubscriptionPurchase] = {
+    EitherT.liftF(IO({
+      androidPublisher.purchases().subscriptions().get(ApplicationConfig.PACKAGE_NAME, productId, token).execute().into[domain.SubscriptionPurchase].enableBeanGetters
+        .withFieldComputed(_.expiryTimeMillis, _.getExpiryTimeMillis.toLong)
+        .withFieldComputed(_.paymentState, _.getPaymentState.toInt)
+        .withFieldComputed(_.acknowledgementState, _.getAcknowledgementState.toInt).transform
+    }))
+  }
+
+  def updateSubscribedUserRole(user: UserId, purchase: domain.SubscriptionPurchase) = {
+    if (purchase.acknowledgementState == 1 &&
+      purchase.expiryTimeMillis > System.currentTimeMillis() &&
+      purchase.paymentState == 1
+    ) {
+      makeUserPremium(user.id)
+    } else {
+      getUser(user.id)
+    }
+  }
 }
 
 object UserService {
@@ -165,7 +191,8 @@ object UserService {
                    usersRepository: UserRepositoryAlgebra[IO],
                    credentialsRepository: CredentialsRepositoryAlgebra[IO],
                    facebookCredentialsRepositoryAlgebra: FacebookCredentialsRepositoryAlgebra[IO],
-                   alertsRepository: AlertsRepositoryT[IO]
+                   alertsRepository: AlertsRepositoryT[IO],
+                   androidPublisher: AndroidPublisher
                   ): UserService =
-    new UserService(usersRepository, credentialsRepository, facebookCredentialsRepositoryAlgebra, alertsRepository, secrets.read.surfsUp.facebook.key)
+    new UserService(usersRepository, credentialsRepository, facebookCredentialsRepositoryAlgebra, alertsRepository, secrets.read.surfsUp.facebook.key, androidPublisher)
 }

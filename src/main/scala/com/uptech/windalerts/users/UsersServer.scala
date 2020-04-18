@@ -39,7 +39,7 @@ object UsersServer extends IOApp {
     credentialsRepository <- IO( new MongoCredentialsRepository(credentialsCollection))
 
     androidPublisher <- IO(AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL))
-    androidPurchaseRepoColl  <- IO( mongoDb.getCollection[AndroidPurchase]("androidPurchases"))
+    androidPurchaseRepoColl  <- IO( mongoDb.getCollection[AndroidToken]("androidPurchases"))
 
     androidPurchaseRepo <- IO( new MongoAndroidPurchaseRepository(androidPurchaseRepoColl))
     fbcredentialsCollection  <- IO( mongoDb.getCollection[FacebookCredentialsT]("facebookCredentials"))
@@ -47,9 +47,9 @@ object UsersServer extends IOApp {
 
     alertsCollection  <- IO( mongoDb.getCollection[AlertT]("alerts"))
     alertsRepository <- IO( new MongoAlertsRepositoryAlgebra(alertsCollection))
-    usersService <- IO(new UserService(userRepository, credentialsRepository, fbcredentialsRepository, alertsRepository, secrets.read.surfsUp.facebook.key))
+    usersService <- IO(new UserService(userRepository, credentialsRepository, fbcredentialsRepository, alertsRepository, secrets.read.surfsUp.facebook.key, androidPublisher))
     auth <- IO(new Auth(refreshTokenRepo))
-    endpoints <- IO(new UsersEndpoints(usersService, new HttpErrorHandler[IO], refreshTokenRepo, otpRepo, androidPurchaseRepo, auth, androidPublisher))
+    endpoints <- IO(new UsersEndpoints(usersService, new HttpErrorHandler[IO], refreshTokenRepo, otpRepo, androidPurchaseRepo, auth))
     httpApp <- IO(
       Router(
         "/v1/users" -> auth.middleware(endpoints.authedService()),
