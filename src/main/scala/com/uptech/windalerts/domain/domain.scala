@@ -24,10 +24,8 @@ object domain {
   case class TokensWithUser(accessToken: String, refreshToken: String, expiredAt: Long, user: UserDTO)
 
 
-  case class SubscriptionPurchase(acknowledgementState: Int,
-                                  expiryTimeMillis: Long,
-                                  orderId: String,
-                                  paymentState: Int)
+  case class SubscriptionPurchase(startTimeMillis:Long,
+                                  expiryTimeMillis: Long)
 
   case class AccessTokenRequest(refreshToken: String)
 
@@ -271,11 +269,12 @@ object domain {
   case class AndroidToken(_id: ObjectId,
                           userId: String,
                           subscriptionId:String,
-                          purchaseToken: String
+                          purchaseToken: String,
+                          creationTime:Long
                          )
 
   object AndroidToken {
-    def apply(userId: String, subscriptionId:String, purchaseToken: String): AndroidToken = new AndroidToken(new ObjectId(), userId, subscriptionId, purchaseToken)
+    def apply(userId: String, subscriptionId:String, purchaseToken: String, creationTime : Long): AndroidToken = new AndroidToken(new ObjectId(), userId, subscriptionId, purchaseToken, creationTime)
   }
 
 }
