@@ -9,14 +9,14 @@ import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
 import org.mongodb.scala.bson.codecs.Macros._
 import org.mongodb.scala.bson.codecs.DEFAULT_CODEC_REGISTRY
-import org.bson.codecs.configuration.CodecRegistries.{fromRegistries, fromProviders}
+import org.bson.codecs.configuration.CodecRegistries.{fromProviders, fromRegistries}
 
 object codecs {
   Notification
   val codecRegistry = fromRegistries(
     fromProviders(classOf[Notification]),
     fromProviders(classOf[OTPWithExpiry]),
-    fromProviders(classOf[AndroidPurchase]),
+    fromProviders(classOf[AndroidToken]),
     fromProviders(classOf[RefreshToken]),
     fromProviders(classOf[UserT]),
     fromProviders(classOf[Credentials]),
@@ -25,6 +25,15 @@ object codecs {
     fromProviders(classOf[TimeRange]),
     fromProviders(classOf[FacebookCredentialsT]),
     DEFAULT_CODEC_REGISTRY)
+
+
+  lazy implicit val sandroidReceiptValidationRequestDecoder: Decoder[SubscriptionPurchase] = deriveDecoder[SubscriptionPurchase]
+
+  implicit def sandroidReceiptValidationRequestEntityDecoder[F[_] : Sync]: EntityDecoder[F, SubscriptionPurchase] = jsonOf
+
+  lazy implicit val sandroidReceiptValidationRequestEncoder: Encoder[SubscriptionPurchase] = deriveEncoder[SubscriptionPurchase]
+
+  implicit def sandroidReceiptValidationRequestEntityEncoder[F[_] : Applicative]: EntityEncoder[F, SubscriptionPurchase] = jsonEncoderOf
 
   lazy implicit val beachIdDecoder: Decoder[BeachId] = deriveDecoder[BeachId]
 

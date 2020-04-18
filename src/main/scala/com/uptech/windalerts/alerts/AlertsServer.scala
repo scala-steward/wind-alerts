@@ -37,7 +37,8 @@ object AlertsServer extends IOApp {
       alertsRepository <- IO( new MongoAlertsRepositoryAlgebra(alertsCollection))
       alertService <- IO(new AlertsService[IO](alertsRepository))
       auth <- IO(new Auth(refreshTokensRepo))
-      usersService <- IO( new UserService(userRepository, credentialsRepository, fbcredentialsRepository, alertsRepository, secrets.read.surfsUp.facebook.key))
+      androidPublisher <- IO(AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL))
+      usersService <- IO( new UserService(userRepository, credentialsRepository, fbcredentialsRepository, alertsRepository, secrets.read.surfsUp.facebook.key, androidPublisher))
       alertsEndPoints <- IO(new AlertsEndpoints(alertService, usersService, auth, httpErrorHandler))
       httpApp <- IO(Router(
         "/v1/users/alerts" -> auth.middleware(alertsEndPoints.allUsersService())

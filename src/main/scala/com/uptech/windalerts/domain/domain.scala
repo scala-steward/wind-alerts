@@ -2,6 +2,7 @@ package com.uptech.windalerts.domain
 
 import java.util
 
+import com.google.api.services.androidpublisher.model.{IntroductoryPriceInfo, SubscriptionCancelSurveyResult, SubscriptionPriceChange}
 import org.log4s.getLogger
 import org.mongodb.scala.bson.ObjectId
 
@@ -14,13 +15,19 @@ object domain {
 
   private val logger = getLogger
 
-  case class UpdateUserRequest(name: String, userType: String, snoozeTill: Long, disableAllAlerts:Boolean, notificationsPerHour : Long)
+  case class UpdateUserRequest(name: String, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long)
 
   case class UserId(id: String)
 
   case class UserSettings(userId: String)
 
   case class TokensWithUser(accessToken: String, refreshToken: String, expiredAt: Long, user: UserDTO)
+
+
+  case class SubscriptionPurchase(acknowledgementState: Int,
+                                  expiryTimeMillis: Long,
+                                  orderId: String,
+                                  paymentState: Int)
 
   case class AccessTokenRequest(refreshToken: String)
 
@@ -33,11 +40,13 @@ object domain {
   }
 
   case class FacebookCredentialsT(_id: ObjectId, email: String, accessToken: String, deviceType: String)
+
   object FacebookCredentialsT {
-    def apply( email: String, accessToken: String, deviceType: String): FacebookCredentialsT = new FacebookCredentialsT(new ObjectId(), email, accessToken, deviceType)
+    def apply(email: String, accessToken: String, deviceType: String): FacebookCredentialsT = new FacebookCredentialsT(new ObjectId(), email, accessToken, deviceType)
   }
 
   case class Credentials(_id: ObjectId, email: String, password: String, deviceType: String)
+
   object Credentials {
     def apply(email: String, password: String, deviceType: String): Credentials = new Credentials(new ObjectId(), email, password, deviceType)
   }
@@ -68,33 +77,38 @@ object domain {
   final case class OTP(otp: String)
 
   case class OTPWithExpiry(_id: ObjectId, otp: String, expiry: Long, userId: String)
+
   object OTPWithExpiry {
     def apply(otp: String, expiry: Long, userId: String): OTPWithExpiry = new OTPWithExpiry(new ObjectId(), otp, expiry, userId)
   }
 
-  final case class UserDTO(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts:Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long) {
-    def this(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long,  userType: String, snoozeTill: Long, disableAllAlerts:Boolean, notificationsPerHour: Long) =
-        this(id, email, name, deviceId, deviceToken, deviceType, startTrialAt, if (startTrialAt == -1) -1L else (startTrialAt + (30L * 24L * 60L * 60L * 1000L)), userType, snoozeTill, disableAllAlerts, notificationsPerHour, -1, -1)
+  final case class UserDTO(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long) {
+    def this(id: String, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long) =
+      this(id, email, name, deviceId, deviceToken, deviceType, startTrialAt, if (startTrialAt == -1) -1L else (startTrialAt + (30L * 24L * 60L * 60L * 1000L)), userType, snoozeTill, disableAllAlerts, notificationsPerHour, -1, -1)
 
   }
 
 
-  case class UserT(_id: ObjectId, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts:Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long) {
+  case class UserT(_id: ObjectId, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long) {
     def isTrialEnded() = {
       startTrialAt != -1 && endTrialAt < System.currentTimeMillis()
     }
   }
+
   object UserT {
-    def create(_id: ObjectId, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long,  userType: String, snoozeTill: Long, disableAllAlerts:Boolean, notificationsPerHour: Long) =
+    def create(_id: ObjectId, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long) =
       UserT(_id, email, name, deviceId, deviceToken, deviceType, startTrialAt, if (startTrialAt == -1) -1L else (startTrialAt + (30L * 24L * 60L * 60L * 1000L)), userType, snoozeTill, disableAllAlerts, notificationsPerHour, -1, -1)
 
-    def apply( email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long): UserT = new UserT(new ObjectId(), email, name, deviceId, deviceToken, deviceType, startTrialAt, endTrialAt, userType, snoozeTill, disableAllAlerts, notificationsPerHour, lastPaymentAt, nextPaymentAt)
+    def apply(email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long): UserT = new UserT(new ObjectId(), email, name, deviceId, deviceToken, deviceType, startTrialAt, endTrialAt, userType, snoozeTill, disableAllAlerts, notificationsPerHour, lastPaymentAt, nextPaymentAt)
   }
 
   final case class AlertWithUser(alert: Alert, user: UserT)
+
   final case class AlertWithBeach(alert: AlertT, beach: domain.Beach)
+
   final case class AlertWithUserWithBeach(alert: AlertT, user: UserT, beach: domain.Beach)
-  final case class UserWithCount(userId:String, count:Int)
+
+  final case class UserWithCount(userId: String, count: Int)
 
   final case class DeviceRequest(deviceId: String)
 
@@ -169,21 +183,22 @@ object domain {
                            timeZone: String = "Australia/Sydney")
 
   case class Alerts(alerts: Seq[Alert])
+
   case class AlertsT(alerts: Seq[AlertT])
 
   case class AlertT(
-                    _id: ObjectId,
-                    owner: String,
-                    beachId: Long,
-                    days: Seq[Long],
-                    swellDirections: Seq[String],
-                    timeRanges: Seq[TimeRange],
-                    waveHeightFrom: Double,
-                    waveHeightTo: Double,
-                    windDirections: Seq[String],
-                    tideHeightStatuses: Seq[String] = Seq("Rising", "Falling"),
-                    enabled: Boolean,
-                    timeZone: String = "Australia/Sydney") {
+                     _id: ObjectId,
+                     owner: String,
+                     beachId: Long,
+                     days: Seq[Long],
+                     swellDirections: Seq[String],
+                     timeRanges: Seq[TimeRange],
+                     waveHeightFrom: Double,
+                     waveHeightTo: Double,
+                     windDirections: Seq[String],
+                     tideHeightStatuses: Seq[String] = Seq("Rising", "Falling"),
+                     enabled: Boolean,
+                     timeZone: String = "Australia/Sydney") {
     def isToBeNotified(beach: Beach): Boolean = {
       logger.error(s"beach to check $beach")
       logger.error(s"self $swellDirections $waveHeightFrom $waveHeightTo $windDirections")
@@ -199,7 +214,8 @@ object domain {
 
   object AlertT {
     def apply(owner: String, beachId: Long, days: Seq[Long], swellDirections: Seq[String], timeRanges: Seq[TimeRange], waveHeightFrom: Double, waveHeightTo: Double, windDirections: Seq[String], tideHeightStatuses: Seq[String], enabled: Boolean, timeZone: String): AlertT
-      = new AlertT(new ObjectId(), owner, beachId, days, swellDirections, timeRanges, waveHeightFrom, waveHeightTo, windDirections, tideHeightStatuses, enabled, timeZone)
+    = new AlertT(new ObjectId(), owner, beachId, days, swellDirections, timeRanges, waveHeightFrom, waveHeightTo, windDirections, tideHeightStatuses, enabled, timeZone)
+
     def apply(alertRequest: AlertRequest, user: String): AlertT = {
       alertRequest.into[AlertT].withFieldComputed(_.owner, u => user).withFieldComputed(_._id, a => new ObjectId()).transform
     }
@@ -221,8 +237,9 @@ object domain {
   }
 
   case class Notification(_id: ObjectId, alertId: String, userId: String, deviceToken: String, title: String, body: String, sentAt: Long)
+
   object Notification {
-    def apply( alertId: String, userId: String, deviceToken: String, title: String, body: String, sentAt: Long): Notification
+    def apply(alertId: String, userId: String, deviceToken: String, title: String, body: String, sentAt: Long): Notification
     = new Notification(new ObjectId(), alertId, userId, deviceToken, title, body, sentAt)
   }
 
@@ -230,21 +247,35 @@ object domain {
 
   def j2sm[K, V](map: util.Map[K, V]): Map[K, V] = JavaConverters.mapAsScalaMap(map).toMap
 
-  case class AppleReceiptValidationRequest(`receipt-data`:String, password:String)
-  case class AndroidReceiptValidationRequest(productId:String, token:String)
+  case class AppleReceiptValidationRequest(`receipt-data`: String, password: String)
+
+  case class AndroidReceiptValidationRequest(productId: String, token: String)
+
   case class AndroidPurchase(_id: ObjectId,
-                             userId:String,
-                             acknowledgementState:Int,
-                             consumptionState:Int,
-                             developerPayload:String,
-                             kind:String,
-                             orderId:String,
-                             purchaseState:Int,
-                             purchaseTimeMillis:Long,
-                             purchaseType:Int
+                             userId: String,
+                             acknowledgementState: Int,
+                             consumptionState: Int,
+                             developerPayload: String,
+                             kind: String,
+                             orderId: String,
+                             purchaseState: Int,
+                             purchaseTimeMillis: Long,
+                             purchaseType: Int
                             )
+
   object AndroidPurchase {
-    def apply(userId:String, acknowledgementState: Int, consumptionState: Int, developerPayload: String, kind: String, orderId: String, purchaseState: Int, purchaseTimeMillis: Long, purchaseType: Int): AndroidPurchase
+    def apply(userId: String, acknowledgementState: Int, consumptionState: Int, developerPayload: String, kind: String, orderId: String, purchaseState: Int, purchaseTimeMillis: Long, purchaseType: Int): AndroidPurchase
     = new AndroidPurchase(new ObjectId(), userId, acknowledgementState, consumptionState, developerPayload, kind, orderId, purchaseState, purchaseTimeMillis, purchaseType)
   }
+
+  case class AndroidToken(_id: ObjectId,
+                          userId: String,
+                          subscriptionId:String,
+                          purchaseToken: String
+                         )
+
+  object AndroidToken {
+    def apply(userId: String, subscriptionId:String, purchaseToken: String): AndroidToken = new AndroidToken(new ObjectId(), userId, subscriptionId, purchaseToken)
+  }
+
 }
