@@ -34,6 +34,17 @@ class UserService(userRepo: UserRepositoryAlgebra[IO],
     } yield operationResult
   }
 
+  def makeUserRegisteredExpired(id: String): EitherT[IO, ValidationError, UserT] = {
+    for {
+      user <- getUser(id)
+      operationResult <- makeRegisteredExpired(user)
+    } yield operationResult
+  }
+
+  private def makeRegisteredExpired(user: UserT): EitherT[IO, ValidationError, UserT] = {
+    userRepo.update(user.copy(userType = RegisteredExpired.value, nextPaymentAt = -1)).toRight(CouldNotUpdateUserError())
+  }
+
   private def updateUserType(user: UserT, userType: String, lastPaymentAt: Long = -1, nextPaymentAt: Long = -1): EitherT[IO, ValidationError, UserT] = {
     userRepo.update(user.copy(userType = userType, lastPaymentAt = lastPaymentAt, nextPaymentAt = nextPaymentAt)).toRight(CouldNotUpdateUserError())
   }
@@ -177,7 +188,7 @@ class UserService(userRepo: UserRepositoryAlgebra[IO],
     if (purchase.expiryTimeMillis > System.currentTimeMillis()) {
       makeUserPremium(user.id, purchase.startTimeMillis, purchase.expiryTimeMillis)
     } else {
-      getUser(user.id)
+      makeUserRegisteredExpired(user.id)
     }
   }
 }

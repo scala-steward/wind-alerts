@@ -111,7 +111,7 @@ class UsersEndpoints(userService: UserService,
         OptionT.liftF(response)
       }
 
-    }
+  }
 
   private def send(emailSender: EmailSender, userFromDb: UserT, otp: String): EitherT[IO, ValidationError, String] = {
     EitherT.liftF(IO({
@@ -253,6 +253,24 @@ class UsersEndpoints(userService: UserService,
           case Right(x) => Ok(x)
           case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
         }
+
+      case req@POST -> Root / "purchase" / "android" / "update" =>
+        val update = req.as[AndroidUpdate].unsafeRunSync()
+
+        val str = new String(java.util.Base64.getDecoder.decode(update.message.data))
+        print( str)
+        Ok()
+//        val action = for {
+//          reciptData <- EitherT.liftF(req.as[String])
+//          //_ <- EitherT.liftF(IO(logger.info("reciptData")))
+//          response <- EitherT.right(IO("Ok"))
+//        } yield response
+//        action.value.flatMap {
+//          case Right(x) => Ok(x)
+//          case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
+//        }
+
+
 
     }
 
