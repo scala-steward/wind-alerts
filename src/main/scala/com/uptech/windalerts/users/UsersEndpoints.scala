@@ -245,7 +245,7 @@ class UsersEndpoints(userService: UserService,
         }
 
       case req@POST -> Root / "purchase" / "apple" =>
-        val action = for {
+        val action:EitherT[IO, String, String] = for {
           reciptData <- EitherT.liftF(req.as[String])
           response <- verifyApple(reciptData, "password")
         } yield response
@@ -256,13 +256,13 @@ class UsersEndpoints(userService: UserService,
 
       case req@POST -> Root / "purchase" / "android" / "update" => {
 
-        val action = for {
+        val action:EitherT[IO, String, String] = for {
           update <- EitherT.liftF(req.as[AndroidUpdate])
-          response <- EitherT.liftF(IO(new String(java.util.Base64.getDecoder.decode(update.message.data))))
+          response <- EitherT.right(IO(new String(java.util.Base64.getDecoder.decode(update.message.data))))
           _ <- EitherT.liftF(IO(logger.error(s"Update received is $response")))
         } yield response
         action.value.flatMap {
-          case Right(x) => Ok(x)
+          case Right(x) => Ok()
           case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
         }
       }
