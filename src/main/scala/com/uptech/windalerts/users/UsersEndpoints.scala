@@ -254,24 +254,18 @@ class UsersEndpoints(userService: UserService,
           case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
         }
 
-      case req@POST -> Root / "purchase" / "android" / "update" =>
-        val update = req.as[AndroidUpdate].unsafeRunSync()
+      case req@POST -> Root / "purchase" / "android" / "update" => {
 
-        val str = new String(java.util.Base64.getDecoder.decode(update.message.data))
-        print( str)
-        Ok()
-//        val action = for {
-//          reciptData <- EitherT.liftF(req.as[String])
-//          //_ <- EitherT.liftF(IO(logger.info("reciptData")))
-//          response <- EitherT.right(IO("Ok"))
-//        } yield response
-//        action.value.flatMap {
-//          case Right(x) => Ok(x)
-//          case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
-//        }
-
-
-
+        val action = for {
+          update <- EitherT.liftF(req.as[AndroidUpdate])
+          response <- EitherT.liftF(IO(new String(java.util.Base64.getDecoder.decode(update.message.data))))
+          _ <- EitherT.liftF(IO(logger.error(s"Update received is $response")))
+        } yield response
+        action.value.flatMap {
+          case Right(x) => Ok(x)
+          case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
+        }
+      }
     }
 
   private def verifyApple(receiptData: String, password: String): EitherT[IO, String, String] = {
