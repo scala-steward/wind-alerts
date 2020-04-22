@@ -8,7 +8,7 @@ import com.uptech.windalerts.domain.domain
 import com.uptech.windalerts.domain.domain.UserType.{Premium, Trial}
 import com.uptech.windalerts.domain.domain._
 import dev.profunktor.auth.JwtAuthMiddleware
-import dev.profunktor.auth.jwt.{JwtAuth, JwtSecretKey}
+import dev.profunktor.auth.jwt.{JwtAuth, JwtSecretKey, JwtToken}
 import io.circe.parser._
 import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim}
 import io.scalaland.chimney.dsl._
@@ -22,7 +22,7 @@ class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra[IO]) {
   case class AccessTokenWithExpiry(accessToken: String, expiredAt: Long)
 
   private val key = JwtSecretKey("secretKey")
-  val jwtAuth = JwtAuth(key, JwtAlgorithm.HS256)
+  val jwtAuth = JwtAuth.hmac("secretKey", JwtAlgorithm.HS256)
   val authenticate: JwtClaim => IO[Option[UserId]] = {
         claim => {
           val r = for {
@@ -35,7 +35,10 @@ class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra[IO]) {
         }
       }
 
-  val middleware = JwtAuthMiddleware[IO, UserId](jwtAuth, authenticate)
+  val authenticate1: JwtToken => JwtClaim => IO[Option[UserId]] =
+    token => authenticate
+
+  val middleware = JwtAuthMiddleware[IO, UserId](jwtAuth, authenticate1)
 
   def verifyNotExpired(token:String) = {
     val notExpiredOption = for {
@@ -72,9 +75,9 @@ class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra[IO]) {
     EitherT.right(IO(AccessTokenWithExpiry(Jwt.encode(claims, key.value, JwtAlgorithm.HS256), expiry)))
   }
 
-  def createToken(userId: String, expirationInDays: Int, accessTokenId: String): EitherT[IO, ValidationError, AccessTokenWithExpiry] = {
+  def createToken(userId: String, expirationInSeconds: Int, accessTokenId: String): EitherT[IO, ValidationError, AccessTokenWithExpiry] = {
     val current = System.currentTimeMillis()
-    val expiry = current / 1000 + TimeUnit.DAYS.toSeconds(expirationInDays)
+    val expiry = current / 1000 + TimeUnit.SECONDS.toSeconds(expirationInSeconds)
     val claims = JwtClaim(
       expiration = Some(expiry),
       issuedAt = Some(current / 1000),
