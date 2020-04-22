@@ -8,7 +8,7 @@ import com.uptech.windalerts.domain.domain
 import com.uptech.windalerts.domain.domain.UserType.{Premium, Trial}
 import com.uptech.windalerts.domain.domain._
 import dev.profunktor.auth.JwtAuthMiddleware
-import dev.profunktor.auth.jwt.{JwtAuth, JwtSecretKey}
+import dev.profunktor.auth.jwt.{JwtAuth, JwtSecretKey, JwtToken}
 import io.circe.parser._
 import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim}
 import io.scalaland.chimney.dsl._
@@ -22,7 +22,7 @@ class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra[IO]) {
   case class AccessTokenWithExpiry(accessToken: String, expiredAt: Long)
 
   private val key = JwtSecretKey("secretKey")
-  val jwtAuth = JwtAuth(key, JwtAlgorithm.HS256)
+  val jwtAuth = JwtAuth.hmac("secretKey", JwtAlgorithm.HS256)
   val authenticate: JwtClaim => IO[Option[UserId]] = {
         claim => {
           val r = for {
@@ -35,7 +35,10 @@ class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra[IO]) {
         }
       }
 
-  val middleware = JwtAuthMiddleware[IO, UserId](jwtAuth, authenticate)
+  val authenticate1: JwtToken => JwtClaim => IO[Option[UserId]] =
+    token => authenticate
+
+  val middleware = JwtAuthMiddleware[IO, UserId](jwtAuth, authenticate1)
 
   def verifyNotExpired(token:String) = {
     val notExpiredOption = for {
