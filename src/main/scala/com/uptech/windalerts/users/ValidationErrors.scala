@@ -1,6 +1,6 @@
 package com.uptech.windalerts.users
 
-sealed trait ValidationError extends Exception with Serializable
+sealed trait ValidationError extends RuntimeException with Serializable
 case class TokenExpiredError() extends ValidationError
 case class UserNotFoundError() extends ValidationError
 case class OtpNotFoundError() extends ValidationError

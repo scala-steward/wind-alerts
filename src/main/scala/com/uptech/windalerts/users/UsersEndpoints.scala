@@ -12,6 +12,7 @@ import org.http4s.{AuthedRoutes, HttpRoutes, Response}
 import org.log4s.getLogger
 import io.scalaland.chimney.dsl._
 import com.uptech.windalerts.domain.codecs._
+import io.circe._, io.circe.parser._
 
 
 class UsersEndpoints(userService: UserService,
@@ -23,14 +24,14 @@ class UsersEndpoints(userService: UserService,
   private val logger = getLogger
 
   def authedService(): AuthedRoutes[UserId, IO] =
-  AuthedRoutes {
+    AuthedRoutes {
       case authReq@PUT -> Root / "profile" as user => {
         val response: IO[Response[IO]] = authReq.req.decode[UpdateUserRequest] { request =>
           val action = for {
             updateResult <- userService.updateUserProfile(user.id, request.name, request.snoozeTill, request.disableAllAlerts, request.notificationsPerHour)
           } yield updateResult
           action.value.flatMap {
-            case Right(tokens) => Ok(tokens.into[UserDTO].withFieldComputed(_.id, u=>u._id.toHexString).transform)
+            case Right(tokens) => Ok(tokens.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform)
             case Left(error) => httpErrorHandler.handleError(error)
           }
         }
@@ -62,7 +63,7 @@ class UsersEndpoints(userService: UserService,
             updateResult <- userService.verifyEmail(user.id)
           } yield updateResult
           action.value.flatMap {
-            case Right(tokens) => Ok(tokens.into[UserDTO].withFieldComputed(_.id, u=>u._id.toHexString).transform)
+            case Right(tokens) => Ok(tokens.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform)
             case Left(error) => httpErrorHandler.handleError(error)
           }
         }
@@ -82,7 +83,7 @@ class UsersEndpoints(userService: UserService,
         OptionT.liftF(response)
       }
 
-      case authReq@POST -> Root /  "purchase" / "android" as user => {
+      case authReq@POST -> Root / "purchase" / "android" as user => {
         val response: IO[Response[IO]] = authReq.req.decode[AndroidReceiptValidationRequest] { request =>
           val action = for {
             purchase <- userService.getPurchase(request)
@@ -96,7 +97,7 @@ class UsersEndpoints(userService: UserService,
         OptionT.liftF(response)
       }
 
-      case authReq@GET -> Root /  "purchase" / "android" as user => {
+      case authReq@GET -> Root / "purchase" / "android" as user => {
         val response: IO[Response[IO]] = {
           val action = for {
             token <- androidPurchaseRepository.getLastForUser(user.id)
@@ -104,14 +105,14 @@ class UsersEndpoints(userService: UserService,
             premiumUser <- userService.updateSubscribedUserRole(user, purchase)
           } yield premiumUser
           action.value.flatMap {
-            case Right(premiumUser) => Ok(premiumUser.into[UserDTO].withFieldComputed(_.id, u=>u._id.toHexString).transform)
+            case Right(premiumUser) => Ok(premiumUser.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform)
             case Left(error) => httpErrorHandler.handleError(error)
           }
         }
         OptionT.liftF(response)
       }
 
-  }
+    }
 
   private def send(emailSender: EmailSender, userFromDb: UserT, otp: String): EitherT[IO, ValidationError, String] = {
     EitherT.liftF(IO({
@@ -245,7 +246,7 @@ class UsersEndpoints(userService: UserService,
         }
 
       case req@POST -> Root / "purchase" / "apple" =>
-        val action:EitherT[IO, String, String] = for {
+        val action: EitherT[IO, String, String] = for {
           reciptData <- EitherT.liftF(req.as[String])
           response <- verifyApple(reciptData, "password")
         } yield response
@@ -256,17 +257,27 @@ class UsersEndpoints(userService: UserService,
 
       case req@POST -> Root / "purchase" / "android" / "update" => {
 
-        val action:EitherT[IO, String, String] = for {
+        val action: EitherT[IO, ValidationError, String] = for {
           update <- EitherT.liftF(req.as[AndroidUpdate])
-          response <- EitherT.right(IO(new String(java.util.Base64.getDecoder.decode(update.message.data))))
-          _ <- EitherT.liftF(IO(logger.error(s"Update received is $response")))
+          response <- EitherT.liftF(
+            IO(new String(java.util.Base64.getDecoder.decode(update.message.data))))
+          subscription <- asSubscription(response)
+          _ <- EitherT.liftF(IO(logger.error(s"Update received is ${response}")))
+          token <- androidPurchaseRepository.getPurchaseByToken(subscription.purchaseToken)
+          purchase <- userService.getPurchase(token.subscriptionId, subscription.purchaseToken)
+          updatedUser <- userService.updateSubscribedUserRole(UserId(token.userId), purchase)
         } yield response
         action.value.flatMap {
           case Right(x) => Ok()
-          case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
+          case Left(error) => httpErrorHandler.handleThrowable(error)
         }
       }
     }
+
+  private def asSubscription(response: String):EitherT[IO, ValidationError, SubscriptionNotification] = {
+    EitherT(IO.fromEither(
+      parse(response).map(json => json.as[SubscriptionNotification].left.map(x=>UnknownError(x.message)))))
+  }
 
   private def verifyApple(receiptData: String, password: String): EitherT[IO, String, String] = {
     implicit val backend = HttpURLConnectionBackend()

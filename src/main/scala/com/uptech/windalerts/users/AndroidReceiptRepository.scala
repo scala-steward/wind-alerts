@@ -10,6 +10,8 @@ import org.mongodb.scala.model.Sorts._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait AndroidTokenRepository {
+  def getPurchaseByToken(purchaseToken: String) : EitherT[IO, ValidationError, AndroidToken]
+
   def getLastForUser(userId: String): EitherT[IO, ValidationError, AndroidToken]
 
   def create(token: AndroidToken): EitherT[IO, ValidationError, AndroidToken]
@@ -30,4 +32,15 @@ class MongoAndroidPurchaseRepository(collection: MongoCollection[AndroidToken])(
     } yield all.headOption,
       TokenNotFoundError())
   }
+
+  override def getPurchaseByToken(purchaseToken: String) = {
+    EitherT.fromOptionF(for {
+      all <- IO.fromFuture(IO(collection.find(
+        and(
+          equal("purchaseToken", purchaseToken))
+      ).sort(orderBy(descending("creationTime"))).collect().toFuture()))
+    } yield all.headOption,
+      TokenNotFoundError())
+  }
+
 }

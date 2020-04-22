@@ -262,4 +262,14 @@ object codecs {
 
   implicit def ms1androidReceiptValidationRequestEncoder[F[_] : Applicative]: EntityEncoder[F, Message] = jsonEncoderOf
 
+
+  lazy implicit val subscriptionNotificationDecoder: Decoder[SubscriptionNotification] = deriveDecoder[SubscriptionNotification]
+
+  implicit def subscriptionNotificationEntityDecoder[F[_] : Sync]: EntityDecoder[F, SubscriptionNotification] = jsonOf
+
+  lazy implicit val subscriptionNotificationEncoder: Encoder[SubscriptionNotification] = deriveEncoder[SubscriptionNotification]
+
+  implicit def subscriptionNotificationEncoder[F[_] : Applicative]: EntityEncoder[F, SubscriptionNotification] = jsonEncoderOf
+
+
 }
