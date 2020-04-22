@@ -104,7 +104,7 @@ class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra[IO]) {
   }
 
   def authorizePremiumUsers(user: domain.UserT):EitherT[IO, ValidationError, UserT] = {
-    val either = if (UserType(user.userType) == UserType.Premium || UserType(user.userType) == UserType.Trial) {
+    val either:Either[OperationNotAllowed, UserT] = if (UserType(user.userType) == UserType.Premium || UserType(user.userType) == UserType.Trial) {
       Right(user)
     } else {
       Left(OperationNotAllowed(s"Only ${Premium.value} and ${Trial.value} users can perform this action"))
