@@ -265,10 +265,11 @@ class UsersEndpoints(userService: UserService,
           _ <- EitherT.liftF(IO(logger.error(s"Update received is ${update}")))
           response <- EitherT.liftF(
             IO(new String(java.util.Base64.getDecoder.decode(update.message.data))))
+          _ <- EitherT.liftF(IO(logger.error(s"Decoded  is ${response}")))
           subscription <- asSubscription(response)
           _ <- EitherT.liftF(IO(logger.error(s"Decoded is ${response}")))
-          token <- androidPurchaseRepository.getPurchaseByToken(subscription.purchaseToken)
-          purchase <- userService.getPurchase(token.subscriptionId, subscription.purchaseToken)
+          token <- androidPurchaseRepository.getPurchaseByToken(subscription.subscriptionNotification.purchaseToken)
+          purchase <- userService.getPurchase(token.subscriptionId, subscription.subscriptionNotification.purchaseToken)
           updatedUser <- userService.updateSubscribedUserRole(UserId(token.userId), purchase)
         } yield response
         action.value.flatMap {
@@ -278,9 +279,9 @@ class UsersEndpoints(userService: UserService,
       }
     }
 
-  private def asSubscription(response: String):EitherT[IO, ValidationError, SubscriptionNotification] = {
+  private def asSubscription(response: String):EitherT[IO, ValidationError, SubscriptionNotificationWrapper] = {
     EitherT(IO.fromEither(
-      parse(response).map(json => json.as[SubscriptionNotification].left.map(x=>UnknownError(x.message)))))
+      parse(response).map(json => json.as[SubscriptionNotificationWrapper].left.map(x=>UnknownError(x.message)))))
   }
 
   private def verifyApple(receiptData: String, password: String): EitherT[IO, String, String] = {

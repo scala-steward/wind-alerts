@@ -272,4 +272,12 @@ object codecs {
   implicit def subscriptionNotificationEncoder[F[_] : Applicative]: EntityEncoder[F, SubscriptionNotification] = jsonEncoderOf
 
 
+  lazy implicit val subscriptionNotificationWrapperDecoder: Decoder[SubscriptionNotificationWrapper] = deriveDecoder[SubscriptionNotificationWrapper]
+
+  implicit def subscriptionNotificationWrapperEntityDecoder[F[_] : Sync]: EntityDecoder[F, SubscriptionNotificationWrapper] = jsonOf
+
+  lazy implicit val subscriptionNotificationWrapperEncoder: Encoder[SubscriptionNotificationWrapper] = deriveEncoder[SubscriptionNotificationWrapper]
+
+  implicit def subscriptionNotificationWrapperEncoder[F[_] : Applicative]: EntityEncoder[F, SubscriptionNotificationWrapper] = jsonEncoderOf
+
 }

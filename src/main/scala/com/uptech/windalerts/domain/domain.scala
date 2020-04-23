@@ -283,5 +283,7 @@ object domain {
   case class AndroidUpdate(message: Message)
   case class Message(data:String)
 
+  case class SubscriptionNotificationWrapper(subscriptionNotification:SubscriptionNotification)
+
   case class SubscriptionNotification(purchaseToken:String)
 }
