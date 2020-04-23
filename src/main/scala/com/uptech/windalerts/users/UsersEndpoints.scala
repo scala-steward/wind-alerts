@@ -258,11 +258,15 @@ class UsersEndpoints(userService: UserService,
       case req@POST -> Root / "purchase" / "android" / "update" => {
 
         val action: EitherT[IO, ValidationError, String] = for {
+          _ <- EitherT.liftF(IO(logger.error(s"Called request ${req}")))
+          _ <- EitherT.liftF(IO(logger.error(s"Called request ${req.body}")))
+
           update <- EitherT.liftF(req.as[AndroidUpdate])
+          _ <- EitherT.liftF(IO(logger.error(s"Update received is ${update}")))
           response <- EitherT.liftF(
             IO(new String(java.util.Base64.getDecoder.decode(update.message.data))))
           subscription <- asSubscription(response)
-          _ <- EitherT.liftF(IO(logger.error(s"Update received is ${response}")))
+          _ <- EitherT.liftF(IO(logger.error(s"Decoded is ${response}")))
           token <- androidPurchaseRepository.getPurchaseByToken(subscription.purchaseToken)
           purchase <- userService.getPurchase(token.subscriptionId, subscription.purchaseToken)
           updatedUser <- userService.updateSubscribedUserRole(UserId(token.userId), purchase)
