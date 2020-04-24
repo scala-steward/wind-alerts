@@ -6,13 +6,16 @@ import com.google.api.services.androidpublisher.AndroidPublisher
 import com.google.api.services.androidpublisher.model.{ProductPurchase, ProductPurchasesAcknowledgeRequest, SubscriptionPurchase, SubscriptionPurchasesAcknowledgeRequest}
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.{HttpErrorHandler, secrets}
+import com.uptech.windalerts.domain.{HttpErrorHandler, PrivacyPolicy, secrets}
 import org.http4s.dsl.Http4sDsl
 import org.http4s.{AuthedRoutes, HttpRoutes, Response}
 import org.log4s.getLogger
 import io.scalaland.chimney.dsl._
 import com.uptech.windalerts.domain.codecs._
-import io.circe._, io.circe.parser._
+import io.circe._
+import io.circe.parser._
+
+import scala.io.Source
 
 
 class UsersEndpoints(userService: UserService,
@@ -166,6 +169,15 @@ class UsersEndpoints(userService: UserService,
 
   def openEndpoints(): HttpRoutes[IO] =
     HttpRoutes.of[IO] {
+
+      case req@GET -> Root / "privacy-policy"  =>
+        val action: EitherT[IO, String, String] = for {
+          response <- EitherT.liftF(IO(PrivacyPolicy.read))
+        } yield response
+        action.value.flatMap {
+          case Right(x) => Ok(x)
+          case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
+        }
 
       case req@POST -> Root =>
         val action = for {

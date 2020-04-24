@@ -1,10 +1,10 @@
 package com.uptech.windalerts.domain
 
 import io.circe.syntax._
-
 import java.io.File
 
 import com.uptech.windalerts.domain.beaches.{Beach, Beaches}
+import com.uptech.windalerts.domain.swellAdjustments.Adjustments
 import io.circe._
 import io.circe.config.parser
 import io.circe.generic.auto._
@@ -43,6 +43,16 @@ object swellAdjustments {
   }
 }
 
+object PrivacyPolicy {
+  def read = {
+    val tryProd = Try(Source.fromFile("/app/resources/privacy-policy.md").getLines.mkString)
+    val contents = tryProd match {
+      case Failure(_) => Source.fromFile("src/main/resources/privacy-policy.md").getLines.mkString
+      case Success(_) => tryProd.get
+    }
+    contents
+  }
+}
 object beaches {
 
   case class Beaches(beaches: Seq[Beach])
