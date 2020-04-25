@@ -269,7 +269,7 @@ class UsersEndpoints(userService: UserService,
 
       case req@POST -> Root / "purchase" / "android" / "update" => {
 
-        val action: EitherT[IO, ValidationError, String] = for {
+        val action: EitherT[IO, ValidationError, UserT] = for {
           _ <- EitherT.liftF(IO(logger.error(s"Called request ${req}")))
           _ <- EitherT.liftF(IO(logger.error(s"Called request ${req.body}")))
 
@@ -281,9 +281,12 @@ class UsersEndpoints(userService: UserService,
           subscription <- asSubscription(response)
           _ <- EitherT.liftF(IO(logger.error(s"Decoded is ${response}")))
           token <- androidPurchaseRepository.getPurchaseByToken(subscription.subscriptionNotification.purchaseToken)
+          _ <- EitherT.liftF(IO(logger.error(s"Token is ${token}")))
           purchase <- userService.getPurchase(token.subscriptionId, subscription.subscriptionNotification.purchaseToken)
+          _ <- EitherT.liftF(IO(logger.error(s"Purchase is ${purchase}")))
           updatedUser <- userService.updateSubscribedUserRole(UserId(token.userId), purchase)
-        } yield response
+          _ <- EitherT.liftF(IO(logger.error(s"updatedUser is ${updatedUser}")))
+        } yield updatedUser
         action.value.flatMap {
           case Right(x) => Ok()
           case Left(error) => httpErrorHandler.handleThrowable(error)

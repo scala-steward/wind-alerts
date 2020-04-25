@@ -2,12 +2,14 @@ package com.uptech.windalerts.users
 
 import java.io.FileInputStream
 
+import cats.data.Kleisli
 import cats.effect.{IO, _}
 import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
 import com.uptech.windalerts.alerts.MongoAlertsRepositoryAlgebra
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.{HttpErrorHandler, secrets}
+import org.http4s.{Header, HttpRoutes, HttpService, Service, Status}
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
@@ -65,5 +67,18 @@ object UsersServer extends IOApp {
                   .as(ExitCode.Success)
 
   } yield server
+
+  def myMiddle(service: HttpRoutes[IO]): HttpRoutes[IO] = Service.lift { req =>
+    service(req).map {
+      case Status.Successful(resp) => {
+        getLogger("mine").error("called")
+        resp
+      }
+      case resp => {
+        getLogger("mine").error("called" + resp)
+        resp
+      }
+    }
+  }
 
 }
