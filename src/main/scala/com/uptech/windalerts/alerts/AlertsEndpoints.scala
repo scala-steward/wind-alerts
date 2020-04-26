@@ -11,7 +11,7 @@ import org.http4s.AuthedRoutes
 import org.http4s.dsl.Http4sDsl
 
 
-class AlertsEndpoints(alertService: AlertsService[IO], usersService: UserService, auth: Auth, httpErrorHandler: HttpErrorHandler[IO]) extends Http4sDsl[IO] {
+class AlertsEndpoints(alertService: AlertsService[IO], usersService: UserService[IO], auth: Auth, httpErrorHandler: HttpErrorHandler[IO]) extends Http4sDsl[IO] {
   def allUsersService(): AuthedRoutes[UserId, IO] =
     AuthedRoutes {
       case GET -> Root as user => {

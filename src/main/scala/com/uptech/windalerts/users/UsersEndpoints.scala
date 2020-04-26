@@ -2,23 +2,18 @@ package com.uptech.windalerts.users
 
 import cats.data.{EitherT, OptionT}
 import cats.effect.IO
-import com.google.api.services.androidpublisher.AndroidPublisher
-import com.google.api.services.androidpublisher.model.{ProductPurchase, ProductPurchasesAcknowledgeRequest, SubscriptionPurchase, SubscriptionPurchasesAcknowledgeRequest}
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
+import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.{HttpErrorHandler, PrivacyPolicy, secrets}
+import io.circe.parser._
+import io.scalaland.chimney.dsl._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.{AuthedRoutes, HttpRoutes, Response}
 import org.log4s.getLogger
-import io.scalaland.chimney.dsl._
-import com.uptech.windalerts.domain.codecs._
-import io.circe._
-import io.circe.parser._
-
-import scala.io.Source
 
 
-class UsersEndpoints(userService: UserService,
+class UsersEndpoints(userService: UserService[IO],
                      httpErrorHandler: HttpErrorHandler[IO],
                      refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra[IO],
                      otpRepository: OtpRepository[IO],
