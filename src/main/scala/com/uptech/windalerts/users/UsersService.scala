@@ -1,7 +1,7 @@
 package com.uptech.windalerts.users
 
 import cats.data._
-import cats.effect.IO
+import cats.effect.{IO, Sync}
 import com.github.t3hnar.bcrypt._
 import com.google.api.services.androidpublisher.AndroidPublisher
 import com.google.api.services.androidpublisher.model.SubscriptionPurchase
@@ -13,10 +13,10 @@ import com.uptech.windalerts.domain.{domain, secrets}
 import org.mongodb.scala.bson.ObjectId
 import io.scalaland.chimney.dsl._
 
-class UserService(userRepo: UserRepositoryAlgebra[IO],
-                  credentialsRepo: CredentialsRepositoryAlgebra[IO],
-                  facebookCredentialsRepo: FacebookCredentialsRepositoryAlgebra[IO],
-                  alertsRepository: AlertsRepositoryT[IO],
+class UserService[F[_]: Sync](userRepo: UserRepositoryAlgebra[F],
+                  credentialsRepo: CredentialsRepositoryAlgebra[F],
+                  facebookCredentialsRepo: FacebookCredentialsRepositoryAlgebra[F],
+                  alertsRepository: AlertsRepositoryT[F],
                   facebookSecretKey: String,
                   androidPublisher: AndroidPublisher) {
 
@@ -34,51 +34,51 @@ class UserService(userRepo: UserRepositoryAlgebra[IO],
     } yield operationResult
   }
 
-  def makeUserPremiumExpired(id: String): EitherT[IO, ValidationError, UserT] = {
+  def makeUserPremiumExpired(id: String): EitherT[F, ValidationError, UserT] = {
     for {
       user <- getUser(id)
       operationResult <- makePremiumExpired(user)
     } yield operationResult
   }
 
-  private def makePremiumExpired(user: UserT): EitherT[IO, ValidationError, UserT] = {
+  private def makePremiumExpired(user: UserT): EitherT[F, ValidationError, UserT] = {
     userRepo.update(user.copy(userType = PremiumExpired.value, nextPaymentAt = -1)).toRight(CouldNotUpdateUserError())
   }
 
-  private def updateUserType(user: UserT, userType: String, lastPaymentAt: Long = -1, nextPaymentAt: Long = -1): EitherT[IO, ValidationError, UserT] = {
+  private def updateUserType(user: UserT, userType: String, lastPaymentAt: Long = -1, nextPaymentAt: Long = -1): EitherT[F, ValidationError, UserT] = {
     userRepo.update(user.copy(userType = userType, lastPaymentAt = lastPaymentAt, nextPaymentAt = nextPaymentAt)).toRight(CouldNotUpdateUserError())
   }
 
 
-  def updateUserProfile(id: String, name: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long): EitherT[IO, ValidationError, UserT] = {
+  def updateUserProfile(id: String, name: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long): EitherT[F, ValidationError, UserT] = {
     for {
       user <- getUser(id)
       operationResult <- updateUser(name, snoozeTill, disableAllAlerts, notificationsPerHour, user)
     } yield operationResult
   }
 
-  private def updateUser(name: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, user: UserT): EitherT[IO, ValidationError, UserT] = {
+  private def updateUser(name: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, user: UserT): EitherT[F, ValidationError, UserT] = {
     userRepo.update(user.copy(name = name, snoozeTill = snoozeTill, disableAllAlerts = disableAllAlerts, notificationsPerHour = notificationsPerHour, lastPaymentAt = -1, nextPaymentAt = -1)).toRight(CouldNotUpdateUserError())
   }
 
   def updateDeviceToken(userId: String, deviceToken: String) =
     userRepo.updateDeviceToken(userId, deviceToken)
 
-  def updatePassword(userId: String, password: String): OptionT[IO, Unit] =
+  def updatePassword(userId: String, password: String): OptionT[F, Unit] =
     credentialsRepo.updatePassword(userId, password.bcrypt)
 
   def getFacebookUserByAccessToken(accessToken: String, deviceType: String) = {
     for {
-      facebookClient <- EitherT.liftF(IO(new DefaultFacebookClient(accessToken, facebookSecretKey, Version.LATEST)))
-      facebookUser <- EitherT.liftF(IO(facebookClient.fetchObject("me", classOf[com.restfb.types.User], Parameter.`with`("fields", "name,id,email"))))
+      facebookClient <- EitherT.pure((new DefaultFacebookClient(accessToken, facebookSecretKey, Version.LATEST)))
+      facebookUser <- EitherT.pure((facebookClient.fetchObject("me", classOf[com.restfb.types.User], Parameter.`with`("fields", "name,id,email"))))
       dbUser <- getUser(facebookUser.getEmail, deviceType)
     } yield dbUser
   }
 
-  def createUser(rr: FacebookRegisterRequest): EitherT[IO, UserAlreadyExistsError, (UserT, FacebookCredentialsT)] = {
+  def createUser(rr: FacebookRegisterRequest): EitherT[F, UserAlreadyExistsError, (UserT, FacebookCredentialsT)] = {
     for {
-      facebookClient <- EitherT.liftF(IO(new DefaultFacebookClient(rr.accessToken, facebookSecretKey, Version.LATEST)))
-      facebookUser <- EitherT.liftF(IO(facebookClient.fetchObject("me", classOf[com.restfb.types.User], Parameter.`with`("fields", "name,id,email"))))
+      facebookClient <- EitherT.pure((new DefaultFacebookClient(rr.accessToken, facebookSecretKey, Version.LATEST)))
+      facebookUser <- EitherT.pure((facebookClient.fetchObject("me", classOf[com.restfb.types.User], Parameter.`with`("fields", "name,id,email"))))
       _ <- doesNotExist(facebookUser.getEmail, rr.deviceType)
 
       savedCreds <- EitherT.liftF(facebookCredentialsRepo.create(FacebookCredentialsT(facebookUser.getEmail, rr.accessToken, rr.deviceType)))
@@ -86,7 +86,7 @@ class UserService(userRepo: UserRepositoryAlgebra[IO],
     } yield (savedUser, savedCreds)
   }
 
-  def createUser(rr: RegisterRequest): EitherT[IO, UserAlreadyExistsError, UserT] = {
+  def createUser(rr: RegisterRequest): EitherT[F, UserAlreadyExistsError, UserT] = {
     val credentials = Credentials(rr.email, rr.password.bcrypt, rr.deviceType)
     for {
       _ <- doesNotExist(credentials.email, credentials.deviceType)
@@ -103,30 +103,30 @@ class UserService(userRepo: UserRepositoryAlgebra[IO],
     } yield (emailDoesNotExist, facebookDoesNotExist)
   }
 
-  private def countToEither(fbCount: IO[Int]) = {
-    val fbcredentialDoesNotExist: EitherT[IO, UserAlreadyExistsError, Unit] = EitherT.liftF(fbCount).flatMap(c => {
+  private def countToEither(fbCount: F[Int]) = {
+    val fbcredentialDoesNotExist: EitherT[F, UserAlreadyExistsError, Unit] = EitherT.liftF(fbCount).flatMap(c => {
       val e: Either[UserAlreadyExistsError, Unit] = if (c > 0) Left(UserAlreadyExistsError("", ""))
       else Right(())
-      EitherT(IO(e))
+      EitherT.fromEither(e)
     })
     fbcredentialDoesNotExist
   }
 
-  def getUserAndUpdateRole(userId: String): EitherT[IO, UserNotFoundError, UserT] = {
+  def getUserAndUpdateRole(userId: String): EitherT[F, UserNotFoundError, UserT] = {
     for {
       eitherUser <- OptionT(userRepo.getByUserId(userId)).toRight(UserNotFoundError())
       updated <- updateRole(eitherUser)
     } yield updated
   }
 
-  def getUserAndUpdateRole(email: String, deviceType: String): EitherT[IO, UserNotFoundError, UserT] = {
+  def getUserAndUpdateRole(email: String, deviceType: String): EitherT[F, UserNotFoundError, UserT] = {
     for {
       eitherUser <- OptionT(userRepo.getByEmailAndDeviceType(email, deviceType)).toRight(UserNotFoundError())
       updated <- updateRole(eitherUser)
     } yield updated
   }
 
-  private def updateRole(eitherUser: UserT): EitherT[IO, UserNotFoundError, UserT] = {
+  private def updateRole(eitherUser: UserT): EitherT[F, UserNotFoundError, UserT] = {
     if (UserType(eitherUser.userType) == Trial && eitherUser.isTrialEnded()) {
       for {
         updated <- update(eitherUser.copy(userType = UserType.TrialExpired.value, lastPaymentAt = -1, nextPaymentAt = -1))
@@ -141,47 +141,47 @@ class UserService(userRepo: UserRepositoryAlgebra[IO],
     Right(user)
   }
 
-  def getUser(email: String, deviceType: String): EitherT[IO, UserNotFoundError, UserT] =
+  def getUser(email: String, deviceType: String): EitherT[F, UserNotFoundError, UserT] =
     OptionT(userRepo.getByEmailAndDeviceType(email, deviceType)).toRight(UserNotFoundError())
 
-  def getUser(userId: String): EitherT[IO, ValidationError, UserT] =
+  def getUser(userId: String): EitherT[F, ValidationError, UserT] =
     OptionT(userRepo.getByUserId(userId)).toRight(UserNotFoundError())
 
   def getByCredentials(
                         email: String, password: String, deviceType: String
-                      ): EitherT[IO, ValidationError, Credentials] =
+                      ): EitherT[F, ValidationError, Credentials] =
     for {
       creds <- credentialsRepo.findByCreds(email, deviceType).toRight(UserAuthenticationFailedError(email))
       passwordMatched <- isPasswordMatch(password, creds)
     } yield passwordMatched
 
 
-  private def isPasswordMatch(password: String, creds: Credentials): EitherT[IO, ValidationError, Credentials] = {
+  private def isPasswordMatch(password: String, creds: Credentials): EitherT[F, ValidationError, Credentials] = {
     val passwordMatch =
       if (password.isBcrypted(creds.password)) {
         Right(creds)
       } else {
         Left(UserAuthenticationFailedError(creds.email))
       }
-    EitherT(IO(passwordMatch))
+    EitherT.fromEither(passwordMatch)
   }
 
-  def update(user: UserT): EitherT[IO, UserNotFoundError, UserT] =
+  def update(user: UserT): EitherT[F, UserNotFoundError, UserT] =
     for {
       saved <- userRepo.update(user).toRight(UserNotFoundError())
     } yield saved
 
 
-  def getPurchase(request: AndroidReceiptValidationRequest): EitherT[IO, ValidationError, domain.SubscriptionPurchase] = {
+  def getPurchase(request: AndroidReceiptValidationRequest): EitherT[F, ValidationError, domain.SubscriptionPurchase] = {
     getPurchase(request.productId, request.token)
   }
 
-  def getPurchase(productId: String, token: String): EitherT[IO, ValidationError, domain.SubscriptionPurchase] = {
-    EitherT.liftF(IO({
+  def getPurchase(productId: String, token: String): EitherT[F, ValidationError, domain.SubscriptionPurchase] = {
+    EitherT.pure({
       androidPublisher.purchases().subscriptions().get(ApplicationConfig.PACKAGE_NAME, productId, token).execute().into[domain.SubscriptionPurchase].enableBeanGetters
         .withFieldComputed(_.expiryTimeMillis, _.getExpiryTimeMillis.toLong)
         .withFieldComputed(_.startTimeMillis, _.getStartTimeMillis.toLong).transform
-    }))
+    })
   }
 
   def updateSubscribedUserRole(user: UserId, purchase: domain.SubscriptionPurchase) = {
@@ -194,12 +194,12 @@ class UserService(userRepo: UserRepositoryAlgebra[IO],
 }
 
 object UserService {
-  def apply[F[_]](
-                   usersRepository: UserRepositoryAlgebra[IO],
-                   credentialsRepository: CredentialsRepositoryAlgebra[IO],
-                   facebookCredentialsRepositoryAlgebra: FacebookCredentialsRepositoryAlgebra[IO],
-                   alertsRepository: AlertsRepositoryT[IO],
+  def apply[F[_]: Sync](
+                   usersRepository: UserRepositoryAlgebra[F],
+                   credentialsRepository: CredentialsRepositoryAlgebra[F],
+                   facebookCredentialsRepositoryAlgebra: FacebookCredentialsRepositoryAlgebra[F],
+                   alertsRepository: AlertsRepositoryT[F],
                    androidPublisher: AndroidPublisher
-                 ): UserService =
+                 ): UserService[F] =
     new UserService(usersRepository, credentialsRepository, facebookCredentialsRepositoryAlgebra, alertsRepository, secrets.read.surfsUp.facebook.key, androidPublisher)
 }
