@@ -91,7 +91,7 @@ class UserService[F[_]: Sync](userRepo: UserRepositoryAlgebra[F],
     for {
       _ <- doesNotExist(credentials.email, credentials.deviceType)
       savedCreds <- EitherT.liftF(credentialsRepo.create(credentials))
-      saved <- EitherT.liftF(userRepo.create(UserT.create(new ObjectId(savedCreds._id.toHexString), rr.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Registered.value, -1, false, 4)))
+      saved <- EitherT.liftF(userRepo.create(UserT.create(new ObjectId(savedCreds._id.toHexString), rr.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, -1, Registered.value, -1, false, 4)))
     } yield saved
   }
 
