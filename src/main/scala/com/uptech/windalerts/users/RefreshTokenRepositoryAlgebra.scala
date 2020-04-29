@@ -6,10 +6,12 @@ import com.uptech.windalerts.domain.domain.RefreshToken
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.equal
+import org.mongodb.scala.model.Updates.set
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait RefreshTokenRepositoryAlgebra[F[_]] {
+  def invalidateAccessTokenForUser(userId: String): F[Unit]
 
   def getByAccessTokenId(accessTokenId: String): OptionT[F, RefreshToken]
 
@@ -46,5 +48,9 @@ class MongoRefreshTokenRepositoryAlgebra(collection: MongoCollection[RefreshToke
 
   override def deleteForUserId(userId: String): IO[Unit] = {
     IO.fromFuture(IO(collection.deleteOne(equal("userId", userId)).toFuture().map(_ => ())))
+  }
+
+  override def invalidateAccessTokenForUser(userId: String): IO[Unit] = {
+    IO.fromFuture(IO(collection.updateOne(equal("userId", userId), set("accessTokenId", null)).toFuture().map(_ => ())))
   }
 }

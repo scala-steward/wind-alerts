@@ -9,7 +9,7 @@ import io.scalaland.chimney.dsl._
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.model.Filters.equal
+import org.mongodb.scala.model.Filters.{and, equal}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -59,7 +59,7 @@ class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit
   }
 
   override def getAllForDay(day: Int, p:AlertT=>Boolean): IO[Seq[AlertT]] = {
-    findByCriteria(equal("days", day)).map(s=>s.filter(p))
+    findByCriteria(and(equal("days", day), equal("enabled", true))).map(s=>s.filter(p))
   }
 
   override def getAllForUser(user: String): IO[AlertsT] = {
