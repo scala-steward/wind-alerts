@@ -281,6 +281,7 @@ class UsersEndpoints(userService: UserService[IO],
           _ <- EitherT.liftF(IO(logger.error(s"Purchase is ${purchase}")))
           updatedUser <- userService.updateSubscribedUserRole(UserId(token.userId), purchase)
           _ <- EitherT.liftF(IO(logger.error(s"updatedUser is ${updatedUser}")))
+          _ <- EitherT.liftF(refreshTokenRepositoryAlgebra.invalidateAccessTokenForUser(token.userId))
         } yield updatedUser
         action.value.flatMap {
           case Right(x) => Ok()
