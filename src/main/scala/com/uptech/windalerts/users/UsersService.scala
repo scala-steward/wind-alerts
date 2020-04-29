@@ -22,8 +22,22 @@ class UserService[F[_]: Sync](userRepo: UserRepositoryAlgebra[F],
 
   def verifyEmail(id: String) = {
     for {
+      operationResult <- startTrial(id)
+    } yield operationResult
+  }
+
+  def startTrial(id: String):EitherT[F, ValidationError, UserT] = {
+    def update(user: UserT):EitherT[F, ValidationError, UserT] = {
+      userRepo.update(user.copy(
+        userType = Trial.value,
+        startTrialAt = System.currentTimeMillis(),
+        nextPaymentAt = System.currentTimeMillis() + (30L * 24L * 60L * 60L * 1000L),
+      )).toRight(CouldNotUpdateUserError())
+    }
+
+    for {
       user <- getUser(id)
-      operationResult <- updateUserType(user, Trial.value)
+      operationResult <- update(user)
     } yield operationResult
   }
 
