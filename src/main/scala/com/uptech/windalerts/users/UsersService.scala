@@ -31,7 +31,7 @@ class UserService[F[_]: Sync](userRepo: UserRepositoryAlgebra[F],
       userRepo.update(user.copy(
         userType = Trial.value,
         startTrialAt = System.currentTimeMillis(),
-        nextPaymentAt = System.currentTimeMillis() + (30L * 24L * 60L * 60L * 1000L),
+        endTrialAt = System.currentTimeMillis() + (30L * 24L * 60L * 60L * 1000L),
       )).toRight(CouldNotUpdateUserError())
     }
 
