@@ -9,9 +9,9 @@ import com.google.auth.oauth2.GoogleCredentials
 import com.uptech.windalerts.alerts.MongoAlertsRepositoryAlgebra
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.logger._
-import com.uptech.windalerts.domain.{HttpErrorHandler, secrets}
+import com.uptech.windalerts.domain.{HttpErrorHandler, errors, secrets}
 import io.circe.Json
-import org.http4s.{Header, HttpRoutes, HttpService, Service, Status}
+import org.http4s.{Header, HttpApp, HttpRoutes, HttpService, Service, Status}
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
@@ -55,12 +55,12 @@ object UsersServer extends IOApp {
     usersService <- IO(new UserService(userRepository, credentialsRepository, fbcredentialsRepository, alertsRepository, secrets.read.surfsUp.facebook.key, androidPublisher))
     auth <- IO(new Auth(refreshTokenRepo))
     endpoints <- IO(new UsersEndpoints(usersService, new HttpErrorHandler[IO], refreshTokenRepo, otpRepo, androidPurchaseRepo, auth))
-    httpApp <- IO(Logger.httpApp(false, true, logAction = requestLogger)(
+    httpApp <- IO(errors.errorMapper(Logger.httpApp(false, true, logAction = requestLogger)(
       Router(
         "/v1/users" -> auth.middleware(endpoints.authedService()),
         "/v1/users" -> endpoints.openEndpoints(),
         "/v1/users/social/facebook" -> endpoints.socialEndpoints()
-    ).orNotFound))
+    ).orNotFound)))
     server <- BlazeServerBuilder[IO]
                   .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
                   .withHttpApp(httpApp)
@@ -70,19 +70,5 @@ object UsersServer extends IOApp {
                   .as(ExitCode.Success)
 
   } yield server
-
-
-  def myMiddle(service: HttpRoutes[IO]): HttpRoutes[IO] = Service.lift { req =>
-    service(req).map {
-      case Status.Successful(resp) => {
-        getLogger("mine").error("called")
-        resp
-      }
-      case resp => {
-        getLogger("mine").error("called" + resp)
-        resp
-      }
-    }
-  }
 
 }
