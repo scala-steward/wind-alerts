@@ -63,22 +63,9 @@ class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra[IO]) {
     OptionT.liftF(IO(decodedToken))
   }
 
-  def createVerificationToken(userId: String): EitherT[IO, ValidationError, AccessTokenWithExpiry] = {
+  def createToken(userId: String, accessTokenId: String): EitherT[IO, ValidationError, AccessTokenWithExpiry] = {
     val current = System.currentTimeMillis()
     val expiry = current / 1000 + TimeUnit.MILLISECONDS.toSeconds(ACCESS_TOKEN_EXPIRY)
-    val claims = JwtClaim(
-      expiration = Some(expiry),
-      issuedAt = Some(current / 1000),
-      issuer = Some("wind-alerts.com"),
-      subject = Some(userId)
-    )
-
-    EitherT.right(IO(AccessTokenWithExpiry(Jwt.encode(claims, key.value, JwtAlgorithm.HS256), expiry)))
-  }
-
-  def createToken(userId: String, expirationInSeconds: Int, accessTokenId: String): EitherT[IO, ValidationError, AccessTokenWithExpiry] = {
-    val current = System.currentTimeMillis()
-    val expiry = current / 1000 + TimeUnit.SECONDS.toSeconds(expirationInSeconds)
     val claims = JwtClaim(
       expiration = Some(expiry),
       issuedAt = Some(current / 1000),

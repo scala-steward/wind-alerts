@@ -134,7 +134,7 @@ class UsersEndpoints(userService: UserService[IO],
           rr <- EitherT.liftF(req.as[FacebookRegisterRequest])
           result <- userService.createUser(rr)
           accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
-          token <- auth.createToken(result._2._id.toHexString, 60, accessTokenId)
+          token <- auth.createToken(result._2._id.toHexString, accessTokenId)
           refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), result._2._id.toHexString, accessTokenId)))
           tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, result._1)
         } yield tokens
@@ -150,7 +150,7 @@ class UsersEndpoints(userService: UserService[IO],
           dbUser <- userService.getFacebookUserByAccessToken(credentials.accessToken, credentials.deviceType)
           updateDevice <- userService.updateDeviceToken(dbUser._id.toHexString, credentials.deviceToken).toRight(CouldNotUpdateUserDeviceError())
           accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
-          token <- auth.createToken(dbUser._id.toHexString, 60, accessTokenId)
+          token <- auth.createToken(dbUser._id.toHexString, accessTokenId)
           deleteOldTokens <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(dbUser._id.toHexString))
           refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbUser._id.toHexString, accessTokenId)))
           tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, dbUser)
@@ -186,7 +186,7 @@ class UsersEndpoints(userService: UserService[IO],
           _ <- EitherT.liftF(IO(emailSender.sendOtp(createUserResponse.email, otp)))
           dbCredentials <- EitherT.right(IO(new Credentials(createUserResponse._id, registerRequest.email, registerRequest.password, registerRequest.deviceType)))
           accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
-          token <- auth.createToken(dbCredentials._id.toHexString, 60, accessTokenId)
+          token <- auth.createToken(dbCredentials._id.toHexString, accessTokenId)
           refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbCredentials._id.toHexString, accessTokenId)))
           tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, createUserResponse)
         } yield tokens
@@ -202,7 +202,7 @@ class UsersEndpoints(userService: UserService[IO],
           dbUser <- userService.getUserAndUpdateRole(dbCredentials.email, dbCredentials.deviceType)
           updateDevice <- userService.updateDeviceToken(dbCredentials._id.toHexString, credentials.deviceToken).toRight(CouldNotUpdateUserDeviceError())
           accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
-          token <- auth.createToken(dbCredentials._id.toHexString, 60, accessTokenId)
+          token <- auth.createToken(dbCredentials._id.toHexString, accessTokenId)
           deleteOldTokens <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(dbCredentials._id.toHexString))
           refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbCredentials._id.toHexString, accessTokenId)))
           tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, dbUser)
@@ -227,7 +227,7 @@ class UsersEndpoints(userService: UserService[IO],
             eitherT
           }
           accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
-          token <- auth.createToken(oldValidRefreshToken.userId, 60, accessTokenId)
+          token <- auth.createToken(oldValidRefreshToken.userId, accessTokenId)
           _ <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(oldValidRefreshToken.userId))
           newRefreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), oldValidRefreshToken.userId, accessTokenId)))
           user <- userService.getUser(newRefreshToken.userId)
