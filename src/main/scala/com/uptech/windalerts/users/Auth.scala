@@ -17,7 +17,7 @@ import scala.util.Random
 
 class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra[IO]) {
 
-  val REFRESH_TOKEN_EXPIRY = 7L * 24L * 60L * 60L * 1000L
+  val REFRESH_TOKEN_EXPIRY = 5L * 60L * 1000L
 
   case class AccessTokenWithExpiry(accessToken: String, expiredAt: Long)
 
