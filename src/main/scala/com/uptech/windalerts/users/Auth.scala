@@ -17,7 +17,8 @@ import scala.util.Random
 
 class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra[IO]) {
 
-  val REFRESH_TOKEN_EXPIRY = 5L * 60L * 1000L
+  val REFRESH_TOKEN_EXPIRY = 7L * 24L * 60L * 60L * 1000L
+  val ACCESS_TOKEN_EXPIRY = 1L * 24L * 60L * 60L * 1000L
 
   case class AccessTokenWithExpiry(accessToken: String, expiredAt: Long)
 
@@ -62,9 +63,9 @@ class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra[IO]) {
     OptionT.liftF(IO(decodedToken))
   }
 
-  def createVerificationToken(userId: String, expirationInDays: Int, email: String): EitherT[IO, ValidationError, AccessTokenWithExpiry] = {
+  def createVerificationToken(userId: String): EitherT[IO, ValidationError, AccessTokenWithExpiry] = {
     val current = System.currentTimeMillis()
-    val expiry = current / 1000 + TimeUnit.DAYS.toSeconds(expirationInDays)
+    val expiry = current / 1000 + TimeUnit.MILLISECONDS.toSeconds(ACCESS_TOKEN_EXPIRY)
     val claims = JwtClaim(
       expiration = Some(expiry),
       issuedAt = Some(current / 1000),
