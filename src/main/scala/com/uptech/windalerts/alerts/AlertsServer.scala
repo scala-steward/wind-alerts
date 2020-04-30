@@ -7,8 +7,9 @@ import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
 import com.uptech.windalerts.domain.domain.{AlertT, Credentials, FacebookCredentialsT, RefreshToken, UserT}
 import com.uptech.windalerts.domain.logger.requestLogger
-import com.uptech.windalerts.domain.{HttpErrorHandler, secrets}
+import com.uptech.windalerts.domain.{HttpErrorHandler, errors, secrets}
 import com.uptech.windalerts.users._
+import org.http4s.{HttpApp, Service, Status}
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
@@ -42,9 +43,9 @@ object AlertsServer extends IOApp {
       androidPublisher <- IO(AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL))
       usersService <- IO( new UserService(userRepository, credentialsRepository, fbcredentialsRepository, alertsRepository, secrets.read.surfsUp.facebook.key, androidPublisher))
       alertsEndPoints <- IO(new AlertsEndpoints(alertService, usersService, auth, httpErrorHandler))
-      httpApp <- IO(Logger.httpApp(false, true, logAction = requestLogger)(Router(
+      httpApp <- IO(Logger.httpApp(false, true, logAction = requestLogger)(errors.errorMapper(Router(
         "/v1/users/alerts" -> auth.middleware(alertsEndPoints.allUsersService())
-      ).orNotFound))
+      ).orNotFound)))
 
       server <- BlazeServerBuilder[IO]
         .bindHttp(sys.env("PORT").toInt, "0.0.0.0")

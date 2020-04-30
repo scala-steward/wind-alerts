@@ -3,6 +3,7 @@ package com.uptech.windalerts.domain
 import java.util
 
 import com.google.api.services.androidpublisher.model.{IntroductoryPriceInfo, SubscriptionCancelSurveyResult, SubscriptionPriceChange}
+import io.circe.generic.JsonCodec
 import org.log4s.getLogger
 import org.mongodb.scala.bson.ObjectId
 
@@ -10,6 +11,8 @@ import scala.beans.BeanProperty
 import scala.collection.JavaConverters
 import scala.util.control.NonFatal
 import io.scalaland.chimney.dsl._
+import io.circe._, io.circe.generic.semiauto._
+
 
 object domain {
 
@@ -286,4 +289,9 @@ object domain {
   case class SubscriptionNotificationWrapper(subscriptionNotification:SubscriptionNotification)
 
   case class SubscriptionNotification(purchaseToken:String)
+
+  case class ApplePurchaseVerificationRequest(`receipt-data`:String, password:String, `exclude-old-transactions`:Boolean)
+
+  case class AppleSubscriptionPurchase(purchase_date_ms:Long,
+                                  expires_date_ms: Long)
 }

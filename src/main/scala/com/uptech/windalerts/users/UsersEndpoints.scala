@@ -5,13 +5,18 @@ import cats.effect.IO
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
+import io.circe.generic.JsonCodec
+import io.circe.syntax._
 import com.uptech.windalerts.domain.{HttpErrorHandler, PrivacyPolicy, secrets}
 import io.circe.parser._
 import io.scalaland.chimney.dsl._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.{AuthedRoutes, HttpRoutes, Response}
 import org.log4s.getLogger
-
+import com.uptech.windalerts.domain.codecs._
+import com.uptech.windalerts.status.Tides.Datum
+import io.circe.optics.JsonPath.root
+import io.circe.parser
 
 class UsersEndpoints(userService: UserService[IO],
                      httpErrorHandler: HttpErrorHandler[IO],
@@ -253,9 +258,9 @@ class UsersEndpoints(userService: UserService[IO],
         }
 
       case req@POST -> Root / "purchase" / "apple" =>
-        val action: EitherT[IO, String, String] = for {
+        val action: EitherT[IO, Exception, String] = for {
           reciptData <- EitherT.liftF(req.as[String])
-          response <- verifyApple(reciptData, "password")
+          response <- verifyApple(reciptData, "70f6da1920b848efa5c78b0fba038a7e")
         } yield response
         action.value.flatMap {
           case Right(x) => Ok(x)
@@ -295,11 +300,20 @@ class UsersEndpoints(userService: UserService[IO],
       parse(response).map(json => json.as[SubscriptionNotificationWrapper].left.map(x=>UnknownError(x.message)))))
   }
 
-  private def verifyApple(receiptData: String, password: String): EitherT[IO, String, String] = {
+  private def verifyApple(receiptData: String, password: String): EitherT[IO, Exception, String] = {
     implicit val backend = HttpURLConnectionBackend()
 
-    EitherT.fromEither(sttp.body(Map("receipt-data" -> "receiptData"))
+    val json = ApplePurchaseVerificationRequest(receiptData, password, true).asJson.toString()
+    val req = sttp.body(json).contentType("application/json")
       .post(uri"https://sandbox.itunes.apple.com/verifyReceipt")
-      .send().body)
+
+    EitherT.fromEither(req
+      .send().body
+      .left.map(new UnknownError(_))
+      .flatMap(parser.parse(_))
+      .map(root.receipt.in_app.each.json.getAll(_)).map(_.map(_.toString()).mkString)
+    )
+
+
   }
 }
