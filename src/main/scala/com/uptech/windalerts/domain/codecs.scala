@@ -24,6 +24,7 @@ object codecs {
     fromProviders(classOf[AlertsT]),
     fromProviders(classOf[TimeRange]),
     fromProviders(classOf[FacebookCredentialsT]),
+    fromProviders(classOf[AppleToken]),
     DEFAULT_CODEC_REGISTRY)
 
 
@@ -296,6 +297,16 @@ object codecs {
 
   lazy implicit val appleSubscriptionPurchaseEncoder: Encoder[AppleSubscriptionPurchase] = deriveEncoder[AppleSubscriptionPurchase]
 
-  implicit def appleSubscriptionPurchaseEncoder[F[_] : Applicative]: EntityEncoder[F, AppleSubscriptionPurchase] = jsonEncoderOf
+  implicit def appleSubscriptionPurchaseEnityEncoder[F[_] : Applicative]: EntityEncoder[F, AppleSubscriptionPurchase] = jsonEncoderOf
+
+
+  lazy implicit val applePurchaseTokenDecoder: Decoder[ApplePurchaseToken] = deriveDecoder[ApplePurchaseToken]
+
+  implicit def applePurchaseTokenEntityDecoder[F[_] : Sync]: EntityDecoder[F, ApplePurchaseToken] = jsonOf
+
+  lazy implicit val applePurchaseTokenEncoder: Encoder[ApplePurchaseToken] = deriveEncoder[ApplePurchaseToken]
+
+  implicit def applePurchaseTokenEnityEncoder[F[_] : Applicative]: EntityEncoder[F, ApplePurchaseToken] = jsonEncoderOf
+
 
 }

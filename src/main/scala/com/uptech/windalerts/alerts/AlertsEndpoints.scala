@@ -23,7 +23,7 @@ class AlertsEndpoints(alertService: AlertsService[IO], usersService: UserService
         OptionT.liftF(response)
       }
 
-      case authReq@DELETE -> Root / alertId as user => {
+      case _@DELETE -> Root / alertId as user => {
         val action = for {
           eitherDeleted <- alertService.deleteT(user.id, alertId)
         } yield eitherDeleted

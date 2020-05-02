@@ -2,27 +2,21 @@ package com.uptech.windalerts.users
 
 import cats.data.{EitherT, OptionT}
 import cats.effect.IO
-import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
-import io.circe.generic.JsonCodec
-import io.circe.syntax._
 import com.uptech.windalerts.domain.{HttpErrorHandler, PrivacyPolicy, secrets}
 import io.circe.parser._
 import io.scalaland.chimney.dsl._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.{AuthedRoutes, HttpRoutes, Response}
 import org.log4s.getLogger
-import com.uptech.windalerts.domain.codecs._
-import com.uptech.windalerts.status.Tides.Datum
-import io.circe.optics.JsonPath.root
-import io.circe.parser
 
 class UsersEndpoints(userService: UserService[IO],
                      httpErrorHandler: HttpErrorHandler[IO],
                      refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra[IO],
                      otpRepository: OtpRepository[IO],
                      androidPurchaseRepository: AndroidTokenRepository,
+                     applePurchaseRepository: AppleTokenRepository,
                      auth: Auth) extends Http4sDsl[IO] {
   private val logger = getLogger
 
@@ -86,10 +80,26 @@ class UsersEndpoints(userService: UserService[IO],
         OptionT.liftF(response)
       }
 
+
+      case authReq@GET -> Root / "purchase" / "android" as user => {
+        val response: IO[Response[IO]] = {
+          val action = for {
+            token <- androidPurchaseRepository.getLastForUser(user.id)
+            purchase <- userService.getAndroidPurchase(token.subscriptionId, token.purchaseToken)
+            premiumUser <- userService.updateSubscribedUserRole(user, purchase.startTimeMillis, purchase.expiryTimeMillis)
+          } yield premiumUser
+          action.value.flatMap {
+            case Right(premiumUser) => Ok(premiumUser.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform)
+            case Left(error) => httpErrorHandler.handleError(error)
+          }
+        }
+        OptionT.liftF(response)
+      }
+
       case authReq@POST -> Root / "purchase" / "android" as user => {
         val response: IO[Response[IO]] = authReq.req.decode[AndroidReceiptValidationRequest] { request =>
           val action = for {
-            purchase <- userService.getPurchase(request)
+            purchase <- userService.getAndroidPurchase(request)
             savedToken <- androidPurchaseRepository.create(AndroidToken(user.id, request.productId, request.token, System.currentTimeMillis()))
           } yield savedToken
           action.value.flatMap {
@@ -100,12 +110,12 @@ class UsersEndpoints(userService: UserService[IO],
         OptionT.liftF(response)
       }
 
-      case authReq@GET -> Root / "purchase" / "android" as user => {
+      case authReq@GET -> Root / "purchase" / "apple" as user => {
         val response: IO[Response[IO]] = {
           val action = for {
-            token <- androidPurchaseRepository.getLastForUser(user.id)
-            purchase <- userService.getPurchase(token.subscriptionId, token.purchaseToken)
-            premiumUser <- userService.updateSubscribedUserRole(user, purchase)
+            token <- applePurchaseRepository.getLastForUser(user.id)
+            purchase <- userService.getApplePurchase(token.purchaseToken, secrets.read.surfsUp.apple.appSecret)
+            premiumUser <- userService.updateSubscribedUserRole(user, purchase.purchase_date_ms, purchase.expires_date_ms)
           } yield premiumUser
           action.value.flatMap {
             case Right(premiumUser) => Ok(premiumUser.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform)
@@ -115,6 +125,19 @@ class UsersEndpoints(userService: UserService[IO],
         OptionT.liftF(response)
       }
 
+      case authReq@POST -> Root / "purchase" / "apple" as user => {
+        val response: IO[Response[IO]] = authReq.req.decode[ApplePurchaseToken] { req =>
+          val action: EitherT[IO, ValidationError, AppleToken] = for {
+            response <- userService.getApplePurchase(req.token, secrets.read.surfsUp.apple.appSecret)
+            savedToken <- applePurchaseRepository.create(AppleToken(user.id, req.token, System.currentTimeMillis()))
+          } yield savedToken
+          action.value.flatMap {
+            case Right(x) => Ok()
+            case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
+          }
+        }
+        OptionT.liftF(response)
+      }
     }
 
   private def send(emailSender: EmailSender, userFromDb: UserT, otp: String): EitherT[IO, ValidationError, String] = {
@@ -257,15 +280,7 @@ class UsersEndpoints(userService: UserService[IO],
           case Left(error) => httpErrorHandler.handleError(error)
         }
 
-      case req@POST -> Root / "purchase" / "apple" =>
-        val action: EitherT[IO, Exception, String] = for {
-          reciptData <- EitherT.liftF(req.as[String])
-          response <- verifyApple(reciptData, "70f6da1920b848efa5c78b0fba038a7e")
-        } yield response
-        action.value.flatMap {
-          case Right(x) => Ok(x)
-          case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
-        }
+
 
       case req@POST -> Root / "purchase" / "android" / "update" => {
 
@@ -282,9 +297,9 @@ class UsersEndpoints(userService: UserService[IO],
           _ <- EitherT.liftF(IO(logger.error(s"Decoded is ${response}")))
           token <- androidPurchaseRepository.getPurchaseByToken(subscription.subscriptionNotification.purchaseToken)
           _ <- EitherT.liftF(IO(logger.error(s"Token is ${token}")))
-          purchase <- userService.getPurchase(token.subscriptionId, subscription.subscriptionNotification.purchaseToken)
+          purchase <- userService.getAndroidPurchase(token.subscriptionId, subscription.subscriptionNotification.purchaseToken)
           _ <- EitherT.liftF(IO(logger.error(s"Purchase is ${purchase}")))
-          updatedUser <- userService.updateSubscribedUserRole(UserId(token.userId), purchase)
+          updatedUser <- userService.updateSubscribedUserRole(UserId(token.userId), purchase.startTimeMillis, purchase.expiryTimeMillis)
           _ <- EitherT.liftF(IO(logger.error(s"updatedUser is ${updatedUser}")))
           _ <- EitherT.liftF(refreshTokenRepositoryAlgebra.invalidateAccessTokenForUser(token.userId))
         } yield updatedUser
@@ -298,22 +313,5 @@ class UsersEndpoints(userService: UserService[IO],
   private def asSubscription(response: String):EitherT[IO, ValidationError, SubscriptionNotificationWrapper] = {
     EitherT(IO.fromEither(
       parse(response).map(json => json.as[SubscriptionNotificationWrapper].left.map(x=>UnknownError(x.message)))))
-  }
-
-  private def verifyApple(receiptData: String, password: String): EitherT[IO, Exception, String] = {
-    implicit val backend = HttpURLConnectionBackend()
-
-    val json = ApplePurchaseVerificationRequest(receiptData, password, true).asJson.toString()
-    val req = sttp.body(json).contentType("application/json")
-      .post(uri"https://sandbox.itunes.apple.com/verifyReceipt")
-
-    EitherT.fromEither(req
-      .send().body
-      .left.map(new UnknownError(_))
-      .flatMap(parser.parse(_))
-      .map(root.receipt.in_app.each.json.getAll(_)).map(_.map(_.toString()).mkString)
-    )
-
-
   }
 }

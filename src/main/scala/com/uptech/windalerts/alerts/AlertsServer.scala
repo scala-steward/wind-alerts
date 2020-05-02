@@ -1,23 +1,17 @@
 package com.uptech.windalerts.alerts
 
-import java.io.FileInputStream
-
 import cats.effect.{ExitCode, IO, IOApp}
 import cats.implicits._
-import com.google.auth.oauth2.GoogleCredentials
-import com.uptech.windalerts.domain.domain.{AlertT, Credentials, FacebookCredentialsT, RefreshToken, UserT}
+import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.logger.requestLogger
 import com.uptech.windalerts.domain.{HttpErrorHandler, errors, secrets}
 import com.uptech.windalerts.users._
-import org.http4s.{HttpApp, Service, Status}
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.Logger
 import org.log4s.getLogger
 import org.mongodb.scala.MongoClient
-
-import scala.util.Try
 
 object AlertsServer extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = {

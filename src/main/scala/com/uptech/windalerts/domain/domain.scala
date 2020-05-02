@@ -27,7 +27,7 @@ object domain {
   case class TokensWithUser(accessToken: String, refreshToken: String, expiredAt: Long, user: UserDTO)
 
 
-  case class SubscriptionPurchase(startTimeMillis:Long,
+  case class SubscriptionPurchase(startTimeMillis: Long,
                                   expiryTimeMillis: Long)
 
   case class AccessTokenRequest(refreshToken: String)
@@ -255,6 +255,8 @@ object domain {
 
   case class AndroidReceiptValidationRequest(productId: String, token: String)
 
+  case class ApplePurchaseToken(token: String)
+
   case class AndroidPurchase(_id: ObjectId,
                              userId: String,
                              acknowledgementState: Int,
@@ -274,24 +276,35 @@ object domain {
 
   case class AndroidToken(_id: ObjectId,
                           userId: String,
-                          subscriptionId:String,
+                          subscriptionId: String,
                           purchaseToken: String,
-                          creationTime:Long
+                          creationTime: Long
                          )
 
   object AndroidToken {
-    def apply(userId: String, subscriptionId:String, purchaseToken: String, creationTime : Long): AndroidToken = new AndroidToken(new ObjectId(), userId, subscriptionId, purchaseToken, creationTime)
+    def apply(userId: String, subscriptionId: String, purchaseToken: String, creationTime: Long): AndroidToken = new AndroidToken(new ObjectId(), userId, subscriptionId, purchaseToken, creationTime)
   }
 
   case class AndroidUpdate(message: Message)
-  case class Message(data:String)
 
-  case class SubscriptionNotificationWrapper(subscriptionNotification:SubscriptionNotification)
+  case class Message(data: String)
 
-  case class SubscriptionNotification(purchaseToken:String)
+  case class SubscriptionNotificationWrapper(subscriptionNotification: SubscriptionNotification)
 
-  case class ApplePurchaseVerificationRequest(`receipt-data`:String, password:String, `exclude-old-transactions`:Boolean)
+  case class SubscriptionNotification(purchaseToken: String)
 
-  case class AppleSubscriptionPurchase(purchase_date_ms:Long,
-                                  expires_date_ms: Long)
+
+  case class ApplePurchaseVerificationRequest(`receipt-data`: String, password: String, `exclude-old-transactions`: Boolean)
+
+  case class AppleSubscriptionPurchase(product_id: String, purchase_date_ms: Long, expires_date_ms: Long)
+
+  case class AppleToken(_id: ObjectId,
+                          userId: String,
+                          purchaseToken: String,
+                          creationTime: Long
+                         )
+
+  object AppleToken {
+    def apply(userId: String, purchaseToken: String, creationTime: Long): AppleToken = new AppleToken(new ObjectId(), userId, purchaseToken, creationTime)
+  }
 }
