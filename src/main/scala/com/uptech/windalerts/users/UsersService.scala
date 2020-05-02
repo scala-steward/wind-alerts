@@ -1,16 +1,22 @@
 package com.uptech.windalerts.users
 
-import cats.data._
+import cats.data.{EitherT, OptionT}
 import cats.effect.{IO, Sync}
 import com.github.t3hnar.bcrypt._
 import com.google.api.services.androidpublisher.AndroidPublisher
-import com.google.api.services.androidpublisher.model.SubscriptionPurchase
 import com.restfb.{DefaultFacebookClient, Parameter, Version}
+import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.uptech.windalerts.alerts.AlertsRepositoryT
 import com.uptech.windalerts.domain.domain.UserType._
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.{domain, secrets}
+import io.circe.syntax._
 import org.mongodb.scala.bson.ObjectId
+
+
+import com.uptech.windalerts.domain.codecs._
+import io.circe.optics.JsonPath.root
+import io.circe.parser
 import io.scalaland.chimney.dsl._
 
 class UserService[F[_]: Sync](userRepo: UserRepositoryAlgebra[F],
@@ -41,7 +47,7 @@ class UserService[F[_]: Sync](userRepo: UserRepositoryAlgebra[F],
     } yield operationResult
   }
 
-  def makeUserPremium(id: String, start:Long, expiry: Long) = {
+  def   makeUserPremium(id: String, start:Long, expiry: Long) = {
     for {
       user <- getUser(id)
       operationResult <- updateUserType(user, Premium.value, start, expiry)
@@ -186,11 +192,11 @@ class UserService[F[_]: Sync](userRepo: UserRepositoryAlgebra[F],
     } yield saved
 
 
-  def getPurchase(request: AndroidReceiptValidationRequest): EitherT[F, ValidationError, domain.SubscriptionPurchase] = {
-    getPurchase(request.productId, request.token)
+  def getAndroidPurchase(request: AndroidReceiptValidationRequest): EitherT[F, ValidationError, domain.SubscriptionPurchase] = {
+    getAndroidPurchase(request.productId, request.token)
   }
 
-  def getPurchase(productId: String, token: String): EitherT[F, ValidationError, domain.SubscriptionPurchase] = {
+  def getAndroidPurchase(productId: String, token: String): EitherT[F, ValidationError, domain.SubscriptionPurchase] = {
     EitherT.pure({
       androidPublisher.purchases().subscriptions().get(ApplicationConfig.PACKAGE_NAME, productId, token).execute().into[domain.SubscriptionPurchase].enableBeanGetters
         .withFieldComputed(_.expiryTimeMillis, _.getExpiryTimeMillis.toLong)
@@ -198,9 +204,28 @@ class UserService[F[_]: Sync](userRepo: UserRepositoryAlgebra[F],
     })
   }
 
-  def updateSubscribedUserRole(user: UserId, purchase: domain.SubscriptionPurchase) = {
-    if (purchase.expiryTimeMillis > System.currentTimeMillis()) {
-      makeUserPremium(user.id, purchase.startTimeMillis, purchase.expiryTimeMillis)
+  def getApplePurchase(receiptData: String, password: String): EitherT[IO, ValidationError, AppleSubscriptionPurchase] = {
+    implicit val backend = HttpURLConnectionBackend()
+
+    val json = ApplePurchaseVerificationRequest(receiptData, password, true).asJson.toString()
+    val req = sttp.body(json).contentType("application/json")
+      .post(uri"https://sandbox.itunes.apple.com/verifyReceipt")
+
+    EitherT.fromEither(
+      req
+        .send().body
+        .left.map(UnknownError(_))
+        .flatMap(parser.parse(_))
+        .map(root.receipt.in_app.each.json.getAll(_))
+        .flatMap(_.map(p => p.as[AppleSubscriptionPurchase])
+                .filter(_.isRight).maxBy(_.right.get.expires_date_ms))
+      .left.map(e => UnknownError(e.getMessage))
+    )
+  }
+
+  def updateSubscribedUserRole(user: UserId, startTime:Long, expiryTime:Long) = {
+    if (expiryTime > System.currentTimeMillis()) {
+      makeUserPremium(user.id, startTime, expiryTime)
     } else {
       makeUserPremiumExpired(user.id)
     }

@@ -2,7 +2,6 @@ package com.uptech.windalerts.users
 
 import java.io.FileInputStream
 
-import cats.data.Kleisli
 import cats.effect.{IO, _}
 import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
@@ -10,8 +9,6 @@ import com.uptech.windalerts.alerts.MongoAlertsRepositoryAlgebra
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.logger._
 import com.uptech.windalerts.domain.{HttpErrorHandler, errors, secrets}
-import io.circe.Json
-import org.http4s.{Header, HttpApp, HttpRoutes, HttpService, Service, Status}
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
@@ -46,7 +43,11 @@ object UsersServer extends IOApp {
     androidPublisher <- IO(AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL))
     androidPurchaseRepoColl  <- IO( mongoDb.getCollection[AndroidToken]("androidPurchases"))
 
+    applePurchaseRepoColl  <- IO( mongoDb.getCollection[AppleToken]("applePurchases"))
+
     androidPurchaseRepo <- IO( new MongoAndroidPurchaseRepository(androidPurchaseRepoColl))
+    applePurchaseRepo <- IO( new MongoApplePurchaseRepository(applePurchaseRepoColl))
+
     fbcredentialsCollection  <- IO( mongoDb.getCollection[FacebookCredentialsT]("facebookCredentials"))
     fbcredentialsRepository <- IO( new MongoFacebookCredentialsRepositoryAlgebra(fbcredentialsCollection))
 
@@ -54,7 +55,7 @@ object UsersServer extends IOApp {
     alertsRepository <- IO( new MongoAlertsRepositoryAlgebra(alertsCollection))
     usersService <- IO(new UserService(userRepository, credentialsRepository, fbcredentialsRepository, alertsRepository, secrets.read.surfsUp.facebook.key, androidPublisher))
     auth <- IO(new Auth(refreshTokenRepo))
-    endpoints <- IO(new UsersEndpoints(usersService, new HttpErrorHandler[IO], refreshTokenRepo, otpRepo, androidPurchaseRepo, auth))
+    endpoints <- IO(new UsersEndpoints(usersService, new HttpErrorHandler[IO], refreshTokenRepo, otpRepo, androidPurchaseRepo, applePurchaseRepo, auth))
     httpApp <- IO(errors.errorMapper(Logger.httpApp(false, true, logAction = requestLogger)(
       Router(
         "/v1/users" -> auth.middleware(endpoints.authedService()),

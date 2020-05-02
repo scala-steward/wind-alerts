@@ -102,11 +102,13 @@ object secrets {
 
   case class SecretsSettings(surfsUp: SurfsUp)
 
-  case class SurfsUp(willyWeather: WillyWeather, facebook: Facebook, email: Email, mongodb: Mongodb)
+  case class SurfsUp(willyWeather: WillyWeather, facebook: Facebook, apple:Apple, email: Email, mongodb: Mongodb)
 
   case class WillyWeather(key: String)
 
   case class Facebook(key: String)
+
+  case class Apple(appSecret: String)
 
   case class Email(userName: String, password: String)
 
