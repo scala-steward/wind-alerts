@@ -19,21 +19,15 @@ import io.circe.optics.JsonPath.root
 import io.circe.parser
 import io.scalaland.chimney.dsl._
 
-class UserService[F[_]: Sync](userRepo: UserRepositoryAlgebra[F],
-                  credentialsRepo: CredentialsRepositoryAlgebra[F],
-                  facebookCredentialsRepo: FacebookCredentialsRepositoryAlgebra[F],
-                  alertsRepository: AlertsRepositoryT[F],
-                  facebookSecretKey: String,
-                  androidPublisher: AndroidPublisher) {
+class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
+                               credentialsRepo: CredentialsRepositoryAlgebra[F],
+                               facebookCredentialsRepo: FacebookCredentialsRepositoryAlgebra[F],
+                               alertsRepository: AlertsRepositoryT[F],
+                               facebookSecretKey: String,
+                               androidPublisher: AndroidPublisher) {
 
   def verifyEmail(id: String) = {
-    for {
-      operationResult <- startTrial(id)
-    } yield operationResult
-  }
-
-  def startTrial(id: String):EitherT[F, ValidationError, UserT] = {
-    def update(user: UserT):EitherT[F, ValidationError, UserT] = {
+    def makeUserTrial(user: UserT): EitherT[F, ValidationError, UserT] = {
       userRepo.update(user.copy(
         userType = Trial.value,
         startTrialAt = System.currentTimeMillis(),
@@ -41,34 +35,67 @@ class UserService[F[_]: Sync](userRepo: UserRepositoryAlgebra[F],
       )).toRight(CouldNotUpdateUserError())
     }
 
+    def startTrial(id: String): EitherT[F, ValidationError, UserT] = {
+      for {
+        user <- getUser(id)
+        operationResult <- makeUserTrial(user)
+      } yield operationResult
+    }
+
     for {
-      user <- getUser(id)
-      operationResult <- update(user)
+      operationResult <- startTrial(id)
     } yield operationResult
   }
 
-  def   makeUserPremium(id: String, start:Long, expiry: Long) = {
+
+  def updateSubscribedUserRole(user: UserId, startTime: Long, expiryTime: Long) = {
+    def makeUserPremium(id: String, start: Long, expiry: Long) = {
+      for {
+        user <- getUser(id)
+        operationResult <- userRepo.update(user.copy(userType = Premium.value, lastPaymentAt = start, nextPaymentAt = expiry)).toRight(CouldNotUpdateUserError())
+      } yield operationResult
+    }
+
+    def makeUserPremiumExpired(id: String): EitherT[F, ValidationError, UserT] = {
+      for {
+        user <- getUser(id)
+        operationResult <- userRepo.update(user.copy(userType = PremiumExpired.value, nextPaymentAt = -1)).toRight(CouldNotUpdateUserError())
+        _ <- EitherT.liftF(alertsRepository.disableAllButOneAlerts(id))
+      } yield operationResult
+    }
+
+    if (expiryTime > System.currentTimeMillis()) {
+      makeUserPremium(user.id, startTime, expiryTime)
+    } else {
+      makeUserPremiumExpired(user.id)
+    }
+  }
+
+
+  def getUserAndUpdateRole(userId: String): EitherT[F, UserNotFoundError, UserT] = {
     for {
-      user <- getUser(id)
-      operationResult <- updateUserType(user, Premium.value, start, expiry)
-    } yield operationResult
+      eitherUser <- OptionT(userRepo.getByUserId(userId)).toRight(UserNotFoundError())
+      updated <- updateRole(eitherUser)
+    } yield updated
   }
 
-  def makeUserPremiumExpired(id: String): EitherT[F, ValidationError, UserT] = {
+  def getUserAndUpdateRole(email: String, deviceType: String): EitherT[F, UserNotFoundError, UserT] = {
     for {
-      user <- getUser(id)
-      operationResult <- makePremiumExpired(user)
-    } yield operationResult
+      eitherUser <- OptionT(userRepo.getByEmailAndDeviceType(email, deviceType)).toRight(UserNotFoundError())
+      updated <- updateRole(eitherUser)
+    } yield updated
   }
 
-  private def makePremiumExpired(user: UserT): EitherT[F, ValidationError, UserT] = {
-    userRepo.update(user.copy(userType = PremiumExpired.value, nextPaymentAt = -1)).toRight(CouldNotUpdateUserError())
+  private def updateRole(eitherUser: UserT): EitherT[F, UserNotFoundError, UserT] = {
+    if (UserType(eitherUser.userType) == Trial && eitherUser.isTrialEnded()) {
+      for {
+        updated <- update(eitherUser.copy(userType = UserType.TrialExpired.value, lastPaymentAt = -1, nextPaymentAt = -1))
+        _ <- EitherT.liftF(alertsRepository.disableAllButOneAlerts(updated._id.toHexString))
+      } yield updated
+    } else {
+      EitherT.fromEither(toEither(eitherUser))
+    }
   }
-
-  private def updateUserType(user: UserT, userType: String, lastPaymentAt: Long = -1, nextPaymentAt: Long = -1): EitherT[F, ValidationError, UserT] = {
-    userRepo.update(user.copy(userType = userType, lastPaymentAt = lastPaymentAt, nextPaymentAt = nextPaymentAt)).toRight(CouldNotUpdateUserError())
-  }
-
 
   def updateUserProfile(id: String, name: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long): EitherT[F, ValidationError, UserT] = {
     for {
@@ -132,30 +159,6 @@ class UserService[F[_]: Sync](userRepo: UserRepositoryAlgebra[F],
     fbcredentialDoesNotExist
   }
 
-  def getUserAndUpdateRole(userId: String): EitherT[F, UserNotFoundError, UserT] = {
-    for {
-      eitherUser <- OptionT(userRepo.getByUserId(userId)).toRight(UserNotFoundError())
-      updated <- updateRole(eitherUser)
-    } yield updated
-  }
-
-  def getUserAndUpdateRole(email: String, deviceType: String): EitherT[F, UserNotFoundError, UserT] = {
-    for {
-      eitherUser <- OptionT(userRepo.getByEmailAndDeviceType(email, deviceType)).toRight(UserNotFoundError())
-      updated <- updateRole(eitherUser)
-    } yield updated
-  }
-
-  private def updateRole(eitherUser: UserT): EitherT[F, UserNotFoundError, UserT] = {
-    if (UserType(eitherUser.userType) == Trial && eitherUser.isTrialEnded()) {
-      for {
-        updated <- update(eitherUser.copy(userType = UserType.TrialExpired.value, lastPaymentAt = -1, nextPaymentAt = -1))
-        _ <- EitherT.liftF(alertsRepository.disableAllButOneAlerts(updated._id.toHexString))
-      } yield updated
-    } else {
-      EitherT.fromEither(toEither(eitherUser))
-    }
-  }
 
   private def toEither(user: UserT): Either[UserNotFoundError, UserT] = {
     Right(user)
@@ -218,27 +221,21 @@ class UserService[F[_]: Sync](userRepo: UserRepositoryAlgebra[F],
         .flatMap(parser.parse(_))
         .map(root.receipt.in_app.each.json.getAll(_))
         .flatMap(_.map(p => p.as[AppleSubscriptionPurchase])
-                .filter(_.isRight).maxBy(_.right.get.expires_date_ms))
-      .left.map(e => UnknownError(e.getMessage))
+          .filter(_.isRight).maxBy(_.right.get.expires_date_ms))
+        .left.map(e => UnknownError(e.getMessage))
     )
   }
 
-  def updateSubscribedUserRole(user: UserId, startTime:Long, expiryTime:Long) = {
-    if (expiryTime > System.currentTimeMillis()) {
-      makeUserPremium(user.id, startTime, expiryTime)
-    } else {
-      makeUserPremiumExpired(user.id)
-    }
-  }
+
 }
 
 object UserService {
-  def apply[F[_]: Sync](
-                   usersRepository: UserRepositoryAlgebra[F],
-                   credentialsRepository: CredentialsRepositoryAlgebra[F],
-                   facebookCredentialsRepositoryAlgebra: FacebookCredentialsRepositoryAlgebra[F],
-                   alertsRepository: AlertsRepositoryT[F],
-                   androidPublisher: AndroidPublisher
-                 ): UserService[F] =
+  def apply[F[_] : Sync](
+                          usersRepository: UserRepositoryAlgebra[F],
+                          credentialsRepository: CredentialsRepositoryAlgebra[F],
+                          facebookCredentialsRepositoryAlgebra: FacebookCredentialsRepositoryAlgebra[F],
+                          alertsRepository: AlertsRepositoryT[F],
+                          androidPublisher: AndroidPublisher
+                        ): UserService[F] =
     new UserService(usersRepository, credentialsRepository, facebookCredentialsRepositoryAlgebra, alertsRepository, secrets.read.surfsUp.facebook.key, androidPublisher)
 }
