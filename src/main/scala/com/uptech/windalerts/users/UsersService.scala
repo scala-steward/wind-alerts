@@ -49,10 +49,14 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
 
 
   def updateSubscribedUserRole(user: UserId, startTime: Long, expiryTime: Long) = {
-    def makeUserPremium(id: String, start: Long, expiry: Long) = {
+    def withTypeFixed(start: Long, expiry: Long, user: UserT): EitherT[F, ValidationError, UserT] = {
+      userRepo.update(user.copy(userType = Premium.value, lastPaymentAt = start, nextPaymentAt = expiry)).toRight(CouldNotUpdateUserError())
+    }
+
+    def makeUserPremium(id: String, start: Long, expiry: Long):EitherT[F, ValidationError, UserT] = {
       for {
         user <- getUser(id)
-        operationResult <- userRepo.update(user.copy(userType = Premium.value, lastPaymentAt = start, nextPaymentAt = expiry)).toRight(CouldNotUpdateUserError())
+        operationResult <- withTypeFixed(start, expiry, user)
       } yield operationResult
     }
 
@@ -60,7 +64,7 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
       for {
         user <- getUser(id)
         operationResult <- userRepo.update(user.copy(userType = PremiumExpired.value, nextPaymentAt = -1)).toRight(CouldNotUpdateUserError())
-        _ <- EitherT.liftF(alertsRepository.disableAllButOneAlerts(id))
+        r <- EitherT.liftF(alertsRepository.disableAllButOneAlerts(id))
       } yield operationResult
     }
 
