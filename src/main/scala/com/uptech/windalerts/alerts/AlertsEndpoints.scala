@@ -15,12 +15,15 @@ class AlertsEndpoints(alertService: AlertsService[IO], usersService: UserService
   def allUsersService(): AuthedRoutes[UserId, IO] =
     AuthedRoutes {
       case GET -> Root as user => {
-        val resp = alertService.getAllForUser(user.id)
-        val either = resp.attempt.unsafeRunSync()
-        val response = either
-          .fold(httpErrorHandler.handleThrowable, _ => Ok(Alerts(either.right.get.alerts.map(a=>a.into[Alert].withFieldComputed(_.id, u=>u._id.toHexString).transform))))
-
-        OptionT.liftF(response)
+        val action = for {
+          resp <- EitherT.liftF(alertService.getAllForUser(user.id))
+        } yield resp
+        OptionT.liftF({
+          action.value.flatMap {
+            case Right(x) => Ok(Alerts(x.alerts.map(a => a.into[Alert].withFieldComputed(_.id, u => u._id.toHexString).transform)))
+            case Left(error) => httpErrorHandler.handleThrowable(error)
+          }
+        })
       }
 
       case _@DELETE -> Root / alertId as user => {
@@ -37,10 +40,18 @@ class AlertsEndpoints(alertService: AlertsService[IO], usersService: UserService
 
 
       case authReq@PUT -> Root / alertId as user => {
+
         val response = authReq.req.decode[AlertRequest] { alert =>
-          val updated = alertService.updateT(user.id, alertId, alert)
-          val resp = updated.value.unsafeRunSync()
-          Ok(resp.toOption.get.into[Alert].withFieldComputed(_.id, u=>u._id.toHexString).transform)
+          val action = for {
+            dbUser <- usersService.getUser(user.id)
+            _ <- auth.authorizePremiumUsers(dbUser)
+            updated <- withTypeFixed(alertId, user, alert)
+          } yield updated
+
+          action.value.flatMap {
+            case Right(value) => Ok(value.into[Alert].withFieldComputed(_.id, u => u._id.toHexString).transform)
+            case Left(error) => httpErrorHandler.handleError(error)
+          }
         }
         OptionT.liftF(response)
       }
@@ -54,7 +65,7 @@ class AlertsEndpoints(alertService: AlertsService[IO], usersService: UserService
           } yield saved
 
           action.value.flatMap {
-            case Right(value) => Created(value.into[Alert].withFieldComputed(_.id, u=>u._id.toHexString).transform)
+            case Right(value) => Created(value.into[Alert].withFieldComputed(_.id, u => u._id.toHexString).transform)
             case Left(error) => httpErrorHandler.handleError(error)
           }
         }
@@ -63,4 +74,7 @@ class AlertsEndpoints(alertService: AlertsService[IO], usersService: UserService
     }
 
 
+  private def withTypeFixed(alertId: String, user: UserId, alert: AlertRequest):EitherT[IO, ValidationError, AlertT] = {
+    alertService.updateT(user.id, alertId, alert).asInstanceOf[EitherT[IO, ValidationError, AlertT]]
+  }
 }

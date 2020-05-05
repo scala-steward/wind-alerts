@@ -3,7 +3,7 @@ package com.uptech.windalerts.notifications
 import cats.data.EitherT
 import cats.effect.IO
 import cats.implicits._
-import com.google.firebase.messaging.{FirebaseMessaging, Message}
+import com.google.firebase.messaging.{FcmOptions, FirebaseMessaging, Message}
 import com.uptech.windalerts.alerts.AlertsService
 import com.uptech.windalerts.domain.beaches.Beach
 import com.uptech.windalerts.domain.config.AppConfig
