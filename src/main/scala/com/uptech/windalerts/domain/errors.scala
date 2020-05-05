@@ -1,11 +1,12 @@
 package com.uptech.windalerts.domain
 
 import cats.effect.IO
+import com.uptech.windalerts.users.ValidationError
 import org.http4s.{HttpApp, Service, Status}
 import org.log4s.getLogger
 
 object errors {
-  trait WindAlertError extends RuntimeException
+  trait WindAlertError extends ValidationError
   case class UserNotFound(userName: String) extends WindAlertError
   case class OperationNotPermitted(message:String) extends WindAlertError
   case class RecordNotFound(message:String) extends WindAlertError

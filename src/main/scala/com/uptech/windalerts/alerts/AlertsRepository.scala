@@ -1,10 +1,11 @@
 package com.uptech.windalerts.alerts
 
-import cats.data.EitherT
+import cats.data.{EitherT, OptionT}
 import cats.effect.{ContextShift, IO}
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.errors.WindAlertError
 import com.uptech.windalerts.domain.{conversions, domain}
+import com.uptech.windalerts.users.{AlertNotFoundError, CouldNotUpdateUserError, UserNotFoundError, ValidationError}
 import io.scalaland.chimney.dsl._
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId
@@ -26,7 +27,7 @@ trait AlertsRepositoryT[F[_]] {
 
   def delete(requester: String, id: String): EitherT[F, WindAlertError, Unit]
 
-  def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest): EitherT[F, WindAlertError, AlertT]
+  def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest): EitherT[F, ValidationError, AlertT]
 }
 
 class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit cs: ContextShift[IO]) extends AlertsRepositoryT[IO] {
@@ -76,9 +77,12 @@ class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit
     EitherT.liftF(IO.fromFuture(IO(collection.deleteOne(equal("_id", new ObjectId(alertId))).toFuture().map(_=>()))))
   }
 
-  override def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest) = {
-    val alert = updateAlertRequest.into[AlertT].withFieldComputed(_._id, u => new ObjectId(alertId)).withFieldComputed(_.owner, _ => requester).transform
-    EitherT.liftF(IO(collection.replaceOne(equal("_id", new ObjectId(alertId)), alert).toFuture()).map(_ => alert))
+  override def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest):EitherT[IO, ValidationError, AlertT] = {
+    val alertUpdated = updateAlertRequest.into[AlertT].withFieldComputed(_._id, u => new ObjectId(alertId)).withFieldComputed(_.owner, _ => requester).transform
+    for {
+      alert <- OptionT(getById(alertId)).toRight(AlertNotFoundError())
+      updated <- EitherT.liftF(IO(collection.replaceOne(equal("_id", new ObjectId(alertId)), alertUpdated).toFuture()).map(_ => alert))
+    } yield updated
   }
 
 }
