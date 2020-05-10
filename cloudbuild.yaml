@@ -18,14 +18,14 @@ steps:
       - '--keyring=$PROJECT_ID-keyring'
       - '--key=$PROJECT_ID-key'
   - name: 'gcr.io/cloud-builders/gcloud'
-      args:
-        - 'kms'
-        - 'decrypt'
-        - '--ciphertext-file=src/main/resources/Apple-$PROJECT_ID.p8.enc'
-        - '--plaintext-file=src/main/resources/Apple-$PROJECT_ID.p8'
-        - '--location=global'
-        - '--keyring=$PROJECT_ID-keyring'
-        - '--key=$PROJECT_ID-key'
+    args:
+      - 'kms'
+      - 'decrypt'
+      - '--ciphertext-file=src/main/resources/Apple-$PROJECT_ID.p8.enc'
+      - '--plaintext-file=src/main/resources/Apple-$PROJECT_ID.p8'
+      - '--location=global'
+      - '--keyring=$PROJECT_ID-keyring'
+      - '--key=$PROJECT_ID-key'
   - name: 'gcr.io/cloud-builders/mvn'
     args: ['-q', 'compile', '-P', 'status', 'jib:build', '-DenvProjectId=$PROJECT_ID']
   - name: 'gcr.io/cloud-builders/mvn'
