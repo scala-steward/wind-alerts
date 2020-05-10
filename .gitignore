@@ -14,3 +14,4 @@ resources/*.conf
 src/main/resources/*.json
 src/main/resources/secrets.conf
 src/main/resources/application.conf
+src/main/resources/Apple.p8

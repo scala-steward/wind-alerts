@@ -46,6 +46,12 @@ object domain {
     def apply(email: String, accessToken: String, deviceType: String): FacebookCredentialsT = new FacebookCredentialsT(new ObjectId(), email, accessToken, deviceType)
   }
 
+  case class AppleCredentials(_id: ObjectId, email: String, deviceType: String, appleId: String)
+
+  object AppleCredentials {
+    def apply(email: String, deviceType: String, appleId: String): AppleCredentials = new AppleCredentials(new ObjectId(), email, deviceType, appleId)
+  }
+
   case class Credentials(_id: ObjectId, email: String, password: String, deviceType: String)
 
   object Credentials {
@@ -121,6 +127,10 @@ object domain {
   final case class UserDevice(deviceId: String, ownerId: String)
 
   case class FacebookRegisterRequest(accessToken: String, deviceId: String, deviceType: String, deviceToken: String)
+
+  case class AppleRegisterRequest(authorizationCode: String, nonce: String, deviceId: String, deviceType: String, deviceToken: String, name:String)
+
+  case class AppleLoginRequest(authorizationCode: String, nonce: String, deviceId: String, deviceType: String, deviceToken: String)
 
   case class RegisterRequest(email: String, name: String, password: String, deviceId: String, deviceType: String, deviceToken: String)
 
@@ -299,12 +309,27 @@ object domain {
   case class AppleSubscriptionPurchase(product_id: String, purchase_date_ms: Long, expires_date_ms: Long)
 
   case class AppleToken(_id: ObjectId,
-                          userId: String,
-                          purchaseToken: String,
-                          creationTime: Long
-                         )
+                        userId: String,
+                        purchaseToken: String,
+                        creationTime: Long
+                       )
 
   object AppleToken {
     def apply(userId: String, purchaseToken: String, creationTime: Long): AppleToken = new AppleToken(new ObjectId(), userId, purchaseToken, creationTime)
   }
+
+  case class ApplePublicKeyList(keys: Seq[ApplePublicKey])
+
+  case class ApplePublicKey(
+                             kty: String,
+                             kid: String,
+                             use: String,
+                             alg: String,
+                             n: String,
+                             e: String)
+
+  case class TokenResponse(access_token: String, id_token: String)
+
+  case class AppleUser(sub: String, email: String)
+
 }

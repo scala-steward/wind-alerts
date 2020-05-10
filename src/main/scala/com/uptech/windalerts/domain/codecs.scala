@@ -25,6 +25,7 @@ object codecs {
     fromProviders(classOf[TimeRange]),
     fromProviders(classOf[FacebookCredentialsT]),
     fromProviders(classOf[AppleToken]),
+    fromProviders(classOf[AppleCredentials]),
     DEFAULT_CODEC_REGISTRY)
 
 
@@ -309,4 +310,52 @@ object codecs {
   implicit def applePurchaseTokenEnityEncoder[F[_] : Applicative]: EntityEncoder[F, ApplePurchaseToken] = jsonEncoderOf
 
 
+  lazy implicit val tokenResponseDecoder: Decoder[TokenResponse] = deriveDecoder[TokenResponse]
+
+  implicit def tokenResponseEntityDecoder[F[_] : Sync]: EntityDecoder[F, TokenResponse] = jsonOf
+
+  lazy implicit val tokenResponseEncoder: Encoder[TokenResponse] = deriveEncoder[TokenResponse]
+
+  implicit def tokenResponseEnityEncoder[F[_] : Applicative]: EntityEncoder[F, TokenResponse] = jsonEncoderOf
+
+  lazy implicit val applePublicKeyDecoder: Decoder[ApplePublicKey] = deriveDecoder[ApplePublicKey]
+
+  implicit def applePublicKeyEntityDecoder[F[_] : Sync]: EntityDecoder[F, ApplePublicKey] = jsonOf
+
+  lazy implicit val applePublicKeyEncoder: Encoder[ApplePublicKey] = deriveEncoder[ApplePublicKey]
+
+  implicit def applePublicKeyEncoder[F[_] : Applicative]: EntityEncoder[F, ApplePublicKey] = jsonEncoderOf
+
+  lazy implicit val applePublicKeyListDecoder: Decoder[ApplePublicKeyList] = deriveDecoder[ApplePublicKeyList]
+
+  implicit def applePublicKeyListEntityDecoder[F[_] : Sync]: EntityDecoder[F, ApplePublicKeyList] = jsonOf
+
+  lazy implicit val applePublicKeyListEncoder: Encoder[ApplePublicKeyList] = deriveEncoder[ApplePublicKeyList]
+
+  implicit def applePublicKeyListEntityEncoder[F[_] : Applicative]: EntityEncoder[F, ApplePublicKeyList] = jsonEncoderOf
+
+  lazy implicit val appleRegisterRequestDecoder: Decoder[AppleRegisterRequest] = deriveDecoder[AppleRegisterRequest]
+
+  implicit def appleRegisterRequestEntityDecoder[F[_] : Sync]: EntityDecoder[F, AppleRegisterRequest] = jsonOf
+
+  lazy implicit val appleRegisterRequestEncoder: Encoder[AppleRegisterRequest] = deriveEncoder[AppleRegisterRequest]
+
+  implicit def appleRegisterRequestEntityEncoder[F[_] : Applicative]: EntityEncoder[F, AppleRegisterRequest] = jsonEncoderOf
+
+
+  lazy implicit val appleUserDecoder: Decoder[AppleUser] = deriveDecoder[AppleUser]
+
+  implicit def appleUserEntityDecoder[F[_] : Sync]: EntityDecoder[F, AppleUser] = jsonOf
+
+  lazy implicit val appleUserEncoder: Encoder[AppleUser] = deriveEncoder[AppleUser]
+
+  implicit def appleUserEntityEncoder[F[_] : Applicative]: EntityEncoder[F, AppleUser] = jsonEncoderOf
+
+  lazy implicit val appleLoginRequestDecoder: Decoder[AppleLoginRequest] = deriveDecoder[AppleLoginRequest]
+
+  implicit def appleLoginRequestEntityDecoder[F[_] : Sync]: EntityDecoder[F, AppleLoginRequest] = jsonOf
+
+  lazy implicit val appleLoginRequestEncoder: Encoder[AppleLoginRequest] = deriveEncoder[AppleLoginRequest]
+
+  implicit def appleLoginRequestEntityEncoder[F[_] : Applicative]: EntityEncoder[F, AppleLoginRequest] = jsonEncoderOf
 }

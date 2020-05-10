@@ -155,7 +155,7 @@ class UsersEndpoints(userService: UserService[IO],
     EitherT.liftF(IO(auth.createOtp(4)))
   }
 
-  def socialEndpoints(): HttpRoutes[IO] = {
+  def facebookEndpoints(): HttpRoutes[IO] = {
     HttpRoutes.of[IO] {
       case req@POST -> Root => {
         val action = for {
@@ -163,7 +163,10 @@ class UsersEndpoints(userService: UserService[IO],
           result <- userService.createUser(rr)
           accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
           token <- auth.createToken(result._2._id.toHexString, accessTokenId)
-          refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), result._2._id.toHexString, accessTokenId)))
+          refreshToken <- EitherT.liftF(
+            refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40),
+              System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY,
+              result._2._id.toHexString, accessTokenId)))
           tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, result._1)
         } yield tokens
         action.value.flatMap {
@@ -176,6 +179,44 @@ class UsersEndpoints(userService: UserService[IO],
         val action = for {
           credentials <- EitherT.liftF(req.as[FacebookLoginRequest])
           dbUser <- userService.getFacebookUserByAccessToken(credentials.accessToken, credentials.deviceType)
+          updateDevice <- userService.updateDeviceToken(dbUser._id.toHexString, credentials.deviceToken).toRight(CouldNotUpdateUserDeviceError())
+          accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
+          token <- auth.createToken(dbUser._id.toHexString, accessTokenId)
+          deleteOldTokens <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(dbUser._id.toHexString))
+          refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbUser._id.toHexString, accessTokenId)))
+          tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, dbUser)
+        } yield tokens
+        action.value.flatMap {
+          case Right(tokens) => Ok(tokens)
+          case Left(error) => httpErrorHandler.handleError(error)
+        }
+    }
+  }
+
+  def appleEndpoints(): HttpRoutes[IO] = {
+    HttpRoutes.of[IO] {
+      case req@POST -> Root => {
+        val action = for {
+          rr <- EitherT.liftF(req.as[AppleRegisterRequest])
+          result <- userService.createUser(rr)
+          accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
+          token <- auth.createToken(result._2._id.toHexString, accessTokenId)
+          refreshToken <- EitherT.liftF(
+            refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40),
+              System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY,
+              result._2._id.toHexString, accessTokenId)))
+          tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, result._1)
+        } yield tokens
+        action.value.flatMap {
+          case Right(tokens) => Ok(tokens)
+          case Left(error) => httpErrorHandler.handleError(error)
+        }
+      }
+
+      case req@POST -> Root / "login" =>
+        val action = for {
+          credentials <- EitherT.liftF(req.as[AppleLoginRequest])
+          dbUser <- userService.loginUser(credentials)
           updateDevice <- userService.updateDeviceToken(dbUser._id.toHexString, credentials.deviceToken).toRight(CouldNotUpdateUserDeviceError())
           accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
           token <- auth.createToken(dbUser._id.toHexString, accessTokenId)
