@@ -25,6 +25,8 @@ object UsersServer extends IOApp {
     projectId <- IO(sys.env("projectId"))
     credentials <- IO(Try(GoogleCredentials.fromStream(new FileInputStream(s"/app/resources/$projectId.json")))
       .getOrElse(GoogleCredentials.getApplicationDefault))
+    applePrivateKey <- IO(Try(AppleLogin.getPrivateKey(s"/app/resources/Apple-$projectId.p8"))
+      .getOrElse(AppleLogin.getPrivateKey(s"src/main/resources/Apple.p8")))
 
     client <- IO.pure(MongoClient(com.uptech.windalerts.domain.secrets.read.surfsUp.mongodb.url))
     mongoDb <- IO(client.getDatabase(sys.env("projectId")).withCodecRegistry(com.uptech.windalerts.domain.codecs.codecRegistry))
@@ -49,18 +51,22 @@ object UsersServer extends IOApp {
     applePurchaseRepo <- IO( new MongoApplePurchaseRepository(applePurchaseRepoColl))
 
     fbcredentialsCollection  <- IO( mongoDb.getCollection[FacebookCredentialsT]("facebookCredentials"))
-    fbcredentialsRepository <- IO( new MongoFacebookCredentialsRepositoryAlgebra(fbcredentialsCollection))
+    fbcredentialsRepository <- IO( new MongoFacebookCredentialsRepository(fbcredentialsCollection))
+
+    appleCredentialsCollection  <- IO( mongoDb.getCollection[AppleCredentials]("appleCredentials"))
+    appleCredentialsRepository <- IO( new MongoAppleCredentialsRepositoryAlgebra(appleCredentialsCollection))
 
     alertsCollection  <- IO( mongoDb.getCollection[AlertT]("alerts"))
     alertsRepository <- IO( new MongoAlertsRepositoryAlgebra(alertsCollection))
-    usersService <- IO(new UserService(userRepository, credentialsRepository, fbcredentialsRepository, alertsRepository, secrets.read.surfsUp.facebook.key, androidPublisher))
+    usersService <- IO(new UserService(userRepository, credentialsRepository, appleCredentialsRepository, fbcredentialsRepository, alertsRepository, secrets.read.surfsUp.facebook.key, androidPublisher, applePrivateKey))
     auth <- IO(new Auth(refreshTokenRepo))
     endpoints <- IO(new UsersEndpoints(usersService, new HttpErrorHandler[IO], refreshTokenRepo, otpRepo, androidPurchaseRepo, applePurchaseRepo, auth))
     httpApp <- IO(errors.errorMapper(Logger.httpApp(false, true, logAction = requestLogger)(
       Router(
         "/v1/users" -> auth.middleware(endpoints.authedService()),
         "/v1/users" -> endpoints.openEndpoints(),
-        "/v1/users/social/facebook" -> endpoints.socialEndpoints()
+        "/v1/users/social/facebook" -> endpoints.facebookEndpoints(),
+        "/v1/users/social/apple" -> endpoints.appleEndpoints()
     ).orNotFound)))
     server <- BlazeServerBuilder[IO]
                   .bindHttp(sys.env("PORT").toInt, "0.0.0.0")

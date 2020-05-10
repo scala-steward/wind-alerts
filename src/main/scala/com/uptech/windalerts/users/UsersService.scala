@@ -1,5 +1,7 @@
 package com.uptech.windalerts.users
 
+import java.security.PrivateKey
+
 import cats.data.{EitherT, OptionT}
 import cats.effect.{IO, Sync}
 import com.github.t3hnar.bcrypt._
@@ -12,8 +14,6 @@ import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.{domain, secrets}
 import io.circe.syntax._
 import org.mongodb.scala.bson.ObjectId
-
-
 import com.uptech.windalerts.domain.codecs._
 import io.circe.optics.JsonPath.root
 import io.circe.parser
@@ -21,10 +21,12 @@ import io.scalaland.chimney.dsl._
 
 class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
                                credentialsRepo: CredentialsRepositoryAlgebra[F],
+                               appleCredentialsRepo: AppleCredentialsRepository[F],
                                facebookCredentialsRepo: FacebookCredentialsRepositoryAlgebra[F],
                                alertsRepository: AlertsRepositoryT[F],
                                facebookSecretKey: String,
-                               androidPublisher: AndroidPublisher) {
+                               androidPublisher: AndroidPublisher,
+                               applePrivateKey:PrivateKey) {
 
   def verifyEmail(id: String) = {
     def makeUserTrial(user: UserT): EitherT[F, ValidationError, UserT] = {
@@ -128,13 +130,30 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
 
   def createUser(rr: FacebookRegisterRequest): EitherT[F, UserAlreadyExistsError, (UserT, FacebookCredentialsT)] = {
     for {
-      facebookClient <- EitherT.pure((new DefaultFacebookClient(rr.accessToken, facebookSecretKey, Version.LATEST)))
+      facebookClient <- EitherT.pure(new DefaultFacebookClient(rr.accessToken, facebookSecretKey, Version.LATEST))
       facebookUser <- EitherT.pure((facebookClient.fetchObject("me", classOf[com.restfb.types.User], Parameter.`with`("fields", "name,id,email"))))
       _ <- doesNotExist(facebookUser.getEmail, rr.deviceType)
 
       savedCreds <- EitherT.liftF(facebookCredentialsRepo.create(FacebookCredentialsT(facebookUser.getEmail, rr.accessToken, rr.deviceType)))
       savedUser <- EitherT.liftF(userRepo.create(UserT.create(new ObjectId(savedCreds._id.toHexString), facebookUser.getEmail, facebookUser.getName, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Trial.value, -1, false, 4)))
     } yield (savedUser, savedCreds)
+  }
+
+  def createUser(rr: AppleRegisterRequest): EitherT[F, UserAlreadyExistsError, (UserT, AppleCredentials)] = {
+    for {
+      appleUser <- EitherT.pure(AppleLogin.getUser(rr.authorizationCode, applePrivateKey))
+      _ <- doesNotExist(appleUser.email, rr.deviceType)
+
+      savedCreds <- EitherT.liftF(appleCredentialsRepo.create(AppleCredentials(appleUser.email, rr.deviceType, appleUser.sub)))
+      savedUser <- EitherT.liftF(userRepo.create(UserT.create(new ObjectId(savedCreds._id.toHexString), appleUser.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Trial.value, -1, false, 4)))
+    } yield (savedUser, savedCreds)
+  }
+
+  def loginUser(rr: AppleLoginRequest) = {
+    for {
+      appleUser <- EitherT.pure(AppleLogin.getUser(rr.authorizationCode, applePrivateKey))
+      dbUser <- getUser(appleUser.email, rr.deviceType)
+    } yield dbUser
   }
 
   def createUser(rr: RegisterRequest): EitherT[F, UserAlreadyExistsError, UserT] = {
@@ -151,16 +170,17 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
     for {
       emailDoesNotExist <- countToEither(credentialsRepo.count(email, deviceType))
       facebookDoesNotExist <- countToEither(facebookCredentialsRepo.count(email, deviceType))
-    } yield (emailDoesNotExist, facebookDoesNotExist)
+      appleDoesNotExist <- countToEither(appleCredentialsRepo.count(email, deviceType))
+    } yield (emailDoesNotExist, facebookDoesNotExist, appleDoesNotExist)
   }
 
-  private def countToEither(fbCount: F[Int]) = {
-    val fbcredentialDoesNotExist: EitherT[F, UserAlreadyExistsError, Unit] = EitherT.liftF(fbCount).flatMap(c => {
+  private def countToEither(count: F[Int]) = {
+    val fbccdentialDoesNotExist: EitherT[F, UserAlreadyExistsError, Unit] = EitherT.liftF(count).flatMap(c => {
       val e: Either[UserAlreadyExistsError, Unit] = if (c > 0) Left(UserAlreadyExistsError("", ""))
       else Right(())
       EitherT.fromEither(e)
     })
-    fbcredentialDoesNotExist
+    fbccdentialDoesNotExist
   }
 
 
@@ -237,9 +257,11 @@ object UserService {
   def apply[F[_] : Sync](
                           usersRepository: UserRepositoryAlgebra[F],
                           credentialsRepository: CredentialsRepositoryAlgebra[F],
+                          appleRepository: AppleCredentialsRepository[F],
                           facebookCredentialsRepositoryAlgebra: FacebookCredentialsRepositoryAlgebra[F],
                           alertsRepository: AlertsRepositoryT[F],
-                          androidPublisher: AndroidPublisher
+                          androidPublisher: AndroidPublisher,
+                          applePrivateKey:PrivateKey
                         ): UserService[F] =
-    new UserService(usersRepository, credentialsRepository, facebookCredentialsRepositoryAlgebra, alertsRepository, secrets.read.surfsUp.facebook.key, androidPublisher)
+    new UserService(usersRepository, credentialsRepository, appleRepository, facebookCredentialsRepositoryAlgebra, alertsRepository, secrets.read.surfsUp.facebook.key, androidPublisher, applePrivateKey)
 }
