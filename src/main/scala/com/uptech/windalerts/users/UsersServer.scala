@@ -56,9 +56,12 @@ object UsersServer extends IOApp {
     appleCredentialsCollection  <- IO( mongoDb.getCollection[AppleCredentials]("appleCredentials"))
     appleCredentialsRepository <- IO( new MongoAppleCredentialsRepositoryAlgebra(appleCredentialsCollection))
 
+    feedbackColl  <- IO( mongoDb.getCollection[Feedback]("feedbacks"))
+    feedbackRepository <- IO( new MongoFeedbackRepository(feedbackColl))
+
     alertsCollection  <- IO( mongoDb.getCollection[AlertT]("alerts"))
     alertsRepository <- IO( new MongoAlertsRepositoryAlgebra(alertsCollection))
-    usersService <- IO(new UserService(userRepository, credentialsRepository, appleCredentialsRepository, fbcredentialsRepository, alertsRepository, secrets.read.surfsUp.facebook.key, androidPublisher, applePrivateKey))
+    usersService <- IO(new UserService(userRepository, credentialsRepository, appleCredentialsRepository, fbcredentialsRepository, alertsRepository, feedbackRepository, secrets.read.surfsUp.facebook.key, androidPublisher, applePrivateKey))
     auth <- IO(new Auth(refreshTokenRepo))
     endpoints <- IO(new UsersEndpoints(usersService, new HttpErrorHandler[IO], refreshTokenRepo, otpRepo, androidPurchaseRepo, applePurchaseRepo, auth))
     httpApp <- IO(errors.errorMapper(Logger.httpApp(false, true, logAction = requestLogger)(
