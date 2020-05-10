@@ -26,6 +26,7 @@ object codecs {
     fromProviders(classOf[FacebookCredentialsT]),
     fromProviders(classOf[AppleToken]),
     fromProviders(classOf[AppleCredentials]),
+    fromProviders(classOf[Feedback]),
     DEFAULT_CODEC_REGISTRY)
 
 
@@ -358,4 +359,13 @@ object codecs {
   lazy implicit val appleLoginRequestEncoder: Encoder[AppleLoginRequest] = deriveEncoder[AppleLoginRequest]
 
   implicit def appleLoginRequestEntityEncoder[F[_] : Applicative]: EntityEncoder[F, AppleLoginRequest] = jsonEncoderOf
+
+  lazy implicit val feedbackRequestDecoder: Decoder[FeedbackRequest] = deriveDecoder[FeedbackRequest]
+
+  implicit def feedbackRequestEntityDecoder[F[_] : Sync]: EntityDecoder[F, FeedbackRequest] = jsonOf
+
+  lazy implicit val feedbackRequestEncoder: Encoder[FeedbackRequest] = deriveEncoder[FeedbackRequest]
+
+  implicit def feedbackRequestEntityEncoder[F[_] : Applicative]: EntityEncoder[F, FeedbackRequest] = jsonEncoderOf
+
 }

@@ -24,6 +24,7 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
                                appleCredentialsRepo: AppleCredentialsRepository[F],
                                facebookCredentialsRepo: FacebookCredentialsRepositoryAlgebra[F],
                                alertsRepository: AlertsRepositoryT[F],
+                               feedbackRepository: FeedbackRepository[F],
                                facebookSecretKey: String,
                                androidPublisher: AndroidPublisher,
                                applePrivateKey:PrivateKey) {
@@ -250,6 +251,9 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
     )
   }
 
+  def createFeedback(feedback:Feedback):EitherT[F, ValidationError, Feedback] = {
+    EitherT.liftF(feedbackRepository.create(feedback))
+  }
 
 }
 
@@ -260,8 +264,10 @@ object UserService {
                           appleRepository: AppleCredentialsRepository[F],
                           facebookCredentialsRepositoryAlgebra: FacebookCredentialsRepositoryAlgebra[F],
                           alertsRepository: AlertsRepositoryT[F],
+                          feedbackRepository: FeedbackRepository[F],
+
                           androidPublisher: AndroidPublisher,
                           applePrivateKey:PrivateKey
                         ): UserService[F] =
-    new UserService(usersRepository, credentialsRepository, appleRepository, facebookCredentialsRepositoryAlgebra, alertsRepository, secrets.read.surfsUp.facebook.key, androidPublisher, applePrivateKey)
+    new UserService(usersRepository, credentialsRepository, appleRepository, facebookCredentialsRepositoryAlgebra, alertsRepository, feedbackRepository, secrets.read.surfsUp.facebook.key, androidPublisher, applePrivateKey)
 }

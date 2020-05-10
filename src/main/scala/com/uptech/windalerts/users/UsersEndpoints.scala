@@ -80,6 +80,18 @@ class UsersEndpoints(userService: UserService[IO],
         OptionT.liftF(response)
       }
 
+      case authReq@POST -> Root / "feedbacks" as user => {
+        val response: IO[Response[IO]] = authReq.req.decode[FeedbackRequest] { request =>
+          val action = for {
+            createResult <- userService.createFeedback(Feedback(request.topic, request.message, user.id))
+          } yield createResult
+          action.value.flatMap {
+            case Right(_) => Ok()
+            case Left(error) => httpErrorHandler.handleError(error)
+          }
+        }
+        OptionT.liftF(response)
+      }
 
       case authReq@GET -> Root / "purchase" / "android" as user => {
         val response: IO[Response[IO]] = {
