@@ -17,10 +17,11 @@ class AlertsEndpoints(alertService: AlertsService[IO], usersService: UserService
       case GET -> Root as user => {
         val action = for {
           resp <- EitherT.liftF(alertService.getAllForUser(user.id))
+            .map(x=>Alerts(x.alerts.map(a => a.into[Alert].withFieldComputed(_.id, u => u._id.toHexString).transform)))
         } yield resp
         OptionT.liftF({
           action.value.flatMap {
-            case Right(x) => Ok(Alerts(x.alerts.map(a => a.into[Alert].withFieldComputed(_.id, u => u._id.toHexString).transform)))
+            case Right(x) => Ok(x)
             case Left(error) => httpErrorHandler.handleThrowable(error)
           }
         })
