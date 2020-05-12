@@ -153,6 +153,7 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
   def loginUser(rr: AppleLoginRequest) = {
     for {
       appleUser <- EitherT.pure(AppleLogin.getUser(rr.authorizationCode, applePrivateKey))
+      _ <- appleCredentialsRepo.findByAppleId(appleUser.sub)
       dbUser <- getUser(appleUser.email, rr.deviceType)
     } yield dbUser
   }
