@@ -20,6 +20,125 @@ class UsersEndpoints(userService: UserService[IO],
                      auth: Auth) extends Http4sDsl[IO] {
   private val logger = getLogger
 
+  def openEndpoints(): HttpRoutes[IO] =
+    HttpRoutes.of[IO] {
+      case _@GET -> Root / "privacy-policy"  =>
+        val action: EitherT[IO, String, String] = for {
+          response <- EitherT.liftF(IO(PrivacyPolicy.read))
+        } yield response
+        action.value.flatMap {
+          case Right(x) => Ok(x)
+          case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
+        }
+
+      case req@POST -> Root =>
+        val action = for {
+          registerRequest <- EitherT.liftF(req.as[RegisterRequest])
+          createUserResponse <- userService.createUser(registerRequest)
+          emailConf <- EitherT.liftF(IO(secrets.read.surfsUp.email))
+          emailSender <- EitherT.liftF(IO(new EmailSender(emailConf.userName, emailConf.password)))
+
+          otp <- createOTP
+          _ <- EitherT.liftF(otpRepository.create(OTPWithExpiry(otp, System.currentTimeMillis() + 5 * 60 * 1000, createUserResponse._id.toHexString)))
+          _ <- EitherT.liftF(IO(emailSender.sendOtp(createUserResponse.email, otp)))
+          dbCredentials <- EitherT.right(IO(new Credentials(createUserResponse._id, registerRequest.email, registerRequest.password, registerRequest.deviceType)))
+          accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
+          token <- auth.createToken(dbCredentials._id.toHexString, accessTokenId)
+          refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbCredentials._id.toHexString, accessTokenId)))
+          tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, createUserResponse)
+        } yield tokens
+        action.value.flatMap {
+          case Right(tokens) => Ok(tokens)
+          case Left(error) => httpErrorHandler.handleError(error)
+        }
+
+      case req@POST -> Root / "login" =>
+        val action = for {
+          credentials <- EitherT.liftF(req.as[LoginRequest])
+          dbCredentials <- userService.getByCredentials(credentials.email, credentials.password, credentials.deviceType)
+          dbUser <- userService.getUserAndUpdateRole(dbCredentials.email, dbCredentials.deviceType)
+          updateDevice <- userService.updateDeviceToken(dbCredentials._id.toHexString, credentials.deviceToken).toRight(CouldNotUpdateUserDeviceError())
+          accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
+          token <- auth.createToken(dbCredentials._id.toHexString, accessTokenId)
+          deleteOldTokens <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(dbCredentials._id.toHexString))
+          refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbCredentials._id.toHexString, accessTokenId)))
+          tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, dbUser)
+        } yield tokens
+        action.value.flatMap {
+          case Right(tokens) => Ok(tokens)
+          case Left(error) => httpErrorHandler.handleError(error)
+        }
+
+      case req@POST -> Root / "refresh" =>
+        val action = for {
+          refreshToken <- EitherT.liftF(req.as[AccessTokenRequest])
+          oldRefreshToken <- refreshTokenRepositoryAlgebra.getByRefreshToken(refreshToken.refreshToken).toRight(RefreshTokenNotFoundError())
+          oldValidRefreshToken <- {
+            val eitherT: EitherT[IO, RefreshTokenExpiredError, RefreshToken] = EitherT.fromEither {
+              if (oldRefreshToken.isExpired()) {
+                Left(RefreshTokenExpiredError())
+              } else {
+                Right(oldRefreshToken)
+              }
+            }
+            eitherT
+          }
+          accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
+          token <- auth.createToken(oldValidRefreshToken.userId, accessTokenId)
+          _ <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(oldValidRefreshToken.userId))
+          newRefreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), oldValidRefreshToken.userId, accessTokenId)))
+          user <- userService.getUser(newRefreshToken.userId)
+          dbUser <- userService.getUserAndUpdateRole(newRefreshToken.userId)
+
+          tokens <- auth.tokens(token.accessToken, newRefreshToken, token.expiredAt, user)
+        } yield tokens
+        action.value.flatMap {
+          case Right(tokens) => Ok(tokens)
+          case Left(error) => httpErrorHandler.handleError(error)
+        }
+
+      case req@POST -> Root / "changePassword" =>
+        val action = for {
+          request <- EitherT.liftF(req.as[ChangePasswordRequest])
+          dbCredentials <- userService.getByCredentials(request.email, request.oldPassword, request.deviceType)
+          _ <- userService.updatePassword(dbCredentials._id.toHexString, request.newPassword).toRight(CouldNotUpdatePasswordError()).asInstanceOf[EitherT[IO, ValidationError, Unit]]
+          _ <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(dbCredentials._id.toHexString)).asInstanceOf[EitherT[IO, ValidationError, Unit]]
+        } yield ()
+        action.value.flatMap {
+          case Right(_) => Ok()
+          case Left(error) => httpErrorHandler.handleError(error)
+        }
+
+
+
+      case req@POST -> Root / "purchase" / "android" / "update" => {
+
+        val action: EitherT[IO, ValidationError, UserT] = for {
+          _ <- EitherT.liftF(IO(logger.error(s"Called request ${req}")))
+          _ <- EitherT.liftF(IO(logger.error(s"Called request ${req.body}")))
+
+          update <- EitherT.liftF(req.as[AndroidUpdate])
+          _ <- EitherT.liftF(IO(logger.error(s"Update received is ${update}")))
+          response <- EitherT.liftF(
+            IO(new String(java.util.Base64.getDecoder.decode(update.message.data))))
+          _ <- EitherT.liftF(IO(logger.error(s"Decoded  is ${response}")))
+          subscription <- asSubscription(response)
+          _ <- EitherT.liftF(IO(logger.error(s"Decoded is ${response}")))
+          token <- androidPurchaseRepository.getPurchaseByToken(subscription.subscriptionNotification.purchaseToken)
+          _ <- EitherT.liftF(IO(logger.error(s"Token is ${token}")))
+          purchase <- userService.getAndroidPurchase(token.subscriptionId, subscription.subscriptionNotification.purchaseToken)
+          _ <- EitherT.liftF(IO(logger.error(s"Purchase is ${purchase}")))
+          updatedUser <- userService.updateSubscribedUserRole(UserId(token.userId), purchase.startTimeMillis, purchase.expiryTimeMillis)
+          _ <- EitherT.liftF(IO(logger.error(s"updatedUser is ${updatedUser}")))
+          _ <- EitherT.liftF(refreshTokenRepositoryAlgebra.invalidateAccessTokenForUser(token.userId))
+        } yield updatedUser
+        action.value.flatMap {
+          case Right(x) => Ok()
+          case Left(error) => httpErrorHandler.handleThrowable(error)
+        }
+      }
+    }
+
   def authedService(): AuthedRoutes[UserId, IO] =
     AuthedRoutes {
       case authReq@PUT -> Root / "profile" as user => {
@@ -243,125 +362,7 @@ class UsersEndpoints(userService: UserService[IO],
     }
   }
 
-  def openEndpoints(): HttpRoutes[IO] =
-    HttpRoutes.of[IO] {
 
-      case req@GET -> Root / "privacy-policy"  =>
-        val action: EitherT[IO, String, String] = for {
-          response <- EitherT.liftF(IO(PrivacyPolicy.read))
-        } yield response
-        action.value.flatMap {
-          case Right(x) => Ok(x)
-          case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
-        }
-
-      case req@POST -> Root =>
-        val action = for {
-          registerRequest <- EitherT.liftF(req.as[RegisterRequest])
-          createUserResponse <- userService.createUser(registerRequest)
-          emailConf <- EitherT.liftF(IO(secrets.read.surfsUp.email))
-          emailSender <- EitherT.liftF(IO(new EmailSender(emailConf.userName, emailConf.password)))
-
-          otp <- createOTP
-          _ <- EitherT.liftF(otpRepository.create(OTPWithExpiry(otp, System.currentTimeMillis() + 5 * 60 * 1000, createUserResponse._id.toHexString)))
-          _ <- EitherT.liftF(IO(emailSender.sendOtp(createUserResponse.email, otp)))
-          dbCredentials <- EitherT.right(IO(new Credentials(createUserResponse._id, registerRequest.email, registerRequest.password, registerRequest.deviceType)))
-          accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
-          token <- auth.createToken(dbCredentials._id.toHexString, accessTokenId)
-          refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbCredentials._id.toHexString, accessTokenId)))
-          tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, createUserResponse)
-        } yield tokens
-        action.value.flatMap {
-          case Right(tokens) => Ok(tokens)
-          case Left(error) => httpErrorHandler.handleError(error)
-        }
-
-      case req@POST -> Root / "login" =>
-        val action = for {
-          credentials <- EitherT.liftF(req.as[LoginRequest])
-          dbCredentials <- userService.getByCredentials(credentials.email, credentials.password, credentials.deviceType)
-          dbUser <- userService.getUserAndUpdateRole(dbCredentials.email, dbCredentials.deviceType)
-          updateDevice <- userService.updateDeviceToken(dbCredentials._id.toHexString, credentials.deviceToken).toRight(CouldNotUpdateUserDeviceError())
-          accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
-          token <- auth.createToken(dbCredentials._id.toHexString, accessTokenId)
-          deleteOldTokens <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(dbCredentials._id.toHexString))
-          refreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbCredentials._id.toHexString, accessTokenId)))
-          tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, dbUser)
-        } yield tokens
-        action.value.flatMap {
-          case Right(tokens) => Ok(tokens)
-          case Left(error) => httpErrorHandler.handleError(error)
-        }
-
-      case req@POST -> Root / "refresh" =>
-        val action = for {
-          refreshToken <- EitherT.liftF(req.as[AccessTokenRequest])
-          oldRefreshToken <- refreshTokenRepositoryAlgebra.getByRefreshToken(refreshToken.refreshToken).toRight(RefreshTokenNotFoundError())
-          oldValidRefreshToken <- {
-            val eitherT: EitherT[IO, RefreshTokenExpiredError, RefreshToken] = EitherT.fromEither {
-              if (oldRefreshToken.isExpired()) {
-                Left(RefreshTokenExpiredError())
-              } else {
-                Right(oldRefreshToken)
-              }
-            }
-            eitherT
-          }
-          accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
-          token <- auth.createToken(oldValidRefreshToken.userId, accessTokenId)
-          _ <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(oldValidRefreshToken.userId))
-          newRefreshToken <- EitherT.liftF(refreshTokenRepositoryAlgebra.create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), oldValidRefreshToken.userId, accessTokenId)))
-          user <- userService.getUser(newRefreshToken.userId)
-          dbUser <- userService.getUserAndUpdateRole(newRefreshToken.userId)
-
-          tokens <- auth.tokens(token.accessToken, newRefreshToken, token.expiredAt, user)
-        } yield tokens
-        action.value.flatMap {
-          case Right(tokens) => Ok(tokens)
-          case Left(error) => httpErrorHandler.handleError(error)
-        }
-
-      case req@POST -> Root / "changePassword" =>
-        val action = for {
-          request <- EitherT.liftF(req.as[ChangePasswordRequest])
-          dbCredentials <- userService.getByCredentials(request.email, request.oldPassword, request.deviceType)
-          _ <- userService.updatePassword(dbCredentials._id.toHexString, request.newPassword).toRight(CouldNotUpdateUserDeviceError()).asInstanceOf[EitherT[IO, ValidationError, Unit]]
-          _ <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(dbCredentials._id.toHexString)).asInstanceOf[EitherT[IO, ValidationError, Unit]]
-        } yield ()
-        action.value.flatMap {
-          case Right(_) => Ok()
-          case Left(error) => httpErrorHandler.handleError(error)
-        }
-
-
-
-      case req@POST -> Root / "purchase" / "android" / "update" => {
-
-        val action: EitherT[IO, ValidationError, UserT] = for {
-          _ <- EitherT.liftF(IO(logger.error(s"Called request ${req}")))
-          _ <- EitherT.liftF(IO(logger.error(s"Called request ${req.body}")))
-
-          update <- EitherT.liftF(req.as[AndroidUpdate])
-          _ <- EitherT.liftF(IO(logger.error(s"Update received is ${update}")))
-          response <- EitherT.liftF(
-            IO(new String(java.util.Base64.getDecoder.decode(update.message.data))))
-          _ <- EitherT.liftF(IO(logger.error(s"Decoded  is ${response}")))
-          subscription <- asSubscription(response)
-          _ <- EitherT.liftF(IO(logger.error(s"Decoded is ${response}")))
-          token <- androidPurchaseRepository.getPurchaseByToken(subscription.subscriptionNotification.purchaseToken)
-          _ <- EitherT.liftF(IO(logger.error(s"Token is ${token}")))
-          purchase <- userService.getAndroidPurchase(token.subscriptionId, subscription.subscriptionNotification.purchaseToken)
-          _ <- EitherT.liftF(IO(logger.error(s"Purchase is ${purchase}")))
-          updatedUser <- userService.updateSubscribedUserRole(UserId(token.userId), purchase.startTimeMillis, purchase.expiryTimeMillis)
-          _ <- EitherT.liftF(IO(logger.error(s"updatedUser is ${updatedUser}")))
-          _ <- EitherT.liftF(refreshTokenRepositoryAlgebra.invalidateAccessTokenForUser(token.userId))
-        } yield updatedUser
-        action.value.flatMap {
-          case Right(x) => Ok()
-          case Left(error) => httpErrorHandler.handleThrowable(error)
-        }
-      }
-    }
 
   private def asSubscription(response: String):EitherT[IO, ValidationError, SubscriptionNotificationWrapper] = {
     EitherT(IO.fromEither(

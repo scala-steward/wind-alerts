@@ -16,3 +16,5 @@ case class CouldNotUpdatePasswordError() extends ValidationError
 case class CouldNotUpdateUserError() extends ValidationError
 case class OperationNotAllowed(message:String) extends ValidationError
 case class UnknownError(message:String) extends ValidationError
+case class RequestFailedError(message:String) extends ValidationError
+case class ResponseParsingFailed(exception: Exception) extends ValidationError

@@ -3,9 +3,8 @@ package com.uptech.windalerts.alerts
 import cats.data.{EitherT, OptionT}
 import cats.effect.{ContextShift, IO}
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.errors.WindAlertError
 import com.uptech.windalerts.domain.{conversions, domain}
-import com.uptech.windalerts.users.{AlertNotFoundError, CouldNotUpdateUserError, UserNotFoundError, ValidationError}
+import com.uptech.windalerts.users.{AlertNotFoundError, ValidationError}
 import io.scalaland.chimney.dsl._
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId
@@ -25,7 +24,7 @@ trait AlertsRepositoryT[F[_]] {
 
   def save(alert: AlertRequest, user: String): F[AlertT]
 
-  def delete(requester: String, id: String): EitherT[F, WindAlertError, Unit]
+  def delete(requester: String, id: String): EitherT[F, ValidationError, Unit]
 
   def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest): EitherT[F, ValidationError, AlertT]
 }
@@ -73,7 +72,7 @@ class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit
     IO.fromFuture(IO(collection.insertOne(alert).toFuture().map(_ => alert)))
   }
 
-  override def delete(requester: String, alertId: String): EitherT[IO, WindAlertError, Unit] = {
+  override def delete(requester: String, alertId: String): EitherT[IO, ValidationError, Unit] = {
     EitherT.liftF(IO.fromFuture(IO(collection.deleteOne(equal("_id", new ObjectId(alertId))).toFuture().map(_=>()))))
   }
 
