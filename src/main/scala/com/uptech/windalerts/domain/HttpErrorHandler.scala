@@ -14,22 +14,6 @@ class HttpErrorHandler[F[_] : Monad] extends Http4sDsl[F] {
       getLogger.error(e)(e.getMessage)
       handleError(e)
     }
-    case e: errors.OperationNotPermitted => {
-      getLogger.error(e)(e.getMessage)
-      Forbidden(e.message)
-    }
-    case e: errors.RecordNotFound => {
-      getLogger.error(e)(e.getMessage)
-      NotFound(e.message)
-    }
-    case e: errors.HeaderNotPresent => {
-      getLogger.error(e)(e.getMessage)
-      BadRequest(e.message)
-    }
-    case e: errors.UserAlreadyRegistered => {
-      getLogger.error(e)(e.getMessage)
-      Conflict(e.message)
-    }
     case everythingElse => {
       getLogger.error(everythingElse)(everythingElse.getMessage)
       InternalServerError(everythingElse.toString)
@@ -49,6 +33,14 @@ class HttpErrorHandler[F[_] : Monad] extends Http4sDsl[F] {
       getLogger.error(e)(e.getMessage)
       BadRequest(s"Refresh token not found")
     }
+    case e@TokenNotFoundError() => {
+      getLogger.error(e)(e.getMessage)
+      BadRequest(s"Token not found")
+    }
+    case e@TokenExpiredError() => {
+      getLogger.error(e)(e.getMessage)
+      BadRequest(s"Token expired")
+    }
     case e@RefreshTokenExpiredError() => {
       getLogger.error(e)(e.getMessage)
       BadRequest(s"Refresh token expired")
@@ -64,6 +56,10 @@ class HttpErrorHandler[F[_] : Monad] extends Http4sDsl[F] {
     case e@OtpNotFoundError() => {
       getLogger.error(e)(e.getMessage)
       Forbidden("Invalid or expired OTP")
+    }
+    case e@UserNotFoundError() => {
+      getLogger.error(e)(e.getMessage)
+      NotFound("User not found")
     }
     case e@everythingElse => {
       getLogger.error(e)(e.getMessage)

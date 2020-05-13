@@ -16,6 +16,8 @@ import org.mongodb.scala.MongoClient
 import scala.util.Try
 
 object AlertsServer extends IOApp {
+  val started = System.currentTimeMillis()
+  sys.addShutdownHook(getLogger.error(s"Shutting down after ${(System.currentTimeMillis() - started)} ms"))
   override def run(args: List[String]): IO[ExitCode] = {
     for {
       _ <- IO(getLogger.error("Starting"))

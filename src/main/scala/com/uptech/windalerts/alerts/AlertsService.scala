@@ -6,7 +6,7 @@ import java.util.{Calendar, TimeZone}
 import cats.data.EitherT
 import cats.effect.Sync
 import com.uptech.windalerts.domain.domain.{AlertRequest, AlertT, AlertsT}
-import com.uptech.windalerts.domain.errors.WindAlertError
+import com.uptech.windalerts.users.ValidationError
 
 class AlertsService[F[_]: Sync](repo: AlertsRepositoryT[F]) {
   def save(alertRequest: AlertRequest, user: String): F[AlertT] = {
@@ -22,7 +22,7 @@ class AlertsService[F[_]: Sync](repo: AlertsRepositoryT[F]) {
     repo.getAllForDay(cal.get(DAY_OF_WEEK), _.isToBeAlertedAt(getMinutes(cal)))
   }
 
-  def deleteT(requester: String, alertId: String): EitherT[F, WindAlertError, Unit] = {
+  def deleteT(requester: String, alertId: String): EitherT[F, ValidationError, Unit] = {
     repo.delete(requester, alertId)
   }
   private def getMinutes(cal: Calendar) = cal.get(HOUR_OF_DAY) * 60 + cal.get(MINUTE)
