@@ -29,7 +29,8 @@ object SendNotifications extends IOApp {
   private val logger = getLogger
 
   logger.error("Starting")
-
+  val started = System.currentTimeMillis()
+  sys.addShutdownHook(getLogger.error(s"Shutting down after ${(System.currentTimeMillis() - started)} ms"))
 
   val dbWithAuthIO = for {
     projectId     <- IO(sys.env("projectId"))
