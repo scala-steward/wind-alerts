@@ -5,22 +5,29 @@ import java.io.FileInputStream
 import cats.effect.{IO, _}
 import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
-import com.uptech.windalerts.alerts.MongoAlertsRepositoryAlgebra
+import com.google.firebase.messaging.FirebaseMessaging
+import com.softwaremill.sttp.HttpURLConnectionBackend
+import com.uptech.windalerts.alerts.{AlertsEndpoints, AlertsService, MongoAlertsRepositoryAlgebra}
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.logger._
-import com.uptech.windalerts.domain.{HttpErrorHandler, errors, secrets}
+import com.uptech.windalerts.domain.{HttpErrorHandler, config, domain, errors, secrets, swellAdjustments}
+import com.uptech.windalerts.notifications.{MongoNotificationsRepository, Notifications, SendNotifications}
+import com.uptech.windalerts.notifications.SendNotifications.{alerts, beachSeq, beachesService, coll, db, dbWithAuth, httpErrorHandler, usersRepo}
+import com.uptech.windalerts.status.{BeachService, Routes, SwellsService, TidesService, WindsService}
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.Logger
 import org.log4s.getLogger
-import org.mongodb.scala.MongoClient
+import org.mongodb.scala.{MongoClient, MongoCollection}
 
 import scala.util.Try
 
 object UsersServer extends IOApp {
   val started = System.currentTimeMillis()
   sys.addShutdownHook(getLogger.error(s"Shutting down after ${(System.currentTimeMillis() - started)} ms"))
+  implicit val backend = HttpURLConnectionBackend()
+
   override def run(args: List[String]): IO[ExitCode] = for {
     _ <- IO(getLogger.error("Starting"))
 
@@ -58,21 +65,38 @@ object UsersServer extends IOApp {
     appleCredentialsCollection  <- IO( mongoDb.getCollection[AppleCredentials]("appleCredentials"))
     appleCredentialsRepository <- IO( new MongoAppleCredentialsRepositoryAlgebra(appleCredentialsCollection))
 
-    feedbackColl  <- IO( mongoDb.getCollection[Feedback]("feedbacks"))
+    notificationsColl <-  IO(mongoDb.getCollection[Notification]("notifications"))
+    notificationsRepository <-  IO(new MongoNotificationsRepository(notificationsColl))
+
+                                                               feedbackColl  <- IO( mongoDb.getCollection[Feedback]("feedbacks"))
     feedbackRepository <- IO( new MongoFeedbackRepository(feedbackColl))
 
     alertsCollection  <- IO( mongoDb.getCollection[AlertT]("alerts"))
     alertsRepository <- IO( new MongoAlertsRepositoryAlgebra(alertsCollection))
     usersService <- IO(new UserService(userRepository, credentialsRepository, appleCredentialsRepository, fbcredentialsRepository, alertsRepository, feedbackRepository, secrets.read.surfsUp.facebook.key, androidPublisher, applePrivateKey))
     auth <- IO(new Auth(refreshTokenRepo))
-    endpoints <- IO(new UsersEndpoints(usersService, new HttpErrorHandler[IO], refreshTokenRepo, otpRepo, androidPurchaseRepo, applePurchaseRepo, auth))
+    apiKey <- IO(secrets.read.surfsUp.willyWeather.key)
+    beaches <- IO(new BeachService[IO](new WindsService[IO](apiKey), new TidesService[IO](apiKey), new SwellsService[IO](apiKey, swellAdjustments.read)))
+    httpErrorHandler <- IO(new HttpErrorHandler[IO])
+
+    endpoints <- IO(new UsersEndpoints(usersService, httpErrorHandler, refreshTokenRepo, otpRepo, androidPurchaseRepo, applePurchaseRepo, auth))
+    alertService <- IO(new AlertsService[IO](alertsRepository))
+
+    alertsEndPoints <- IO(new AlertsEndpoints(alertService, usersService, auth, httpErrorHandler))
+    //notifications <- IO(new Notifications(alerts, beachesService, beachSeq, usersRepo, dbWithAuth._2, httpErrorHandler, notificationsRepository, config = config.read))
+
     httpApp <- IO(errors.errorMapper(Logger.httpApp(false, true, logAction = requestLogger)(
       Router(
         "/v1/users" -> auth.middleware(endpoints.authedService()),
         "/v1/users" -> endpoints.openEndpoints(),
         "/v1/users/social/facebook" -> endpoints.facebookEndpoints(),
-        "/v1/users/social/apple" -> endpoints.appleEndpoints()
-    ).orNotFound)))
+        "/v1/users/social/apple" -> endpoints.appleEndpoints(),
+
+        "/v1/users/alerts" -> auth.middleware(alertsEndPoints.allUsersService()),
+        "/v1/notify" ->
+          SendNotifications.routes(alertService, beachesService, userRepository, dbWithAuth._2, httpErrorHandler),
+        "" -> Routes[IO](beaches, new HttpErrorHandler[IO]).allRoutes(),
+      ).orNotFound)))
     server <- BlazeServerBuilder[IO]
                   .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
                   .withHttpApp(httpApp)
