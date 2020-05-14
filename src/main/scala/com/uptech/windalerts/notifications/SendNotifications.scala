@@ -67,14 +67,24 @@ object SendNotifications extends IOApp {
   val alerts = new AlertsService[IO](alertsRepo)
   val notifications = new Notifications(alerts, beachesService, beachSeq, usersRepo, dbWithAuth._2, httpErrorHandler, notificationsRepository = new MongoNotificationsRepository(coll), config = config.read)
 
-  def allRoutes(A: AlertsService[IO], B: BeachService[IO], UR: UserRepositoryAlgebra[IO], firebaseMessaging: FirebaseMessaging, H: HttpErrorHandler[IO]) = HttpRoutes.of[IO] {
-    case GET -> Root / "notify" => {
-      val res = notifications.sendNotification
-      val either = res.value.unsafeRunSync()
-      Ok()
-    }
-  }.orNotFound
+  def allRoutes(A: AlertsService[IO], B: BeachService[IO], UR: UserRepositoryAlgebra[IO], firebaseMessaging: FirebaseMessaging, H: HttpErrorHandler[IO]) =
+    routes(A, B, UR, firebaseMessaging,H).orNotFound
 
+
+  def routes(A: AlertsService[IO], B: BeachService[IO], UR: UserRepositoryAlgebra[IO], firebaseMessaging: FirebaseMessaging, H: HttpErrorHandler[IO]) = {
+    HttpRoutes.of[IO] {
+      case GET -> Root / "notify" => {
+        val res = notifications.sendNotification
+        val either = res.value.unsafeRunSync()
+        Ok()
+      }
+      case GET -> Root => {
+        val res = notifications.sendNotification
+        val either = res.value.unsafeRunSync()
+        Ok()
+      }
+    }
+  }
 
   def run(args: List[String]): IO[ExitCode] = {
 
