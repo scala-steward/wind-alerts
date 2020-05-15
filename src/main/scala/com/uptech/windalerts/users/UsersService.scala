@@ -122,10 +122,6 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
   def updatePassword(userId: String, password: String): OptionT[F, Unit] =
     credentialsRepo.updatePassword(userId, password.bcrypt)
 
-  def updateAndSendPassword(userId: String, password: String): OptionT[F, Unit] = {
-    updatePassword(userId, password)
-
-  }
 
   def getFacebookUserByAccessToken(accessToken: String, deviceType: String) = {
     for {
