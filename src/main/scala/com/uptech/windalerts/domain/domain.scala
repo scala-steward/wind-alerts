@@ -140,6 +140,8 @@ object domain {
 
   case class ChangePasswordRequest(email: String, oldPassword: String, newPassword: String, deviceType: String)
 
+  case class ResetPasswordRequest(email: String, deviceType: String)
+
   final case class BeachId(id: Long) extends AnyVal
 
   final case class Wind(direction: Double = 0, speed: Double = 0, directionText: String)

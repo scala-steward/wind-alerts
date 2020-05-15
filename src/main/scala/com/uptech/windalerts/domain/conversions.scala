@@ -7,6 +7,7 @@ import cats.effect.IO
 import scala.collection.JavaConverters
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.Random
 
 object conversions {
 
@@ -19,6 +20,13 @@ object conversions {
 
   def toIOSeq[T](x: Seq[IO[T]]):IO[Seq[T]] = {
     toIO(x.toList).map(l=>l.toSeq)
+  }
+
+  def generateRandomString(n: Int) = {
+    val alpha = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    val size = alpha.size
+
+    (1 to n).map(_ => alpha(Random.nextInt.abs % size)).mkString
   }
 
 }

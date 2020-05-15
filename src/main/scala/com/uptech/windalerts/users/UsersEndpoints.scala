@@ -109,6 +109,16 @@ class UsersEndpoints(userService: UserService[IO],
           case Left(error) => httpErrorHandler.handleError(error)
         }
 
+      case req@POST -> Root / "resetPassword" =>
+        val action = for {
+          request <- EitherT.liftF(req.as[ResetPasswordRequest])
+          dbUser <- userService.resetPassword(request.email, request.deviceType)
+          _ <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(dbUser._id.toHexString)).asInstanceOf[EitherT[IO, ValidationError, Unit]]
+        } yield ()
+        action.value.flatMap {
+          case Right(_) => Ok()
+          case Left(error) => httpErrorHandler.handleError(error)
+        }
 
 
       case req@POST -> Root / "purchase" / "android" / "update" => {

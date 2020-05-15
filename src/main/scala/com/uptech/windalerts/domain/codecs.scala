@@ -217,6 +217,10 @@ object codecs {
 
   implicit def changePasswordRequestEntityEncoder[F[_] : Applicative]: EntityEncoder[F, ChangePasswordRequest] = jsonEncoderOf
 
+  lazy implicit val resetPasswordRequestDecoder: Decoder[ResetPasswordRequest] = deriveDecoder[ResetPasswordRequest]
+
+  implicit def resetPasswordRequestEntityDecoder[F[_] : Sync]: EntityDecoder[F, ResetPasswordRequest] = jsonOf
+
   lazy implicit val updateUserRequestDecoder: Decoder[UpdateUserRequest] = deriveDecoder[UpdateUserRequest]
 
   implicit def updateUserRequestEntityDecoder[F[_] : Sync]: EntityDecoder[F, UpdateUserRequest] = jsonOf
