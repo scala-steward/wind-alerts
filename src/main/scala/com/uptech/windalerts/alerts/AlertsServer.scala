@@ -44,7 +44,9 @@ object AlertsServer extends IOApp {
       alertService <- IO(new AlertsService[IO](alertsRepository))
       auth <- IO(new Auth(refreshTokensRepo))
       androidPublisher <- IO(AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL))
-      usersService <- IO( new UserService(userRepository, credentialsRepository, applecredentialsRepository, fbcredentialsRepository, alertsRepository, feedbackRepository, secrets.read.surfsUp.facebook.key, androidPublisher, applePrivateKey))
+      emailConf = com.uptech.windalerts.domain.secrets.read.surfsUp.email
+      emailSender = new EmailSender(emailConf.userName, emailConf.password)
+      usersService <- IO( new UserService(userRepository, credentialsRepository, applecredentialsRepository, fbcredentialsRepository, alertsRepository, feedbackRepository, secrets.read.surfsUp.facebook.key, androidPublisher, applePrivateKey, emailSender))
       alertsEndPoints <- IO(new AlertsEndpoints(alertService, usersService, auth, httpErrorHandler))
       httpApp <- IO(Logger.httpApp(false, true, logAction = requestLogger)(errors.errorMapper(Router(
         "/v1/users/alerts" -> auth.middleware(alertsEndPoints.allUsersService())

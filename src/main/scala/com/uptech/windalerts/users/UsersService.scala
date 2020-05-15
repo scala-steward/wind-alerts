@@ -11,7 +11,7 @@ import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.uptech.windalerts.alerts.AlertsRepositoryT
 import com.uptech.windalerts.domain.domain.UserType._
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.{domain, secrets}
+import com.uptech.windalerts.domain.{conversions, domain, secrets}
 import io.circe.syntax._
 import org.mongodb.scala.bson.ObjectId
 import com.uptech.windalerts.domain.codecs._
@@ -27,7 +27,8 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
                                feedbackRepository: FeedbackRepository[F],
                                facebookSecretKey: String,
                                androidPublisher: AndroidPublisher,
-                               applePrivateKey:PrivateKey) {
+                               applePrivateKey: PrivateKey,
+                               emailSender: EmailSender) {
 
   def verifyEmail(id: String) = {
     def makeUserTrial(user: UserT): EitherT[F, ValidationError, UserT] = {
@@ -56,7 +57,7 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
       userRepo.update(user.copy(userType = Premium.value, lastPaymentAt = start, nextPaymentAt = expiry)).toRight(CouldNotUpdateUserError())
     }
 
-    def makeUserPremium(id: String, start: Long, expiry: Long):EitherT[F, ValidationError, UserT] = {
+    def makeUserPremium(id: String, start: Long, expiry: Long): EitherT[F, ValidationError, UserT] = {
       for {
         user <- getUser(id)
         operationResult <- withTypeFixed(start, expiry, user)
@@ -120,6 +121,7 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
 
   def updatePassword(userId: String, password: String): OptionT[F, Unit] =
     credentialsRepo.updatePassword(userId, password.bcrypt)
+
 
   def getFacebookUserByAccessToken(accessToken: String, deviceType: String) = {
     for {
@@ -204,6 +206,16 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
       passwordMatched <- isPasswordMatch(password, creds)
     } yield passwordMatched
 
+  def resetPassword(
+                     email: String, deviceType: String
+                   ):EitherT[F, ValidationError, Credentials] =
+    for {
+      creds <- credentialsRepo.findByCreds(email, deviceType).toRight(UserAuthenticationFailedError(email))
+      newPassword <- EitherT.pure(conversions.generateRandomString(10))
+      _ <- updatePassword(creds._id.toHexString, newPassword).toRight(CouldNotUpdatePasswordError())
+      _ <- EitherT.pure(emailSender.send(email, "Your new password", newPassword))
+    } yield creds
+
 
   private def isPasswordMatch(password: String, creds: Credentials): EitherT[F, ValidationError, Credentials] = {
     val passwordMatch =
@@ -252,7 +264,7 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
     )
   }
 
-  def createFeedback(feedback:Feedback):EitherT[F, ValidationError, Feedback] = {
+  def createFeedback(feedback: Feedback): EitherT[F, ValidationError, Feedback] = {
     EitherT.liftF(feedbackRepository.create(feedback))
   }
 
@@ -268,7 +280,8 @@ object UserService {
                           feedbackRepository: FeedbackRepository[F],
 
                           androidPublisher: AndroidPublisher,
-                          applePrivateKey:PrivateKey
+                          applePrivateKey: PrivateKey,
+                          emailSender: EmailSender
                         ): UserService[F] =
-    new UserService(usersRepository, credentialsRepository, appleRepository, facebookCredentialsRepositoryAlgebra, alertsRepository, feedbackRepository, secrets.read.surfsUp.facebook.key, androidPublisher, applePrivateKey)
+    new UserService(usersRepository, credentialsRepository, appleRepository, facebookCredentialsRepositoryAlgebra, alertsRepository, feedbackRepository, secrets.read.surfsUp.facebook.key, androidPublisher, applePrivateKey, emailSender)
 }

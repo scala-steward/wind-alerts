@@ -11,6 +11,10 @@ class EmailSender(username: String, password: String) {
 
 
   def sendOtp(to: String, otp: String) = {
+    send(to, "Verify SurfsUp account", otp)
+  }
+
+  def send(to: String, subject: String, text:String) = {
     try {
       val prop = new Properties
       prop.put("mail.smtp.host", "smtp-relay.sendinblue.com")
@@ -25,12 +29,12 @@ class EmailSender(username: String, password: String) {
       })
       val message = new MimeMessage(session)
       message.setRecipients(Message.RecipientType.TO, to)
-      message.setSubject("Verify SurfsUp account")
-      message.setText(s"$otp")
+      message.setSubject(subject)
+      message.setText(text)
       message.setFrom(username)
       logger.error(s"message   $message")
       Transport.send(message)
-      logger.error(s"Sent otp to $to")
+      logger.error(s"Sent message to $to")
     } catch {
       case e:Throwable => logger.error(s"Exception sending email $e , ${e.printStackTrace()}")
     }
