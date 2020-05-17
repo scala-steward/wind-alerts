@@ -76,7 +76,7 @@ object UsersServer extends IOApp {
     emailConf = com.uptech.windalerts.domain.secrets.read.surfsUp.email
     emailSender = new EmailSender(emailConf.userName, emailConf.password)
 
-    usersService <- IO(new UserService(userRepository, credentialsRepository, appleCredentialsRepository, fbcredentialsRepository, alertsRepository, feedbackRepository, secrets.read.surfsUp.facebook.key, androidPublisher, applePrivateKey, emailSender))
+    usersService <- IO(new UserService(userRepository, credentialsRepository, appleCredentialsRepository, fbcredentialsRepository, refreshTokenRepo, alertsRepository, feedbackRepository, secrets.read.surfsUp.facebook.key, androidPublisher, applePrivateKey, emailSender))
     auth <- IO(new Auth(refreshTokenRepo))
     apiKey <- IO(secrets.read.surfsUp.willyWeather.key)
     beaches <- IO(new BeachService[IO](new WindsService[IO](apiKey), new TidesService[IO](apiKey), new SwellsService[IO](apiKey, swellAdjustments.read)))

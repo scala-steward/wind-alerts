@@ -23,6 +23,7 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
                                credentialsRepo: CredentialsRepositoryAlgebra[F],
                                appleCredentialsRepo: AppleCredentialsRepository[F],
                                facebookCredentialsRepo: FacebookCredentialsRepositoryAlgebra[F],
+                               refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra[F],
                                alertsRepository: AlertsRepositoryT[F],
                                feedbackRepository: FeedbackRepository[F],
                                facebookSecretKey: String,
@@ -169,6 +170,12 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
     } yield saved
   }
 
+  def logoutUser(userId:String) = {
+    for {
+      _ <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(userId))
+      _ <- userRepo.updateDeviceToken(userId, "").toRight(CouldNotUpdateUserError())
+    } yield ()
+  }
 
   def doesNotExist(email: String, deviceType: String) = {
     for {
@@ -276,6 +283,7 @@ object UserService {
                           credentialsRepository: CredentialsRepositoryAlgebra[F],
                           appleRepository: AppleCredentialsRepository[F],
                           facebookCredentialsRepositoryAlgebra: FacebookCredentialsRepositoryAlgebra[F],
+                          refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra[F],
                           alertsRepository: AlertsRepositoryT[F],
                           feedbackRepository: FeedbackRepository[F],
 
@@ -283,5 +291,5 @@ object UserService {
                           applePrivateKey: PrivateKey,
                           emailSender: EmailSender
                         ): UserService[F] =
-    new UserService(usersRepository, credentialsRepository, appleRepository, facebookCredentialsRepositoryAlgebra, alertsRepository, feedbackRepository, secrets.read.surfsUp.facebook.key, androidPublisher, applePrivateKey, emailSender)
+    new UserService(usersRepository, credentialsRepository, appleRepository, facebookCredentialsRepositoryAlgebra, refreshTokenRepositoryAlgebra, alertsRepository, feedbackRepository, secrets.read.surfsUp.facebook.key, androidPublisher, applePrivateKey, emailSender)
 }
