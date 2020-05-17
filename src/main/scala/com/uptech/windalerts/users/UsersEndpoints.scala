@@ -199,7 +199,7 @@ class UsersEndpoints(userService: UserService[IO],
       case authReq@POST -> Root / "logout" as user => {
         val response: IO[Response[IO]] = {
           val action = for {
-            updateResult <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(user.id))
+            updateResult <- userService.logoutUser(user.id)
           } yield updateResult
           action.value.flatMap {
             case Right(_) => Ok()

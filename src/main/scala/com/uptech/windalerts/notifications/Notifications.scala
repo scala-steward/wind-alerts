@@ -36,9 +36,11 @@ class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long
       _                               <- EitherT.liftF(IO(logger.info(s"alertWithUserWithBeach $alertWithUserWithBeach")))
       usersToBeDisabledAlertsFiltered =  alertWithUserWithBeach.filterNot(f => f.user.disableAllAlerts)
       usersToBeNotifiedSnoozeFiltered =  usersToBeDisabledAlertsFiltered.filterNot(f => f.user.snoozeTill > System.currentTimeMillis())
-      usersWithCounts                 <- usersToBeNotifiedSnoozeFiltered.map(u => notificationsRepository.countNotificationInLastHour(u.user._id.toHexString)).toList.sequence
+      loggedOutUserFiltered           =  usersToBeNotifiedSnoozeFiltered.filterNot(f => "".equals(f.user.deviceToken))
+
+      usersWithCounts                 <- loggedOutUserFiltered.map(u => notificationsRepository.countNotificationInLastHour(u.user._id.toHexString)).toList.sequence
       usersWithCountsMap              =  usersWithCounts.map(u => (u.userId, u.count)).toMap
-      usersToBeFilteredWithCount      =  usersToBeNotifiedSnoozeFiltered.filter(u => usersWithCountsMap(u.user._id.toHexString) < u.user.notificationsPerHour)
+      usersToBeFilteredWithCount      =  loggedOutUserFiltered.filter(u => usersWithCountsMap(u.user._id.toHexString) < u.user.notificationsPerHour)
     } yield usersToBeFilteredWithCount
 
     for {
