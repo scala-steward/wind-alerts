@@ -34,7 +34,10 @@ object SendNotifications extends IOApp {
 
   val dbWithAuthIO = for {
     projectId     <- IO(sys.env("projectId"))
-    credentials   <- IO(Try(GoogleCredentials.fromStream(new FileInputStream(s"/app/resources/$projectId.json")))
+    credentials   <- IO(
+      Try(GoogleCredentials.getApplicationDefault)
+                            .orElse(Try(GoogleCredentials.fromStream(new FileInputStream(s"/app/resources/$projectId.json"))))
+                            .orElse(Try(GoogleCredentials.fromStream(new FileInputStream(s"src/main/resources/$projectId.json"))))
                             .getOrElse(GoogleCredentials.getApplicationDefault))
     options       <- IO(new FirebaseOptions.Builder().setCredentials(credentials).setProjectId(projectId).build)
     _             <- IO(FirebaseApp.initializeApp(options))

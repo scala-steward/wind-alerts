@@ -84,7 +84,7 @@ class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long
     }
     catch {
       case e: Exception => {
-        logger.error(s"Error $e")
+        logger.error(e)(s"Error while sending notification")
 
       }
     }
