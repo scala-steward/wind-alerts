@@ -68,7 +68,7 @@ object UsersServer extends IOApp {
     notificationsColl <-  IO(mongoDb.getCollection[Notification]("notifications"))
     notificationsRepository <-  IO(new MongoNotificationsRepository(notificationsColl))
 
-                                                               feedbackColl  <- IO( mongoDb.getCollection[Feedback]("feedbacks"))
+    feedbackColl  <- IO( mongoDb.getCollection[Feedback]("feedbacks"))
     feedbackRepository <- IO( new MongoFeedbackRepository(feedbackColl))
 
     alertsCollection  <- IO( mongoDb.getCollection[AlertT]("alerts"))
