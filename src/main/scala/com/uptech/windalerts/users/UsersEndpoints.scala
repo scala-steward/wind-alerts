@@ -22,6 +22,15 @@ class UsersEndpoints(userService: UserService[IO],
 
   def openEndpoints(): HttpRoutes[IO] =
     HttpRoutes.of[IO] {
+      case _@GET -> Root / "ping"  =>
+        val action: EitherT[IO, String, String] = for {
+          response <- EitherT.liftF(IO("pong"))
+        } yield response
+        action.value.flatMap {
+          case Right(x) => Ok(x)
+          case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
+        }
+
       case _@GET -> Root / "privacy-policy"  =>
         val action: EitherT[IO, String, String] = for {
           response <- EitherT.liftF(IO(PrivacyPolicy.read))

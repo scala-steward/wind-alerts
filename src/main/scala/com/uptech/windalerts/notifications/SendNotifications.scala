@@ -50,9 +50,8 @@ object SendNotifications extends IOApp {
   val conf = secrets.read
   val appConf = config.read
   val key = conf.surfsUp.willyWeather.key
-  val beachSeq = beaches.read
-  logger.error(s"beachSeq $beachSeq")
-  val adjustments = swellAdjustments.read
+  lazy val beachSeq = beaches.read
+  lazy val adjustments = swellAdjustments.read
   val beachesService = new BeachService[IO](new WindsService[IO](key), new TidesService[IO](key), new SwellsService[IO](key, swellAdjustments.read))
 
 
