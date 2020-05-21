@@ -8,7 +8,8 @@ import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.softwaremill.sttp.HttpURLConnectionBackend
-import com.uptech.windalerts.alerts.{MongoAlertsRepositoryAlgebra, AlertsService}
+import com.uptech.windalerts.{Repos, LazyRepos}
+import com.uptech.windalerts.alerts.{AlertsService, MongoAlertsRepositoryAlgebra}
 import com.uptech.windalerts.domain._
 import com.uptech.windalerts.domain.domain.{AlertT, UserT}
 import com.uptech.windalerts.status.{BeachService, SwellsService, TidesService, WindsService}
@@ -42,7 +43,7 @@ object SendNotifications extends IOApp {
     options       <- IO(new FirebaseOptions.Builder().setCredentials(credentials).setProjectId(projectId).build)
     _             <- IO(FirebaseApp.initializeApp(options))
     notifications <- IO(FirebaseMessaging.getInstance)
-  } yield (db, notifications)
+  } yield (notifications)
 
   val dbWithAuth = dbWithAuthIO.unsafeRunSync()
   implicit val backend = HttpURLConnectionBackend()
@@ -58,22 +59,15 @@ object SendNotifications extends IOApp {
   implicit val httpErrorHandler: HttpErrorHandler[IO] = new HttpErrorHandler[IO]
 
 
+  val repos = new LazyRepos()
+  val alerts = new AlertsService[IO](repos)
+  val notifications = new Notifications(alerts, beachesService, beachSeq, repos, dbWithAuth, httpErrorHandler, config = config.read)
 
-  val client: MongoClient = MongoClient(conf.surfsUp.mongodb.url)
-  val db: MongoDatabase = client.getDatabase(sys.env("projectId")).withCodecRegistry(com.uptech.windalerts.domain.codecs.codecRegistry)
-  val usersCollection:MongoCollection[UserT] =  db.getCollection("users")
-  val usersRepo = new MongoUserRepository(usersCollection)
-  private val coll: MongoCollection[domain.Notification] = db.getCollection("notifications")
-  val alertColl: MongoCollection[AlertT]  = db.getCollection("alerts")
-  val alertsRepo = new MongoAlertsRepositoryAlgebra(alertColl)
-  val alerts = new AlertsService[IO](alertsRepo)
-  val notifications = new Notifications(alerts, beachesService, beachSeq, usersRepo, dbWithAuth._2, httpErrorHandler, notificationsRepository = new MongoNotificationsRepository(coll), config = config.read)
-
-  def allRoutes(A: AlertsService[IO], B: BeachService[IO], UR: UserRepositoryAlgebra[IO], firebaseMessaging: FirebaseMessaging, H: HttpErrorHandler[IO]) =
-    routes(A, B, UR, firebaseMessaging,H).orNotFound
+  def allRoutes() =
+    routes().orNotFound
 
 
-  def routes(A: AlertsService[IO], B: BeachService[IO], UR: UserRepositoryAlgebra[IO], firebaseMessaging: FirebaseMessaging, H: HttpErrorHandler[IO]) = {
+  def routes() = {
     HttpRoutes.of[IO] {
       case GET -> Root / "notify" => {
         val res = notifications.sendNotification
@@ -94,7 +88,7 @@ object SendNotifications extends IOApp {
       .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
       .withResponseHeaderTimeout(Duration(5, "min"))
       .withIdleTimeout(Duration(8, "min"))
-      .withHttpApp(allRoutes(alerts, beachesService, usersRepo, dbWithAuth._2, httpErrorHandler))
+      .withHttpApp(allRoutes())
       .serve
       .compile
       .drain

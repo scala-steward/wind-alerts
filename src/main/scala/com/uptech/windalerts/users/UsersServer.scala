@@ -1,25 +1,20 @@
 package com.uptech.windalerts.users
 
-import java.io.FileInputStream
-
 import cats.effect.{IO, _}
 import cats.implicits._
-import com.google.auth.oauth2.GoogleCredentials
-import com.google.firebase.messaging.FirebaseMessaging
 import com.softwaremill.sttp.HttpURLConnectionBackend
+import com.uptech.windalerts.LazyRepos
 import com.uptech.windalerts.alerts.{AlertsEndpoints, AlertsService, MongoAlertsRepositoryAlgebra}
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.logger._
-import com.uptech.windalerts.domain.{HttpErrorHandler, config, domain, errors, secrets, swellAdjustments}
-import com.uptech.windalerts.notifications.{MongoNotificationsRepository, Notifications, SendNotifications}
-import com.uptech.windalerts.notifications.SendNotifications.{alerts, beachSeq, beachesService, coll, db, dbWithAuth, httpErrorHandler, usersRepo}
-import com.uptech.windalerts.status.{BeachService, Routes, SwellsService, TidesService, WindsService}
+import com.uptech.windalerts.domain.{HttpErrorHandler, errors, secrets, swellAdjustments}
+import com.uptech.windalerts.status._
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.Logger
 import org.log4s.getLogger
-import org.mongodb.scala.{MongoClient, MongoCollection}
+import org.mongodb.scala.MongoClient
 
 import scala.util.Try
 
@@ -34,55 +29,22 @@ object UsersServer extends IOApp {
     applePrivateKey <- IO(Try(AppleLogin.getPrivateKey(s"/app/resources/Apple-$projectId.p8"))
       .getOrElse(AppleLogin.getPrivateKey(s"src/main/resources/Apple.p8")))
 
-    client <- IO.pure(MongoClient(com.uptech.windalerts.domain.secrets.read.surfsUp.mongodb.url))
-    mongoDb <- IO(client.getDatabase(sys.env("projectId")).withCodecRegistry(com.uptech.windalerts.domain.codecs.codecRegistry))
-
-    otpColl  <- IO( mongoDb.getCollection[OTPWithExpiry]("otp"))
-    otpRepo <- IO( new MongoOtpRepository(otpColl))
-
-    refreshTokensColl  <- IO( mongoDb.getCollection[RefreshToken]("refreshTokens"))
-    refreshTokenRepo <- IO( new MongoRefreshTokenRepositoryAlgebra(refreshTokensColl))
-
-    usersColl  <- IO( mongoDb.getCollection[UserT]("users"))
-    userRepository <- IO( new MongoUserRepository(usersColl))
-
-    credentialsCollection  <- IO( mongoDb.getCollection[Credentials]("credentials"))
-    credentialsRepository <- IO( new MongoCredentialsRepository(credentialsCollection))
-
-    androidPublisher <- IO(AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL))
-
-    androidPurchaseRepoColl  <- IO( mongoDb.getCollection[AndroidToken]("androidPurchases"))
-    androidPurchaseRepo <- IO( new MongoAndroidPurchaseRepository(androidPurchaseRepoColl))
-
-    applePurchaseRepoColl  <- IO( mongoDb.getCollection[AppleToken]("applePurchases"))
-    applePurchaseRepo <- IO( new MongoApplePurchaseRepository(applePurchaseRepoColl))
-
-    fbcredentialsCollection  <- IO( mongoDb.getCollection[FacebookCredentialsT]("facebookCredentials"))
-    fbcredentialsRepository <- IO( new MongoFacebookCredentialsRepository(fbcredentialsCollection))
-
-    appleCredentialsCollection  <- IO( mongoDb.getCollection[AppleCredentials]("appleCredentials"))
-    appleCredentialsRepository <- IO( new MongoAppleCredentialsRepositoryAlgebra(appleCredentialsCollection))
 
 
-    feedbackColl  <- IO( mongoDb.getCollection[Feedback]("feedbacks"))
-    feedbackRepository <- IO( new MongoFeedbackRepository(feedbackColl))
-
-    alertsCollection  <- IO( mongoDb.getCollection[AlertT]("alerts"))
-    alertsRepository <- IO( new MongoAlertsRepositoryAlgebra(alertsCollection))
 
     emailConf = com.uptech.windalerts.domain.secrets.read.surfsUp.email
     emailSender = new EmailSender(emailConf.userName, emailConf.password)
-
-    usersService <- IO(new UserService(userRepository, credentialsRepository, appleCredentialsRepository, fbcredentialsRepository, refreshTokenRepo, alertsRepository, feedbackRepository, secrets.read.surfsUp.facebook.key, androidPublisher, applePrivateKey, emailSender))
-    auth <- IO(new Auth(refreshTokenRepo))
+    repos = new LazyRepos()
+    usersService <- IO(new UserService(repos,secrets.read.surfsUp.facebook.key, applePrivateKey, emailSender))
+    auth <- IO(new Auth(repos))
     apiKey <- IO(secrets.read.surfsUp.willyWeather.key)
 
     beaches <- IO(new BeachService[IO](new WindsService[IO](apiKey), new TidesService[IO](apiKey), new SwellsService[IO](apiKey, swellAdjustments.read)))
     httpErrorHandler <- IO(new HttpErrorHandler[IO])
 
-    endpoints <- IO(new UsersEndpoints(usersService, httpErrorHandler, refreshTokenRepo, otpRepo, androidPurchaseRepo, applePurchaseRepo, auth))
+    endpoints <- IO(new UsersEndpoints(repos, usersService, httpErrorHandler, auth))
 
-    alertService <- IO(new AlertsService[IO](alertsRepository))
+    alertService <- IO(new AlertsService[IO](repos))
     alertsEndPoints <- IO(new AlertsEndpoints(alertService, usersService, auth, httpErrorHandler))
 
     httpApp <- IO(errors.errorMapper(Logger.httpApp(false, true, logAction = requestLogger)(
