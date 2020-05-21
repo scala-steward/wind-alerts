@@ -4,6 +4,7 @@ import java.util.concurrent.TimeUnit
 
 import cats.data.{EitherT, OptionT}
 import cats.effect.IO
+import com.uptech.windalerts.Repos
 import com.uptech.windalerts.domain.domain
 import com.uptech.windalerts.domain.domain.UserType.{Premium, Trial}
 import com.uptech.windalerts.domain.domain._
@@ -15,7 +16,7 @@ import io.scalaland.chimney.dsl._
 
 import scala.util.Random
 
-class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra[IO]) {
+class Auth(repos: Repos[IO]) {
 
   val REFRESH_TOKEN_EXPIRY = 7L * 24L * 60L * 60L * 1000L
   val ACCESS_TOKEN_EXPIRY = 1L * 24L * 60L * 60L * 1000L
@@ -29,7 +30,7 @@ class Auth(refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra[IO]) {
           val r = for {
             parseResult <- IO.fromEither(parse(claim.content))
             accessTokenId <- IO.fromEither(parseResult.hcursor.downField("accessTokenId").as[String])
-            maybeRefreshToken <- refreshTokenRepositoryAlgebra.getByAccessTokenId(accessTokenId).value
+            maybeRefreshToken <- repos.refreshTokenRepo().getByAccessTokenId(accessTokenId).value
           } yield maybeRefreshToken
 
           r.map(f=>f.map(t=>UserId(t.userId)))

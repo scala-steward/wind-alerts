@@ -9,15 +9,15 @@ import org.mongodb.scala.model.Sorts._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait AndroidTokenRepository {
-  def getPurchaseByToken(purchaseToken: String) : EitherT[IO, ValidationError, AndroidToken]
+trait AndroidTokenRepository[F[_]]  {
+  def getPurchaseByToken(purchaseToken: String) : EitherT[F, ValidationError, AndroidToken]
 
-  def getLastForUser(userId: String): EitherT[IO, ValidationError, AndroidToken]
+  def getLastForUser(userId: String): EitherT[F, ValidationError, AndroidToken]
 
-  def create(token: AndroidToken): EitherT[IO, ValidationError, AndroidToken]
+  def create(token: AndroidToken): EitherT[F, ValidationError, AndroidToken]
 }
 
-class MongoAndroidPurchaseRepository(collection: MongoCollection[AndroidToken])(implicit cs: ContextShift[IO]) extends AndroidTokenRepository {
+class MongoAndroidPurchaseRepository(collection: MongoCollection[AndroidToken])(implicit cs: ContextShift[IO]) extends AndroidTokenRepository[IO]  {
 
   override def create(token: AndroidToken): EitherT[IO, ValidationError, AndroidToken] = {
     EitherT.liftF(IO.fromFuture(IO(collection.insertOne(token).toFuture().map(_ => token))))

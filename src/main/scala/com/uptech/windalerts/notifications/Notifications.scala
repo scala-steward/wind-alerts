@@ -4,6 +4,7 @@ import cats.data.EitherT
 import cats.effect.IO
 import cats.implicits._
 import com.google.firebase.messaging.{FcmOptions, FirebaseMessaging, Message}
+import com.uptech.windalerts.Repos
 import com.uptech.windalerts.alerts.AlertsService
 import com.uptech.windalerts.domain.beaches.Beach
 import com.uptech.windalerts.domain.config.AppConfig
@@ -16,7 +17,7 @@ import org.log4s.getLogger
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long, Beach], UR: UserRepositoryAlgebra[IO], firebaseMessaging: FirebaseMessaging, H: HttpErrorHandler[IO], notificationsRepository: NotificationRepository[IO],
+class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long, Beach], repos:Repos[IO], firebaseMessaging: FirebaseMessaging, H: HttpErrorHandler[IO],
                     config: AppConfig) {
   private val logger = getLogger
 
@@ -30,7 +31,7 @@ class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long
       x                               =  alertsByBeaches.map(kv => (beaches(kv._1), kv._2))
       alertsToBeNotified              =  x.map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)).map(a => domain.AlertWithBeach(a, kv._1))))
       _                               <- EitherT.liftF(IO(logger.info(s"alertsToBeNotified $alertsToBeNotified")))
-      usersToBeNotified               <- alertsToBeNotified.values.flatten.map(v => UR.getByUserIdEitherT(v.alert.owner)).toList.sequence
+      usersToBeNotified               <- alertsToBeNotified.values.flatten.map(v => repos.usersRepo().getByUserIdEitherT(v.alert.owner)).toList.sequence
       userIdToUser                    =  usersToBeNotified.map(u => (u._id.toHexString, u)).toMap
       alertWithUserWithBeach          =  alertsToBeNotified.values.flatten.map(v => AlertWithUserWithBeach(v.alert, userIdToUser(v.alert.owner), v.beach))
       _                               <- EitherT.liftF(IO(logger.info(s"alertWithUserWithBeach $alertWithUserWithBeach")))
@@ -38,7 +39,7 @@ class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long
       usersToBeNotifiedSnoozeFiltered =  usersToBeDisabledAlertsFiltered.filterNot(f => f.user.snoozeTill > System.currentTimeMillis())
       loggedOutUserFiltered           =  usersToBeNotifiedSnoozeFiltered.filterNot(f => "".equals(f.user.deviceToken))
 
-      usersWithCounts                 <- loggedOutUserFiltered.map(u => notificationsRepository.countNotificationInLastHour(u.user._id.toHexString)).toList.sequence
+      usersWithCounts                 <- loggedOutUserFiltered.map(u => repos.notificationsRepo().countNotificationInLastHour(u.user._id.toHexString)).toList.sequence
       usersWithCountsMap              =  usersWithCounts.map(u => (u.userId, u.count)).toMap
       usersToBeFilteredWithCount      =  loggedOutUserFiltered.filter(u => usersWithCountsMap(u.user._id.toHexString) < u.user.notificationsPerHour)
     } yield usersToBeFilteredWithCount
@@ -79,7 +80,7 @@ class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long
         .setNotification(new com.google.firebase.messaging.Notification(title, body))
         .setToken(u.deviceToken)
         .build())
-      val s = notificationsRepository.create(com.uptech.windalerts.domain.domain.Notification(a._id.toHexString, a.owner, u.deviceToken, title, body, System.currentTimeMillis()))
+      val s = repos.notificationsRepo().create(com.uptech.windalerts.domain.domain.Notification(a._id.toHexString, a.owner, u.deviceToken, title, body, System.currentTimeMillis()))
       logger.warn(s"unsafeRunSync ${s.unsafeRunSync()}")
 
       logger.warn(s" sending to ${u.email} for ${a._id.toHexString} status : ${sent}")

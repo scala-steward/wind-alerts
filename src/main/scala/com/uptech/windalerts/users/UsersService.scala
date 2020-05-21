@@ -3,11 +3,12 @@ package com.uptech.windalerts.users
 import java.security.PrivateKey
 
 import cats.data.{EitherT, OptionT}
-import cats.effect.{IO, Sync}
+import cats.effect.{ContextShift, IO, Sync}
 import com.github.t3hnar.bcrypt._
 import com.google.api.services.androidpublisher.AndroidPublisher
 import com.restfb.{DefaultFacebookClient, Parameter, Version}
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
+import com.uptech.windalerts.Repos
 import com.uptech.windalerts.alerts.AlertsRepositoryT
 import com.uptech.windalerts.domain.domain.UserType._
 import com.uptech.windalerts.domain.domain._
@@ -19,21 +20,14 @@ import io.circe.optics.JsonPath.root
 import io.circe.parser
 import io.scalaland.chimney.dsl._
 
-class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
-                               credentialsRepo: CredentialsRepositoryAlgebra[F],
-                               appleCredentialsRepo: AppleCredentialsRepository[F],
-                               facebookCredentialsRepo: FacebookCredentialsRepositoryAlgebra[F],
-                               refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra[F],
-                               alertsRepository: AlertsRepositoryT[F],
-                               feedbackRepository: FeedbackRepository[F],
+class UserService[F[_] : Sync](rpos:Repos[F],
                                facebookSecretKey: String,
-                               androidPublisher: AndroidPublisher,
                                applePrivateKey: PrivateKey,
                                emailSender: EmailSender) {
 
   def verifyEmail(id: String) = {
     def makeUserTrial(user: UserT): EitherT[F, ValidationError, UserT] = {
-      userRepo.update(user.copy(
+      rpos.usersRepo().update(user.copy(
         userType = Trial.value,
         startTrialAt = System.currentTimeMillis(),
         endTrialAt = System.currentTimeMillis() + (30L * 24L * 60L * 60L * 1000L),
@@ -55,7 +49,7 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
 
   def updateSubscribedUserRole(user: UserId, startTime: Long, expiryTime: Long) = {
     def withTypeFixed(start: Long, expiry: Long, user: UserT): EitherT[F, ValidationError, UserT] = {
-      userRepo.update(user.copy(userType = Premium.value, lastPaymentAt = start, nextPaymentAt = expiry)).toRight(CouldNotUpdateUserError())
+      rpos.usersRepo().update(user.copy(userType = Premium.value, lastPaymentAt = start, nextPaymentAt = expiry)).toRight(CouldNotUpdateUserError())
     }
 
     def makeUserPremium(id: String, start: Long, expiry: Long): EitherT[F, ValidationError, UserT] = {
@@ -68,8 +62,8 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
     def makeUserPremiumExpired(id: String): EitherT[F, ValidationError, UserT] = {
       for {
         user <- getUser(id)
-        operationResult <- userRepo.update(user.copy(userType = PremiumExpired.value, nextPaymentAt = -1)).toRight(CouldNotUpdateUserError())
-        r <- EitherT.liftF(alertsRepository.disableAllButOneAlerts(id))
+        operationResult <- rpos.usersRepo().update(user.copy(userType = PremiumExpired.value, nextPaymentAt = -1)).toRight(CouldNotUpdateUserError())
+        r <- EitherT.liftF(rpos.alertsRepository().disableAllButOneAlerts(id))
       } yield operationResult
     }
 
@@ -83,14 +77,14 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
 
   def getUserAndUpdateRole(userId: String): EitherT[F, UserNotFoundError, UserT] = {
     for {
-      eitherUser <- OptionT(userRepo.getByUserId(userId)).toRight(UserNotFoundError())
+      eitherUser <- OptionT(rpos.usersRepo().getByUserId(userId)).toRight(UserNotFoundError())
       updated <- updateRole(eitherUser)
     } yield updated
   }
 
   def getUserAndUpdateRole(email: String, deviceType: String): EitherT[F, UserNotFoundError, UserT] = {
     for {
-      eitherUser <- OptionT(userRepo.getByEmailAndDeviceType(email, deviceType)).toRight(UserNotFoundError())
+      eitherUser <- OptionT(rpos.usersRepo().getByEmailAndDeviceType(email, deviceType)).toRight(UserNotFoundError())
       updated <- updateRole(eitherUser)
     } yield updated
   }
@@ -99,7 +93,7 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
     if (UserType(eitherUser.userType) == Trial && eitherUser.isTrialEnded()) {
       for {
         updated <- update(eitherUser.copy(userType = UserType.TrialExpired.value, lastPaymentAt = -1, nextPaymentAt = -1))
-        _ <- EitherT.liftF(alertsRepository.disableAllButOneAlerts(updated._id.toHexString))
+        _ <- EitherT.liftF(rpos.alertsRepository().disableAllButOneAlerts(updated._id.toHexString))
       } yield updated
     } else {
       EitherT.fromEither(toEither(eitherUser))
@@ -114,14 +108,14 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
   }
 
   private def updateUser(name: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, user: UserT): EitherT[F, ValidationError, UserT] = {
-    userRepo.update(user.copy(name = name, snoozeTill = snoozeTill, disableAllAlerts = disableAllAlerts, notificationsPerHour = notificationsPerHour, lastPaymentAt = -1, nextPaymentAt = -1)).toRight(CouldNotUpdateUserError())
+    rpos.usersRepo().update(user.copy(name = name, snoozeTill = snoozeTill, disableAllAlerts = disableAllAlerts, notificationsPerHour = notificationsPerHour, lastPaymentAt = -1, nextPaymentAt = -1)).toRight(CouldNotUpdateUserError())
   }
 
   def updateDeviceToken(userId: String, deviceToken: String) =
-    userRepo.updateDeviceToken(userId, deviceToken)
+    rpos.usersRepo().updateDeviceToken(userId, deviceToken)
 
   def updatePassword(userId: String, password: String): OptionT[F, Unit] =
-    credentialsRepo.updatePassword(userId, password.bcrypt)
+    rpos.credentialsRepo().updatePassword(userId, password.bcrypt)
 
 
   def getFacebookUserByAccessToken(accessToken: String, deviceType: String) = {
@@ -138,8 +132,8 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
       facebookUser <- EitherT.pure((facebookClient.fetchObject("me", classOf[com.restfb.types.User], Parameter.`with`("fields", "name,id,email"))))
       _ <- doesNotExist(facebookUser.getEmail, rr.deviceType)
 
-      savedCreds <- EitherT.liftF(facebookCredentialsRepo.create(FacebookCredentialsT(facebookUser.getEmail, rr.accessToken, rr.deviceType)))
-      savedUser <- EitherT.liftF(userRepo.create(UserT.create(new ObjectId(savedCreds._id.toHexString), facebookUser.getEmail, facebookUser.getName, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Trial.value, -1, false, 4)))
+      savedCreds <- EitherT.liftF(rpos.facebookCredentialsRepo().create(FacebookCredentialsT(facebookUser.getEmail, rr.accessToken, rr.deviceType)))
+      savedUser <- EitherT.liftF(rpos.usersRepo().create(UserT.create(new ObjectId(savedCreds._id.toHexString), facebookUser.getEmail, facebookUser.getName, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Trial.value, -1, false, 4)))
     } yield (savedUser, savedCreds)
   }
 
@@ -148,15 +142,15 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
       appleUser <- EitherT.pure(AppleLogin.getUser(rr.authorizationCode, applePrivateKey))
       _ <- doesNotExist(appleUser.email, rr.deviceType)
 
-      savedCreds <- EitherT.liftF(appleCredentialsRepo.create(AppleCredentials(appleUser.email, rr.deviceType, appleUser.sub)))
-      savedUser <- EitherT.liftF(userRepo.create(UserT.create(new ObjectId(savedCreds._id.toHexString), appleUser.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Trial.value, -1, false, 4)))
+      savedCreds <- EitherT.liftF(rpos.appleCredentialsRepository().create(AppleCredentials(appleUser.email, rr.deviceType, appleUser.sub)))
+      savedUser <- EitherT.liftF(rpos.usersRepo().create(UserT.create(new ObjectId(savedCreds._id.toHexString), appleUser.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Trial.value, -1, false, 4)))
     } yield (savedUser, savedCreds)
   }
 
   def loginUser(rr: AppleLoginRequest) = {
     for {
       appleUser <- EitherT.pure(AppleLogin.getUser(rr.authorizationCode, applePrivateKey))
-      _ <- appleCredentialsRepo.findByAppleId(appleUser.sub)
+      _ <- rpos.appleCredentialsRepository().findByAppleId(appleUser.sub)
       dbUser <- getUser(appleUser.email, rr.deviceType)
     } yield dbUser
   }
@@ -165,23 +159,23 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
     val credentials = Credentials(rr.email, rr.password.bcrypt, rr.deviceType)
     for {
       _ <- doesNotExist(credentials.email, credentials.deviceType)
-      savedCreds <- EitherT.liftF(credentialsRepo.create(credentials))
-      saved <- EitherT.liftF(userRepo.create(UserT.create(new ObjectId(savedCreds._id.toHexString), rr.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, -1, Registered.value, -1, false, 4)))
+      savedCreds <- EitherT.liftF(rpos.credentialsRepo().create(credentials))
+      saved <- EitherT.liftF(rpos.usersRepo().create(UserT.create(new ObjectId(savedCreds._id.toHexString), rr.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, -1, Registered.value, -1, false, 4)))
     } yield saved
   }
 
   def logoutUser(userId:String) = {
     for {
-      _ <- EitherT.liftF(refreshTokenRepositoryAlgebra.deleteForUserId(userId))
-      _ <- userRepo.updateDeviceToken(userId, "").toRight(CouldNotUpdateUserError())
+      _ <- EitherT.liftF(rpos.refreshTokenRepo().deleteForUserId(userId))
+      _ <- rpos.usersRepo().updateDeviceToken(userId, "").toRight(CouldNotUpdateUserError())
     } yield ()
   }
 
   def doesNotExist(email: String, deviceType: String) = {
     for {
-      emailDoesNotExist <- countToEither(credentialsRepo.count(email, deviceType))
-      facebookDoesNotExist <- countToEither(facebookCredentialsRepo.count(email, deviceType))
-      appleDoesNotExist <- countToEither(appleCredentialsRepo.count(email, deviceType))
+      emailDoesNotExist <- countToEither(rpos.credentialsRepo().count(email, deviceType))
+      facebookDoesNotExist <- countToEither(rpos.facebookCredentialsRepo().count(email, deviceType))
+      appleDoesNotExist <- countToEither(rpos.appleCredentialsRepository().count(email, deviceType))
     } yield (emailDoesNotExist, facebookDoesNotExist, appleDoesNotExist)
   }
 
@@ -200,16 +194,16 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
   }
 
   def getUser(email: String, deviceType: String): EitherT[F, UserNotFoundError, UserT] =
-    OptionT(userRepo.getByEmailAndDeviceType(email, deviceType)).toRight(UserNotFoundError())
+    OptionT(rpos.usersRepo().getByEmailAndDeviceType(email, deviceType)).toRight(UserNotFoundError())
 
   def getUser(userId: String): EitherT[F, ValidationError, UserT] =
-    OptionT(userRepo.getByUserId(userId)).toRight(UserNotFoundError())
+    OptionT(rpos.usersRepo().getByUserId(userId)).toRight(UserNotFoundError())
 
   def getByCredentials(
                         email: String, password: String, deviceType: String
                       ): EitherT[F, ValidationError, Credentials] =
     for {
-      creds <- credentialsRepo.findByCreds(email, deviceType).toRight(UserAuthenticationFailedError(email))
+      creds <- rpos.credentialsRepo().findByCreds(email, deviceType).toRight(UserAuthenticationFailedError(email))
       passwordMatched <- isPasswordMatch(password, creds)
     } yield passwordMatched
 
@@ -217,7 +211,7 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
                      email: String, deviceType: String
                    ):EitherT[F, ValidationError, Credentials] =
     for {
-      creds <- credentialsRepo.findByCreds(email, deviceType).toRight(UserAuthenticationFailedError(email))
+      creds <- rpos.credentialsRepo().findByCreds(email, deviceType).toRight(UserAuthenticationFailedError(email))
       newPassword <- EitherT.pure(conversions.generateRandomString(10))
       _ <- updatePassword(creds._id.toHexString, newPassword).toRight(CouldNotUpdatePasswordError())
       _ <- EitherT.pure(emailSender.send(email, "Your new password", newPassword))
@@ -236,7 +230,7 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
 
   def update(user: UserT): EitherT[F, UserNotFoundError, UserT] =
     for {
-      saved <- userRepo.update(user).toRight(UserNotFoundError())
+      saved <- rpos.usersRepo().update(user).toRight(UserNotFoundError())
     } yield saved
 
 
@@ -246,7 +240,7 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
 
   def getAndroidPurchase(productId: String, token: String): EitherT[F, ValidationError, domain.SubscriptionPurchase] = {
     EitherT.pure({
-      androidPublisher.purchases().subscriptions().get(ApplicationConfig.PACKAGE_NAME, productId, token).execute().into[domain.SubscriptionPurchase].enableBeanGetters
+      rpos.androidConf().purchases().subscriptions().get(ApplicationConfig.PACKAGE_NAME, productId, token).execute().into[domain.SubscriptionPurchase].enableBeanGetters
         .withFieldComputed(_.expiryTimeMillis, _.getExpiryTimeMillis.toLong)
         .withFieldComputed(_.startTimeMillis, _.getStartTimeMillis.toLong).transform
     })
@@ -272,24 +266,16 @@ class UserService[F[_] : Sync](userRepo: UserRepositoryAlgebra[F],
   }
 
   def createFeedback(feedback: Feedback): EitherT[F, ValidationError, Feedback] = {
-    EitherT.liftF(feedbackRepository.create(feedback))
+    EitherT.liftF(rpos.feedbackRepository.create(feedback))
   }
 
 }
 
 object UserService {
   def apply[F[_] : Sync](
-                          usersRepository: UserRepositoryAlgebra[F],
-                          credentialsRepository: CredentialsRepositoryAlgebra[F],
-                          appleRepository: AppleCredentialsRepository[F],
-                          facebookCredentialsRepositoryAlgebra: FacebookCredentialsRepositoryAlgebra[F],
-                          refreshTokenRepositoryAlgebra: RefreshTokenRepositoryAlgebra[F],
-                          alertsRepository: AlertsRepositoryT[F],
-                          feedbackRepository: FeedbackRepository[F],
-
-                          androidPublisher: AndroidPublisher,
+                          repos:Repos[F],
                           applePrivateKey: PrivateKey,
                           emailSender: EmailSender
                         ): UserService[F] =
-    new UserService(usersRepository, credentialsRepository, appleRepository, facebookCredentialsRepositoryAlgebra, refreshTokenRepositoryAlgebra, alertsRepository, feedbackRepository, secrets.read.surfsUp.facebook.key, androidPublisher, applePrivateKey, emailSender)
+    new UserService(repos, secrets.read.surfsUp.facebook.key, applePrivateKey, emailSender)
 }

@@ -9,15 +9,15 @@ import org.mongodb.scala.model.Sorts._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait AppleTokenRepository {
-  def getPurchaseByToken(purchaseToken: String) : EitherT[IO, ValidationError, AppleToken]
+trait AppleTokenRepository[F[_]] {
+  def getPurchaseByToken(purchaseToken: String) : EitherT[F, ValidationError, AppleToken]
 
-  def getLastForUser(userId: String): EitherT[IO, ValidationError, AppleToken]
+  def getLastForUser(userId: String): EitherT[F, ValidationError, AppleToken]
 
-  def create(token: AppleToken): EitherT[IO, ValidationError, AppleToken]
+  def create(token: AppleToken): EitherT[F, ValidationError, AppleToken]
 }
 
-class MongoApplePurchaseRepository(collection: MongoCollection[AppleToken])(implicit cs: ContextShift[IO]) extends AppleTokenRepository {
+class MongoApplePurchaseRepository(collection: MongoCollection[AppleToken])(implicit cs: ContextShift[IO]) extends AppleTokenRepository[IO] {
 
   override def create(token: AppleToken): EitherT[IO, ValidationError, AppleToken] = {
     EitherT.liftF(IO.fromFuture(IO(collection.insertOne(token).toFuture().map(_ => token))))
