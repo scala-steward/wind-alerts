@@ -3,14 +3,11 @@ package com.uptech.windalerts
 import cats.Eval
 import cats.effect.{ContextShift, IO}
 import com.google.api.services.androidpublisher.AndroidPublisher
-import com.turo.pushy.apns.auth.ApnsSigningKey
 import com.uptech.windalerts.alerts.{AlertsRepositoryT, MongoAlertsRepositoryAlgebra}
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.notifications.{MongoNotificationsRepository, NotificationRepository}
 import com.uptech.windalerts.users._
-import org.mongodb.scala.MongoClient
-
-import scala.util.Try
+import org.mongodb.scala.{MongoClient, MongoDatabase}
 
 trait Repos[F[_]] {
   def otp(): OtpRepository[F]
@@ -40,6 +37,8 @@ trait Repos[F[_]] {
 
 
 class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
+
+  var  maybeDb:MongoDatabase = _
 
   val otpRepo = Eval.later {
     new MongoOtpRepository(db.getCollection[OTPWithExpiry]("otp"))
@@ -131,9 +130,17 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
     nRepo.value
   }
 
+  private def acqyuireDb() = {
+    Eval.later {
+      println("db")
+      val client = MongoClient(com.uptech.windalerts.domain.secrets.read.surfsUp.mongodb.url)
+      client.getDatabase(sys.env("projectId")).withCodecRegistry(com.uptech.windalerts.domain.codecs.codecRegistry)
+    }.value
+  }
   private def db() = {
-    val client = MongoClient(com.uptech.windalerts.domain.secrets.read.surfsUp.mongodb.url)
-    client.getDatabase(sys.env("projectId")).withCodecRegistry(com.uptech.windalerts.domain.codecs.codecRegistry)
+    if (maybeDb == null)
+      maybeDb = Eval.later{acqyuireDb}.value
+    maybeDb
   }
 
   override def androidConf(): AndroidPublisher = {
