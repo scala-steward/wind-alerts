@@ -6,6 +6,7 @@ import cats.data.EitherT
 import cats.effect.Sync
 import cats.{Applicative, Functor}
 import com.softwaremill.sttp._
+import com.uptech.windalerts.Repos
 import com.uptech.windalerts.domain.domain.{BeachId, TideHeight}
 import com.uptech.windalerts.domain.{beaches, domain}
 import com.uptech.windalerts.status.Tides.{Datum, TideDecoders}
@@ -16,7 +17,7 @@ import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
 import org.log4s.getLogger
 
-class TidesService[F[_] : Sync](apiKey: String)(implicit backend: SttpBackend[Id, Nothing]) {
+class TidesService[F[_] : Sync](apiKey: String, repos:Repos[F])(implicit backend: SttpBackend[Id, Nothing]) {
   private val logger = getLogger
   val startDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
@@ -32,7 +33,7 @@ class TidesService[F[_] : Sync](apiKey: String)(implicit backend: SttpBackend[Id
     EitherT.fromEither(getFromWillyWeatther(apiKey, beachId))
 
   def getFromWillyWeatther(apiKey: String, beachId: BeachId): Either[Exception, domain.TideHeight] = {
-    val tz = timeZoneForRegion.getOrElse(beaches.read(beachId.id).region, "Australia/NSW")
+    val tz = timeZoneForRegion.getOrElse(repos.beaches()(beachId.id).region, "Australia/NSW")
     val tzId = ZoneId.of(tz)
     val startDateFormatted = startDateFormat.format(ZonedDateTime.now(tzId).minusDays(1))
 

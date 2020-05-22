@@ -11,7 +11,6 @@ import org.log4s.getLogger
 class HttpErrorHandler[F[_] : Monad] extends Http4sDsl[F] {
   val handleThrowable: Throwable => F[Response[F]] = {
     case e: ValidationError => {
-      getLogger.error(e)(e.getMessage)
       handleError(e)
     }
     case everythingElse => {

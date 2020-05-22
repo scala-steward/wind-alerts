@@ -3,11 +3,16 @@ package com.uptech.windalerts
 import cats.Eval
 import cats.effect.{ContextShift, IO}
 import com.google.api.services.androidpublisher.AndroidPublisher
+import com.turo.pushy.apns.auth.ApnsSigningKey
 import com.uptech.windalerts.alerts.{AlertsRepositoryT, MongoAlertsRepositoryAlgebra}
+import com.uptech.windalerts.domain.beaches.Beach
 import com.uptech.windalerts.domain.domain._
+import com.uptech.windalerts.domain.secrets
 import com.uptech.windalerts.notifications.{MongoNotificationsRepository, NotificationRepository}
 import com.uptech.windalerts.users._
 import org.mongodb.scala.{MongoClient, MongoDatabase}
+
+import scala.util.Try
 
 trait Repos[F[_]] {
   def otp(): OtpRepository[F]
@@ -32,7 +37,15 @@ trait Repos[F[_]] {
 
   def notificationsRepo(): NotificationRepository[F]
 
-  def androidConf():AndroidPublisher
+  def androidConf(): AndroidPublisher
+
+  def appleLoginConf() : ApnsSigningKey
+
+  def emailConf() : EmailSender
+
+  def fbSecret() : String
+
+  def beaches() : Map[Long, Beach]
 }
 
 
@@ -49,7 +62,10 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
   }
 
   val uRepo = Eval.later {
-    new MongoUserRepository(db.getCollection[UserT]("users"))
+    val start = System.currentTimeMillis()
+    val x = new MongoUserRepository(db.getCollection[UserT]("users"))
+    println(System.currentTimeMillis() - start)
+    x
   }
 
   val cRepo = Eval.later {
@@ -85,6 +101,23 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
   }
 
   val andConf = Eval.later(AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL))
+
+  val appleLogin = Eval.later{
+    Try(AppleLogin.getPrivateKey(s"/app/resources/Apple-${sys.env("projectId")}.p8"))
+    .getOrElse(AppleLogin.getPrivateKey(s"src/main/resources/Apple.p8"))}
+
+  val email = Eval.later {
+    val emailConf = com.uptech.windalerts.domain.secrets.read.surfsUp.email
+    new EmailSender(emailConf.userName, emailConf.password)
+  }
+
+  val fbKey = Eval.later {
+    secrets.read.surfsUp.facebook.key
+  }
+
+  val b = Eval.later {
+    com.uptech.windalerts.domain.beaches.read
+  }
 
   override def otp(): OtpRepository[IO] = {
     otpRepo.value
@@ -130,20 +163,34 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
     nRepo.value
   }
 
-  private def acqyuireDb() = {
-    Eval.later {
-      println("db")
+  private def acquireDb() = {
+    val start = System.currentTimeMillis()
+    val value = Eval.later {
       val client = MongoClient(com.uptech.windalerts.domain.secrets.read.surfsUp.mongodb.url)
       client.getDatabase(sys.env("projectId")).withCodecRegistry(com.uptech.windalerts.domain.codecs.codecRegistry)
-    }.value
+    }
+    val v = value.value
+    println(System.currentTimeMillis() - start)
+    v
   }
   private def db() = {
+
     if (maybeDb == null)
-      maybeDb = Eval.later{acqyuireDb}.value
+      maybeDb = Eval.later{acquireDb}.value
     maybeDb
   }
 
   override def androidConf(): AndroidPublisher = {
     andConf.value
   }
+
+  override def appleLoginConf() = {
+    appleLogin.value
+  }
+
+  override def emailConf()  = email.value
+
+  override  def fbSecret = fbKey.value
+
+  override  def beaches = b.value
 }

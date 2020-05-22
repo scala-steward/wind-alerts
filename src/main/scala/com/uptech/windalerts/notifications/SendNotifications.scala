@@ -32,6 +32,7 @@ object SendNotifications extends IOApp {
   logger.error("Starting")
   val started = System.currentTimeMillis()
   sys.addShutdownHook(getLogger.error(s"Shutting down after ${(System.currentTimeMillis() - started)} ms"))
+  val repos = new LazyRepos()
 
   val dbWithAuthIO = for {
     projectId     <- IO(sys.env("projectId"))
@@ -53,13 +54,12 @@ object SendNotifications extends IOApp {
   val key = conf.surfsUp.willyWeather.key
   lazy val beachSeq = beaches.read
   lazy val adjustments = swellAdjustments.read
-  val beachesService = new BeachService[IO](new WindsService[IO](key), new TidesService[IO](key), new SwellsService[IO](key, swellAdjustments.read))
+  val beachesService = new BeachService[IO](new WindsService[IO](key), new TidesService[IO](key, repos), new SwellsService[IO](key, swellAdjustments.read))
 
 
   implicit val httpErrorHandler: HttpErrorHandler[IO] = new HttpErrorHandler[IO]
 
 
-  val repos = new LazyRepos()
   val alerts = new AlertsService[IO](repos)
   val notifications = new Notifications(alerts, beachesService, beachSeq, repos, dbWithAuth, httpErrorHandler, config = config.read)
 

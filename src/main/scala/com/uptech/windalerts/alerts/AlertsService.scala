@@ -20,7 +20,7 @@ class AlertsService[F[_]: Sync](repo: Repos[F]) {
 
   def getAllForDayAndTimeRange()(implicit F: Sync[F]): F[Seq[AlertT]] = {
     val cal = Calendar.getInstance(TimeZone.getTimeZone("Australia/Sydney"))
-    repo.alertsRepository()getAllForDay(cal.get(DAY_OF_WEEK), _.isToBeAlertedAt(getMinutes(cal)))
+    repo.alertsRepository().getAllForDay(cal.get(DAY_OF_WEEK), _.isToBeAlertedAt(getMinutes(cal)))
   }
 
   def deleteT(requester: String, alertId: String): EitherT[F, ValidationError, Unit] = {

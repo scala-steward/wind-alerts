@@ -20,10 +20,7 @@ import io.circe.optics.JsonPath.root
 import io.circe.parser
 import io.scalaland.chimney.dsl._
 
-class UserService[F[_] : Sync](rpos:Repos[F],
-                               facebookSecretKey: String,
-                               applePrivateKey: PrivateKey,
-                               emailSender: EmailSender) {
+class UserService[F[_] : Sync](rpos:Repos[F]) {
 
   def verifyEmail(id: String) = {
     def makeUserTrial(user: UserT): EitherT[F, ValidationError, UserT] = {
@@ -120,7 +117,7 @@ class UserService[F[_] : Sync](rpos:Repos[F],
 
   def getFacebookUserByAccessToken(accessToken: String, deviceType: String) = {
     for {
-      facebookClient <- EitherT.pure((new DefaultFacebookClient(accessToken, facebookSecretKey, Version.LATEST)))
+      facebookClient <- EitherT.pure((new DefaultFacebookClient(accessToken, rpos.fbSecret(), Version.LATEST)))
       facebookUser <- EitherT.pure((facebookClient.fetchObject("me", classOf[com.restfb.types.User], Parameter.`with`("fields", "name,id,email"))))
       dbUser <- getUser(facebookUser.getEmail, deviceType)
     } yield dbUser
@@ -128,7 +125,7 @@ class UserService[F[_] : Sync](rpos:Repos[F],
 
   def createUser(rr: FacebookRegisterRequest): EitherT[F, UserAlreadyExistsError, (UserT, FacebookCredentialsT)] = {
     for {
-      facebookClient <- EitherT.pure(new DefaultFacebookClient(rr.accessToken, facebookSecretKey, Version.LATEST))
+      facebookClient <- EitherT.pure(new DefaultFacebookClient(rr.accessToken, rpos.fbSecret(), Version.LATEST))
       facebookUser <- EitherT.pure((facebookClient.fetchObject("me", classOf[com.restfb.types.User], Parameter.`with`("fields", "name,id,email"))))
       _ <- doesNotExist(facebookUser.getEmail, rr.deviceType)
 
@@ -139,7 +136,7 @@ class UserService[F[_] : Sync](rpos:Repos[F],
 
   def createUser(rr: AppleRegisterRequest): EitherT[F, UserAlreadyExistsError, (UserT, AppleCredentials)] = {
     for {
-      appleUser <- EitherT.pure(AppleLogin.getUser(rr.authorizationCode, applePrivateKey))
+      appleUser <- EitherT.pure(AppleLogin.getUser(rr.authorizationCode, rpos.appleLoginConf()))
       _ <- doesNotExist(appleUser.email, rr.deviceType)
 
       savedCreds <- EitherT.liftF(rpos.appleCredentialsRepository().create(AppleCredentials(appleUser.email, rr.deviceType, appleUser.sub)))
@@ -149,7 +146,7 @@ class UserService[F[_] : Sync](rpos:Repos[F],
 
   def loginUser(rr: AppleLoginRequest) = {
     for {
-      appleUser <- EitherT.pure(AppleLogin.getUser(rr.authorizationCode, applePrivateKey))
+      appleUser <- EitherT.pure(AppleLogin.getUser(rr.authorizationCode, rpos.appleLoginConf()))
       _ <- rpos.appleCredentialsRepository().findByAppleId(appleUser.sub)
       dbUser <- getUser(appleUser.email, rr.deviceType)
     } yield dbUser
@@ -214,7 +211,7 @@ class UserService[F[_] : Sync](rpos:Repos[F],
       creds <- rpos.credentialsRepo().findByCreds(email, deviceType).toRight(UserAuthenticationFailedError(email))
       newPassword <- EitherT.pure(conversions.generateRandomString(10))
       _ <- updatePassword(creds._id.toHexString, newPassword).toRight(CouldNotUpdatePasswordError())
-      _ <- EitherT.pure(emailSender.send(email, "Your new password", newPassword))
+      _ <- EitherT.pure(rpos.emailConf().send(email, "Your new password", newPassword))
     } yield creds
 
 
@@ -274,8 +271,6 @@ class UserService[F[_] : Sync](rpos:Repos[F],
 object UserService {
   def apply[F[_] : Sync](
                           repos:Repos[F],
-                          applePrivateKey: PrivateKey,
-                          emailSender: EmailSender
                         ): UserService[F] =
-    new UserService(repos, secrets.read.surfsUp.facebook.key, applePrivateKey, emailSender)
+    new UserService(repos)
 }
