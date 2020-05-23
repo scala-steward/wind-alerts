@@ -206,9 +206,10 @@ object domain {
       swellDirections.contains(beach.tide.swell.directionText) &&
         waveHeightFrom <= beach.tide.swell.height && waveHeightTo >= beach.tide.swell.height &&
         windDirections.contains(beach.wind.directionText) &&
-        (tideHeightStatuses.contains(beach.tide.height.status) || tideHeightStatuses.contains(beach.tide.height.status.map(s=>{
-          if (s.equals("Increasing")) "Rising" else "Falling"
-        })))
+        (tideHeightStatuses.contains(beach.tide.height.status) || tideHeightStatuses.contains(
+          {
+            if (beach.tide.height.status.equals("Increasing"))"Rising" else "Falling"
+          }))
 
     }
 
