@@ -169,22 +169,6 @@ object domain {
     }
   }
 
-  sealed case class TideHeightStatus(value: String)
-
-  object TideHeightStatus {
-
-    object Rising extends TideHeightStatus("Rising")
-
-    object Falling extends TideHeightStatus("Falling")
-
-    val values = Seq(Rising, Falling)
-
-    def apply(value: String): TideHeightStatus = value match {
-      case Rising.value => Rising
-      case Falling.value => Falling
-    }
-  }
-
 
   case class AlertRequest(
                            beachId: Long,
@@ -222,7 +206,10 @@ object domain {
       swellDirections.contains(beach.tide.swell.directionText) &&
         waveHeightFrom <= beach.tide.swell.height && waveHeightTo >= beach.tide.swell.height &&
         windDirections.contains(beach.wind.directionText) &&
-        tideHeightStatuses.contains(beach.tide.height.status)
+        (tideHeightStatuses.contains(beach.tide.height.status) || tideHeightStatuses.contains(beach.tide.height.status.map(s=>{
+          if (s.equals("Increasing")) "Rising" else "Falling"
+        })))
+
     }
 
     def isToBeAlertedAt(minutes: Int): Boolean = timeRanges.exists(_.isWithinRange(minutes))

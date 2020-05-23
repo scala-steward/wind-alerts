@@ -59,7 +59,7 @@ class TidesService[F[_] : Sync](apiKey: String, repos:Repos[F])(implicit backend
     val nextLow_ = after.filter(_.description == "low").head
     val nextLow = nextLow_.copy(x = nextLow_.x - ZonedDateTime.now(zoneId).getOffset.getTotalSeconds)
 
-    val status = if (nextLow.x < nextHigh.x) "Falling" else "Rising"
+    val status = if (nextLow.x < nextHigh.x) "Decreasing" else "Increasing"
 
     TideHeight(interpolated.y, status, nextLow.x, nextHigh.x)
   }
