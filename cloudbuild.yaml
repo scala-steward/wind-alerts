@@ -31,11 +31,13 @@ steps:
   - name: 'gcr.io/cloud-builders/mvn'
     args: ['-q', 'compile', '-P', 'notifications', 'jib:build', '-DenvProjectId=$PROJECT_ID']
   - name: 'gcr.io/cloud-builders/mvn'
-    args: ['-q', 'compile', '-P', 'alerts', 'jib:build', '-DenvProjectId=$PROJECT_ID']
+    args: ['-q', 'compile', '-P', 'subscriptions', 'jib:build', '-DenvProjectId=$PROJECT_ID']
   - name: 'gcr.io/cloud-builders/mvn'
     args: ['-q', 'compile', '-P', 'users', 'jib:build', '-DenvProjectId=$PROJECT_ID']
   - name: 'gcr.io/cloud-builders/gcloud'
     args: ['beta', 'run', 'deploy', 'wind-alerts-notifications', '--image', 'gcr.io/$PROJECT_ID/wind-alerts-send-notifications:1.0-SNAPSHOT', '--region', 'asia-northeast1','--platform', 'managed', '--quiet', '--memory', '1024Mi',  '--concurrency', '1',  '--no-allow-unauthenticated', '--set-env-vars', 'projectId=$PROJECT_ID']
   - name: 'gcr.io/cloud-builders/gcloud'
-    args: ['beta', 'run', 'deploy', 'wind-alerts-users', '--image', 'gcr.io/$PROJECT_ID/wind-alerts-users:1.0-SNAPSHOT', '--region', 'asia-northeast1','--platform', 'managed', '--quiet', '--memory', '1024Mi', '--concurrency', '1',  '--allow-unauthenticated', '--set-env-vars', 'projectId=$PROJECT_ID']
+    args: ['beta', 'run', 'deploy', 'wind-alerts-users', '--image', 'gcr.io/$PROJECT_ID/wind-alerts-users:1.0-SNAPSHOT', '--region', 'asia-northeast1','--platform', 'managed', '--quiet', '--memory', '1024Mi', '--concurrency', '80',  '--allow-unauthenticated', '--set-env-vars', 'projectId=$PROJECT_ID']
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: ['beta', 'run', 'deploy', 'wind-alerts-subscriptions', '--image', 'gcr.io/$PROJECT_ID/wind-alerts-subscriptions:1.0-SNAPSHOT', '--region', 'asia-northeast1','--platform', 'managed', '--quiet', '--memory', '1024Mi', '--concurrency', '1',  '--allow-unauthenticated', '--set-env-vars', 'projectId=$PROJECT_ID']
 

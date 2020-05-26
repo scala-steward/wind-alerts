@@ -18,7 +18,7 @@ import scala.util.Random
 
 class Auth(repos: Repos[IO]) {
 
-  val REFRESH_TOKEN_EXPIRY = 7L * 24L * 60L * 60L * 1000L
+  val REFRESH_TOKEN_EXPIRY = 14L * 24L * 60L * 60L * 1000L
   val ACCESS_TOKEN_EXPIRY = 1L * 24L * 60L * 60L * 1000L
 
   case class AccessTokenWithExpiry(accessToken: String, expiredAt: Long)
@@ -37,32 +37,9 @@ class Auth(repos: Repos[IO]) {
         }
       }
 
-  val authenticate1: JwtToken => JwtClaim => IO[Option[UserId]] =
-    token => authenticate
+  val authenticate1: JwtToken => JwtClaim => IO[Option[UserId]] = _ => authenticate
 
   val middleware = JwtAuthMiddleware[IO, UserId](jwtAuth, authenticate1)
-
-  def verifyNotExpired(token:String) = {
-    val notExpiredOption = for {
-      decodedToken <- OptionT.liftF(IO.fromTry(Jwt.decode(token, key.value, Seq(JwtAlgorithm.HS256))))
-      notExpired <- isExpired(decodedToken)
-      userId <- OptionT(IO(notExpired.subject))
-    } yield userId
-    notExpiredOption.toRight(TokenExpiredError())
-  }
-
-  private def isExpired(decodedToken: JwtClaim) = {
-    val isExpired = decodedToken.expiration match {
-      case Some(expiry) => {
-        if ( System.currentTimeMillis() / 1000 > expiry )
-          Some(decodedToken)
-        else
-          None
-      }
-      case None => None
-    }
-    OptionT.liftF(IO(decodedToken))
-  }
 
   def createToken(userId: String, accessTokenId: String): EitherT[IO, ValidationError, AccessTokenWithExpiry] = {
     val current = System.currentTimeMillis()
@@ -96,11 +73,10 @@ class Auth(repos: Repos[IO]) {
   }
 
   def authorizePremiumUsers(user: domain.UserT):EitherT[IO, ValidationError, UserT] = {
-    val either:Either[OperationNotAllowed, UserT] = if (UserType(user.userType) == UserType.Premium || UserType(user.userType) == UserType.Trial) {
+    EitherT.fromEither(if (UserType(user.userType) == UserType.Premium || UserType(user.userType) == UserType.Trial) {
       Right(user)
     } else {
-      Left(OperationNotAllowed(s"Only ${Premium.value} and ${Trial.value} users can perform this action"))
-    }
-    EitherT.fromEither(either)
+      Left(OperationNotAllowed(s"Please subscribe to perform this action"))
+    })
   }
 }
