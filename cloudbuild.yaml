@@ -27,8 +27,6 @@ steps:
       - '--keyring=$PROJECT_ID-keyring'
       - '--key=$PROJECT_ID-key'
   - name: 'gcr.io/cloud-builders/mvn'
-    args: ['-q', 'compile', '-P', 'status', 'jib:build', '-DenvProjectId=$PROJECT_ID']
-  - name: 'gcr.io/cloud-builders/mvn'
     args: ['-q', 'compile', '-P', 'notifications', 'jib:build', '-DenvProjectId=$PROJECT_ID']
   - name: 'gcr.io/cloud-builders/mvn'
     args: ['-q', 'compile', '-P', 'subscriptions', 'jib:build', '-DenvProjectId=$PROJECT_ID']
