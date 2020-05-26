@@ -1,26 +1,22 @@
 package com.uptech.windalerts.users
 
-import java.security.PrivateKey
-
 import cats.data.{EitherT, OptionT}
-import cats.effect.{ContextShift, IO, Sync}
+import cats.effect.Sync
 import com.github.t3hnar.bcrypt._
-import com.google.api.services.androidpublisher.AndroidPublisher
 import com.restfb.{DefaultFacebookClient, Parameter, Version}
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.uptech.windalerts.Repos
-import com.uptech.windalerts.alerts.AlertsRepositoryT
+import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain.UserType._
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.{conversions, domain, secrets}
-import io.circe.syntax._
-import org.mongodb.scala.bson.ObjectId
-import com.uptech.windalerts.domain.codecs._
 import io.circe.optics.JsonPath.root
 import io.circe.parser
+import io.circe.syntax._
 import io.scalaland.chimney.dsl._
+import org.mongodb.scala.bson.ObjectId
 
-class UserService[F[_] : Sync](rpos:Repos[F]) {
+class UserService[F[_] : Sync](rpos: Repos[F]) {
 
   def verifyEmail(id: String) = {
     def makeUserTrial(user: UserT): EitherT[F, ValidationError, UserT] = {
@@ -56,11 +52,11 @@ class UserService[F[_] : Sync](rpos:Repos[F]) {
       } yield operationResult
     }
 
-    def makeUserPremiumExpired(id: String): EitherT[F, ValidationError, UserT] = {
+    def makeUserPremiumExpired(userId: String): EitherT[F, ValidationError, UserT] = {
       for {
-        user <- getUser(id)
+        user <- getUser(userId)
         operationResult <- rpos.usersRepo().update(user.copy(userType = PremiumExpired.value, nextPaymentAt = -1)).toRight(CouldNotUpdateUserError())
-        r <- EitherT.liftF(rpos.alertsRepository().disableAllButOneAlerts(id))
+        _ <- EitherT.liftF(rpos.alertsRepository().disableAllButOneAlerts(userId))
       } yield operationResult
     }
 
@@ -68,32 +64,6 @@ class UserService[F[_] : Sync](rpos:Repos[F]) {
       makeUserPremium(user.id, startTime, expiryTime)
     } else {
       makeUserPremiumExpired(user.id)
-    }
-  }
-
-
-  def getUserAndUpdateRole(userId: String): EitherT[F, UserNotFoundError, UserT] = {
-    for {
-      eitherUser <- OptionT(rpos.usersRepo().getByUserId(userId)).toRight(UserNotFoundError())
-      updated <- updateRole(eitherUser)
-    } yield updated
-  }
-
-  def getUserAndUpdateRole(email: String, deviceType: String): EitherT[F, UserNotFoundError, UserT] = {
-    for {
-      eitherUser <- OptionT(rpos.usersRepo().getByEmailAndDeviceType(email, deviceType)).toRight(UserNotFoundError())
-      updated <- updateRole(eitherUser)
-    } yield updated
-  }
-
-  private def updateRole(eitherUser: UserT): EitherT[F, UserNotFoundError, UserT] = {
-    if (UserType(eitherUser.userType) == Trial && eitherUser.isTrialEnded()) {
-      for {
-        updated <- update(eitherUser.copy(userType = UserType.TrialExpired.value, lastPaymentAt = -1, nextPaymentAt = -1))
-        _ <- EitherT.liftF(rpos.alertsRepository().disableAllButOneAlerts(updated._id.toHexString))
-      } yield updated
-    } else {
-      EitherT.fromEither(toEither(eitherUser))
     }
   }
 
@@ -161,10 +131,10 @@ class UserService[F[_] : Sync](rpos:Repos[F]) {
     } yield saved
   }
 
-  def logoutUser(userId:String) = {
+  def logoutUser(userId: String) = {
     for {
       _ <- EitherT.liftF(rpos.refreshTokenRepo().deleteForUserId(userId))
-      _ <- rpos.usersRepo().updateDeviceToken(userId, "").toRight(CouldNotUpdateUserError())
+      _ <- updateDeviceToken(userId, "").toRight(CouldNotUpdateUserError())
     } yield ()
   }
 
@@ -206,7 +176,7 @@ class UserService[F[_] : Sync](rpos:Repos[F]) {
 
   def resetPassword(
                      email: String, deviceType: String
-                   ):EitherT[F, ValidationError, Credentials] =
+                   ): EitherT[F, ValidationError, Credentials] =
     for {
       creds <- rpos.credentialsRepo().findByCreds(email, deviceType).toRight(UserAuthenticationFailedError(email))
       newPassword <- EitherT.pure(conversions.generateRandomString(10))
@@ -243,7 +213,7 @@ class UserService[F[_] : Sync](rpos:Repos[F]) {
     })
   }
 
-  def getApplePurchase(receiptData: String, password: String): EitherT[IO, ValidationError, AppleSubscriptionPurchase] = {
+  def getApplePurchase(receiptData: String, password: String): EitherT[F, ValidationError, AppleSubscriptionPurchase] = {
     implicit val backend = HttpURLConnectionBackend()
 
     val json = ApplePurchaseVerificationRequest(receiptData, password, true).asJson.toString()
@@ -254,7 +224,10 @@ class UserService[F[_] : Sync](rpos:Repos[F]) {
       req
         .send().body
         .left.map(UnknownError(_))
-        .flatMap(parser.parse(_))
+        .flatMap(s=>{
+          println(s)
+          parser.parse(s)
+        })
         .map(root.receipt.in_app.each.json.getAll(_))
         .flatMap(_.map(p => p.as[AppleSubscriptionPurchase])
           .filter(_.isRight).maxBy(_.right.get.expires_date_ms))
@@ -266,11 +239,65 @@ class UserService[F[_] : Sync](rpos:Repos[F]) {
     EitherT.liftF(rpos.feedbackRepository.create(feedback))
   }
 
+  def updateTrialUsers() = {
+    for {
+      users <- rpos.usersRepo().findTrialExpiredUsers()
+      _ <- convert(users.map(user => makeUserTrialExpired(user)).toList)
+    } yield ()
+  }
+
+  def updateAndroidSubscribedUsers() = {
+    for {
+      users <- rpos.usersRepo().findAndroidPremiumExpiredUsers()
+      _ <- convert(users.map(user=>updateAndroidSubscribedUser(UserId(user._id.toHexString))).toList)
+    } yield ()
+  }
+
+  private def updateAndroidSubscribedUser(user:UserId ) = {
+    for {
+      token <- rpos.androidPurchaseRepo().getLastForUser(user.id)
+      purchase <- getAndroidPurchase(token.subscriptionId, token.purchaseToken)
+      _ <- updateSubscribedUserRole(user, purchase.startTimeMillis, purchase.expiryTimeMillis)
+    } yield ()
+  }
+
+  def updateAppleSubscribedUsers() = {
+    for {
+      users <- rpos.usersRepo().findApplePremiumExpiredUsers()
+      _ <- convert(users.map(user=>updateAppleSubscribedUser(UserId(user._id.toHexString))).toList)
+    } yield ()
+  }
+
+  private def updateAppleSubscribedUser(user:UserId ) = {
+    for {
+      token <- rpos.applePurchaseRepo().getLastForUser(user.id)
+      purchase <- getApplePurchase(token.purchaseToken, secrets.read.surfsUp.apple.appSecret)
+      _ <- updateSubscribedUserRole(user, purchase.purchase_date_ms, purchase.expires_date_ms)
+    } yield ()
+  }
+
+
+  private def makeUserTrialExpired(eitherUser: UserT): EitherT[F, ValidationError, UserT] = {
+    for {
+      updated <- update(eitherUser.copy(userType = UserType.TrialExpired.value, lastPaymentAt = -1, nextPaymentAt = -1))
+      _ <- EitherT.liftF(rpos.alertsRepository().disableAllButOneAlerts(updated._id.toHexString))
+    } yield updated
+  }
+
+  def convert[A](list: List[EitherT[F, ValidationError, A]]) = {
+    import cats.implicits._
+
+    type Stack[A] = EitherT[F, ValidationError, A]
+
+    val eitherOfList: Stack[List[A]] = list.sequence
+    eitherOfList
+  }
+
 }
 
 object UserService {
   def apply[F[_] : Sync](
-                          repos:Repos[F],
+                          repos: Repos[F],
                         ): UserService[F] =
     new UserService(repos)
 }

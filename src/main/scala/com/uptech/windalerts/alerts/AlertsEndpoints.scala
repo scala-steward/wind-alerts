@@ -17,11 +17,11 @@ class AlertsEndpoints(alertService: AlertsService[IO], usersService: UserService
       case GET -> Root as user => {
         val action = for {
           resp <- EitherT.liftF(alertService.getAllForUser(user.id))
-            .map(x=>Alerts(x.alerts.map(a => a.into[Alert].withFieldComputed(_.id, u => u._id.toHexString).transform)))
+            .map(alerts=>Alerts(alerts.alerts.map(a => a.into[Alert].withFieldComputed(_.id, u => u._id.toHexString).transform)))
         } yield resp
         OptionT.liftF({
           action.value.flatMap {
-            case Right(x) => Ok(x)
+            case Right(reponse) => Ok(reponse)
             case Left(error) => httpErrorHandler.handleThrowable(error)
           }
         })
@@ -33,7 +33,7 @@ class AlertsEndpoints(alertService: AlertsService[IO], usersService: UserService
         } yield eitherDeleted
         OptionT.liftF({
           action.value.flatMap {
-            case Right(x) => NoContent()
+            case Right(_) => NoContent()
             case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
           }
         })
@@ -46,7 +46,7 @@ class AlertsEndpoints(alertService: AlertsService[IO], usersService: UserService
           val action = for {
             dbUser <- usersService.getUser(user.id)
             _ <- auth.authorizePremiumUsers(dbUser)
-            updated <- withTypeFixed(alertId, user, alert)
+            updated <- alertService.updateT(user.id, alertId, alert)
           } yield updated
 
           action.value.flatMap {
@@ -66,16 +66,11 @@ class AlertsEndpoints(alertService: AlertsService[IO], usersService: UserService
           } yield saved
 
           action.value.flatMap {
-            case Right(value) => Created(value.into[Alert].withFieldComputed(_.id, u => u._id.toHexString).transform)
+            case Right(response) => Created(response.into[Alert].withFieldComputed(_.id, u => u._id.toHexString).transform)
             case Left(error) => httpErrorHandler.handleError(error)
           }
         }
         OptionT.liftF(response)
       }
     }
-
-
-  private def withTypeFixed(alertId: String, user: UserId, alert: AlertRequest):EitherT[IO, ValidationError, AlertT] = {
-    alertService.updateT(user.id, alertId, alert).asInstanceOf[EitherT[IO, ValidationError, AlertT]]
-  }
 }

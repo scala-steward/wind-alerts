@@ -16,7 +16,7 @@ class AlertsService[F[_]: Sync](repo: Repos[F]) {
 
   def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest) = repo.alertsRepository()updateT(requester, alertId, updateAlertRequest)
 
-  def getAllForUser(user: String): F[AlertsT] = repo.alertsRepository()getAllForUser(user)
+  def getAllForUser(user: String): F[AlertsT] = repo.alertsRepository().getAllForUser(user)
 
   def getAllForDayAndTimeRange()(implicit F: Sync[F]): F[Seq[AlertT]] = {
     val cal = Calendar.getInstance(TimeZone.getTimeZone("Australia/Sydney"))

@@ -2,7 +2,10 @@ package com.uptech.windalerts.domain
 
 import java.util
 
+import cats.data.EitherT
 import cats.effect.IO
+import com.uptech.windalerts.domain.domain.UserT
+import com.uptech.windalerts.users.ValidationError
 
 import scala.collection.JavaConverters
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -22,11 +25,14 @@ object conversions {
     toIO(x.toList).map(l=>l.toSeq)
   }
 
+
   def generateRandomString(n: Int) = {
     val alpha = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     val size = alpha.size
 
     (1 to n).map(_ => alpha(Random.nextInt.abs % size)).mkString
   }
+
+
 
 }

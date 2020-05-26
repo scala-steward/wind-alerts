@@ -17,8 +17,6 @@ import java.util.Base64
 import org.log4s.getLogger
 
 object AppleLogin extends App {
-  val APPLE_AUTH_URL = "https://appleid.apple.com/auth/token"
-
   def getUser(authorizationCode: String, privateKey: PrivateKey): AppleUser = {
 
     val req = sttp.body(Map(
@@ -57,7 +55,6 @@ object AppleLogin extends App {
 
   def generateJWT(privateKey:PrivateKey) = {
     val current = System.currentTimeMillis()
-    val expiry = current / 1000 + TimeUnit.MILLISECONDS.toSeconds(1)
     val claims = JwtClaim(
       issuer = Some("W9WH7WV85S"),
       audience = Some(Set("https://appleid.apple.com")),
