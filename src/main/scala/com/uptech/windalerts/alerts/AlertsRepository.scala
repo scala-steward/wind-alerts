@@ -3,8 +3,7 @@ package com.uptech.windalerts.alerts
 import cats.data.{EitherT, OptionT}
 import cats.effect.{ContextShift, IO}
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.{conversions, domain}
-import com.uptech.windalerts.users.{AlertNotFoundError, ValidationError}
+import com.uptech.windalerts.domain.{AlertNotFoundError, ValidationError, conversions, domain}
 import io.scalaland.chimney.dsl._
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId

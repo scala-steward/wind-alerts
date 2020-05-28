@@ -1,7 +1,6 @@
 package com.uptech.windalerts.domain
 
 import cats.effect.IO
-import com.uptech.windalerts.users.ValidationError
 import org.http4s.{HttpApp, Service, Status}
 import org.log4s.getLogger
 

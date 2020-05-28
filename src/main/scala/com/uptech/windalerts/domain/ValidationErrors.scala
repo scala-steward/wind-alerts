@@ -1,4 +1,4 @@
-package com.uptech.windalerts.users
+package com.uptech.windalerts.domain
 
 trait ValidationError extends RuntimeException with Serializable
 case class TokenExpiredError() extends ValidationError

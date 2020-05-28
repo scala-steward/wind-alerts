@@ -2,7 +2,7 @@ package com.uptech.windalerts.users
 
 import cats.data.EitherT
 import cats.effect.{ContextShift, IO}
-import com.uptech.windalerts.domain.domain
+import com.uptech.windalerts.domain.{UserNotFoundError, domain}
 import com.uptech.windalerts.domain.domain.{AppleCredentials, FacebookCredentialsT}
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.conversions.Bson

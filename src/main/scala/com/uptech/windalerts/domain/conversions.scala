@@ -5,7 +5,6 @@ import java.util
 import cats.data.EitherT
 import cats.effect.IO
 import com.uptech.windalerts.domain.domain.UserT
-import com.uptech.windalerts.users.ValidationError
 
 import scala.collection.JavaConverters
 import scala.concurrent.ExecutionContext.Implicits.global

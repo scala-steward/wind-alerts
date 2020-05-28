@@ -5,7 +5,7 @@ import cats.effect.Sync
 import com.github.t3hnar.bcrypt._
 import com.restfb.{DefaultFacebookClient, Parameter, Version}
 import com.uptech.windalerts.Repos
-import com.uptech.windalerts.domain.conversions
+import com.uptech.windalerts.domain.{CouldNotUpdatePasswordError, CouldNotUpdateUserError, UserAlreadyExistsError, UserAuthenticationFailedError, UserNotFoundError, ValidationError, conversions}
 import com.uptech.windalerts.domain.domain.UserType._
 import com.uptech.windalerts.domain.domain.{Credentials, _}
 import org.mongodb.scala.bson.ObjectId

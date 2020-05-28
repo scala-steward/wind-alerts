@@ -5,7 +5,7 @@ import cats.effect.Sync
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.domain.codecs._
-import com.uptech.windalerts.domain.domain
+import com.uptech.windalerts.domain.{UnknownError, ValidationError, domain}
 import com.uptech.windalerts.domain.domain.{AndroidReceiptValidationRequest, ApplePurchaseVerificationRequest, AppleSubscriptionPurchase}
 import io.circe.optics.JsonPath.root
 import io.circe.parser
