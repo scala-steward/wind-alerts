@@ -2,10 +2,10 @@ package com.uptech.windalerts.alerts
 
 import cats.data.{EitherT, OptionT}
 import cats.effect.IO
-import com.uptech.windalerts.domain.HttpErrorHandler
+import com.uptech.windalerts.domain.{HttpErrorHandler, ValidationError}
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.users.{Auth, UserService, ValidationError}
+import com.uptech.windalerts.users.{Auth, UserService}
 import io.scalaland.chimney.dsl._
 import org.http4s.AuthedRoutes
 import org.http4s.dsl.Http4sDsl

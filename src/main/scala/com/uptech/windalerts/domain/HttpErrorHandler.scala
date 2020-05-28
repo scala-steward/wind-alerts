@@ -2,7 +2,6 @@ package com.uptech.windalerts.domain
 
 
 import cats.Monad
-import com.uptech.windalerts.users._
 import org.http4s.Response
 import org.http4s.dsl.Http4sDsl
 import org.log4s.getLogger

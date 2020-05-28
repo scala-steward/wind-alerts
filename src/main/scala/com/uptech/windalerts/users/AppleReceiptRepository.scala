@@ -2,7 +2,8 @@ package com.uptech.windalerts.users
 
 import cats.data.EitherT
 import cats.effect.{ContextShift, IO}
-import com.uptech.windalerts.domain.domain.{AppleToken}
+import com.uptech.windalerts.domain.{TokenNotFoundError, ValidationError}
+import com.uptech.windalerts.domain.domain.AppleToken
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model.Sorts._

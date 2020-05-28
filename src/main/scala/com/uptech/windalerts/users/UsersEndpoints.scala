@@ -5,7 +5,7 @@ import cats.effect.{ContextShift, IO}
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.{HttpErrorHandler, PrivacyPolicy, secrets}
+import com.uptech.windalerts.domain.{CouldNotUpdatePasswordError, CouldNotUpdateUserDeviceError, HttpErrorHandler, PrivacyPolicy, RefreshTokenExpiredError, RefreshTokenNotFoundError, UnknownError, ValidationError, secrets}
 import io.circe.parser._
 import io.scalaland.chimney.dsl._
 import org.http4s.dsl.Http4sDsl

@@ -5,7 +5,7 @@ import cats.effect.Sync
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.domain.domain.UserType.{Premium, PremiumExpired, Trial}
 import com.uptech.windalerts.domain.domain.{UserT, UserType}
-import com.uptech.windalerts.domain.secrets
+import com.uptech.windalerts.domain.{CouldNotUpdateUserError, UserNotFoundError, ValidationError, secrets}
 
 class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: SubscriptionsService[F]) {
   def makeUserTrial(user: UserT): EitherT[F, ValidationError, UserT] = {

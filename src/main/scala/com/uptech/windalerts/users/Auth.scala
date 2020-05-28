@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit
 import cats.data.{EitherT, OptionT}
 import cats.effect.IO
 import com.uptech.windalerts.Repos
-import com.uptech.windalerts.domain.domain
+import com.uptech.windalerts.domain.{OperationNotAllowed, ValidationError, domain}
 import com.uptech.windalerts.domain.domain.UserType.{Premium, Trial}
 import com.uptech.windalerts.domain.domain._
 import dev.profunktor.auth.JwtAuthMiddleware
