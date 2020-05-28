@@ -23,13 +23,15 @@ object UsersServer extends IOApp {
 
     repos = new LazyRepos()
     usersService <- IO(new UserService(repos))
+    subscriptionsService <- IO(new SubscriptionsService[IO](repos))
+    userRolesService <- IO(new UserRolesService[IO](repos, subscriptionsService))
     auth <- IO(new Auth(repos))
 
     apiKey <- IO(secrets.read.surfsUp.willyWeather.key)
     beaches <- IO(new BeachService[IO](new WindsService[IO](apiKey), new TidesService[IO](apiKey, repos), new SwellsService[IO](apiKey, swellAdjustments.read)))
     httpErrorHandler <- IO(new HttpErrorHandler[IO])
 
-    endpoints <- IO(new UsersEndpoints(repos, usersService, httpErrorHandler, auth))
+    endpoints <- IO(new UsersEndpoints(repos, usersService, userRolesService, subscriptionsService, httpErrorHandler, auth))
 
     alertService <- IO(new AlertsService[IO](repos))
     alertsEndPoints <- IO(new AlertsEndpoints(alertService, usersService, auth, httpErrorHandler))

@@ -21,7 +21,6 @@ object AndroidPublisherHelper {
 
   private val RESOURCES_CLIENT_SECRETS_JSON = "/resources/client_secrets.json"
 
-
   private val DATA_STORE_SYSTEM_PROPERTY = "user.home"
   private val DATA_STORE_FILE = ".store/android_publisher_api"
   private val DATA_STORE_DIR = new File(System.getProperty(DATA_STORE_SYSTEM_PROPERTY), DATA_STORE_FILE)
