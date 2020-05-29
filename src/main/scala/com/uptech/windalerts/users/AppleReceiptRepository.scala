@@ -43,5 +43,4 @@ class MongoApplePurchaseRepository(collection: MongoCollection[AppleToken])(impl
     } yield all.headOption,
       TokenNotFoundError())
   }
-
 }

@@ -2,6 +2,7 @@ package com.uptech.windalerts.domain
 
 import java.util
 
+import cats.data.EitherT
 import com.google.api.services.androidpublisher.model.{IntroductoryPriceInfo, SubscriptionCancelSurveyResult, SubscriptionPriceChange}
 import io.circe.generic.JsonCodec
 import org.log4s.getLogger
@@ -11,10 +12,12 @@ import scala.beans.BeanProperty
 import scala.collection.JavaConverters
 import scala.util.control.NonFatal
 import io.scalaland.chimney.dsl._
-import io.circe._, io.circe.generic.semiauto._
+import io.circe._
+import io.circe.generic.semiauto._
 
 
 object domain {
+
 
   private val logger = getLogger
 

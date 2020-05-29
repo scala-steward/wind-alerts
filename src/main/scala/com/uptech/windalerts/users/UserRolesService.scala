@@ -6,6 +6,7 @@ import com.uptech.windalerts.Repos
 import com.uptech.windalerts.domain.domain.UserType.{Premium, PremiumExpired, Trial}
 import com.uptech.windalerts.domain.domain.{UserT, UserType}
 import com.uptech.windalerts.domain.{CouldNotUpdateUserError, UserNotFoundError, ValidationError, secrets}
+import cats.implicits._
 
 class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: SubscriptionsService[F]) {
   def makeUserTrial(user: UserT): EitherT[F, ValidationError, UserT] = {
@@ -17,12 +18,8 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
   }
 
   def makeUserPremium(user: UserT, start: Long, expiry: Long): EitherT[F, ValidationError, UserT] = {
-    def withTypeFixed(start: Long, expiry: Long, user: UserT): EitherT[F, ValidationError, UserT] = {
-      repos.usersRepo().update(user.copy(userType = Premium.value, lastPaymentAt = start, nextPaymentAt = expiry)).toRight(CouldNotUpdateUserError())
-    }
-
     for {
-      operationResult <- withTypeFixed(start, expiry, user)
+      operationResult <- repos.usersRepo().update(user.copy(userType = Premium.value, lastPaymentAt = start, nextPaymentAt = expiry)).toRight(CouldNotUpdateUserError()).leftWiden[ValidationError]
     } yield operationResult
   }
 

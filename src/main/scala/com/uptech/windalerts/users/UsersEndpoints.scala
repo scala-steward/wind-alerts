@@ -5,7 +5,7 @@ import cats.effect.{ContextShift, IO}
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.{CouldNotUpdatePasswordError, CouldNotUpdateUserDeviceError, HttpErrorHandler, PrivacyPolicy, RefreshTokenExpiredError, RefreshTokenNotFoundError, UnknownError, ValidationError, secrets}
+import com.uptech.windalerts.domain.{CouldNotUpdatePasswordError, CouldNotUpdateUserDeviceError, HttpErrorHandler, PrivacyPolicy, RefreshTokenExpiredError, RefreshTokenNotFoundError, UnknownError, ValidationError, conversions, secrets}
 import io.circe.parser._
 import io.scalaland.chimney.dsl._
 import org.http4s.dsl.Http4sDsl
@@ -17,7 +17,7 @@ class UsersEndpoints(rpos: Repos[IO],
                      userRolesService: UserRolesService[IO],
                      subscriptionsService: SubscriptionsService[IO],
                      httpErrorHandler: HttpErrorHandler[IO],
-                     auth: Auth)(implicit cs: ContextShift[IO])  extends Http4sDsl[IO] {
+                     auth: AuthenticationService[IO])(implicit cs: ContextShift[IO])  extends Http4sDsl[IO] {
   private val logger = getLogger
 
   def openEndpoints(): HttpRoutes[IO] =
@@ -51,9 +51,9 @@ class UsersEndpoints(rpos: Repos[IO],
           _ <- EitherT.liftF(rpos.otp().create(OTPWithExpiry(otp, System.currentTimeMillis() + 5 * 60 * 1000, createUserResponse._id.toHexString)))
           _ <- EitherT.liftF(IO(emailSender.sendOtp(createUserResponse.email, otp)))
           dbCredentials <- EitherT.right(IO(new Credentials(createUserResponse._id, registerRequest.email, registerRequest.password, registerRequest.deviceType)))
-          accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
+          accessTokenId <- EitherT.right(IO(conversions.generateRandomString(10)))
           token <- auth.createToken(dbCredentials._id.toHexString, accessTokenId)
-          refreshToken <- EitherT.liftF(rpos.refreshTokenRepo().create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbCredentials._id.toHexString, accessTokenId)))
+          refreshToken <- EitherT.liftF(rpos.refreshTokenRepo().create(RefreshToken(conversions.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbCredentials._id.toHexString, accessTokenId)))
           tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, createUserResponse)
         } yield tokens
         action.value.flatMap {
@@ -67,10 +67,10 @@ class UsersEndpoints(rpos: Repos[IO],
           dbCredentials <- userService.getByCredentials(credentials.email, credentials.password, credentials.deviceType)
           dbUser <- userService.getUser(dbCredentials.email, dbCredentials.deviceType)
           _ <- userService.updateDeviceToken(dbCredentials._id.toHexString, credentials.deviceToken).toRight(CouldNotUpdateUserDeviceError())
-          accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
+          accessTokenId <- EitherT.right(IO(conversions.generateRandomString(10)))
           token <- auth.createToken(dbCredentials._id.toHexString, accessTokenId)
           _ <- EitherT.liftF(rpos.refreshTokenRepo().deleteForUserId(dbCredentials._id.toHexString))
-          refreshToken <- EitherT.liftF(rpos.refreshTokenRepo().create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbCredentials._id.toHexString, accessTokenId)))
+          refreshToken <- EitherT.liftF(rpos.refreshTokenRepo().create(RefreshToken(conversions.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbCredentials._id.toHexString, accessTokenId)))
           tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, dbUser)
         } yield tokens
         action.value.flatMap {
@@ -92,10 +92,10 @@ class UsersEndpoints(rpos: Repos[IO],
             }
             eitherT
           }
-          accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
+          accessTokenId <- EitherT.right(IO(conversions.generateRandomString(10)))
           token <- auth.createToken(oldValidRefreshToken.userId, accessTokenId)
           _ <- EitherT.liftF(rpos.refreshTokenRepo().deleteForUserId(oldValidRefreshToken.userId))
-          newRefreshToken <- EitherT.liftF(rpos.refreshTokenRepo().create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), oldValidRefreshToken.userId, accessTokenId)))
+          newRefreshToken <- EitherT.liftF(rpos.refreshTokenRepo().create(RefreshToken(conversions.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), oldValidRefreshToken.userId, accessTokenId)))
           user <- userService.getUser(newRefreshToken.userId)
 
           tokens <- auth.tokens(token.accessToken, newRefreshToken, token.expiredAt, user)
@@ -314,10 +314,10 @@ class UsersEndpoints(rpos: Repos[IO],
         val action = for {
           rr <- EitherT.liftF(req.as[FacebookRegisterRequest])
           result <- userService.createUser(rr)
-          accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
+          accessTokenId <- EitherT.right(IO(conversions.generateRandomString(10)))
           token <- auth.createToken(result._2._id.toHexString, accessTokenId)
           refreshToken <- EitherT.liftF(
-            rpos.refreshTokenRepo().create(RefreshToken(auth.generateRandomString(40),
+            rpos.refreshTokenRepo().create(RefreshToken(conversions.generateRandomString(40),
               System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY,
               result._2._id.toHexString, accessTokenId)))
           tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, result._1)
@@ -333,10 +333,10 @@ class UsersEndpoints(rpos: Repos[IO],
           credentials <- EitherT.liftF(req.as[FacebookLoginRequest])
           dbUser <- userService.getFacebookUserByAccessToken(credentials.accessToken, credentials.deviceType)
           _ <- userService.updateDeviceToken(dbUser._id.toHexString, credentials.deviceToken).toRight(CouldNotUpdateUserDeviceError())
-          accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
+          accessTokenId <- EitherT.right(IO(conversions.generateRandomString(10)))
           token <- auth.createToken(dbUser._id.toHexString, accessTokenId)
           _ <- EitherT.liftF(rpos.refreshTokenRepo().deleteForUserId(dbUser._id.toHexString))
-          refreshToken <- EitherT.liftF(rpos.refreshTokenRepo().create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbUser._id.toHexString, accessTokenId)))
+          refreshToken <- EitherT.liftF(rpos.refreshTokenRepo().create(RefreshToken(conversions.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbUser._id.toHexString, accessTokenId)))
           tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, dbUser)
         } yield tokens
         action.value.flatMap {
@@ -352,10 +352,10 @@ class UsersEndpoints(rpos: Repos[IO],
         val action = for {
           rr <- EitherT.liftF(req.as[AppleRegisterRequest])
           result <- userService.createUser(rr)
-          accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
+          accessTokenId <- EitherT.right(IO(conversions.generateRandomString(10)))
           token <- auth.createToken(result._2._id.toHexString, accessTokenId)
           refreshToken <- EitherT.liftF(
-            rpos.refreshTokenRepo().create(RefreshToken(auth.generateRandomString(40),
+            rpos.refreshTokenRepo().create(RefreshToken(conversions.generateRandomString(40),
               System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY,
               result._2._id.toHexString, accessTokenId)))
           tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, result._1)
@@ -371,10 +371,10 @@ class UsersEndpoints(rpos: Repos[IO],
           credentials <- EitherT.liftF(req.as[AppleLoginRequest])
           dbUser <- userService.loginUser(credentials)
           _ <- userService.updateDeviceToken(dbUser._id.toHexString, credentials.deviceToken).toRight(CouldNotUpdateUserDeviceError())
-          accessTokenId <- EitherT.right(IO(auth.generateRandomString(10)))
+          accessTokenId <- EitherT.right(IO(conversions.generateRandomString(10)))
           token <- auth.createToken(dbUser._id.toHexString, accessTokenId)
           _ <- EitherT.liftF(rpos.refreshTokenRepo().deleteForUserId(dbUser._id.toHexString))
-          refreshToken <- EitherT.liftF(rpos.refreshTokenRepo().create(RefreshToken(auth.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbUser._id.toHexString, accessTokenId)))
+          refreshToken <- EitherT.liftF(rpos.refreshTokenRepo().create(RefreshToken(conversions.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbUser._id.toHexString, accessTokenId)))
           tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, dbUser)
         } yield tokens
         action.value.flatMap {
