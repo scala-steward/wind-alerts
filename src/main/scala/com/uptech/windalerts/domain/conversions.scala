@@ -1,14 +1,7 @@
 package com.uptech.windalerts.domain
 
-import java.util
-
-import cats.data.EitherT
 import cats.effect.IO
-import com.uptech.windalerts.domain.domain.UserT
 
-import scala.collection.JavaConverters
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.util.Random
 
 object conversions {
@@ -31,7 +24,4 @@ object conversions {
 
     (1 to n).map(_ => alpha(Random.nextInt.abs % size)).mkString
   }
-
-
-
 }

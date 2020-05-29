@@ -110,6 +110,14 @@ class UserService[F[_] : Sync](repos: Repos[F]) {
       passwordMatched <- isPasswordMatch(password, creds)
     } yield passwordMatched
 
+  private def isPasswordMatch(password: String, creds: Credentials): EitherT[F, ValidationError, Credentials] = {
+    EitherT.fromEither(if (password.isBcrypted(creds.password)) {
+      Right(creds)
+    } else {
+      Left(UserAuthenticationFailedError(creds.email))
+    })
+  }
+
   def resetPassword(
                      email: String, deviceType: String
                    ): EitherT[F, ValidationError, Credentials] =
@@ -119,15 +127,6 @@ class UserService[F[_] : Sync](repos: Repos[F]) {
       _ <- updatePassword(creds._id.toHexString, newPassword).toRight(CouldNotUpdatePasswordError())
       _ <- EitherT.pure(repos.emailConf().send(email, "Your new password", newPassword))
     } yield creds
-
-
-  private def isPasswordMatch(password: String, creds: Credentials): EitherT[F, ValidationError, Credentials] = {
-    EitherT.fromEither(if (password.isBcrypted(creds.password)) {
-      Right(creds)
-    } else {
-      Left(UserAuthenticationFailedError(creds.email))
-    })
-  }
 
   def createFeedback(feedback: Feedback): EitherT[F, ValidationError, Feedback] = {
     EitherT.liftF(repos.feedbackRepository.create(feedback))
