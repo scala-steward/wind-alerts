@@ -45,12 +45,11 @@ class UsersEndpoints(rpos: Repos[IO],
         val action = for {
           registerRequest <- EitherT.liftF(req.as[RegisterRequest])
           createUserResponse <- userService.createUser(registerRequest)
-          _ <- otpService.send(createUserResponse._id.toHexString, createUserResponse.email)
-          dbCredentials <- EitherT.right(IO(new Credentials(createUserResponse._id, registerRequest.email, registerRequest.password, registerRequest.deviceType)))
+          _ <- otpService.send(createUserResponse._1._id.toHexString, createUserResponse._1.email)
           accessTokenId <- EitherT.right(IO(conversions.generateRandomString(10)))
-          token <- auth.createToken(dbCredentials._id.toHexString, accessTokenId)
-          refreshToken <- EitherT.liftF(rpos.refreshTokenRepo().create(RefreshToken(conversions.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbCredentials._id.toHexString, accessTokenId)))
-          tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, createUserResponse)
+          token <- auth.createToken(createUserResponse._2._id.toHexString, accessTokenId)
+          refreshToken <- EitherT.liftF(rpos.refreshTokenRepo().create(RefreshToken(conversions.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), createUserResponse._2._id.toHexString, accessTokenId)))
+          tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, createUserResponse._1)
         } yield tokens
         action.value.flatMap {
           case Right(tokens) => Ok(tokens)
