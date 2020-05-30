@@ -41,7 +41,7 @@ trait Repos[F[_]] {
 
   def appleLoginConf() : ApnsSigningKey
 
-  def emailConf() : EmailSender
+  def emailConf() : EmailSender[F]
 
   def fbSecret() : String
 
@@ -108,7 +108,7 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
 
   val email = Eval.later {
     val emailConf = com.uptech.windalerts.domain.secrets.read.surfsUp.email
-    new EmailSender(emailConf.userName, emailConf.password)
+    new EmailSender[IO](emailConf.userName, emailConf.password)
   }
 
   val fbKey = Eval.later {

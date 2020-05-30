@@ -5,7 +5,9 @@ import cats.effect.{ContextShift, IO}
 import com.uptech.windalerts.domain.OtpNotFoundError
 import com.uptech.windalerts.domain.domain.OTPWithExpiry
 import org.mongodb.scala.MongoCollection
+import org.mongodb.scala.bson.BsonString
 import org.mongodb.scala.model.Filters.{and, equal}
+import org.mongodb.scala.model.{InsertOneOptions, UpdateOptions}
 import org.mongodb.scala.model.Updates._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -13,7 +15,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 trait OtpRepository[F[_]] {
   def exists(otp: String, userId: String): EitherT[F, OtpNotFoundError, OTPWithExpiry]
 
-  def create(otp: OTPWithExpiry): F[OTPWithExpiry]
 
   def updateForUser(userId:String, otp: OTPWithExpiry): F[OTPWithExpiry]
 }
@@ -31,11 +32,7 @@ class MongoOtpRepository(collection: MongoCollection[OTPWithExpiry])(implicit cs
       OtpNotFoundError())
   }
 
-  override def create(otp: OTPWithExpiry): IO[OTPWithExpiry] = {
-    IO.fromFuture(IO(collection.insertOne(otp).toFuture().map(_ => otp)))
-  }
-
   override def updateForUser(userId: String, otp: OTPWithExpiry): IO[OTPWithExpiry] = {
-    IO.fromFuture(IO(collection.updateOne(equal("userId", otp.userId), Seq(set("otp", otp.otp), set("expiry", otp.expiry))).toFuture().map(_ => otp)))
+    IO.fromFuture(IO(collection.updateOne(equal("userId", otp.userId), Seq(set("otp", otp.otp), set("expiry", otp.expiry)), UpdateOptions().upsert(true)).toFuture().map(_ => otp)))
   }
 }

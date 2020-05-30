@@ -5,7 +5,7 @@ import cats.effect.{ContextShift, IO}
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.{CouldNotUpdatePasswordError, CouldNotUpdateUserDeviceError, HttpErrorHandler, PrivacyPolicy, RefreshTokenExpiredError, RefreshTokenNotFoundError, UnknownError, ValidationError, conversions, secrets}
+import com.uptech.windalerts.domain._
 import io.circe.parser._
 import io.scalaland.chimney.dsl._
 import org.http4s.dsl.Http4sDsl
@@ -17,7 +17,8 @@ class UsersEndpoints(rpos: Repos[IO],
                      userRolesService: UserRolesService[IO],
                      subscriptionsService: SubscriptionsService[IO],
                      httpErrorHandler: HttpErrorHandler[IO],
-                     auth: AuthenticationService[IO])(implicit cs: ContextShift[IO])  extends Http4sDsl[IO] {
+                     auth: AuthenticationService[IO],
+                     otpService:OTPService[IO])(implicit cs: ContextShift[IO])  extends Http4sDsl[IO] {
   private val logger = getLogger
 
   def openEndpoints(): HttpRoutes[IO] =
@@ -44,12 +45,7 @@ class UsersEndpoints(rpos: Repos[IO],
         val action = for {
           registerRequest <- EitherT.liftF(req.as[RegisterRequest])
           createUserResponse <- userService.createUser(registerRequest)
-          emailConf <- EitherT.liftF(IO(secrets.read.surfsUp.email))
-          emailSender <- EitherT.liftF(IO(new EmailSender(emailConf.userName, emailConf.password)))
-
-          otp <- createOTP
-          _ <- EitherT.liftF(rpos.otp().create(OTPWithExpiry(otp, System.currentTimeMillis() + 5 * 60 * 1000, createUserResponse._id.toHexString)))
-          _ <- EitherT.liftF(IO(emailSender.sendOtp(createUserResponse.email, otp)))
+          _ <- otpService.send(createUserResponse._id.toHexString, createUserResponse.email)
           dbCredentials <- EitherT.right(IO(new Credentials(createUserResponse._id, registerRequest.email, registerRequest.password, registerRequest.deviceType)))
           accessTokenId <- EitherT.right(IO(conversions.generateRandomString(10)))
           token <- auth.createToken(dbCredentials._id.toHexString, accessTokenId)
@@ -175,14 +171,8 @@ class UsersEndpoints(rpos: Repos[IO],
 
       case _@POST -> Root / "sendOTP" as user => {
         val action = for {
-          emailConf <- EitherT.liftF(IO(secrets.read.surfsUp.email))
-          emailSender <- EitherT.liftF(IO(new EmailSender(emailConf.userName, emailConf.password)))
           userFromDb <- userService.getUser(user.id)
-          otp <- createOTP
-          _ <- otpWithExpiry(user, otp)
-
-          sent <- send(emailSender, userFromDb, otp)
-
+          sent <- otpService.send(userFromDb._id.toHexString, userFromDb.email)
         } yield sent
         val response = action.value.flatMap {
           case Right(_) => Ok()
@@ -293,22 +283,8 @@ class UsersEndpoints(rpos: Repos[IO],
       }
     }
 
-  private def send(emailSender: EmailSender, userFromDb: UserT, otp: String): EitherT[IO, ValidationError, String] = {
-    EitherT.liftF(IO({
-      emailSender.sendOtp(userFromDb.email, otp)
-      otp
-    }))
-  }
-
-  private def otpWithExpiry(user: UserId, otp: String): EitherT[IO, ValidationError, OTPWithExpiry] = {
-    EitherT.liftF(rpos.otp().updateForUser(user.id, OTPWithExpiry(otp, System.currentTimeMillis() + 5 * 60 * 1000, user.id)))
-  }
-
-  private def createOTP: EitherT[IO, ValidationError, String] = {
-    EitherT.liftF(IO(auth.createOtp(4)))
-  }
-
   def facebookEndpoints(): HttpRoutes[IO] = {
+
     HttpRoutes.of[IO] {
       case req@POST -> Root => {
         val action = for {

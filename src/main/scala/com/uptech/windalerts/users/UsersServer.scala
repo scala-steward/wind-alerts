@@ -31,7 +31,7 @@ object UsersServer extends IOApp {
     beaches <- IO(new BeachService[IO](new WindsService[IO](apiKey), new TidesService[IO](apiKey, repos), new SwellsService[IO](apiKey, swellAdjustments.read)))
     httpErrorHandler <- IO(new HttpErrorHandler[IO])
 
-    endpoints <- IO(new UsersEndpoints(repos, usersService, userRolesService, subscriptionsService, httpErrorHandler, auth))
+    endpoints <- IO(new UsersEndpoints(repos, usersService, userRolesService, subscriptionsService, httpErrorHandler, auth, new OTPService[IO](repos, auth)))
 
     alertService <- IO(new AlertsService[IO](repos))
     alertsEndPoints <- IO(new AlertsEndpoints(alertService, usersService, auth, httpErrorHandler))

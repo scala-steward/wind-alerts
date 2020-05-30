@@ -20,6 +20,15 @@ class UserService[F[_] : Sync](repos: Repos[F]) {
     } yield saved
   }
 
+  def createUser1(rr: RegisterRequest): EitherT[F, UserAlreadyExistsError, (UserT, Credentials)] = {
+    val credentials = Credentials(rr.email, rr.password.bcrypt, rr.deviceType)
+    for {
+      _ <- doesNotExist(credentials.email, credentials.deviceType)
+      savedCreds <- EitherT.liftF(repos.credentialsRepo().create(credentials))
+      saved <- EitherT.liftF(repos.usersRepo().create(UserT.create(new ObjectId(savedCreds._id.toHexString), rr.email, rr.name, rr.deviceId, rr.deviceToken, rr.deviceType, -1, Registered.value, -1, false, 4)))
+    } yield (saved, savedCreds)
+  }
+
   def createUser(rr: FacebookRegisterRequest): EitherT[F, UserAlreadyExistsError, (UserT, FacebookCredentialsT)] = {
     for {
       facebookClient <- EitherT.pure(new DefaultFacebookClient(rr.accessToken, repos.fbSecret(), Version.LATEST))

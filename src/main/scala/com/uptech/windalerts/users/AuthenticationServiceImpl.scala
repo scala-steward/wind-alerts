@@ -27,7 +27,7 @@ trait AuthenticationService[F[_]] {
 
   def tokens(accessToken: String, refreshToken: RefreshToken, expiredAt: Long, user: UserT): EitherT[F, ValidationError, TokensWithUser]
 
-  def createOtp(n: Int) : String
+  def createOtp(n: Int) : F[String]
 
 }
 
@@ -71,7 +71,7 @@ class AuthenticationServiceImpl(repos: Repos[IO]) extends AuthenticationService[
     val alpha = "0123456789"
     val size = alpha.size
 
-    (1 to n).map(_ => alpha(Random.nextInt.abs % size)).mkString
+    IO.pure((1 to n).map(_ => alpha(Random.nextInt.abs % size)).mkString)
   }
 
   override def authorizePremiumUsers(user: domain.UserT): EitherT[IO, ValidationError, UserT] = {
