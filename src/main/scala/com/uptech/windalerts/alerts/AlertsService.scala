@@ -28,3 +28,5 @@ class AlertsService[F[_]: Sync](repo: Repos[F]) {
   }
   private def getMinutes(cal: Calendar) = cal.get(HOUR_OF_DAY) * 60 + cal.get(MINUTE)
 }
+
+

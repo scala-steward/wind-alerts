@@ -57,8 +57,9 @@ class MongoUserRepository(collection: MongoCollection[UserT])(implicit cs: Conte
   override def update(user: domain.UserT): OptionT[IO, domain.UserT] = {
     OptionT.liftF(
       for {
-        updateResultIO <- IO.fromFuture(IO(collection.replaceOne(equal("_id", user._id), user).toFuture().map(_ => user)))
-      } yield updateResultIO)
+        updateResultIO <- IO.fromFuture(IO(collection.replaceOne(equal("_id", user._id), user).toFuture()))
+        updatedUser <- getByUserId(user._id.toHexString).map(u=>u.get)
+      } yield updatedUser)
   }
 
   override def updateDeviceToken(userId: String, deviceToken: String): OptionT[IO, Unit] = {
