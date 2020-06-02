@@ -78,9 +78,9 @@ class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit
   override def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest):EitherT[IO, ValidationError, AlertT] = {
     val alertUpdated = updateAlertRequest.into[AlertT].withFieldComputed(_._id, u => new ObjectId(alertId)).withFieldComputed(_.owner, _ => requester).transform
     for {
+      updated <- EitherT.liftF(IO(collection.replaceOne(equal("_id", new ObjectId(alertId)), alertUpdated).toFuture()))
       alert <- OptionT(getById(alertId)).toRight(AlertNotFoundError())
-      updated <- EitherT.liftF(IO(collection.replaceOne(equal("_id", new ObjectId(alertId)), alertUpdated).toFuture()).map(_ => alert))
-    } yield updated
+    } yield alert
   }
 
 }
