@@ -23,7 +23,8 @@ object AppleLogin extends App {
       "client_id" -> "com.passiondigital.surfsup.ios",
       "client_secret" -> generateJWT(privateKey),
       "grant_type" -> "authorization_code",
-      "code" -> authorizationCode
+      "code" -> authorizationCode,
+      "scope" -> "name%20email"
     ))
       .post(uri"https://appleid.apple.com/auth/token?scope=name%20email")
 
