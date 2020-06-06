@@ -173,6 +173,7 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
     println(System.currentTimeMillis() - start)
     v
   }
+
   private def db() = {
 
     if (maybeDb == null)

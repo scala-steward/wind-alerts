@@ -348,6 +348,14 @@ object codecs {
   implicit def appleRegisterRequestEntityEncoder[F[_] : Applicative]: EntityEncoder[F, AppleRegisterRequest] = jsonEncoderOf
 
 
+  lazy implicit val nameDecoder: Decoder[Name] = deriveDecoder[Name]
+
+  implicit def nameEntityDecoder[F[_] : Sync]: EntityDecoder[F, Name] = jsonOf
+
+  lazy implicit val nameEncoder: Encoder[Name] = deriveEncoder[Name]
+
+  implicit def nameEntityEncoder[F[_] : Applicative]: EntityEncoder[F, Name] = jsonEncoderOf
+
   lazy implicit val appleUserDecoder: Decoder[AppleUser] = deriveDecoder[AppleUser]
 
   implicit def appleUserEntityDecoder[F[_] : Sync]: EntityDecoder[F, AppleUser] = jsonOf

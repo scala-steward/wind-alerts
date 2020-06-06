@@ -25,6 +25,7 @@ class UsersEndpoints(rpos: Repos[IO],
     HttpRoutes.of[IO] {
       case _@GET -> Root / "ping"  =>
         val action: EitherT[IO, String, String] = for {
+          _ <- EitherT.liftF(IO(rpos.usersRepo()))
           response <- EitherT.liftF(IO("pong"))
         } yield response
         action.value.flatMap {
