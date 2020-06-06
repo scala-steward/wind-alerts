@@ -318,7 +318,9 @@ object domain {
 
   case class TokenResponse(access_token: String, id_token: String)
 
-  case class AppleUser(sub: String, email: String)
+  case class Name(firstName: String, lastName: String)
+
+  case class AppleUser(sub: String, email: String, name: Name)
 
   case class Feedback(_id: ObjectId, topic: String, message: String, userId:String)
   object Feedback {

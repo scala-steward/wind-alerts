@@ -25,7 +25,7 @@ object AppleLogin extends App {
       "grant_type" -> "authorization_code",
       "code" -> authorizationCode
     ))
-      .post(uri"https://appleid.apple.com/auth/token?scope=email")
+      .post(uri"https://appleid.apple.com/auth/token?scope=name%20email")
 
     implicit val backend = HttpURLConnectionBackend()
 
@@ -34,7 +34,7 @@ object AppleLogin extends App {
     val tokenResponse = body.flatMap(parser.parse(_)).flatMap(x => x.as[TokenResponse]).right.get
     val claims = Jwt.decode(tokenResponse.id_token, JwtOptions(signature = false))
     val parsedEither = parser.parse(claims.toOption.get.content)
-    println(claims.toOption.get.content)
+    getLogger.error(claims.toOption.get.content)
     parsedEither.flatMap(x => x.as[AppleUser]).right.get
   }
 
