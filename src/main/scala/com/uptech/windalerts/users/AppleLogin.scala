@@ -24,9 +24,8 @@ object AppleLogin extends App {
       "client_secret" -> generateJWT(privateKey),
       "grant_type" -> "authorization_code",
       "code" -> authorizationCode,
-      "scope" -> "name%20email"
     ))
-      .post(uri"https://appleid.apple.com/auth/token?scope=name%20email")
+      .post(uri"https://appleid.apple.com/auth/token?scope=email")
 
     implicit val backend = HttpURLConnectionBackend()
 
