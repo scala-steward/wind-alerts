@@ -40,7 +40,7 @@ object UsersServer extends IOApp {
     alertService <- IO(new AlertsService[IO](repos))
     alertsEndPoints <- IO(new AlertsEndpoints(alertService, usersService, auth, httpErrorHandler))
 
-    httpApp <- IO(errors.errorMapper(Logger.httpApp(false, true, logAction = requestLogger)(
+    httpApp <- IO(errors.errorMapper(Logger.httpApp(true, true, logAction = requestLogger)(
       Router(
         "/v1/users" -> auth.middleware(endpoints.authedService()),
         "/v1/users" -> endpoints.openEndpoints(),
