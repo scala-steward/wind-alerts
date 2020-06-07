@@ -29,7 +29,7 @@ object UpdateUserRolesServer extends IOApp {
     endpoints <- IO(new UpdateUserRolesEndpoints[IO](new UserRolesService[IO](repos, subscriptionsService), httpErrorHandler))
 
 
-    httpApp <- IO(errors.errorMapper(Logger.httpApp(false, true, logAction = requestLogger)(
+    httpApp <- IO(errors.errorMapper(Logger.httpApp(true, true, logAction = requestLogger)(
       Router(
         "/v1/users/roles" -> endpoints.endpoints(),
       ).orNotFound)))
