@@ -13,7 +13,7 @@ import io.circe.syntax._
 import io.scalaland.chimney.dsl._
 import org.log4s.getLogger
 
-class SubscriptionsService[F[_] : Sync](rpos: Repos[F]) {
+class SubscriptionsService[F[_] : Sync](repos: Repos[F]) {
 
   def getAndroidPurchase(request: AndroidReceiptValidationRequest): EitherT[F, ValidationError, domain.SubscriptionPurchase] = {
     getAndroidPurchase(request.productId, request.token)
@@ -21,7 +21,7 @@ class SubscriptionsService[F[_] : Sync](rpos: Repos[F]) {
 
   def getAndroidPurchase(productId: String, token: String): EitherT[F, ValidationError, domain.SubscriptionPurchase] = {
     EitherT.pure({
-      rpos.androidConf().purchases().subscriptions().get(ApplicationConfig.PACKAGE_NAME, productId, token).execute().into[domain.SubscriptionPurchase].enableBeanGetters
+      repos.androidConf().purchases().subscriptions().get(ApplicationConfig.PACKAGE_NAME, productId, token).execute().into[domain.SubscriptionPurchase].enableBeanGetters
         .withFieldComputed(_.expiryTimeMillis, _.getExpiryTimeMillis.toLong)
         .withFieldComputed(_.startTimeMillis, _.getStartTimeMillis.toLong).transform
     })
