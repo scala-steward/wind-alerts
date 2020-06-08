@@ -245,10 +245,6 @@ object domain {
     = new Notification(new ObjectId(), alertId, userId, deviceToken, title, body, sentAt)
   }
 
-  def j2s[A](inputList: util.List[A]): Seq[A] = JavaConverters.asScalaIteratorConverter(inputList.iterator).asScala.toSeq
-
-  def j2sm[K, V](map: util.Map[K, V]): Map[K, V] = JavaConverters.mapAsScalaMap(map).toMap
-
   case class AppleReceiptValidationRequest(`receipt-data`: String, password: String)
 
   case class AndroidReceiptValidationRequest(productId: String, token: String)
