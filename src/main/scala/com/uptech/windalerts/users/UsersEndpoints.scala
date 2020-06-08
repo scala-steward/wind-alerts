@@ -36,7 +36,16 @@ class UsersEndpoints(repos: Repos[IO],
 
       case _@GET -> Root / "privacy-policy"  =>
         val action: EitherT[IO, String, String] = for {
-          response <- EitherT.liftF(IO(PrivacyPolicy.read))
+          response <- EitherT.liftF(IO(statics.privacyPolicy))
+        } yield response
+        action.value.flatMap {
+          case Right(x) => Ok(x)
+          case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
+        }
+
+      case _@GET -> Root / "about-surfs-up"  =>
+        val action: EitherT[IO, String, String] = for {
+          response <- EitherT.liftF(IO(statics.aboutSurfsUp))
         } yield response
         action.value.flatMap {
           case Right(x) => Ok(x)

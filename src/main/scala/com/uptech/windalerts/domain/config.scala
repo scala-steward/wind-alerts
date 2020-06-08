@@ -42,17 +42,18 @@ object swellAdjustments {
     Adjustments(decode[Adjustments](jsonContents).toOption.get.adjustments.sortBy(_.from))
   }
 }
-
-object PrivacyPolicy {
-  def read = {
-    val tryProd = Try(Source.fromFile("/app/resources/privacy-policy.md").getLines.mkString)
-    val contents = tryProd match {
-      case Failure(_) => Source.fromFile("src/main/resources/privacy-policy.md").getLines.mkString
-      case Success(_) => tryProd.get
+object statics {
+  def read(name:String) = {
+    Try(Source.fromFile(s"/app/resources/$name.md").getLines.mkString) match {
+      case Failure(_) => Source.fromFile(s"src/main/resources/$name.md").getLines.mkString
+      case Success(_) => Try(Source.fromFile(s"/app/resources/$name.md").getLines.mkString).get
     }
-    contents
   }
+
+  def privacyPolicy = read("privacy-policy")
+  def aboutSurfsUp = read("about-surfs-up")
 }
+
 object beaches {
 
   case class Beaches(beaches: Seq[Beach])
