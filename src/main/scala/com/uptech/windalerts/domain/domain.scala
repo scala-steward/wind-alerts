@@ -40,8 +40,6 @@ object domain {
       conversions.generateRandomString(40),
       System.currentTimeMillis() + REFRESH_TOKEN_EXPIRY,
       userId, accessTokenId)
-
-    def apply(refreshToken: String, expiry: Long, userId: String, accessTokenId: String): RefreshToken = new RefreshToken(new ObjectId(), refreshToken, expiry, userId, accessTokenId)
   }
 
   case class FacebookCredentialsT(_id: ObjectId, email: String, accessToken: String, deviceType: String)
