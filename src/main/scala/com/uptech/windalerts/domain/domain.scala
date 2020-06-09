@@ -4,13 +4,14 @@ import cats.data.EitherT
 import io.scalaland.chimney.dsl._
 import org.log4s.getLogger
 import org.mongodb.scala.bson.ObjectId
+import org.mongodb.scala.result
 
 import scala.beans.BeanProperty
 import scala.util.control.NonFatal
 
 
 object domain {
-  type SurfsUpEitherT[F[_], T] =  EitherT[F, SurfsUpError, T]
+  type SurfsUpEitherT[F[_], T] = EitherT[F, SurfsUpError, T]
 
   private val logger = getLogger
 
@@ -33,6 +34,13 @@ object domain {
   }
 
   object RefreshToken {
+    val REFRESH_TOKEN_EXPIRY = 14L * 24L * 60L * 60L * 1000L
+
+    def apply(userId: String, accessTokenId: String): RefreshToken = new RefreshToken(new ObjectId(),
+      conversions.generateRandomString(40),
+      System.currentTimeMillis() + REFRESH_TOKEN_EXPIRY,
+      userId, accessTokenId)
+
     def apply(refreshToken: String, expiry: Long, userId: String, accessTokenId: String): RefreshToken = new RefreshToken(new ObjectId(), refreshToken, expiry, userId, accessTokenId)
   }
 
@@ -124,7 +132,7 @@ object domain {
 
   case class FacebookRegisterRequest(accessToken: String, deviceId: String, deviceType: String, deviceToken: String)
 
-  case class AppleRegisterRequest(authorizationCode: String, nonce: String, deviceId: String, deviceType: String, deviceToken: String, name:String)
+  case class AppleRegisterRequest(authorizationCode: String, nonce: String, deviceId: String, deviceType: String, deviceToken: String, name: String)
 
   case class AppleLoginRequest(authorizationCode: String, nonce: String, deviceId: String, deviceType: String, deviceToken: String)
 
@@ -204,7 +212,7 @@ object domain {
         windDirections.contains(beach.wind.directionText) &&
         (tideHeightStatuses.contains(beach.tide.height.status) || tideHeightStatuses.contains(
           {
-            if (beach.tide.height.status.equals("Increasing"))"Rising" else "Falling"
+            if (beach.tide.height.status.equals("Increasing")) "Rising" else "Falling"
           }))
 
     }
@@ -314,7 +322,8 @@ object domain {
 
   case class AppleUser(sub: String, email: String)
 
-  case class Feedback(_id: ObjectId, topic: String, message: String, userId:String)
+  case class Feedback(_id: ObjectId, topic: String, message: String, userId: String)
+
   object Feedback {
     def apply(topic: String, message: String, userId: String): Feedback = new Feedback(new ObjectId, topic, message, userId)
   }
