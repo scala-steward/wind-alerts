@@ -2,14 +2,16 @@ package com.uptech.windalerts.users
 
 import cats.data.EitherT
 import cats.effect.Sync
-import com.uptech.windalerts.Repos
-import com.uptech.windalerts.domain.domain.UserType.{Premium, PremiumExpired, Trial}
-import com.uptech.windalerts.domain.domain.{UserT, UserType}
-import com.uptech.windalerts.domain.{CouldNotUpdateUserError, UserNotFoundError, ValidationError, secrets}
 import cats.implicits._
+import com.uptech.windalerts.Repos
+import com.uptech.windalerts.domain.codecs._
+import com.uptech.windalerts.domain.domain.UserType.{Premium, PremiumExpired, Trial}
+import com.uptech.windalerts.domain.domain._
+import com.uptech.windalerts.domain._
+import io.circe.parser.parse
 
 class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: SubscriptionsService[F]) {
-  def makeUserTrial(user: UserT): EitherT[F, ValidationError, UserT] = {
+  def makeUserTrial(user: UserT): EitherT[F, SurfsUpError, UserT] = {
     repos.usersRepo().update(user.copy(
       userType = Trial.value,
       startTrialAt = System.currentTimeMillis(),
@@ -17,20 +19,20 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
     )).toRight(CouldNotUpdateUserError())
   }
 
-  def makeUserPremium(user: UserT, start: Long, expiry: Long): EitherT[F, ValidationError, UserT] = {
+  def makeUserPremium(user: UserT, start: Long, expiry: Long): EitherT[F, SurfsUpError, UserT] = {
     for {
-      operationResult <- repos.usersRepo().update(user.copy(userType = Premium.value, lastPaymentAt = start, nextPaymentAt = expiry)).toRight(CouldNotUpdateUserError()).leftWiden[ValidationError]
+      operationResult <- repos.usersRepo().update(user.copy(userType = Premium.value, lastPaymentAt = start, nextPaymentAt = expiry)).toRight(CouldNotUpdateUserError()).leftWiden[SurfsUpError]
     } yield operationResult
   }
 
-  def makeUserPremiumExpired(user: UserT): EitherT[F, ValidationError, UserT] = {
+  def makeUserPremiumExpired(user: UserT): EitherT[F, SurfsUpError, UserT] = {
     for {
       operationResult <- repos.usersRepo().update(user.copy(userType = PremiumExpired.value, nextPaymentAt = -1)).toRight(CouldNotUpdateUserError())
       _ <- EitherT.liftF(repos.alertsRepository().disableAllButOneAlerts(user._id.toHexString))
     } yield operationResult
   }
 
-  private def makeUserTrialExpired(eitherUser: UserT): EitherT[F, ValidationError, UserT] = {
+  private def makeUserTrialExpired(eitherUser: UserT): EitherT[F, SurfsUpError, UserT] = {
     for {
       updated <- update(eitherUser.copy(userType = UserType.TrialExpired.value, lastPaymentAt = -1, nextPaymentAt = -1))
       _ <- EitherT.liftF(repos.alertsRepository().disableAllButOneAlerts(updated._id.toHexString))
@@ -92,13 +94,13 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
       saved <- repos.usersRepo().update(user).toRight(UserNotFoundError())
     } yield saved
 
-
-  def convert[A](list: List[EitherT[F, ValidationError, A]]) = {
+  def convert[A](list: List[EitherT[F, SurfsUpError, A]]) = {
     import cats.implicits._
 
-    type Stack[A] = EitherT[F, ValidationError, A]
+    type Stack[A] = EitherT[F, SurfsUpError, A]
 
     val eitherOfList: Stack[List[A]] = list.sequence
     eitherOfList
   }
+
 }

@@ -5,7 +5,7 @@ import cats.effect.Effect
 import cats.implicits._
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.{HttpErrorHandler, ValidationError}
+import com.uptech.windalerts.domain.{HttpErrorHandler, SurfsUpError}
 import com.uptech.windalerts.users.{AuthenticationService, UserService}
 import io.scalaland.chimney.dsl._
 import org.http4s.AuthedRoutes
@@ -62,7 +62,7 @@ class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F], usersServic
           val action = for {
             dbUser <- usersService.getUser(user.id)
             _ <- auth.authorizePremiumUsers(dbUser)
-            saved <- EitherT.liftF(alertService.save(alert, user.id)).asInstanceOf[EitherT[F, ValidationError, AlertT]]
+            saved <- EitherT.liftF(alertService.save(alert, user.id)).asInstanceOf[EitherT[F, SurfsUpError, AlertT]]
           } yield saved
           action.value.flatMap {
             case Right(response) => Created(response.into[Alert].withFieldComputed(_.id, u => u._id.toHexString).transform)

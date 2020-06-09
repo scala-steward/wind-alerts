@@ -6,7 +6,7 @@ import cats.data.EitherT
 import cats.effect.IO
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.{OperationNotAllowed, ValidationError, domain}
+import com.uptech.windalerts.domain.{OperationNotAllowed, SurfsUpError, domain}
 import dev.profunktor.auth.JwtAuthMiddleware
 import dev.profunktor.auth.jwt.{JwtAuth, JwtSecretKey, JwtToken}
 import io.circe.parser._
@@ -21,11 +21,11 @@ trait AuthenticationService[F[_]] {
   val REFRESH_TOKEN_EXPIRY = 14L * 24L * 60L * 60L * 1000L
   val ACCESS_TOKEN_EXPIRY = 1L * 24L * 60L * 60L * 1000L
 
-  def createToken(userId: String, accessTokenId: String): EitherT[F, ValidationError, AccessTokenWithExpiry]
+  def createToken(userId: String, accessTokenId: String): EitherT[F, SurfsUpError, AccessTokenWithExpiry]
 
-  def authorizePremiumUsers(user: domain.UserT): EitherT[F, ValidationError, UserT]
+  def authorizePremiumUsers(user: domain.UserT): EitherT[F, SurfsUpError, UserT]
 
-  def tokens(accessToken: String, refreshToken: RefreshToken, expiredAt: Long, user: UserT): EitherT[F, ValidationError, TokensWithUser]
+  def tokens(accessToken: String, refreshToken: RefreshToken, expiredAt: Long, user: UserT): EitherT[F, SurfsUpError, TokensWithUser]
 
   def createOtp(n: Int) : F[String]
 
@@ -51,7 +51,7 @@ class AuthenticationServiceImpl(repos: Repos[IO]) extends AuthenticationService[
 
   val middleware = JwtAuthMiddleware[IO, UserId](jwtAuth, authenticate1)
 
-  override def createToken(userId: String, accessTokenId: String): EitherT[IO, ValidationError, AccessTokenWithExpiry] = {
+  override def createToken(userId: String, accessTokenId: String): EitherT[IO, SurfsUpError, AccessTokenWithExpiry] = {
     val current = System.currentTimeMillis()
     val expiry = current / 1000 + TimeUnit.MILLISECONDS.toSeconds(ACCESS_TOKEN_EXPIRY)
     val claims = JwtClaim(
@@ -64,7 +64,7 @@ class AuthenticationServiceImpl(repos: Repos[IO]) extends AuthenticationService[
     EitherT.right(IO(AccessTokenWithExpiry(Jwt.encode(claims, key.value, JwtAlgorithm.HS256), expiry)))
   }
 
-  override def tokens(accessToken: String, refreshToken: RefreshToken, expiredAt: Long, user: UserT): EitherT[IO, ValidationError, TokensWithUser] =
+  override def tokens(accessToken: String, refreshToken: RefreshToken, expiredAt: Long, user: UserT): EitherT[IO, SurfsUpError, TokensWithUser] =
     EitherT.right(IO(domain.TokensWithUser(accessToken, refreshToken.refreshToken, expiredAt, user.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform)))
 
   def createOtp(n: Int) = {
@@ -74,7 +74,7 @@ class AuthenticationServiceImpl(repos: Repos[IO]) extends AuthenticationService[
     IO.pure((1 to n).map(_ => alpha(Random.nextInt.abs % size)).mkString)
   }
 
-  override def authorizePremiumUsers(user: domain.UserT): EitherT[IO, ValidationError, UserT] = {
+  override def authorizePremiumUsers(user: domain.UserT): EitherT[IO, SurfsUpError, UserT] = {
     EitherT.fromEither(if (UserType(user.userType) == UserType.Premium || UserType(user.userType) == UserType.Trial) {
       Right(user)
     } else {

@@ -22,9 +22,9 @@ object UpdateUserRolesServer extends IOApp {
     _ <- IO(getLogger.error("Starting"))
 
     repos = new LazyRepos()
-
+    authService <- IO(new AuthenticationServiceImpl(repos))
+    otpService <-  IO(new OTPService[IO](repos, authService))
     httpErrorHandler <- IO(new HttpErrorHandler[IO])
-    userService <- IO(new UserService[IO](repos))
     subscriptionsService <- IO(new SubscriptionsService[IO](repos))
     endpoints <- IO(new UpdateUserRolesEndpoints[IO](new UserRolesService[IO](repos, subscriptionsService), httpErrorHandler))
 

@@ -3,7 +3,7 @@ package com.uptech.windalerts.users
 
 import cats.data.{EitherT, OptionT}
 import cats.effect.{ContextShift, IO}
-import com.uptech.windalerts.domain.{UserNotFoundError, ValidationError, domain}
+import com.uptech.windalerts.domain.{UserNotFoundError, SurfsUpError, domain}
 import com.uptech.windalerts.domain.domain.UserT
 import com.uptech.windalerts.domain.domain.UserType.{Premium, Trial}
 import org.mongodb.scala.MongoCollection
@@ -28,11 +28,11 @@ trait UserRepositoryAlgebra[F[_]] {
 
   def updateDeviceToken(userId: String, deviceToken: String): OptionT[F, Unit]
 
-  def findTrialExpiredUsers(): EitherT[F, ValidationError, Seq[UserT]]
+  def findTrialExpiredUsers(): EitherT[F, SurfsUpError, Seq[UserT]]
 
-  def findAndroidPremiumExpiredUsers(): EitherT[F, ValidationError, Seq[UserT]]
+  def findAndroidPremiumExpiredUsers(): EitherT[F, SurfsUpError, Seq[UserT]]
 
-  def findApplePremiumExpiredUsers(): EitherT[F, ValidationError, Seq[UserT]]
+  def findApplePremiumExpiredUsers(): EitherT[F, SurfsUpError, Seq[UserT]]
 }
 
 
@@ -66,7 +66,7 @@ class MongoUserRepository(collection: MongoCollection[UserT])(implicit cs: Conte
     OptionT.liftF(IO.fromFuture(IO(collection.updateOne(equal("_id", new ObjectId(userId)), set("deviceToken", deviceToken)).toFuture().map(_ => ()))))
   }
 
-  override def findTrialExpiredUsers(): EitherT[IO, ValidationError, Seq[UserT]] = {
+  override def findTrialExpiredUsers(): EitherT[IO, SurfsUpError, Seq[UserT]] = {
     EitherT.liftF(findAllByCriteria(and(equal("userType", Trial.value),
       lt("endTrialAt", System.currentTimeMillis())
     )))
@@ -79,7 +79,7 @@ class MongoUserRepository(collection: MongoCollection[UserT])(implicit cs: Conte
   private def findAllByCriteria(criteria: Bson) =
     IO.fromFuture(IO(collection.find(criteria).toFuture()))
 
-  override def findAndroidPremiumExpiredUsers(): EitherT[IO, ValidationError, Seq[UserT]] = {
+  override def findAndroidPremiumExpiredUsers(): EitherT[IO, SurfsUpError, Seq[UserT]] = {
     EitherT.liftF(findAllByCriteria(
       and(equal("userType", Premium.value),
         equal("deviceType", "ANDROID"),
@@ -87,7 +87,7 @@ class MongoUserRepository(collection: MongoCollection[UserT])(implicit cs: Conte
       )))
   }
 
-  override def findApplePremiumExpiredUsers(): EitherT[IO, ValidationError, Seq[UserT]] = {
+  override def findApplePremiumExpiredUsers(): EitherT[IO, SurfsUpError, Seq[UserT]] = {
     EitherT.liftF(findAllByCriteria(
       and(
         equal("userType", Premium.value),
