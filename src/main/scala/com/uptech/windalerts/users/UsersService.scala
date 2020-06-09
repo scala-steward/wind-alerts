@@ -8,7 +8,6 @@ import com.uptech.windalerts.Repos
 import com.uptech.windalerts.domain._
 import com.uptech.windalerts.domain.domain.UserType._
 import com.uptech.windalerts.domain.domain.{Credentials, SurfsUpEitherT, _}
-import io.circe.parser.parse
 import org.mongodb.scala.bson.ObjectId
 
 class UserService[F[_] : Sync](repos: Repos[F], otpService: OTPService[F], auth: AuthenticationService[F]) {
@@ -21,12 +20,46 @@ class UserService[F[_] : Sync](repos: Repos[F], otpService: OTPService[F], auth:
     } yield tokens
   }
 
+  def registerAppleUser(rr: AppleRegisterRequest): SurfsUpEitherT[F, TokensWithUser] = {
+    for {
+      result <- createUser(rr)
+      tokens <- generateNewTokens(result._1)
+    } yield tokens
+  }
+
+  def registerFacebookUser(rr: FacebookRegisterRequest): SurfsUpEitherT[F, TokensWithUser] = {
+    for {
+      result <- createUser(rr)
+      tokens <- generateNewTokens(result._1)
+    } yield tokens
+  }
+
   def login(credentials:LoginRequest): SurfsUpEitherT[F, TokensWithUser] = {
     for {
       dbCredentials <- getByCredentials(credentials.email, credentials.password, credentials.deviceType)
       dbUser <- getUser(dbCredentials.email, dbCredentials.deviceType)
-      _ <- updateDeviceToken(dbCredentials._id.toHexString, credentials.deviceToken)
-      _ <- EitherT.liftF(repos.refreshTokenRepo().deleteForUserId(dbCredentials._id.toHexString))
+      tokens <- resetUserSession(dbUser, credentials.deviceToken)
+    } yield tokens
+  }
+
+  def loginFacebookUser(credentials:FacebookLoginRequest): SurfsUpEitherT[F, TokensWithUser] = {
+    for {
+      dbUser <- getFacebookUserByAccessToken(credentials.accessToken, credentials.deviceType)
+      tokens <- resetUserSession(dbUser, credentials.deviceToken)
+    } yield tokens
+  }
+
+  def loginAppleUser(credentials:AppleLoginRequest): SurfsUpEitherT[F, TokensWithUser] = {
+    for {
+      dbUser <- loginUser(credentials)
+      tokens <- resetUserSession(dbUser, credentials.deviceToken)
+    } yield tokens
+  }
+
+  def resetUserSession(dbUser:UserT, deviceToken:String) = {
+    for {
+      _ <- updateDeviceToken(dbUser._id.toHexString, deviceToken)
+      _ <- EitherT.liftF(repos.refreshTokenRepo().deleteForUserId(dbUser._id.toHexString))
       tokens <- generateNewTokens(dbUser)
     } yield tokens
   }
@@ -41,7 +74,7 @@ class UserService[F[_] : Sync](repos: Repos[F], otpService: OTPService[F], auth:
             EitherT.fromEither(Left(RefreshTokenExpiredError()))
           } else {
             import cats.implicits._
-            repos.refreshTokenRepo().updateExpiry(oldRefreshToken._id.toHexString, (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY)).leftWiden[SurfsUpError]
+            repos.refreshTokenRepo().updateExpiry(oldRefreshToken._id.toHexString, (System.currentTimeMillis() + RefreshToken.REFRESH_TOKEN_EXPIRY)).leftWiden[SurfsUpError]
           }
         }
         eitherT
@@ -56,7 +89,7 @@ class UserService[F[_] : Sync](repos: Repos[F], otpService: OTPService[F], auth:
     for {
       accessTokenId <- EitherT.pure(conversions.generateRandomString(10))
       token <- auth.createToken(user._id.toHexString, accessTokenId)
-      newRefreshToken <- EitherT.liftF(repos.refreshTokenRepo().create(RefreshToken(conversions.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), user._id.toHexString, accessTokenId)))
+      newRefreshToken <- EitherT.liftF(repos.refreshTokenRepo().create(RefreshToken(user._id.toHexString, accessTokenId)))
       tokens <- auth.tokens(token.accessToken, newRefreshToken, token.expiredAt, user)
     } yield tokens
   }
@@ -113,8 +146,12 @@ class UserService[F[_] : Sync](repos: Repos[F], otpService: OTPService[F], auth:
   def updateDeviceToken(userId: String, deviceToken: String): SurfsUpEitherT[F, Unit] =
     repos.usersRepo().updateDeviceToken(userId, deviceToken).toRight(CouldNotUpdateUserDeviceError())
 
-  def updatePassword(userId: String, password: String): SurfsUpEitherT[F, Unit] =
-    repos.credentialsRepo().updatePassword(userId, password.bcrypt).toRight(CouldNotUpdatePasswordError())
+  def updatePassword(userId: String, password: String): SurfsUpEitherT[F, Unit] = {
+    for {
+      _ <- repos.credentialsRepo().updatePassword(userId, password.bcrypt).toRight(CouldNotUpdatePasswordError())
+      result <- EitherT.liftF(repos.refreshTokenRepo().deleteForUserId(userId))
+    } yield result
+  }
 
   def getFacebookUserByAccessToken(accessToken: String, deviceType: String): SurfsUpEitherT[F, UserT] = {
     for {

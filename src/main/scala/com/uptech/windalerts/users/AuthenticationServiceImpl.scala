@@ -18,7 +18,6 @@ import scala.util.Random
 case class AccessTokenWithExpiry(accessToken: String, expiredAt: Long)
 
 trait AuthenticationService[F[_]] {
-  val REFRESH_TOKEN_EXPIRY = 14L * 24L * 60L * 60L * 1000L
   val ACCESS_TOKEN_EXPIRY = 1L * 24L * 60L * 60L * 1000L
 
   def createToken(userId: String, accessTokenId: String): EitherT[F, SurfsUpError, AccessTokenWithExpiry]
