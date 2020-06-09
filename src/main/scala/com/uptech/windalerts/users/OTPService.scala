@@ -4,11 +4,11 @@ import cats.Monad
 import cats.data.EitherT
 import cats.implicits._
 import com.uptech.windalerts.Repos
-import com.uptech.windalerts.domain.ValidationError
+import com.uptech.windalerts.domain.SurfsUpError
 import com.uptech.windalerts.domain.domain.OTPWithExpiry
 
 class OTPService[F[_]](repos: Repos[F], auth: AuthenticationService[F]) {
-  def send(userId: String, email: String)(implicit M: Monad[F]):EitherT[F, ValidationError, Unit] = {
+  def send(userId: String, email: String)(implicit M: Monad[F]):EitherT[F, SurfsUpError, Unit] = {
 
     EitherT.liftF(for {
       otp <- auth.createOtp(4)

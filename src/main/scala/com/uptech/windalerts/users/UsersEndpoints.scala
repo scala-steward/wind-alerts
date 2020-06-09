@@ -3,15 +3,14 @@ package com.uptech.windalerts.users
 import cats.data.{EitherT, OptionT}
 import cats.effect.{ContextShift, IO}
 import com.uptech.windalerts.Repos
+import com.uptech.windalerts.domain._
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain._
 import io.circe.parser._
 import io.scalaland.chimney.dsl._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.{AuthedRoutes, HttpRoutes, Response}
 import org.log4s.getLogger
-import cats.implicits._
 
 class UsersEndpoints(repos: Repos[IO],
                      userService: UserService[IO],
@@ -55,12 +54,7 @@ class UsersEndpoints(repos: Repos[IO],
       case req@POST -> Root =>
         val action = for {
           registerRequest <- EitherT.liftF(req.as[RegisterRequest])
-          createUserResponse <- userService.createUser(registerRequest)
-          _ <- otpService.send(createUserResponse._1._id.toHexString, createUserResponse._1.email)
-          accessTokenId <- EitherT.right(IO(conversions.generateRandomString(10)))
-          token <- auth.createToken(createUserResponse._2._id.toHexString, accessTokenId)
-          refreshToken <- EitherT.liftF(repos.refreshTokenRepo().create(RefreshToken(conversions.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), createUserResponse._2._id.toHexString, accessTokenId)))
-          tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, createUserResponse._1)
+          tokens <- userService.register(registerRequest)
         } yield tokens
         action.value.flatMap {
           case Right(tokens) => Ok(tokens)
@@ -70,14 +64,7 @@ class UsersEndpoints(repos: Repos[IO],
       case req@POST -> Root / "login" =>
         val action = for {
           credentials <- EitherT.liftF(req.as[LoginRequest])
-          dbCredentials <- userService.getByCredentials(credentials.email, credentials.password, credentials.deviceType)
-          dbUser <- userService.getUser(dbCredentials.email, dbCredentials.deviceType)
-          _ <- userService.updateDeviceToken(dbCredentials._id.toHexString, credentials.deviceToken).toRight(CouldNotUpdateUserDeviceError())
-          accessTokenId <- EitherT.right(IO(conversions.generateRandomString(10)))
-          token <- auth.createToken(dbCredentials._id.toHexString, accessTokenId)
-          _ <- EitherT.liftF(repos.refreshTokenRepo().deleteForUserId(dbCredentials._id.toHexString))
-          refreshToken <- EitherT.liftF(repos.refreshTokenRepo().create(RefreshToken(conversions.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), dbCredentials._id.toHexString, accessTokenId)))
-          tokens <- auth.tokens(token.accessToken, refreshToken, token.expiredAt, dbUser)
+          tokens <- userService.login(credentials)
         } yield tokens
         action.value.flatMap {
           case Right(tokens) => Ok(tokens)
@@ -87,24 +74,7 @@ class UsersEndpoints(repos: Repos[IO],
       case req@POST -> Root / "refresh" =>
         val action = for {
           refreshToken <- EitherT.liftF(req.as[AccessTokenRequest])
-          oldRefreshToken <- repos.refreshTokenRepo().getByRefreshToken(refreshToken.refreshToken).toRight(RefreshTokenNotFoundError())
-          oldValidRefreshToken <- {
-            val eitherT: EitherT[IO, ValidationError, RefreshToken] =  {
-              if (oldRefreshToken.isExpired()) {
-                EitherT.fromEither(Left(RefreshTokenExpiredError()))
-              } else {
-                repos.refreshTokenRepo().updateExpiry(oldRefreshToken._id.toHexString, (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY)).leftWiden[ValidationError]
-              }
-            }
-            eitherT
-          }
-          accessTokenId <- EitherT.right(IO(conversions.generateRandomString(10)))
-          token <- auth.createToken(oldValidRefreshToken.userId, accessTokenId)
-          _ <- EitherT.liftF(repos.refreshTokenRepo().deleteForUserId(oldValidRefreshToken.userId))
-          newRefreshToken <- EitherT.liftF(repos.refreshTokenRepo().create(RefreshToken(conversions.generateRandomString(40), (System.currentTimeMillis() + auth.REFRESH_TOKEN_EXPIRY), oldValidRefreshToken.userId, accessTokenId)))
-          user <- userService.getUser(newRefreshToken.userId)
-
-          tokens <- auth.tokens(token.accessToken, newRefreshToken, token.expiredAt, user)
+          tokens <- userService.refresh(refreshToken)
         } yield tokens
         action.value.flatMap {
           case Right(tokens) => Ok(tokens)
@@ -115,8 +85,8 @@ class UsersEndpoints(repos: Repos[IO],
         val action = for {
           request <- EitherT.liftF(req.as[ChangePasswordRequest])
           dbCredentials <- userService.getByCredentials(request.email, request.oldPassword, request.deviceType)
-          _ <- userService.updatePassword(dbCredentials._id.toHexString, request.newPassword).toRight(CouldNotUpdatePasswordError()).asInstanceOf[EitherT[IO, ValidationError, Unit]]
-          _ <- EitherT.liftF(repos.refreshTokenRepo().deleteForUserId(dbCredentials._id.toHexString)).asInstanceOf[EitherT[IO, ValidationError, Unit]]
+          _ <- userService.updatePassword(dbCredentials._id.toHexString, request.newPassword)
+          _ <- EitherT.liftF(repos.refreshTokenRepo().deleteForUserId(dbCredentials._id.toHexString)).asInstanceOf[EitherT[IO, SurfsUpError, Unit]]
         } yield ()
         action.value.flatMap {
           case Right(_) => Ok()
@@ -126,36 +96,22 @@ class UsersEndpoints(repos: Repos[IO],
       case req@POST -> Root / "resetPassword" =>
         val action = for {
           request <- EitherT.liftF(req.as[ResetPasswordRequest])
-          dbUser <- userService.resetPassword(request.email, request.deviceType)
-          _ <- EitherT.liftF(repos.refreshTokenRepo().deleteForUserId(dbUser._id.toHexString)).asInstanceOf[EitherT[IO, ValidationError, Unit]]
+          _ <- userService.resetPassword(request.email, request.deviceType)
         } yield ()
         action.value.flatMap {
           case Right(_) => Ok()
           case Left(error) => httpErrorHandler.handleError(error)
         }
 
-
       case req@POST -> Root / "purchase" / "android" / "update" => {
-
-
-        val action: EitherT[IO, ValidationError, UserT] = for {
-          _ <- EitherT.liftF(IO(logger.error(s"Called request ${req}")))
-          _ <- EitherT.liftF(IO(logger.error(s"Called request ${req.body}")))
-
+        val action: EitherT[IO, SurfsUpError, UserT] = for {
           update <- EitherT.liftF(req.as[AndroidUpdate])
-          _ <- EitherT.liftF(IO(logger.error(s"Update received is ${update}")))
-          response <- EitherT.liftF(
-            IO(new String(java.util.Base64.getDecoder.decode(update.message.data))))
-          _ <- EitherT.liftF(IO(logger.error(s"Decoded  is ${response}")))
-          subscription <- asSubscription(response)
-          _ <- EitherT.liftF(IO(logger.error(s"Decoded is ${response}")))
+          decoded <- EitherT.liftF(IO(new String(java.util.Base64.getDecoder.decode(update.message.data))))
+          subscription <- asSubscription(decoded)
           token <- repos.androidPurchaseRepo().getPurchaseByToken(subscription.subscriptionNotification.purchaseToken)
-          _ <- EitherT.liftF(IO(logger.error(s"Token is ${token}")))
           purchase <- subscriptionsService.getAndroidPurchase(token.subscriptionId, subscription.subscriptionNotification.purchaseToken)
-          _ <- EitherT.liftF(IO(logger.error(s"Purchase is ${purchase}")))
           user <- userService.getUser(token.userId)
           updatedUser <- userRolesService.updateSubscribedUserRole(user, purchase.startTimeMillis, purchase.expiryTimeMillis)
-          _ <- EitherT.liftF(IO(logger.error(s"updatedUser is ${updatedUser}")))
         } yield updatedUser
         action.value.flatMap {
           case Right(_) => Ok()
@@ -280,7 +236,7 @@ class UsersEndpoints(repos: Repos[IO],
 
       case authReq@POST -> Root / "purchase" / "apple" as user => {
         val response: IO[Response[IO]] = authReq.req.decode[ApplePurchaseToken] { req =>
-          val action: EitherT[IO, ValidationError, AppleToken] = for {
+          val action: EitherT[IO, SurfsUpError, AppleToken] = for {
             _ <- subscriptionsService.getApplePurchase(req.token, secrets.read.surfsUp.apple.appSecret)
             savedToken <- repos.applePurchaseRepo().create(AppleToken(user.id, req.token, System.currentTimeMillis()))
           } yield savedToken
@@ -318,7 +274,7 @@ class UsersEndpoints(repos: Repos[IO],
         val action = for {
           credentials <- EitherT.liftF(req.as[FacebookLoginRequest])
           dbUser <- userService.getFacebookUserByAccessToken(credentials.accessToken, credentials.deviceType)
-          _ <- userService.updateDeviceToken(dbUser._id.toHexString, credentials.deviceToken).toRight(CouldNotUpdateUserDeviceError())
+          _ <- userService.updateDeviceToken(dbUser._id.toHexString, credentials.deviceToken)
           accessTokenId <- EitherT.right(IO(conversions.generateRandomString(10)))
           token <- auth.createToken(dbUser._id.toHexString, accessTokenId)
           _ <- EitherT.liftF(repos.refreshTokenRepo().deleteForUserId(dbUser._id.toHexString))
@@ -356,7 +312,7 @@ class UsersEndpoints(repos: Repos[IO],
         val action = for {
           credentials <- EitherT.liftF(req.as[AppleLoginRequest])
           dbUser <- userService.loginUser(credentials)
-          _ <- userService.updateDeviceToken(dbUser._id.toHexString, credentials.deviceToken).toRight(CouldNotUpdateUserDeviceError())
+          _ <- userService.updateDeviceToken(dbUser._id.toHexString, credentials.deviceToken)
           accessTokenId <- EitherT.right(IO(conversions.generateRandomString(10)))
           token <- auth.createToken(dbUser._id.toHexString, accessTokenId)
           _ <- EitherT.liftF(repos.refreshTokenRepo().deleteForUserId(dbUser._id.toHexString))
@@ -370,7 +326,7 @@ class UsersEndpoints(repos: Repos[IO],
     }
   }
 
-  private def asSubscription(response: String):EitherT[IO, ValidationError, SubscriptionNotificationWrapper] = {
+  private def asSubscription(response: String):EitherT[IO, SurfsUpError, SubscriptionNotificationWrapper] = {
     EitherT(IO.fromEither(
       parse(response).map(json => json.as[SubscriptionNotificationWrapper].left.map(x=>UnknownError(x.message)))))
   }

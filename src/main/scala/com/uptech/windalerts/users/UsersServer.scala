@@ -1,8 +1,5 @@
 package com.uptech.windalerts.users
 
-import java.time.{LocalDateTime, ZoneId, ZoneOffset}
-import java.util.{Calendar, TimeZone}
-
 import cats.effect.{IO, _}
 import cats.implicits._
 import com.softwaremill.sttp.HttpURLConnectionBackend
@@ -26,10 +23,11 @@ object UsersServer extends IOApp {
     _ <- IO(getLogger.error("Starting"))
 
     repos = new LazyRepos()
-    usersService <- IO(new UserService(repos))
+    auth <- IO(new AuthenticationServiceImpl(repos))
+    otpService <- IO(new OTPService[IO](repos, auth))
+    usersService <- IO(new UserService(repos, otpService, auth))
     subscriptionsService <- IO(new SubscriptionsService[IO](repos))
     userRolesService <- IO(new UserRolesService[IO](repos, subscriptionsService))
-    auth <- IO(new AuthenticationServiceImpl(repos))
 
     apiKey <- IO(secrets.read.surfsUp.willyWeather.key)
     beaches <- IO(new BeachService[IO](new WindsService[IO](apiKey), new TidesService[IO](apiKey, repos), new SwellsService[IO](apiKey, swellAdjustments.read)))

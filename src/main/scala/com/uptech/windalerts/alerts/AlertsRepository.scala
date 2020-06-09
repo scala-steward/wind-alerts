@@ -3,7 +3,7 @@ package com.uptech.windalerts.alerts
 import cats.data.{EitherT, OptionT}
 import cats.effect.{ContextShift, IO}
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.{AlertNotFoundError, ValidationError, conversions, domain}
+import com.uptech.windalerts.domain.{AlertNotFoundError, SurfsUpError, conversions, domain}
 import io.scalaland.chimney.dsl._
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId
@@ -23,9 +23,9 @@ trait AlertsRepositoryT[F[_]] {
 
   def save(alert: AlertRequest, user: String): F[AlertT]
 
-  def delete(requester: String, id: String): EitherT[F, ValidationError, Unit]
+  def delete(requester: String, id: String): EitherT[F, SurfsUpError, Unit]
 
-  def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest): EitherT[F, ValidationError, AlertT]
+  def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest): EitherT[F, SurfsUpError, AlertT]
 }
 
 class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit cs: ContextShift[IO]) extends AlertsRepositoryT[IO] {
@@ -71,11 +71,11 @@ class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit
     IO.fromFuture(IO(collection.insertOne(alert).toFuture().map(_ => alert)))
   }
 
-  override def delete(requester: String, alertId: String): EitherT[IO, ValidationError, Unit] = {
+  override def delete(requester: String, alertId: String): EitherT[IO, SurfsUpError, Unit] = {
     EitherT.liftF(IO.fromFuture(IO(collection.deleteOne(equal("_id", new ObjectId(alertId))).toFuture().map(_=>()))))
   }
 
-  override def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest):EitherT[IO, ValidationError, AlertT] = {
+  override def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest):EitherT[IO, SurfsUpError, AlertT] = {
     val alertUpdated = updateAlertRequest.into[AlertT].withFieldComputed(_._id, u => new ObjectId(alertId)).withFieldComputed(_.owner, _ => requester).transform
     for {
       _ <- EitherT.liftF(IO(collection.replaceOne(equal("_id", new ObjectId(alertId)), alertUpdated).toFuture()))

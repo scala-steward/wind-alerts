@@ -2,7 +2,7 @@ package com.uptech.windalerts.users
 
 import cats.data.{EitherT, OptionT}
 import cats.effect.{ContextShift, IO}
-import com.uptech.windalerts.domain.{TokenNotFoundError, ValidationError, domain}
+import com.uptech.windalerts.domain.{TokenNotFoundError, SurfsUpError, domain}
 import com.uptech.windalerts.domain.domain.RefreshToken
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId

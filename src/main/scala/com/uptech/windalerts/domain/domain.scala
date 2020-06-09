@@ -1,18 +1,16 @@
 package com.uptech.windalerts.domain
 
-import java.util
-
+import cats.data.EitherT
 import io.scalaland.chimney.dsl._
 import org.log4s.getLogger
 import org.mongodb.scala.bson.ObjectId
 
 import scala.beans.BeanProperty
-import scala.collection.JavaConverters
 import scala.util.control.NonFatal
 
 
 object domain {
-
+  type SurfsUpEitherT[F[_], T] =  EitherT[F, SurfsUpError, T]
 
   private val logger = getLogger
 

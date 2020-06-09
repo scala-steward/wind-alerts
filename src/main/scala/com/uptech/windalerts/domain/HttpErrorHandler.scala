@@ -9,7 +9,7 @@ import org.log4s.getLogger
 
 class HttpErrorHandler[F[_] : Monad] extends Http4sDsl[F] {
   val handleThrowable: Throwable => F[Response[F]] = {
-    case e: ValidationError => {
+    case e: SurfsUpError => {
       handleError(e)
     }
     case everythingElse => {
@@ -18,7 +18,7 @@ class HttpErrorHandler[F[_] : Monad] extends Http4sDsl[F] {
     }
   }
 
-  val handleError: ValidationError => F[Response[F]] = {
+  val handleError: SurfsUpError => F[Response[F]] = {
     case e@UserAlreadyExistsError(email, deviceType) => {
       getLogger.error(e)(e.getMessage)
       Conflict(s"The user with email $email for device type $deviceType already exists")
