@@ -78,7 +78,7 @@ class UsersEndpoints(repos: Repos[IO],
       }
 
       case _@POST -> Root / "sendOTP" as user => {
-        handleOkNoContentNoDecode(user, (u: UserId) =>
+        handleOkNoDecode(user, (u: UserId) =>
           for {
             userFromDb <- userService.getUser(user.id)
             sent <- otpService.send(userFromDb._id.toHexString, userFromDb.email)
@@ -97,7 +97,7 @@ class UsersEndpoints(repos: Repos[IO],
       }
 
       case _@POST -> Root / "logout" as user => {
-        handleOkNoContentNoDecode(user, (u: UserId) => userService.logoutUser(user.id))
+        handleOkNoDecode(user, (u: UserId) => userService.logoutUser(user.id))
       }
 
       case authReq@POST -> Root / "feedbacks" as user => {

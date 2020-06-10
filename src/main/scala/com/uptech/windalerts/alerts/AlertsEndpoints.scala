@@ -20,7 +20,7 @@ class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F], usersServic
       }
 
       case authReq@DELETE -> Root / alertId as user => {
-        handleOkNoContentNoDecode(user, (u: UserId) => alertService.deleteT(u.id, alertId))
+        handleNoContentNoDecode(user, (u: UserId) => alertService.deleteT(u.id, alertId))
       }
 
       case authReq@PUT -> Root / alertId as user => {
