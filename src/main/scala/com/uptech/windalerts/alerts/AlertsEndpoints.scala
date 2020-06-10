@@ -1,75 +1,48 @@
 package com.uptech.windalerts.alerts
 
-import cats.data.{EitherT, OptionT}
+import cats.data.EitherT
 import cats.effect.Effect
-import cats.implicits._
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.{HttpErrorHandler, SurfsUpError}
+import com.uptech.windalerts.domain.{HttpErrorHandler, http}
 import com.uptech.windalerts.users.{AuthenticationService, UserService}
 import io.scalaland.chimney.dsl._
 import org.http4s.AuthedRoutes
-import org.http4s.dsl.Http4sDsl
 
-class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F], usersService: UserService[F], auth: AuthenticationService[F], httpErrorHandler: HttpErrorHandler[F]) extends Http4sDsl[F] {
+class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F], usersService: UserService[F], auth: AuthenticationService[F], httpErrorHandler: HttpErrorHandler[F]) extends http[F](httpErrorHandler) {
   def allUsersService(): AuthedRoutes[UserId, F] =
     AuthedRoutes {
-      case GET -> Root as user => {
-        val action = for {
-          resp <- EitherT.liftF(alertService.getAllForUser(user.id))
-            .map(alerts => Alerts(alerts.alerts.map(a => a.into[Alert].withFieldComputed(_.id, u => u._id.toHexString).transform)))
-        } yield resp
-
-        OptionT.liftF({
-          action.value.flatMap {
-            case Right(reponse) => Ok(reponse)
-            case Left(error) => httpErrorHandler.handleThrowable(error)
-          }
-        })
+      case authReq@GET -> Root as user => {
+        handleOkNoDecode(user, (u: UserId) =>
+            EitherT.liftF(alertService.getAllForUser(user.id))
+              .map(alerts => Alerts(alerts.alerts.map(a => a.into[Alert].withFieldComputed(_.id, u => u._id.toHexString).transform)))
+        )
       }
 
-      case _@DELETE -> Root / alertId as user => {
-        val action = for {
-          eitherDeleted <- alertService.deleteT(user.id, alertId)
-        } yield eitherDeleted
-        OptionT.liftF({
-          action.value.flatMap {
-            case Right(_) => NoContent()
-            case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
-          }
-        })
+      case authReq@DELETE -> Root / alertId as user => {
+        handleNoContent(authReq, user, (u: UserId, r: AlertRequest) => alertService.deleteT(u.id, alertId))
       }
-
 
       case authReq@PUT -> Root / alertId as user => {
-        val response = authReq.req.decode[AlertRequest] { alert =>
-          val action = for {
-            dbUser <- usersService.getUser(user.id)
+        handleOk(authReq, user, (u: UserId, r: AlertRequest) => {
+          for {
+            dbUser <- usersService.getUser(u.id)
             _ <- auth.authorizePremiumUsers(dbUser)
-            updated <- alertService.updateT(user.id, alertId, alert)
-          } yield updated
-
-          action.value.flatMap {
-            case Right(value) => Ok(value.into[Alert].withFieldComputed(_.id, u => u._id.toHexString).transform)
-            case Left(error) => httpErrorHandler.handleError(error)
-          }
+            saved <- alertService.updateT(u.id, alertId, r).map(r => r.into[Alert].withFieldComputed(_.id, u => u._id.toHexString).transform)
+          } yield saved
         }
-        OptionT.liftF(response)
+        )
       }
 
       case authReq@POST -> Root as user => {
-        val response = authReq.req.decode[AlertRequest] { alert =>
-          val action = for {
-            dbUser <- usersService.getUser(user.id)
+        handleCreated(authReq, user, (u: UserId, r: AlertRequest) => {
+          for {
+            dbUser <- usersService.getUser(u.id)
             _ <- auth.authorizePremiumUsers(dbUser)
-            saved <- EitherT.liftF(alertService.save(alert, user.id)).asInstanceOf[EitherT[F, SurfsUpError, AlertT]]
+            saved <- EitherT.liftF(alertService.save(r, u.id)).map(r => r.into[Alert].withFieldComputed(_.id, u => u._id.toHexString).transform)
           } yield saved
-          action.value.flatMap {
-            case Right(response) => Created(response.into[Alert].withFieldComputed(_.id, u => u._id.toHexString).transform)
-            case Left(error) => httpErrorHandler.handleError(error)
-          }
         }
-        OptionT.liftF(response)
+        )
       }
     }
 }

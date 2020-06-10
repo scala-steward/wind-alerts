@@ -5,7 +5,7 @@ import cats.effect.{ContextShift, IO}
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.domain._
 import com.uptech.windalerts.domain.codecs._
-import com.uptech.windalerts.domain.domain.{ChangePasswordRequest, ResetPasswordRequest, _}
+import com.uptech.windalerts.domain.domain.{AppleLoginRequest, AppleRegisterRequest, ChangePasswordRequest, FacebookLoginRequest, FacebookRegisterRequest, ResetPasswordRequest, _}
 import io.circe.parser._
 import io.scalaland.chimney.dsl._
 import org.http4s.{AuthedRoutes, HttpRoutes, Response}
@@ -16,17 +16,17 @@ class UsersEndpoints(repos: Repos[IO],
                      subscriptionsService: SubscriptionsService[IO],
                      httpErrorHandler: HttpErrorHandler[IO],
                      auth: AuthenticationService[IO],
-                     otpService:OTPService[IO])(implicit cs: ContextShift[IO])  extends http[IO](httpErrorHandler) {
+                     otpService: OTPService[IO])(implicit cs: ContextShift[IO]) extends http[IO](httpErrorHandler) {
 
   def openEndpoints(): HttpRoutes[IO] =
     HttpRoutes.of[IO] {
-      case r@GET -> Root / "ping"  =>
+      case _@GET -> Root / "ping" =>
         handle(() => EitherT.liftF(IO("pong")))
 
-      case _@GET -> Root / "privacy-policy"  =>
+      case _@GET -> Root / "privacy-policy" =>
         handle(() => EitherT.liftF(IO(statics.privacyPolicy)))
 
-      case _@GET -> Root / "about-surfs-up"  =>
+      case _@GET -> Root / "about-surfs-up" =>
         handle(() => EitherT.liftF(IO(statics.aboutSurfsUp)))
 
       case req@POST -> Root =>
@@ -47,8 +47,8 @@ class UsersEndpoints(repos: Repos[IO],
 
       case req@POST -> Root / "resetPassword" =>
         val resetPasswordRequest = req.as[ResetPasswordRequest]
-        handle(resetPasswordRequest, (x:ResetPasswordRequest) => {
-          userService.resetPassword(x.email, x.deviceType).map(_=>())
+        handle(resetPasswordRequest, (x: ResetPasswordRequest) => {
+          userService.resetPassword(x.email, x.deviceType).map(_ => ())
         })
 
       case req@POST -> Root / "purchase" / "android" / "update" => {
@@ -71,129 +71,81 @@ class UsersEndpoints(repos: Repos[IO],
   def authedService(): AuthedRoutes[UserId, IO] =
     AuthedRoutes {
       case authReq@PUT -> Root / "profile" as user => {
-        val response: IO[Response[IO]] = authReq.req.decode[UpdateUserRequest] { request =>
-          val action = for {
-            updateResult <- userService.updateUserProfile(user.id, request.name, request.snoozeTill, request.disableAllAlerts, request.notificationsPerHour)
-          } yield updateResult
-          action.value.flatMap {
-            case Right(tokens) => Ok(tokens.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform)
-            case Left(error) => httpErrorHandler.handleError(error)
-          }
-        }
-        OptionT.liftF(response)
+        handleOk(authReq, user, (u: UserId, request: UpdateUserRequest) =>
+          userService.updateUserProfile(u.id, request.name, request.snoozeTill, request.disableAllAlerts, request.notificationsPerHour)
+            .map(tokens => tokens.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform)
+        )
       }
 
       case _@POST -> Root / "sendOTP" as user => {
-        val action = for {
-          userFromDb <- userService.getUser(user.id)
-          sent <- otpService.send(userFromDb._id.toHexString, userFromDb.email)
-        } yield sent
-        val response = action.value.flatMap {
-          case Right(_) => Ok()
-          case Left(error) => httpErrorHandler.handleError(error)
-        }
-        OptionT.liftF(response)
+        handleOkNoContentNoDecode(user, (u: UserId) =>
+          for {
+            userFromDb <- userService.getUser(user.id)
+            sent <- otpService.send(userFromDb._id.toHexString, userFromDb.email)
+          } yield sent
+        )
       }
 
       case authReq@POST -> Root / "verifyEmail" as user => {
-        val response: IO[Response[IO]] = authReq.req.decode[OTP] { request =>
-          val action = for {
+        handleOk(authReq, user, (u: UserId, request: OTP) =>
+          for {
             _ <- repos.otp().exists(request.otp, user.id)
             user <- userService.getUser(user.id)
-            updateResult <- userRolesService.makeUserTrial(user)
+            updateResult <- userRolesService.makeUserTrial(user).map(tokens => tokens.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform)
           } yield updateResult
-          action.value.flatMap {
-            case Right(tokens) => Ok(tokens.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform)
-            case Left(error) => httpErrorHandler.handleError(error)
-          }
-        }
-        OptionT.liftF(response)
+        )
       }
 
       case _@POST -> Root / "logout" as user => {
-        val response: IO[Response[IO]] = {
-          val action = for {
-            updateResult <- userService.logoutUser(user.id)
-          } yield updateResult
-          action.value.flatMap {
-            case Right(_) => Ok()
-            case Left(error) => httpErrorHandler.handleError(error)
-          }
-        }
-        OptionT.liftF(response)
+        handleOkNoContentNoDecode(user, (u: UserId) => userService.logoutUser(user.id))
       }
 
       case authReq@POST -> Root / "feedbacks" as user => {
-        val response: IO[Response[IO]] = authReq.req.decode[FeedbackRequest] { request =>
-          val action = for {
-            createResult <- userService.createFeedback(Feedback(request.topic, request.message, user.id))
-          } yield createResult
-          action.value.flatMap {
-            case Right(_) => Ok()
-            case Left(error) => httpErrorHandler.handleError(error)
-          }
-        }
-        OptionT.liftF(response)
+        handleEmptyOk(authReq, user, (u: UserId, request: FeedbackRequest) =>
+          userService.createFeedback(Feedback(request.topic, request.message, user.id))
+        )
       }
 
       case _@GET -> Root / "purchase" / "android" as user => {
-        val response: IO[Response[IO]] = {
-          val action = for {
-            token <- repos.androidPurchaseRepo().getLastForUser(user.id)
+        handleOkNoDecode(user, (u: UserId) => {
+          for {
+            token <- repos.androidPurchaseRepo().getLastForUser(u.id)
             purchase <- subscriptionsService.getAndroidPurchase(token.subscriptionId, token.purchaseToken)
-            userO <- userService.getUser(user.id)
-            premiumUser <- userRolesService.updateSubscribedUserRole(userO, purchase.startTimeMillis, purchase.expiryTimeMillis)
+            userO <- userService.getUser(u.id)
+            premiumUser <- userRolesService.updateSubscribedUserRole(userO, purchase.startTimeMillis, purchase.expiryTimeMillis).map(premiumUser => premiumUser.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform)
           } yield premiumUser
-          action.value.flatMap {
-            case Right(premiumUser) => Ok(premiumUser.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform)
-            case Left(error) => httpErrorHandler.handleError(error)
-          }
         }
-        OptionT.liftF(response)
+        )
       }
 
       case authReq@POST -> Root / "purchase" / "android" as user => {
-        val response: IO[Response[IO]] = authReq.req.decode[AndroidReceiptValidationRequest] { request =>
-          val action = for {
+        handleEmptyOk(authReq, user, (u: UserId, request: AndroidReceiptValidationRequest) =>
+          for {
             _ <- subscriptionsService.getAndroidPurchase(request)
             savedToken <- repos.androidPurchaseRepo().create(AndroidToken(user.id, request.productId, request.token, System.currentTimeMillis()))
           } yield savedToken
-          action.value.flatMap {
-            case Right(_) => Ok()
-            case Left(error) => httpErrorHandler.handleError(error)
-          }
-        }
-        OptionT.liftF(response)
+        )
       }
 
       case _@GET -> Root / "purchase" / "apple" as user => {
-        val response: IO[Response[IO]] = {
-          val action = for {
+        handleOkNoDecode(user, (u: UserId) => {
+          for {
             token <- repos.applePurchaseRepo().getLastForUser(user.id)
             purchase <- subscriptionsService.getApplePurchase(token.purchaseToken, secrets.read.surfsUp.apple.appSecret)
             dbUser <- userService.getUser(user.id)
-            premiumUser <- userRolesService.updateSubscribedUserRole(dbUser, purchase.purchase_date_ms, purchase.expires_date_ms)
+            premiumUser <- userRolesService.updateSubscribedUserRole(dbUser, purchase.purchase_date_ms, purchase.expires_date_ms).map(premiumUser => premiumUser.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform)
           } yield premiumUser
-          action.value.flatMap {
-            case Right(premiumUser) => Ok(premiumUser.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform)
-            case Left(error) => httpErrorHandler.handleError(error)
-          }
         }
-        OptionT.liftF(response)
+        )
       }
 
       case authReq@POST -> Root / "purchase" / "apple" as user => {
-        val response: IO[Response[IO]] = authReq.req.decode[ApplePurchaseToken] { req =>
-          val action: EitherT[IO, SurfsUpError, AppleToken] = for {
+        handleEmptyOk(authReq, user, (u: UserId, req: ApplePurchaseToken) =>
+          for {
             _ <- subscriptionsService.getApplePurchase(req.token, secrets.read.surfsUp.apple.appSecret)
             savedToken <- repos.applePurchaseRepo().create(AppleToken(user.id, req.token, System.currentTimeMillis()))
           } yield savedToken
-          action.value.flatMap {
-            case Right(x) => Ok()
-            case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
-          }
-        }
-        OptionT.liftF(response)
+        )
       }
     }
 
@@ -201,56 +153,31 @@ class UsersEndpoints(repos: Repos[IO],
 
     HttpRoutes.of[IO] {
       case req@POST -> Root => {
-        val action = for {
-          rr <- EitherT.liftF(req.as[FacebookRegisterRequest])
-          tokens <- userService.registerFacebookUser(rr)
-        } yield tokens
-        action.value.flatMap {
-          case Right(tokens) => Ok(tokens)
-          case Left(error) => httpErrorHandler.handleError(error)
-        }
+        val facebookRegisterRequest = req.as[FacebookRegisterRequest]
+        handle(facebookRegisterRequest, userService.registerFacebookUser(_))
       }
 
       case req@POST -> Root / "login" =>
-        val action = for {
-          credentials <- EitherT.liftF(req.as[FacebookLoginRequest])
-          tokens <- userService.loginFacebookUser(credentials)
-        } yield tokens
-        action.value.flatMap {
-          case Right(tokens) => Ok(tokens)
-          case Left(error) => httpErrorHandler.handleError(error)
-        }
+        val facebookLoginRequest = req.as[FacebookLoginRequest]
+        handle(facebookLoginRequest, userService.loginFacebookUser(_))
     }
   }
 
   def appleEndpoints(): HttpRoutes[IO] = {
     HttpRoutes.of[IO] {
-      case req@POST -> Root => {
-        val action = for {
-          rr <- EitherT.liftF(req.as[AppleRegisterRequest])
-          tokens <- userService.registerAppleUser(rr)
-        } yield tokens
-        action.value.flatMap {
-          case Right(tokens) => Ok(tokens)
-          case Left(error) => httpErrorHandler.handleError(error)
-        }
-      }
+      case req@POST -> Root =>
+        val appleRegisterRequest = req.as[AppleRegisterRequest]
+        handle(appleRegisterRequest, userService.registerAppleUser(_))
 
       case req@POST -> Root / "login" =>
-        val action = for {
-          credentials <- EitherT.liftF(req.as[AppleLoginRequest])
-          tokens <- userService.loginAppleUser(credentials)
-        } yield tokens
-        action.value.flatMap {
-          case Right(tokens) => Ok(tokens)
-          case Left(error) => httpErrorHandler.handleError(error)
-        }
+        val appleLoginRequest = req.as[AppleLoginRequest]
+        handle(appleLoginRequest, userService.loginAppleUser(_))
     }
 
   }
 
-  private def asSubscription(response: String):EitherT[IO, SurfsUpError, SubscriptionNotificationWrapper] = {
+  private def asSubscription(response: String): EitherT[IO, SurfsUpError, SubscriptionNotificationWrapper] = {
     EitherT(IO.fromEither(
-      parse(response).map(json => json.as[SubscriptionNotificationWrapper].left.map(x=>UnknownError(x.message)))))
+      parse(response).map(json => json.as[SubscriptionNotificationWrapper].left.map(x => UnknownError(x.message)))))
   }
 }
