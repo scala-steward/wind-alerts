@@ -1,11 +1,11 @@
 package com.uptech.windalerts.domain
 
 import cats.data.{EitherT, OptionT}
-import cats.effect.{Effect, IO}
+import cats.effect.Effect
 import cats.implicits._
-import com.uptech.windalerts.domain.domain.{Alert, AlertRequest, AlertT, SurfsUpEitherT, UpdateUserRequest, UserDTO, UserId}
-import org.http4s.{AuthedRequest, EntityDecoder, EntityEncoder, Response}
+import com.uptech.windalerts.domain.domain.{SurfsUpEitherT, UserId}
 import org.http4s.dsl.Http4sDsl
+import org.http4s.{AuthedRequest, EntityDecoder, EntityEncoder, Response}
 
 class http[F[_] : Effect](httpErrorHandler: HttpErrorHandler[F]) extends Http4sDsl[F] {
 
@@ -45,8 +45,8 @@ class http[F[_] : Effect](httpErrorHandler: HttpErrorHandler[F]) extends Http4sD
     handle(authReq, user, handler, (r:Res) => Created(r))(decoder, encoder)
   }
 
-  def handleOkNoContentNoDecode[Res](user:UserId, handler : (UserId) => SurfsUpEitherT[F, Res])(implicit encoder:EntityEncoder[F, Res])  = {
-    handleNoDecode( user, handler, (r:Res) => Ok())(encoder)
+  def handleNoContentNoDecode[Res](user:UserId, handler : (UserId) => SurfsUpEitherT[F, Res])(implicit encoder:EntityEncoder[F, Res])  = {
+    handleNoDecode( user, handler, (r:Res) => NoContent())(encoder)
   }
 
   def handleOkNoDecode[Res](user:UserId, handler : (UserId) => SurfsUpEitherT[F, Res])(implicit encoder:EntityEncoder[F, Res])  = {
