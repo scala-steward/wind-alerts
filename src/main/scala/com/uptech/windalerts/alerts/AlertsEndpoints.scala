@@ -12,7 +12,7 @@ import org.http4s.AuthedRoutes
 class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F], usersService: UserService[F], auth: AuthenticationService[F], httpErrorHandler: HttpErrorHandler[F]) extends http[F](httpErrorHandler) {
   def allUsersService(): AuthedRoutes[UserId, F] =
     AuthedRoutes {
-      case authReq@GET -> Root as user => {
+      case _@GET -> Root as user => {
         handleOkNoDecode(user, (u: UserId) =>
             EitherT.liftF(alertService.getAllForUser(user.id))
               .map(alerts => Alerts(alerts.alerts.map(a => a.into[Alert].withFieldComputed(_.id, u => u._id.toHexString).transform)))
@@ -20,7 +20,7 @@ class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F], usersServic
       }
 
       case authReq@DELETE -> Root / alertId as user => {
-        handleNoContent(authReq, user, (u: UserId, r: AlertRequest) => alertService.deleteT(u.id, alertId))
+        handleOkNoContentNoDecode(user, (u: UserId) => alertService.deleteT(u.id, alertId))
       }
 
       case authReq@PUT -> Root / alertId as user => {
