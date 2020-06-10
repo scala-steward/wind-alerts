@@ -5,10 +5,9 @@ import cats.effect.{ContextShift, IO}
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.domain._
 import com.uptech.windalerts.domain.codecs._
-import com.uptech.windalerts.domain.domain._
+import com.uptech.windalerts.domain.domain.{ChangePasswordRequest, ResetPasswordRequest, _}
 import io.circe.parser._
 import io.scalaland.chimney.dsl._
-import org.http4s.dsl.Http4sDsl
 import org.http4s.{AuthedRoutes, HttpRoutes, Response}
 
 class UsersEndpoints(repos: Repos[IO],
@@ -17,88 +16,40 @@ class UsersEndpoints(repos: Repos[IO],
                      subscriptionsService: SubscriptionsService[IO],
                      httpErrorHandler: HttpErrorHandler[IO],
                      auth: AuthenticationService[IO],
-                     otpService:OTPService[IO])(implicit cs: ContextShift[IO])  extends Http4sDsl[IO] {
+                     otpService:OTPService[IO])(implicit cs: ContextShift[IO])  extends http[IO](httpErrorHandler) {
 
   def openEndpoints(): HttpRoutes[IO] =
     HttpRoutes.of[IO] {
-      case _@GET -> Root / "ping"  =>
-        val action: EitherT[IO, String, String] = for {
-          _ <- EitherT.liftF(IO(repos.usersRepo()))
-          response <- EitherT.liftF(IO("pong"))
-        } yield response
-        action.value.flatMap {
-          case Right(x) => Ok(x)
-          case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
-        }
+      case r@GET -> Root / "ping"  =>
+        handle(() => EitherT.liftF(IO("pong")))
 
       case _@GET -> Root / "privacy-policy"  =>
-        val action: EitherT[IO, String, String] = for {
-          response <- EitherT.liftF(IO(statics.privacyPolicy))
-        } yield response
-        action.value.flatMap {
-          case Right(x) => Ok(x)
-          case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
-        }
+        handle(() => EitherT.liftF(IO(statics.privacyPolicy)))
 
       case _@GET -> Root / "about-surfs-up"  =>
-        val action: EitherT[IO, String, String] = for {
-          response <- EitherT.liftF(IO(statics.aboutSurfsUp))
-        } yield response
-        action.value.flatMap {
-          case Right(x) => Ok(x)
-          case Left(error) => httpErrorHandler.handleThrowable(new RuntimeException(error))
-        }
+        handle(() => EitherT.liftF(IO(statics.aboutSurfsUp)))
 
       case req@POST -> Root =>
-        val action = for {
-          registerRequest <- EitherT.liftF(req.as[RegisterRequest])
-          tokens <- userService.register(registerRequest)
-        } yield tokens
-        action.value.flatMap {
-          case Right(tokens) => Ok(tokens)
-          case Left(error) => httpErrorHandler.handleError(error)
-        }
+        val rr = req.as[RegisterRequest]
+        handle(rr, userService.register(_))
 
       case req@POST -> Root / "login" =>
-        val action = for {
-          credentials <- EitherT.liftF(req.as[LoginRequest])
-          tokens <- userService.login(credentials)
-        } yield tokens
-        action.value.flatMap {
-          case Right(tokens) => Ok(tokens)
-          case Left(error) => httpErrorHandler.handleError(error)
-        }
+        val credentials = req.as[LoginRequest]
+        handle(credentials, userService.login(_))
 
       case req@POST -> Root / "refresh" =>
-        val action = for {
-          refreshToken <- EitherT.liftF(req.as[AccessTokenRequest])
-          tokens <- userService.refresh(refreshToken)
-        } yield tokens
-        action.value.flatMap {
-          case Right(tokens) => Ok(tokens)
-          case Left(error) => httpErrorHandler.handleError(error)
-        }
+        val refreshToken = req.as[AccessTokenRequest]
+        handle(refreshToken, userService.refresh(_))
 
       case req@POST -> Root / "changePassword" =>
-        val action = for {
-          request <- EitherT.liftF(req.as[ChangePasswordRequest])
-          dbCredentials <- userService.getByCredentials(request.email, request.oldPassword, request.deviceType)
-          _ <- userService.updatePassword(dbCredentials._id.toHexString, request.newPassword)
-        } yield ()
-        action.value.flatMap {
-          case Right(_) => Ok()
-          case Left(error) => httpErrorHandler.handleError(error)
-        }
+        val changePasswordRequest = req.as[ChangePasswordRequest]
+        handle(changePasswordRequest, userService.changePassword(_))
 
       case req@POST -> Root / "resetPassword" =>
-        val action = for {
-          request <- EitherT.liftF(req.as[ResetPasswordRequest])
-          _ <- userService.resetPassword(request.email, request.deviceType)
-        } yield ()
-        action.value.flatMap {
-          case Right(_) => Ok()
-          case Left(error) => httpErrorHandler.handleError(error)
-        }
+        val resetPasswordRequest = req.as[ResetPasswordRequest]
+        handle(resetPasswordRequest, (x:ResetPasswordRequest) => {
+          userService.resetPassword(x.email, x.deviceType).map(_=>())
+        })
 
       case req@POST -> Root / "purchase" / "android" / "update" => {
         val action: EitherT[IO, SurfsUpError, UserT] = for {
@@ -295,6 +246,7 @@ class UsersEndpoints(repos: Repos[IO],
           case Left(error) => httpErrorHandler.handleError(error)
         }
     }
+
   }
 
   private def asSubscription(response: String):EitherT[IO, SurfsUpError, SubscriptionNotificationWrapper] = {
