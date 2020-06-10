@@ -7,8 +7,8 @@ import cats.effect.Sync
 import cats.{Applicative, Functor}
 import com.softwaremill.sttp._
 import com.uptech.windalerts.Repos
-import com.uptech.windalerts.domain.domain.{BeachId, TideHeight}
-import com.uptech.windalerts.domain.{beaches, domain}
+import com.uptech.windalerts.domain.domain.{BeachId, SurfsUpEitherT, TideHeight}
+import com.uptech.windalerts.domain.{UnknownError, beaches, domain}
 import com.uptech.windalerts.status.Tides.{Datum, TideDecoders}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.optics.JsonPath._
@@ -29,10 +29,10 @@ class TidesService[F[_] : Sync](apiKey: String, repos:Repos[F])(implicit backend
                               "ACT" -> "Australia/ACT",
                              "NSW"  -> "Australia/NSW",
                               "NT"  -> "Australia/Darwin")
-  def get(beachId: BeachId)(implicit F: Functor[F]): EitherT[F, Exception, domain.TideHeight] =
+  def get(beachId: BeachId)(implicit F: Functor[F]): SurfsUpEitherT[F, domain.TideHeight] =
     EitherT.fromEither(getFromWillyWeatther(apiKey, beachId))
 
-  def getFromWillyWeatther(apiKey: String, beachId: BeachId): Either[Exception, domain.TideHeight] = {
+  def getFromWillyWeatther(apiKey: String, beachId: BeachId) = {
     val tz = timeZoneForRegion.getOrElse(repos.beaches()(beachId.id).region, "Australia/NSW")
     val tzId = ZoneId.of(tz)
     val startDateFormatted = startDateFormat.format(ZonedDateTime.now(tzId).minusDays(1))
@@ -42,8 +42,9 @@ class TidesService[F[_] : Sync](apiKey: String, repos:Repos[F])(implicit backend
     import TideDecoders._
 
     sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecastGraphs=tides&days=3&startDate=$startDateFormatted").send().body
-      .left.map(new RuntimeException(_))
+      .left.map(UnknownError(_))
       .flatMap(parser.parse(_))
+      .left.map(e=>UnknownError(e.getMessage))
       .map(root.forecastGraphs.tides.dataConfig.series.groups.each.points.each.json.getAll(_))
       .map(_.flatMap(j => j.as[Datum].toSeq.sortBy(_.x)))
       .map(interpolate(tzId, currentTimeGmt, _))

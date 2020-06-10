@@ -8,8 +8,8 @@ import cats.data.EitherT
 import cats.effect.Sync
 import cats.{Applicative, Functor}
 import com.softwaremill.sttp._
-import com.uptech.windalerts.domain.domain
-import com.uptech.windalerts.domain.domain.BeachId
+import com.uptech.windalerts.domain.{SurfsUpError, UnknownError, domain}
+import com.uptech.windalerts.domain.domain.{BeachId, SurfsUpEitherT}
 import com.uptech.windalerts.domain.swellAdjustments.Adjustments
 import com.uptech.windalerts.status.Swells.Swell
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
@@ -20,21 +20,21 @@ import org.http4s.{EntityDecoder, EntityEncoder}
 
 
 class SwellsService[F[_] : Sync](apiKey: String, adjustments: Adjustments)(implicit backend: SttpBackend[Id, Nothing]) {
-  def get(beachId: BeachId)(implicit F: Functor[F]): EitherT[F, Exception, domain.Swell] =
+  def get(beachId: BeachId)(implicit F: Functor[F]): SurfsUpEitherT[F, domain.Swell] =
     EitherT.fromEither(getFromWillyWeatther(apiKey, beachId))
 
-  def getFromWillyWeatther(apiKey: String, beachId: BeachId): Either[Exception, domain.Swell] = {
+  def getFromWillyWeatther(apiKey: String, beachId: BeachId): Either[UnknownError, domain.Swell] = {
     val body = sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecasts=swell&days=1").send().body
     body
-      .left.map(new RuntimeException(_))
+      .left.map(UnknownError(_))
       .flatMap(parser.parse(_))
       .map(root.forecasts.swell.days.each.entries.each.json.getAll(_))
+      .left.map(e=>UnknownError(e.getMessage))
       .map(
         _.flatMap(j => j.as[Swell].toSeq.filter(isCurrentHour(body, _)))
           .map(swell => swell.copy(height = adjustments.adjust(swell.height)))
           .head)
       .map(swell => domain.Swell(swell.height, swell.direction, swell.directionText))
-
   }
 
   private def isCurrentHour(body: Either[String, String], s: Swell) = {
