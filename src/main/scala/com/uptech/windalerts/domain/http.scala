@@ -1,10 +1,10 @@
 package com.uptech.windalerts.domain
 
-import cats.data.EitherT
-import cats.effect.Effect
+import cats.data.{EitherT, OptionT}
+import cats.effect.{Effect, IO}
 import cats.implicits._
-import com.uptech.windalerts.domain.domain.SurfsUpEitherT
-import org.http4s.EntityEncoder
+import com.uptech.windalerts.domain.domain.{Alert, AlertRequest, AlertT, SurfsUpEitherT, UpdateUserRequest, UserDTO, UserId}
+import org.http4s.{AuthedRequest, EntityDecoder, EntityEncoder, Response}
 import org.http4s.dsl.Http4sDsl
 
 class http[F[_] : Effect](httpErrorHandler: HttpErrorHandler[F]) extends Http4sDsl[F] {
@@ -39,5 +39,53 @@ class http[F[_] : Effect](httpErrorHandler: HttpErrorHandler[F]) extends Http4sD
       case Right(res) => Ok(res)
       case Left(error) => httpErrorHandler.handleThrowable(error)
     }
+  }
+
+  def handleCreated[Req, Res](authReq:AuthedRequest[F, UserId], user:UserId, handler : (UserId, Req) => SurfsUpEitherT[F, Res])(implicit decoder:EntityDecoder[F, Req],  encoder:EntityEncoder[F, Res])  = {
+    handle(authReq, user, handler, (r:Res) => Created(r))(decoder, encoder)
+  }
+
+  def handleOkNoContentNoDecode[Res](user:UserId, handler : (UserId) => SurfsUpEitherT[F, Res])(implicit encoder:EntityEncoder[F, Res])  = {
+    handleNoDecode( user, handler, (r:Res) => Ok())(encoder)
+  }
+
+  def handleOkNoDecode[Res](user:UserId, handler : (UserId) => SurfsUpEitherT[F, Res])(implicit encoder:EntityEncoder[F, Res])  = {
+    handleNoDecode( user, handler, (r:Res) => Ok(r))(encoder)
+  }
+
+  def handleNoDecode[Res](user:UserId, handler : (UserId) => SurfsUpEitherT[F, Res],  res : Res => F[Response[F]])(implicit encoder:EntityEncoder[F, Res])  = {
+    val action = for {
+      sent <- handler(user)
+    } yield sent
+    val response = action.value.flatMap {
+      case Right(response) => res(response)
+      case Left(error) => httpErrorHandler.handleError(error)
+    }
+    OptionT.liftF(response)
+  }
+
+  def handleOk[Req, Res](authReq:AuthedRequest[F, UserId], user:UserId, handler : (UserId, Req) => SurfsUpEitherT[F, Res])(implicit decoder:EntityDecoder[F, Req],  encoder:EntityEncoder[F, Res])  = {
+    handle(authReq, user, handler, (r:Res) => Ok(r))(decoder, encoder)
+  }
+
+  def handleEmptyOk[Req, Res](authReq:AuthedRequest[F, UserId], user:UserId, handler : (UserId, Req) => SurfsUpEitherT[F, Res])(implicit decoder:EntityDecoder[F, Req])  = {
+    handle(authReq, user, handler, (r:Res) => Ok())(decoder, null)
+  }
+
+  def handleNoContent[Req, Res](authReq:AuthedRequest[F, UserId], user:UserId, handler : (UserId, Req) => SurfsUpEitherT[F, Res])(implicit decoder:EntityDecoder[F, Req],  encoder:EntityEncoder[F, Res])  = {
+    handle(authReq, user, handler, (r:Res) => NoContent())(decoder, encoder)
+  }
+
+  def handle[Req, Res](authReq:AuthedRequest[F, UserId], user:UserId, handler : (UserId, Req) => SurfsUpEitherT[F, Res], res : Res => F[Response[F]])(implicit decoder:EntityDecoder[F, Req],  encoder:EntityEncoder[F, Res])  = {
+    val response = authReq.req.decode[Req] { req =>
+      val action = for {
+        response <- handler(user, req)
+      } yield response
+      action.value.flatMap {
+        case Right(response) => res(response)
+        case Left(error) => httpErrorHandler.handleError(error)
+      }
+    }
+    OptionT.liftF(response)
   }
 }
