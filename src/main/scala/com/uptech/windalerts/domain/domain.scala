@@ -4,7 +4,6 @@ import cats.data.EitherT
 import io.scalaland.chimney.dsl._
 import org.log4s.getLogger
 import org.mongodb.scala.bson.ObjectId
-import org.mongodb.scala.result
 
 import scala.beans.BeanProperty
 import scala.util.control.NonFatal

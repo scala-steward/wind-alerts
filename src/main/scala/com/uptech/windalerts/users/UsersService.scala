@@ -146,6 +146,14 @@ class UserService[F[_] : Sync](repos: Repos[F], otpService: OTPService[F], auth:
   def updateDeviceToken(userId: String, deviceToken: String): SurfsUpEitherT[F, Unit] =
     repos.usersRepo().updateDeviceToken(userId, deviceToken).toRight(CouldNotUpdateUserDeviceError())
 
+  def changePassword(request:ChangePasswordRequest): SurfsUpEitherT[F, Unit] = {
+    for {
+      credentials <- getByCredentials(request.email, request.oldPassword, request.deviceType)
+      result <- updatePassword(credentials._id.toHexString, credentials.password)
+    } yield result
+  }
+
+
   def updatePassword(userId: String, password: String): SurfsUpEitherT[F, Unit] = {
     for {
       _ <- repos.credentialsRepo().updatePassword(userId, password.bcrypt).toRight(CouldNotUpdatePasswordError())
