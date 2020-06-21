@@ -1,33 +1,29 @@
 package com.uptech.windalerts.users
 
-import cats.data.{EitherT, OptionT}
-import cats.effect.{ContextShift, IO}
+import cats.data.EitherT
+import cats.effect.Effect
+import cats.implicits._
 import com.uptech.windalerts.Repos
-import com.uptech.windalerts.domain._
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain.{AppleLoginRequest, AppleRegisterRequest, ChangePasswordRequest, FacebookLoginRequest, FacebookRegisterRequest, ResetPasswordRequest, _}
+import com.uptech.windalerts.domain.{HttpErrorHandler, http, secrets, _}
 import io.circe.parser._
 import io.scalaland.chimney.dsl._
-import org.http4s.{AuthedRoutes, HttpRoutes, Response}
+import org.http4s.{AuthedRoutes, HttpRoutes}
 
-class UsersEndpoints(repos: Repos[IO],
-                     userService: UserService[IO],
-                     userRolesService: UserRolesService[IO],
-                     subscriptionsService: SubscriptionsService[IO],
-                     httpErrorHandler: HttpErrorHandler[IO],
-                     auth: AuthenticationService[IO],
-                     otpService: OTPService[IO])(implicit cs: ContextShift[IO]) extends http[IO](httpErrorHandler) {
+class UsersEndpoints[F[_] : Effect]
+(repos: Repos[F], userService: UserService[F], userRolesService: UserRolesService[F], subscriptionsService: SubscriptionsService[F], httpErrorHandler: HttpErrorHandler[F]) extends http[F](httpErrorHandler) {
 
-  def openEndpoints(): HttpRoutes[IO] =
-    HttpRoutes.of[IO] {
+  def openEndpoints(): HttpRoutes[F] =
+    HttpRoutes.of[F] {
       case _@GET -> Root / "ping" =>
-        handle(() => EitherT.liftF(IO("pong")))
+        handle(() => EitherT.pure("pong"))
 
       case _@GET -> Root / "privacy-policy" =>
-        handle(() => EitherT.liftF(IO(statics.privacyPolicy)))
+        handle(() => EitherT.pure(statics.privacyPolicy))
 
       case _@GET -> Root / "about-surfs-up" =>
-        handle(() => EitherT.liftF(IO(statics.aboutSurfsUp)))
+        handle(() => EitherT.pure(statics.aboutSurfsUp))
 
       case req@POST -> Root =>
         val rr = req.as[RegisterRequest]
@@ -52,9 +48,9 @@ class UsersEndpoints(repos: Repos[IO],
         })
 
       case req@POST -> Root / "purchase" / "android" / "update" => {
-        val action: EitherT[IO, SurfsUpError, UserT] = for {
+        val action: EitherT[F, SurfsUpError, UserT] = for {
           update <- EitherT.liftF(req.as[AndroidUpdate])
-          decoded <- EitherT.liftF(IO(new String(java.util.Base64.getDecoder.decode(update.message.data))))
+          decoded <- EitherT.fromEither[F](Either.right(new String(java.util.Base64.getDecoder.decode(update.message.data))))
           subscription <- asSubscription(decoded)
           token <- repos.androidPurchaseRepo().getPurchaseByToken(subscription.subscriptionNotification.purchaseToken)
           purchase <- subscriptionsService.getAndroidPurchase(token.subscriptionId, subscription.subscriptionNotification.purchaseToken)
@@ -68,7 +64,7 @@ class UsersEndpoints(repos: Repos[IO],
       }
     }
 
-  def authedService(): AuthedRoutes[UserId, IO] =
+  def authedService(): AuthedRoutes[UserId, F] =
     AuthedRoutes {
       case authReq@PUT -> Root / "profile" as user => {
         handleOk(authReq, user, (u: UserId, request: UpdateUserRequest) =>
@@ -78,12 +74,7 @@ class UsersEndpoints(repos: Repos[IO],
       }
 
       case _@POST -> Root / "sendOTP" as user => {
-        handleOkNoDecode(user, (u: UserId) =>
-          for {
-            userFromDb <- userService.getUser(user.id)
-            sent <- otpService.send(userFromDb._id.toHexString, userFromDb.email)
-          } yield sent
-        )
+        handleOkNoDecode(user, (u: UserId) => userService.sendOtp(user.id))
       }
 
       case authReq@POST -> Root / "verifyEmail" as user => {
@@ -111,8 +102,8 @@ class UsersEndpoints(repos: Repos[IO],
           for {
             token <- repos.androidPurchaseRepo().getLastForUser(u.id)
             purchase <- subscriptionsService.getAndroidPurchase(token.subscriptionId, token.purchaseToken)
-            userO <- userService.getUser(u.id)
-            premiumUser <- userRolesService.updateSubscribedUserRole(userO, purchase.startTimeMillis, purchase.expiryTimeMillis).map(premiumUser => premiumUser.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform)
+            dbUser <- userService.getUser(u.id)
+            premiumUser <- userRolesService.updateSubscribedUserRole(dbUser, purchase.startTimeMillis, purchase.expiryTimeMillis).map(premiumUser => premiumUser.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform)
           } yield premiumUser
         }
         )
@@ -149,9 +140,9 @@ class UsersEndpoints(repos: Repos[IO],
       }
     }
 
-  def facebookEndpoints(): HttpRoutes[IO] = {
+  def facebookEndpoints(): HttpRoutes[F] = {
 
-    HttpRoutes.of[IO] {
+    HttpRoutes.of[F] {
       case req@POST -> Root => {
         val facebookRegisterRequest = req.as[FacebookRegisterRequest]
         handle(facebookRegisterRequest, userService.registerFacebookUser(_))
@@ -163,8 +154,8 @@ class UsersEndpoints(repos: Repos[IO],
     }
   }
 
-  def appleEndpoints(): HttpRoutes[IO] = {
-    HttpRoutes.of[IO] {
+  def appleEndpoints(): HttpRoutes[F] = {
+    HttpRoutes.of[F] {
       case req@POST -> Root =>
         val appleRegisterRequest = req.as[AppleRegisterRequest]
         handle(appleRegisterRequest, userService.registerAppleUser(_))
@@ -176,8 +167,11 @@ class UsersEndpoints(repos: Repos[IO],
 
   }
 
-  private def asSubscription(response: String): EitherT[IO, SurfsUpError, SubscriptionNotificationWrapper] = {
-    EitherT(IO.fromEither(
-      parse(response).map(json => json.as[SubscriptionNotificationWrapper].left.map(x => UnknownError(x.message)))))
+  private def asSubscription(response: String): EitherT[F, SurfsUpError, SubscriptionNotificationWrapper] = {
+    EitherT.fromEither((for {
+      parsed <- parse(response)
+      decoded <- parsed.as[SubscriptionNotificationWrapper].leftWiden[io.circe.Error]
+    } yield decoded).leftMap(error => UnknownError(error.getMessage)).leftWiden[SurfsUpError])
+
   }
 }
