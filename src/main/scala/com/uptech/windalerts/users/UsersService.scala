@@ -229,6 +229,12 @@ class UserService[F[_] : Sync](repos: Repos[F], otpService: OTPService[F], auth:
     EitherT.liftF(repos.feedbackRepository.create(feedback))
   }
 
+  def sendOtp(userId: String): SurfsUpEitherT[F, Unit] = {
+    for {
+      userFromDb <- getUser(userId)
+      sent <- otpService.send(userFromDb._id.toHexString, userFromDb.email)
+    } yield sent
+  }
 }
 
 object UserService {

@@ -14,12 +14,12 @@ class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F], usersServic
     AuthedRoutes {
       case _@GET -> Root as user => {
         handleOkNoDecode(user, (u: UserId) =>
-            EitherT.liftF(alertService.getAllForUser(user.id))
-              .map(alerts => Alerts(alerts.alerts.map(a => a.into[Alert].withFieldComputed(_.id, u => u._id.toHexString).transform)))
+          EitherT.liftF(alertService.getAllForUser(user.id))
+            .map(alerts => Alerts(alerts.alerts.map(a => a.into[Alert].withFieldComputed(_.id, u => u._id.toHexString).transform)))
         )
       }
 
-      case authReq@DELETE -> Root / alertId as user => {
+      case _@DELETE -> Root / alertId as user => {
         handleNoContentNoDecode(user, (u: UserId) => alertService.deleteT(u.id, alertId))
       }
 

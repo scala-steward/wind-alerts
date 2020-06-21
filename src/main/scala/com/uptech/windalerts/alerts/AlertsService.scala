@@ -14,7 +14,7 @@ class AlertsService[F[_]: Sync](repo: Repos[F]) {
     repo.alertsRepository().save(alertRequest, user)
   }
 
-  def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest) = repo.alertsRepository()updateT(requester, alertId, updateAlertRequest)
+  def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest) = repo.alertsRepository().updateT(requester, alertId, updateAlertRequest)
 
   def getAllForUser(user: String): F[AlertsT] = repo.alertsRepository().getAllForUser(user)
 
