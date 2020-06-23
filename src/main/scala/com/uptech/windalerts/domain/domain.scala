@@ -220,7 +220,7 @@ object domain {
 
     def isToBeAlertedAt(minutes: Int): Boolean = timeRanges.exists(_.isWithinRange(minutes))
 
-    def asDTO() = {
+    def asDTO():Alert = {
       this.into[Alert].withFieldComputed(_.id, _._id.toHexString).transform
     }
   }
