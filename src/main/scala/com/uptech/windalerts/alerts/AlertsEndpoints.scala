@@ -15,7 +15,7 @@ class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F], usersServic
       case _@GET -> Root as user => {
         handleOkNoDecode(user, (u: UserId) =>
           EitherT.liftF(alertService.getAllForUser(user.id))
-            .map(alerts => Alerts(alerts.alerts.map(a => a.into[Alert].withFieldComputed(_.id, u => u._id.toHexString).transform)))
+            .map(alerts => Alerts(alerts.alerts.map(_.asDTO())))
         )
       }
 
@@ -28,7 +28,7 @@ class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F], usersServic
           for {
             dbUser <- usersService.getUser(u.id)
             _ <- auth.authorizePremiumUsers(dbUser)
-            saved <- alertService.updateT(u.id, alertId, r).map(r => r.into[Alert].withFieldComputed(_.id, u => u._id.toHexString).transform)
+            saved <- alertService.updateT(u.id, alertId, r).map(_.asDTO())
           } yield saved
         }
         )
@@ -39,7 +39,7 @@ class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F], usersServic
           for {
             dbUser <- usersService.getUser(u.id)
             _ <- auth.authorizePremiumUsers(dbUser)
-            saved <- EitherT.liftF(alertService.save(r, u.id)).map(r => r.into[Alert].withFieldComputed(_.id, u => u._id.toHexString).transform)
+            saved <- EitherT.liftF(alertService.save(r, u.id)).map(_.asDTO())
           } yield saved
         }
         )

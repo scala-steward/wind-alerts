@@ -8,7 +8,6 @@ import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain.{AppleLoginRequest, AppleRegisterRequest, ChangePasswordRequest, FacebookLoginRequest, FacebookRegisterRequest, ResetPasswordRequest, _}
 import com.uptech.windalerts.domain.{HttpErrorHandler, http, secrets, _}
 import io.circe.parser._
-import io.scalaland.chimney.dsl._
 import org.http4s.{AuthedRoutes, HttpRoutes}
 
 class UsersEndpoints[F[_] : Effect]
@@ -69,7 +68,7 @@ class UsersEndpoints[F[_] : Effect]
       case authReq@PUT -> Root / "profile" as user => {
         handleOk(authReq, user, (u: UserId, request: UpdateUserRequest) =>
           userService.updateUserProfile(u.id, request.name, request.snoozeTill, request.disableAllAlerts, request.notificationsPerHour)
-            .map(tokens => tokens.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform)
+            .map(_.asDTO)
         )
       }
 
@@ -82,7 +81,7 @@ class UsersEndpoints[F[_] : Effect]
           for {
             _ <- repos.otp().exists(request.otp, user.id)
             user <- userService.getUser(user.id)
-            updateResult <- userRolesService.makeUserTrial(user).map(tokens => tokens.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform)
+            updateResult <- userRolesService.makeUserTrial(user).map(_.asDTO())
           } yield updateResult
         )
       }
@@ -103,7 +102,7 @@ class UsersEndpoints[F[_] : Effect]
             token <- repos.androidPurchaseRepo().getLastForUser(u.id)
             purchase <- subscriptionsService.getAndroidPurchase(token.subscriptionId, token.purchaseToken)
             dbUser <- userService.getUser(u.id)
-            premiumUser <- userRolesService.updateSubscribedUserRole(dbUser, purchase.startTimeMillis, purchase.expiryTimeMillis).map(premiumUser => premiumUser.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform)
+            premiumUser <- userRolesService.updateSubscribedUserRole(dbUser, purchase.startTimeMillis, purchase.expiryTimeMillis).map(_.asDTO())
           } yield premiumUser
         }
         )
@@ -124,7 +123,7 @@ class UsersEndpoints[F[_] : Effect]
             token <- repos.applePurchaseRepo().getLastForUser(user.id)
             purchase <- subscriptionsService.getApplePurchase(token.purchaseToken, secrets.read.surfsUp.apple.appSecret)
             dbUser <- userService.getUser(user.id)
-            premiumUser <- userRolesService.updateSubscribedUserRole(dbUser, purchase.purchase_date_ms, purchase.expires_date_ms).map(premiumUser => premiumUser.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform)
+            premiumUser <- userRolesService.updateSubscribedUserRole(dbUser, purchase.purchase_date_ms, purchase.expires_date_ms).map(_.asDTO())
           } yield premiumUser
         }
         )
