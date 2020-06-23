@@ -64,7 +64,7 @@ class AuthenticationServiceImpl(repos: Repos[IO]) extends AuthenticationService[
   }
 
   override def tokens(accessToken: String, refreshToken: RefreshToken, expiredAt: Long, user: UserT): EitherT[IO, SurfsUpError, TokensWithUser] =
-    EitherT.right(IO(domain.TokensWithUser(accessToken, refreshToken.refreshToken, expiredAt, user.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform)))
+    EitherT.right(IO(domain.TokensWithUser(accessToken, refreshToken.refreshToken, expiredAt, user.asDTO())))
 
   def createOtp(n: Int) = {
     val alpha = "0123456789"

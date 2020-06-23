@@ -104,6 +104,10 @@ object domain {
     def isTrialEnded() = {
       startTrialAt != -1 && endTrialAt < System.currentTimeMillis()
     }
+
+    def asDTO():UserDTO = {
+      this.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform
+    }
   }
 
   object UserT {
@@ -215,6 +219,10 @@ object domain {
     }
 
     def isToBeAlertedAt(minutes: Int): Boolean = timeRanges.exists(_.isWithinRange(minutes))
+
+    def asDTO():Alert = {
+      this.into[Alert].withFieldComputed(_.id, _._id.toHexString).transform
+    }
   }
 
   object AlertT {
