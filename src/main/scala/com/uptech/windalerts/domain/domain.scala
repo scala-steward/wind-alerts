@@ -101,6 +101,8 @@ object domain {
 
 
   case class UserT(_id: ObjectId, email: String, name: String, deviceId: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long) {
+    def firstName() = name.split(" ")(0)
+
     def isTrialEnded() = {
       startTrialAt != -1 && endTrialAt < System.currentTimeMillis()
     }

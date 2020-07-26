@@ -111,7 +111,7 @@ object secrets {
 
   case class Apple(appSecret: String)
 
-  case class Email(userName: String, password: String)
+  case class Email(apiKey: String)
 
   case class Mongodb(url: String)
 

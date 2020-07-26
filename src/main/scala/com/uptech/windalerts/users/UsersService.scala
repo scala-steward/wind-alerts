@@ -222,7 +222,8 @@ class UserService[F[_] : Sync](repos: Repos[F], otpService: OTPService[F], auth:
       newPassword <- EitherT.pure(conversions.generateRandomString(10))
       _ <- updatePassword(creds._id.toHexString, newPassword)
       _ <- EitherT.liftF(repos.refreshTokenRepo().deleteForUserId(creds._id.toHexString))
-      _ <- EitherT.pure(repos.emailConf().send(email, "Your new password", newPassword))
+      user <- EitherT.liftF(repos.usersRepo().getByUserId(creds._id.toHexString))
+      _ <- EitherT.pure(repos.emailConf().sendResetPassword(user.get.firstName(), email, newPassword))
     } yield creds
 
   def createFeedback(feedback: Feedback): SurfsUpEitherT[F, Feedback] = {
