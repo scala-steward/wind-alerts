@@ -5,6 +5,7 @@ import java.io.File
 
 import com.uptech.windalerts.domain.beaches.{Beach, Beaches}
 import com.uptech.windalerts.domain.swellAdjustments.Adjustments
+import com.uptech.windalerts.users.AppleLogin
 import io.circe._
 import io.circe.config.parser
 import io.circe.generic.auto._
@@ -117,6 +118,11 @@ object secrets {
 
   def read: SecretsSettings = {
     val projectId = sys.env("projectId")
+    import org.log4s.getLogger
+    getLogger.error(projectId)
+    getLogger.error("File exists " + new File(s"/app/resources/$projectId.secrets").exists())
+    getLogger.error("File exists " + new File(s"src/main/resources/$projectId.secrets").exists())
+
     Option(parser.decodeFile[SecretsSettings](new File(s"/app/resources/$projectId.secrets")).toOption
       .getOrElse(parser.decodeFile[SecretsSettings](new File(s"src/main/resources/secrets.conf")).toOption.get)).get
   }
