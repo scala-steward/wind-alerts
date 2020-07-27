@@ -16,6 +16,8 @@ trait AppleCredentialsRepository[F[_]] {
   def count(email: String, deviceType: String): F[Int]
 
   def findByAppleId(appleId:String): EitherT[F, UserNotFoundError, AppleCredentials]
+
+  def find(email: String, deviceType: String): F[Option[AppleCredentials]]
 }
 
 class MongoAppleCredentialsRepositoryAlgebra(collection: MongoCollection[AppleCredentials])(implicit cs: ContextShift[IO]) extends AppleCredentialsRepository[IO] {
@@ -30,4 +32,8 @@ class MongoAppleCredentialsRepositoryAlgebra(collection: MongoCollection[AppleCr
 
   private def findByCriteria(criteria: Bson) =
     IO.fromFuture(IO(collection.find(criteria).toFuture()))
+
+  override def find(email: String, deviceType: String): IO[Option[AppleCredentials]] = {
+    findByCriteria(and(equal("email", email), equal("deviceType", deviceType))).map(_.headOption)
+  }
 }

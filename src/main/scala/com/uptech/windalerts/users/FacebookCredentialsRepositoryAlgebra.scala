@@ -6,12 +6,15 @@ import com.uptech.windalerts.domain.domain.FacebookCredentialsT
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.{and, equal}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait FacebookCredentialsRepositoryAlgebra[F[_]] {
   def create(credentials: domain.FacebookCredentialsT): F[FacebookCredentialsT]
 
   def count(email: String, deviceType: String): F[Int]
+
+  def find(email: String, deviceType: String): F[Option[FacebookCredentialsT]]
 }
 
 class MongoFacebookCredentialsRepository(collection: MongoCollection[FacebookCredentialsT])(implicit cs: ContextShift[IO]) extends FacebookCredentialsRepositoryAlgebra[IO] {
@@ -23,4 +26,8 @@ class MongoFacebookCredentialsRepository(collection: MongoCollection[FacebookCre
 
   private def findByCriteria(criteria: Bson) =
     IO.fromFuture(IO(collection.find(criteria).toFuture()))
+
+  override def find(email: String, deviceType: String): IO[Option[FacebookCredentialsT]] = {
+    findByCriteria(and(equal("email", email), equal("deviceType", deviceType))).map(_.headOption)
+  }
 }

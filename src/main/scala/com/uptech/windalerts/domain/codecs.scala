@@ -120,29 +120,6 @@ object codecs {
 
   implicit def userEntityEncoder[F[_] : Applicative]: EntityEncoder[F, UserDTO] = jsonEncoderOf
 
-  lazy implicit val userDeviceDecoder: Decoder[UserDevice] = deriveDecoder[UserDevice]
-
-  implicit def userDeviceEntityDecoder[F[_] : Sync]: EntityDecoder[F, UserDevice] = jsonOf
-
-  lazy implicit val userDeviceEncoder: Encoder[UserDevice] = deriveEncoder[UserDevice]
-
-  implicit def userDeviceEntityEncoder[F[_] : Applicative]: EntityEncoder[F, UserDevice] = jsonEncoderOf
-
-  lazy implicit val userDeviceRDecoder: Decoder[DeviceRequest] = deriveDecoder[DeviceRequest]
-
-  implicit def userDeviceEntityRDecoder[F[_] : Sync]: EntityDecoder[F, DeviceRequest] = jsonOf
-
-  lazy implicit val userDeviceREncoder: Encoder[DeviceRequest] = deriveEncoder[DeviceRequest]
-
-  implicit def userDeviceEntityREncoder[F[_] : Applicative]: EntityEncoder[F, DeviceRequest] = jsonEncoderOf
-
-  lazy implicit val userDevicesDecoder: Decoder[UserDevices] = deriveDecoder[UserDevices]
-
-  implicit def userDevicesEntityLDecoder[F[_] : Sync]: EntityDecoder[F, UserDevices] = jsonOf
-
-  lazy implicit val userDevicesEncoder: Encoder[UserDevices] = deriveEncoder[UserDevices]
-
-  implicit def userDevicesEntityLEncoder[F[_] : Applicative]: EntityEncoder[F, UserDevices] = jsonEncoderOf
 
   lazy implicit val alertRDecoder: Decoder[AlertRequest] = deriveDecoder[AlertRequest]
 

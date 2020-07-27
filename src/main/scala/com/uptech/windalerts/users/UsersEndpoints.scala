@@ -144,12 +144,12 @@ class UsersEndpoints[F[_] : Effect]
     HttpRoutes.of[F] {
       case req@POST -> Root => {
         val facebookRegisterRequest = req.as[FacebookRegisterRequest]
-        handle(facebookRegisterRequest, userService.registerFacebookUser(_))
+        handle(facebookRegisterRequest, userService.registerOrLoginFacebookUser(_))
       }
 
       case req@POST -> Root / "login" =>
-        val facebookLoginRequest = req.as[FacebookLoginRequest]
-        handle(facebookLoginRequest, userService.loginFacebookUser(_))
+        val facebookLoginRequest = req.as[FacebookRegisterRequest]
+        handle(facebookLoginRequest, userService.registerOrLoginFacebookUser(_))
     }
   }
 
@@ -157,11 +157,11 @@ class UsersEndpoints[F[_] : Effect]
     HttpRoutes.of[F] {
       case req@POST -> Root =>
         val appleRegisterRequest = req.as[AppleRegisterRequest]
-        handle(appleRegisterRequest, userService.registerAppleUser(_))
+        handle(appleRegisterRequest, userService.registerOrLoginAppleUser(_))
 
       case req@POST -> Root / "login" =>
-        val appleLoginRequest = req.as[AppleLoginRequest]
-        handle(appleLoginRequest, userService.loginAppleUser(_))
+        val appleLoginRequest = req.as[AppleRegisterRequest]
+        handle(appleLoginRequest, userService.registerOrLoginAppleUser(_))
     }
 
   }
