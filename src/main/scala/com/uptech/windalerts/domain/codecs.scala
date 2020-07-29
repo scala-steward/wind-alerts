@@ -23,7 +23,7 @@ object codecs {
     fromProviders(classOf[AlertT]),
     fromProviders(classOf[AlertsT]),
     fromProviders(classOf[TimeRange]),
-    fromProviders(classOf[FacebookCredentialsT]),
+    fromProviders(classOf[FacebookCredentials]),
     fromProviders(classOf[AppleToken]),
     fromProviders(classOf[AppleCredentials]),
     fromProviders(classOf[Feedback]),

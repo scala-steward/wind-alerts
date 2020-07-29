@@ -11,7 +11,7 @@ import com.uptech.windalerts.domain.domain.UserType._
 import com.uptech.windalerts.domain.domain.{Credentials, SurfsUpEitherT, _}
 import org.mongodb.scala.bson.ObjectId
 
-class UserService[F[_] : Sync](repos: Repos[F], otpService: OTPService[F], auth: AuthenticationService[F]) {
+class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService:UserCredentialService[F], otpService: OTPService[F], auth: AuthenticationService[F]) {
 
   def register(registerRequest: RegisterRequest): SurfsUpEitherT[F, TokensWithUser] = {
     for {
@@ -33,7 +33,7 @@ class UserService[F[_] : Sync](repos: Repos[F], otpService: OTPService[F], auth:
 
   def login(credentials:LoginRequest): SurfsUpEitherT[F, TokensWithUser] = {
     for {
-      dbCredentials <- getByCredentials(credentials.email, credentials.password, credentials.deviceType)
+      dbCredentials <- userCredentialsService.getByCredentials(credentials.email, credentials.password, credentials.deviceType)
       dbUser <- getUser(dbCredentials.email, dbCredentials.deviceType)
       tokens <- resetUserSession(dbUser, credentials.deviceToken)
     } yield tokens
@@ -121,10 +121,10 @@ class UserService[F[_] : Sync](repos: Repos[F], otpService: OTPService[F], auth:
     } yield tokens
   }
 
-  def createUser(rr: FacebookRegisterRequest, facebookUser:User): SurfsUpEitherT[F, (UserT, FacebookCredentialsT)] = {
+  def createUser(rr: FacebookRegisterRequest, user: User): SurfsUpEitherT[F, (UserT, FacebookCredentials)] = {
     for {
-      savedCreds <- EitherT.liftF(repos.facebookCredentialsRepo().create(FacebookCredentialsT(facebookUser.getEmail, rr.accessToken, rr.deviceType)))
-      savedUser <- EitherT.liftF(repos.usersRepo().create(UserT.create(new ObjectId(savedCreds._id.toHexString), facebookUser.getEmail, facebookUser.getName, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Trial.value, -1, false, 4)))
+      savedCreds <- EitherT.liftF(repos.facebookCredentialsRepo().create(FacebookCredentials(user.getEmail, rr.accessToken, rr.deviceType)))
+      savedUser <- EitherT.liftF(repos.usersRepo().create(UserT.create(new ObjectId(savedCreds._id.toHexString), user.getEmail, user.getType, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Trial.value, -1, false, 4)))
     } yield (savedUser, savedCreds)
   }
 
@@ -150,19 +150,6 @@ class UserService[F[_] : Sync](repos: Repos[F], otpService: OTPService[F], auth:
   def updateDeviceToken(userId: String, deviceToken: String): SurfsUpEitherT[F, Unit] =
     repos.usersRepo().updateDeviceToken(userId, deviceToken).toRight(CouldNotUpdateUserDeviceError())
 
-  def changePassword(request:ChangePasswordRequest): SurfsUpEitherT[F, Unit] = {
-    for {
-      credentials <- getByCredentials(request.email, request.oldPassword, request.deviceType)
-      result <- updatePassword(credentials._id.toHexString, credentials.password)
-    } yield result
-  }
-
-  def updatePassword(userId: String, password: String): SurfsUpEitherT[F, Unit] = {
-    for {
-      _ <- repos.credentialsRepo().updatePassword(userId, password.bcrypt).toRight(CouldNotUpdatePasswordError())
-      result <- EitherT.liftF(repos.refreshTokenRepo().deleteForUserId(userId))
-    } yield result
-  }
 
   def logoutUser(userId: String): SurfsUpEitherT[F, Unit] = {
     for {
@@ -193,34 +180,6 @@ class UserService[F[_] : Sync](repos: Repos[F], otpService: OTPService[F], auth:
   def getUser(userId: String): SurfsUpEitherT[F, UserT] =
     OptionT(repos.usersRepo().getByUserId(userId)).toRight(UserNotFoundError())
 
-  def getByCredentials(
-                        email: String, password: String, deviceType: String
-                      ): SurfsUpEitherT[F, Credentials] =
-    for {
-      creds <- repos.credentialsRepo().findByCreds(email, deviceType).toRight(UserAuthenticationFailedError(email))
-      passwordMatched <- isPasswordMatch(password, creds)
-    } yield passwordMatched
-
-  private def isPasswordMatch(password: String, creds: Credentials): SurfsUpEitherT[F, Credentials] = {
-    EitherT.fromEither(if (password.isBcrypted(creds.password)) {
-      Right(creds)
-    } else {
-      Left(UserAuthenticationFailedError(creds.email))
-    })
-  }
-
-  def resetPassword(
-                     email: String, deviceType: String
-                   ): SurfsUpEitherT[F, Credentials] =
-    for {
-      creds <- repos.credentialsRepo().findByCreds(email, deviceType).toRight(UserAuthenticationFailedError(email))
-      newPassword <- EitherT.pure(conversions.generateRandomString(10))
-      _ <- updatePassword(creds._id.toHexString, newPassword)
-      _ <- EitherT.liftF(repos.refreshTokenRepo().deleteForUserId(creds._id.toHexString))
-      user <- EitherT.liftF(repos.usersRepo().getByUserId(creds._id.toHexString))
-      _ <- EitherT.pure(repos.emailConf().sendResetPassword(user.get.firstName(), email, newPassword))
-    } yield creds
-
   def createFeedback(feedback: Feedback): SurfsUpEitherT[F, Feedback] = {
     EitherT.liftF(repos.feedbackRepository.create(feedback))
   }
@@ -236,8 +195,9 @@ class UserService[F[_] : Sync](repos: Repos[F], otpService: OTPService[F], auth:
 object UserService {
   def apply[F[_] : Sync](
                           repos: Repos[F],
+                          userCredentialService: UserCredentialService[F],
                           otpService:OTPService[F],
                           authenticationService: AuthenticationService[F]
                         ): UserService[F] =
-    new UserService(repos, otpService, authenticationService)
+    new UserService(repos, userCredentialService, otpService, authenticationService)
 }

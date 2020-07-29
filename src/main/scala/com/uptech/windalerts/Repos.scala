@@ -27,9 +27,9 @@ trait Repos[F[_]] {
 
   def applePurchaseRepo(): AppleTokenRepository[F]
 
-  def facebookCredentialsRepo(): FacebookCredentialsRepositoryAlgebra[F]
+  def facebookCredentialsRepo(): SocialCredentialsRepository[F, FacebookCredentials]
 
-  def appleCredentialsRepository(): AppleCredentialsRepository[F]
+  def appleCredentialsRepository(): SocialCredentialsRepository[F, AppleCredentials]
 
   def feedbackRepository(): FeedbackRepository[F]
 
@@ -81,11 +81,11 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
   }
 
   val fbRepo = Eval.later {
-    new MongoFacebookCredentialsRepository(db.getCollection[FacebookCredentialsT]("facebookCredentials"))
+    new MongoSocialCredentialsRepository[FacebookCredentials](db.getCollection[FacebookCredentials]("facebookCredentials"))
   }
 
   val appCRepo = Eval.later {
-    new MongoAppleCredentialsRepositoryAlgebra(db.getCollection[AppleCredentials]("appleCredentials"))
+    new MongoSocialCredentialsRepository[AppleCredentials](db.getCollection[AppleCredentials]("appleCredentials"))
   }
 
   val fdRepo = Eval.later {
@@ -143,11 +143,11 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
     appRepo.value
   }
 
-  override def facebookCredentialsRepo: FacebookCredentialsRepositoryAlgebra[IO] = {
+  override def facebookCredentialsRepo: SocialCredentialsRepository[IO, FacebookCredentials] = {
     fbRepo.value
   }
 
-  override def appleCredentialsRepository: AppleCredentialsRepository[IO] = {
+  override def appleCredentialsRepository:  SocialCredentialsRepository[IO, AppleCredentials] = {
     appCRepo.value
   }
 

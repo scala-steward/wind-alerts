@@ -41,16 +41,22 @@ object domain {
       userId, accessTokenId)
   }
 
-  case class FacebookCredentialsT(_id: ObjectId, email: String, accessToken: String, deviceType: String)
+  trait SocialCredentials {
+    def _id:ObjectId
+    def email:String
+    def socialId:String
+    def deviceType: String
+  }
+  case class FacebookCredentials(override val _id: ObjectId, override val email: String, override val socialId: String, override val deviceType: String) extends SocialCredentials
 
-  object FacebookCredentialsT {
-    def apply(email: String, accessToken: String, deviceType: String): FacebookCredentialsT = new FacebookCredentialsT(new ObjectId(), email, accessToken, deviceType)
+  object FacebookCredentials {
+    def apply(email: String, socialId: String, deviceType: String): FacebookCredentials = new FacebookCredentials(new ObjectId(), email, socialId, deviceType)
   }
 
-  case class AppleCredentials(_id: ObjectId, email: String, deviceType: String, appleId: String)
+  case class AppleCredentials(override val _id: ObjectId, override val email: String, override val socialId: String, override val deviceType: String)  extends SocialCredentials
 
   object AppleCredentials {
-    def apply(email: String, deviceType: String, appleId: String): AppleCredentials = new AppleCredentials(new ObjectId(), email, deviceType, appleId)
+    def apply(email: String, appleId: String, deviceType: String): AppleCredentials = new AppleCredentials(new ObjectId(), email, appleId, deviceType)
   }
 
   case class Credentials(_id: ObjectId, email: String, password: String, deviceType: String)
@@ -129,6 +135,7 @@ object domain {
   final case class AlertWithUserWithBeach(alert: AlertT, user: UserT, beach: domain.Beach)
 
   final case class UserWithCount(userId: String, count: Int)
+
 
 
   case class FacebookRegisterRequest(accessToken: String, deviceType: String, deviceToken: String)
