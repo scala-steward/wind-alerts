@@ -80,9 +80,8 @@ class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long
         .putData("beachId", s"$beachId")
         .setNotification(new com.google.firebase.messaging.Notification(title, body))
         .setToken(u.deviceToken)
-          .setApnsConfig(new ApnsConfig.Builder().putHeader("apns-priority", "10")
-            .setFcmOptions(new ApnsFcmOptions.Builder().).build())
-
+          .setApnsConfig(new ApnsConfig.Builder().putHeader("apns-priority", "10").build())
+          .setAndroidConfig(AndroidConfig.builder().setPriority(AndroidConfig.Priority.HIGH).build())
         .build())
       val s = repos.notificationsRepo().create(com.uptech.windalerts.domain.domain.Notification(a._id.toHexString, a.owner, u.deviceToken, title, body, System.currentTimeMillis()))
       logger.warn(s"unsafeRunSync ${s.unsafeRunSync()}")
