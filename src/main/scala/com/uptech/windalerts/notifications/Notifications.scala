@@ -75,12 +75,12 @@ class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long
     try {
       logger.warn(s" sending to ${u.email} for ${a._id.toHexString}")
 
-      val sent = firebaseMessaging.send(Message.builder().setAndroidConfig(new AndroidConfig.Builder().setPriority(AndroidConfig.Priority.HIGH).build())
-          .setWebpushConfig(new WebpushConfig.Builder().putHeader("Urgency", "high").build())
+      val sent = firebaseMessaging.send(Message.builder().setAndroidConfig(AndroidConfig.builder().setPriority(AndroidConfig.Priority.HIGH).build())
+          .setWebpushConfig(WebpushConfig.builder().putHeader("Urgency", "high").build())
         .putData("beachId", s"$beachId")
         .setNotification(new com.google.firebase.messaging.Notification(title, body))
         .setToken(u.deviceToken)
-          .setApnsConfig(new ApnsConfig.Builder().putHeader("apns-priority", "10").build())
+          .setApnsConfig(ApnsConfig.builder().putHeader("apns-priority", "10").build())
           .setAndroidConfig(AndroidConfig.builder().setPriority(AndroidConfig.Priority.HIGH).build())
         .build())
       val s = repos.notificationsRepo().create(com.uptech.windalerts.domain.domain.Notification(a._id.toHexString, a.owner, u.deviceToken, title, body, System.currentTimeMillis()))
