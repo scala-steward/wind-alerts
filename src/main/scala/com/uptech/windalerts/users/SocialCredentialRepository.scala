@@ -1,24 +1,23 @@
 package com.uptech.windalerts.users
 
 import cats.effect.{ContextShift, IO}
-import com.uptech.windalerts.domain.domain
-import com.uptech.windalerts.domain.domain.FacebookCredentialsT
+import com.uptech.windalerts.domain.domain.SocialCredentials
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.{and, equal}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait FacebookCredentialsRepositoryAlgebra[F[_]] {
-  def create(credentials: domain.FacebookCredentialsT): F[FacebookCredentialsT]
+trait SocialCredentialsRepository[F[_], T] {
+  def create(credentials: T): F[T]
 
   def count(email: String, deviceType: String): F[Int]
 
-  def find(email: String, deviceType: String): F[Option[FacebookCredentialsT]]
+  def find(email: String, deviceType: String): F[Option[T]]
 }
 
-class MongoFacebookCredentialsRepository(collection: MongoCollection[FacebookCredentialsT])(implicit cs: ContextShift[IO]) extends FacebookCredentialsRepositoryAlgebra[IO] {
-  override def create(credentials: FacebookCredentialsT): IO[FacebookCredentialsT] =
+class MongoSocialCredentialsRepository[T : scala.reflect.ClassTag](collection: MongoCollection[T])(implicit cs: ContextShift[IO]) extends SocialCredentialsRepository[IO, T] {
+  override def create(credentials: T): IO[T] =
     IO.fromFuture(IO(collection.insertOne(credentials).toFuture().map(_ => credentials)))
 
   override def count(email: String, deviceType: String): IO[Int] =
@@ -27,7 +26,7 @@ class MongoFacebookCredentialsRepository(collection: MongoCollection[FacebookCre
   private def findByCriteria(criteria: Bson) =
     IO.fromFuture(IO(collection.find(criteria).toFuture()))
 
-  override def find(email: String, deviceType: String): IO[Option[FacebookCredentialsT]] = {
+  override def find(email: String, deviceType: String): IO[Option[T]] = {
     findByCriteria(and(equal("email", email), equal("deviceType", deviceType))).map(_.headOption)
   }
 }

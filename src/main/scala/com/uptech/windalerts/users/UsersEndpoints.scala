@@ -11,7 +11,7 @@ import io.circe.parser._
 import org.http4s.{AuthedRoutes, HttpRoutes}
 
 class UsersEndpoints[F[_] : Effect]
-(repos: Repos[F], userService: UserService[F], userRolesService: UserRolesService[F], subscriptionsService: SubscriptionsService[F], httpErrorHandler: HttpErrorHandler[F]) extends http[F](httpErrorHandler) {
+(repos: Repos[F], userCredentialsService:UserCredentialService[F], userService: UserService[F], userRolesService: UserRolesService[F], subscriptionsService: SubscriptionsService[F], httpErrorHandler: HttpErrorHandler[F]) extends http[F](httpErrorHandler) {
 
   def openEndpoints(): HttpRoutes[F] =
     HttpRoutes.of[F] {
@@ -38,12 +38,12 @@ class UsersEndpoints[F[_] : Effect]
 
       case req@POST -> Root / "changePassword" =>
         val changePasswordRequest = req.as[ChangePasswordRequest]
-        handle(changePasswordRequest, userService.changePassword(_))
+        handle(changePasswordRequest, userCredentialsService.changePassword(_))
 
       case req@POST -> Root / "resetPassword" =>
         val resetPasswordRequest = req.as[ResetPasswordRequest]
         handle(resetPasswordRequest, (x: ResetPasswordRequest) => {
-          userService.resetPassword(x.email, x.deviceType).map(_ => ())
+          userCredentialsService.resetPassword(x.email, x.deviceType).map(_ => ())
         })
 
       case req@POST -> Root / "purchase" / "android" / "update" => {
