@@ -3,7 +3,7 @@ package com.uptech.windalerts.notifications
 import cats.data.EitherT
 import cats.effect.IO
 import cats.implicits._
-import com.google.firebase.messaging.{FcmOptions, FirebaseMessaging, Message}
+import com.google.firebase.messaging.{AndroidConfig, ApnsConfig, ApnsFcmOptions, FcmOptions, FirebaseMessaging, Message, WebpushConfig}
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.alerts.AlertsService
 import com.uptech.windalerts.domain.beaches.Beach
@@ -75,10 +75,14 @@ class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long
     try {
       logger.warn(s" sending to ${u.email} for ${a._id.toHexString}")
 
-      val sent = firebaseMessaging.send(Message.builder()
+      val sent = firebaseMessaging.send(Message.builder().setAndroidConfig(new AndroidConfig.Builder().setPriority(AndroidConfig.Priority.HIGH).build())
+          .setWebpushConfig(new WebpushConfig.Builder().putHeader("Urgency", "high").build())
         .putData("beachId", s"$beachId")
         .setNotification(new com.google.firebase.messaging.Notification(title, body))
         .setToken(u.deviceToken)
+          .setApnsConfig(new ApnsConfig.Builder().putHeader("apns-priority", "10")
+            .setFcmOptions(new ApnsFcmOptions.Builder().).build())
+
         .build())
       val s = repos.notificationsRepo().create(com.uptech.windalerts.domain.domain.Notification(a._id.toHexString, a.owner, u.deviceToken, title, body, System.currentTimeMillis()))
       logger.warn(s"unsafeRunSync ${s.unsafeRunSync()}")
