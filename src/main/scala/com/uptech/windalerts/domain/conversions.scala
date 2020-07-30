@@ -6,15 +6,13 @@ import scala.util.Random
 
 object conversions {
 
-  def toIO[T](x: List[IO[T]]) = {
+  def toIO[T](x: List[IO[T]]): IO[List[T]] = {
     import cats.implicits._
-    val y: IO[List[T]] = x.sequence
-
-    y
+    x.sequence
   }
 
   def toIOSeq[T](x: Seq[IO[T]]):IO[Seq[T]] = {
-    toIO(x.toList).map(l=>l.toSeq)
+    toIO(x.toList).map(_.toSeq)
   }
 
 

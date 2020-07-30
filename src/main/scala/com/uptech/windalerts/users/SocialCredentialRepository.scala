@@ -1,7 +1,6 @@
 package com.uptech.windalerts.users
 
 import cats.effect.{ContextShift, IO}
-import com.uptech.windalerts.domain.domain.SocialCredentials
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.{and, equal}
@@ -26,7 +25,6 @@ class MongoSocialCredentialsRepository[T : scala.reflect.ClassTag](collection: M
   private def findByCriteria(criteria: Bson) =
     IO.fromFuture(IO(collection.find(criteria).toFuture()))
 
-  override def find(email: String, deviceType: String): IO[Option[T]] = {
+  override def find(email: String, deviceType: String): IO[Option[T]] =
     findByCriteria(and(equal("email", email), equal("deviceType", deviceType))).map(_.headOption)
-  }
 }
