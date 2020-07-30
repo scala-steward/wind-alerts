@@ -3,7 +3,7 @@ package com.uptech.windalerts.notifications
 import cats.data.EitherT
 import cats.effect.IO
 import cats.implicits._
-import com.google.firebase.messaging.{AndroidConfig, ApnsConfig, ApnsFcmOptions, FcmOptions, FirebaseMessaging, Message, WebpushConfig}
+import com.google.firebase.messaging._
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.alerts.AlertsService
 import com.uptech.windalerts.domain.beaches.Beach
@@ -11,7 +11,6 @@ import com.uptech.windalerts.domain.config.AppConfig
 import com.uptech.windalerts.domain.domain.{AlertT, AlertWithUserWithBeach, BeachId, UserT}
 import com.uptech.windalerts.domain.{HttpErrorHandler, domain}
 import com.uptech.windalerts.status.BeachService
-import com.uptech.windalerts.users.UserRepositoryAlgebra
 import org.log4s.getLogger
 
 import scala.concurrent.ExecutionContext.Implicits.global

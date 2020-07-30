@@ -13,7 +13,7 @@ class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F], usersServic
   def allUsersService(): AuthedRoutes[UserId, F] =
     AuthedRoutes {
       case _@GET -> Root as user => {
-        handleOkNoDecode(user, (u: UserId) =>
+        handleOkNoDecode(user, (_: UserId) =>
           EitherT.liftF(alertService.getAllForUser(user.id))
             .map(alerts => Alerts(alerts.alerts.map(_.asDTO())))
         )

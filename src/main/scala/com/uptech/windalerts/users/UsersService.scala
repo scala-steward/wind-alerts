@@ -3,8 +3,6 @@ package com.uptech.windalerts.users
 import cats.data.{EitherT, OptionT}
 import cats.effect.Sync
 import com.github.t3hnar.bcrypt._
-import com.restfb.types.User
-import com.restfb.{DefaultFacebookClient, Parameter, Version}
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.domain._
 import com.uptech.windalerts.domain.domain.UserType._
@@ -30,7 +28,6 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService:UserCrede
     } yield (saved, savedCreds)
   }
 
-
   def login(credentials:LoginRequest): SurfsUpEitherT[F, TokensWithUser] = {
     for {
       dbCredentials <- userCredentialsService.getByCredentials(credentials.email, credentials.password, credentials.deviceType)
@@ -39,49 +36,6 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService:UserCrede
     } yield tokens
   }
 
-  def registerOrLoginFacebookUser(credentials:FacebookRegisterRequest): SurfsUpEitherT[F, TokensWithUser] = {
-    for {
-      facebookClient <- EitherT.pure(new DefaultFacebookClient(credentials.accessToken, repos.fbSecret(), Version.LATEST))
-      facebookUser <- EitherT.pure(facebookClient.fetchObject("me", classOf[com.restfb.types.User], Parameter.`with`("fields", "name,id,email")))
-      exisitngCredentials <- EitherT.liftF(repos.facebookCredentialsRepo().find(facebookUser.getEmail, credentials.deviceType))
-      tokens <- {
-        if (exisitngCredentials.isEmpty) {
-          for {
-            _ <- doesNotExist(facebookUser.getEmail, credentials.deviceType)
-            result <- createUser(credentials, facebookUser)
-            tokens <- generateNewTokens(result._1)
-          } yield tokens
-        } else {
-          for {
-            dbUser <- getUser(facebookUser.getEmail, credentials.deviceType)
-            tokens <- resetUserSession(dbUser, credentials.deviceToken)
-          } yield tokens
-        }
-      }
-    } yield tokens
-  }
-
-  def registerOrLoginAppleUser(rr:AppleRegisterRequest): SurfsUpEitherT[F, TokensWithUser] = {
-    for {
-      appleUser <- EitherT.pure(AppleLogin.getUser(rr.authorizationCode, repos.appleLoginConf()))
-      exisitngCredentials <- EitherT.liftF(repos.appleCredentialsRepository().find(appleUser.email, rr.deviceType))
-
-      tokens <- {
-        if (exisitngCredentials.isEmpty) {
-          for {
-            _ <- doesNotExist(appleUser.email, rr.deviceType)
-            result <- createUser(rr, appleUser)
-            tokens <- generateNewTokens(result._1)
-          } yield tokens
-        } else {
-          for {
-            dbUser <- getUser(appleUser.email, rr.deviceType)
-            tokens <- resetUserSession(dbUser, rr.deviceToken)
-          } yield tokens
-        }
-      }
-    } yield tokens
-  }
 
   def resetUserSession(dbUser:UserT, deviceToken:String) = {
     for {
@@ -92,7 +46,6 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService:UserCrede
   }
 
   def refresh(refreshToken:AccessTokenRequest): SurfsUpEitherT[F, TokensWithUser] = {
-
     for {
       oldRefreshToken <- repos.refreshTokenRepo().getByRefreshToken(refreshToken.refreshToken).toRight(RefreshTokenNotFoundError())
       oldValidRefreshToken <- {
@@ -119,21 +72,6 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService:UserCrede
       newRefreshToken <- EitherT.liftF(repos.refreshTokenRepo().create(RefreshToken(user._id.toHexString, accessTokenId)))
       tokens <- auth.tokens(token.accessToken, newRefreshToken, token.expiredAt, user)
     } yield tokens
-  }
-
-  def createUser(rr: FacebookRegisterRequest, user: User): SurfsUpEitherT[F, (UserT, FacebookCredentials)] = {
-    for {
-      savedCreds <- EitherT.liftF(repos.facebookCredentialsRepo().create(FacebookCredentials(user.getEmail, rr.accessToken, rr.deviceType)))
-      savedUser <- EitherT.liftF(repos.usersRepo().create(UserT.create(new ObjectId(savedCreds._id.toHexString), user.getEmail, user.getType, rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Trial.value, -1, false, 4)))
-    } yield (savedUser, savedCreds)
-  }
-
-  def createUser(rr: AppleRegisterRequest, appleUser: AppleUser): SurfsUpEitherT[F, (UserT, AppleCredentials)] = {
-    for {
-      savedCreds <- EitherT.liftF(repos.appleCredentialsRepository().create(AppleCredentials(appleUser.email, rr.deviceType, appleUser.sub)))
-      savedUser <- EitherT.liftF(repos.usersRepo().create(UserT.create(new ObjectId(savedCreds._id.toHexString), appleUser.email,
-        rr.name,  rr.deviceToken, rr.deviceType, System.currentTimeMillis(), Trial.value, -1, false, 4)))
-    } yield (savedUser, savedCreds)
   }
 
   def updateUserProfile(id: String, name: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long): SurfsUpEitherT[F, UserT] = {
@@ -190,6 +128,7 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService:UserCrede
       sent <- otpService.send(userFromDb._id.toHexString, userFromDb.email)
     } yield sent
   }
+
 }
 
 object UserService {
