@@ -25,15 +25,15 @@ class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long
     val usersToBeNotifiedEitherT = for {
       alerts                          <- EitherT.liftF(A.getAllForDayAndTimeRange)
       alertsByBeaches                 =  alerts.groupBy(_.beachId).map(kv => (BeachId(kv._1), kv._2))
-      _                               <- EitherT.liftF(IO(logger.info(s"alertsByBeaches $alertsByBeaches")))
+      _                               <- EitherT.liftF(IO(logger.error(s"alertsByBeaches $alertsByBeaches")))
       beaches                         <- B.getAll(alertsByBeaches.keys.toSeq)
       x                               =  alertsByBeaches.map(kv => (beaches(kv._1), kv._2))
       alertsToBeNotified              =  x.map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)).map(a => domain.AlertWithBeach(a, kv._1))))
-      _                               <- EitherT.liftF(IO(logger.info(s"alertsToBeNotified $alertsToBeNotified")))
+      _                               <- EitherT.liftF(IO(logger.error(s"alertsToBeNotified $alertsToBeNotified")))
       usersToBeNotified               <- alertsToBeNotified.values.flatten.map(v => repos.usersRepo().getByUserIdEitherT(v.alert.owner)).toList.sequence
       userIdToUser                    =  usersToBeNotified.map(u => (u._id.toHexString, u)).toMap
       alertWithUserWithBeach          =  alertsToBeNotified.values.flatten.map(v => AlertWithUserWithBeach(v.alert, userIdToUser(v.alert.owner), v.beach))
-      _                               <- EitherT.liftF(IO(logger.info(s"alertWithUserWithBeach $alertWithUserWithBeach")))
+      _                               <- EitherT.liftF(IO(logger.error(s"alertWithUserWithBeach $alertWithUserWithBeach")))
       usersToBeDisabledAlertsFiltered =  alertWithUserWithBeach.filterNot(f => f.user.disableAllAlerts)
       usersToBeNotifiedSnoozeFiltered =  usersToBeDisabledAlertsFiltered.filterNot(f => f.user.snoozeTill > System.currentTimeMillis())
       loggedOutUserFiltered           =  usersToBeNotifiedSnoozeFiltered.filterNot(f => "".equals(f.user.deviceToken))
@@ -56,23 +56,15 @@ class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long
     Thread.sleep(2000)
     logger.info("Submitting " + u)
     val beachName = beaches(u.alert.beachId).location
-    val body = config.surfsUp.notifications.title.replaceAll("BEACH_NAME", beachName)
-    val fullBody =
-      s"""windDirections : ${u.alert.windDirections.mkString(", ")} - ${u.beach.wind.directionText}
-                        tideHeightStatuses : ${u.alert.tideHeightStatuses.mkString(", ")} - ${u.beach.tide.height}
-                        days : ${u.alert.days.mkString(", ")}
-                        swellDirections : ${u.alert.swellDirections.mkString(", ")}  - ${u.beach.tide.swell.directionText}
-                        waveHeightFrom : ${u.alert.waveHeightFrom} - ${u.beach.tide.swell.height}
-                        waveHeightTo : ${u.alert.waveHeightTo} - ${u.beach.tide.swell.height}
-                        timeRanges : ${u.alert.timeRanges.mkString(", ")}
-                        """
+    val title = config.surfsUp.notifications.title.replaceAll("BEACH_NAME", beachName)
+    val body = config.surfsUp.notifications.body
 
-    tryS(u.alert.beachId, body, fullBody, u.user, u.alert)
+    tryS(u.alert.beachId, title, body, u.user, u.alert)
   }
 
   private def tryS(beachId: Long, title: String, body: String, u: UserT, a: AlertT) = {
     try {
-      logger.warn(s" sending to ${u.email} for ${a._id.toHexString}")
+      logger.error(s" sending to ${u.email} for ${a._id.toHexString}")
 
       val sent = firebaseMessaging.send(Message.builder().setAndroidConfig(AndroidConfig.builder().setPriority(AndroidConfig.Priority.HIGH).build())
           .setWebpushConfig(WebpushConfig.builder().putHeader("Urgency", "high").build())
