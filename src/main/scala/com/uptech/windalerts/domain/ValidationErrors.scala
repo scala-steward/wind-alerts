@@ -16,5 +16,4 @@ case class CouldNotUpdatePasswordError() extends SurfsUpError
 case class CouldNotUpdateUserError() extends SurfsUpError
 case class OperationNotAllowed(message:String) extends SurfsUpError
 case class UnknownError(message:String) extends SurfsUpError
-case class RequestFailedError(message:String) extends SurfsUpError
-case class ResponseParsingFailed(exception: Exception) extends SurfsUpError
+case class WWError() extends SurfsUpError

@@ -59,6 +59,10 @@ class HttpErrorHandler[F[_] : Monad] extends Http4sDsl[F] {
       getLogger.error(e)(e.getMessage)
       NotFound("User not found")
     }
+    case e@WWError() => {
+      getLogger.error(e)(e.getMessage)
+      InternalServerError("Error while fetching beach status")
+    }
     case e@everythingElse => {
       getLogger.error(e)(e.getMessage)
       InternalServerError(everythingElse.toString)
