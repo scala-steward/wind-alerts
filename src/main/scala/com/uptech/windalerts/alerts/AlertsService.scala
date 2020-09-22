@@ -6,8 +6,9 @@ import java.util.{Calendar, TimeZone}
 import cats.data.EitherT
 import cats.effect.Sync
 import com.uptech.windalerts.Repos
+import com.uptech.windalerts.alerts.domain.AlertT
 import com.uptech.windalerts.domain.SurfsUpError
-import com.uptech.windalerts.domain.domain.{AlertRequest, AlertT, AlertsT}
+import com.uptech.windalerts.domain.domain.{AlertRequest, AlertsT}
 
 class AlertsService[F[_]: Sync](repo: Repos[F]) {
   def save(alertRequest: AlertRequest, user: String): F[AlertT] = {

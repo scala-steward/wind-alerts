@@ -8,19 +8,13 @@ import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.softwaremill.sttp.HttpURLConnectionBackend
-import com.uptech.windalerts.{Repos, LazyRepos}
-import com.uptech.windalerts.alerts.{AlertsService, MongoAlertsRepositoryAlgebra}
+import com.uptech.windalerts.LazyRepos
+import com.uptech.windalerts.alerts.AlertsService
 import com.uptech.windalerts.domain._
-import com.uptech.windalerts.domain.domain.{AlertT, UserT}
+import com.uptech.windalerts.infrastructure.endpoints.NotificationEndpoints
 import com.uptech.windalerts.status.{BeachService, SwellsService, TidesService, WindsService}
-import com.uptech.windalerts.users.{MongoUserRepository, UserRepositoryAlgebra}
-import org.http4s.HttpRoutes
-import org.http4s.dsl.impl.Root
-import org.http4s.dsl.io.{->, /, GET, Ok, _}
-import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
-import org.mongodb.scala.{MongoClient, MongoCollection, MongoDatabase}
 
 import scala.concurrent.duration.Duration
 import scala.util.Try
@@ -62,25 +56,8 @@ object SendNotifications extends IOApp {
 
   val alerts = new AlertsService[IO](repos)
   val notifications = new Notifications(alerts, beachesService, beachSeq, repos, dbWithAuth, httpErrorHandler, config = config.read)
+  val notificationsEndPoints = new NotificationEndpoints[IO](notifications, httpErrorHandler)
 
-  def allRoutes() =
-    routes().orNotFound
-
-
-  def routes() = {
-    HttpRoutes.of[IO] {
-      case GET -> Root / "notify" => {
-        val res = notifications.sendNotification
-        val either = res.value.unsafeRunSync()
-        Ok()
-      }
-      case GET -> Root => {
-        val res = notifications.sendNotification
-        val either = res.value.unsafeRunSync()
-        Ok()
-      }
-    }
-  }
 
   def run(args: List[String]): IO[ExitCode] = {
 
@@ -88,7 +65,7 @@ object SendNotifications extends IOApp {
       .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
       .withResponseHeaderTimeout(Duration(5, "min"))
       .withIdleTimeout(Duration(8, "min"))
-      .withHttpApp(allRoutes())
+      .withHttpApp(notificationsEndPoints.allRoutes())
       .serve
       .compile
       .drain
