@@ -1,4 +1,4 @@
-package com.uptech.windalerts.status
+package com.uptech.windalerts.infrastructure.endpoints
 
 
 import cats.effect.Effect
@@ -6,10 +6,11 @@ import cats.implicits._
 import com.uptech.windalerts.domain.HttpErrorHandler
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain.BeachId
+import com.uptech.windalerts.status.BeachService
 import org.http4s._
 import org.http4s.dsl.Http4sDsl
 
-case class Routes[F[_]: Effect](B: BeachService[F], H: HttpErrorHandler[F]) extends Http4sDsl[F] {
+class BeachesEndpoints[F[_]: Effect](B: BeachService[F], H: HttpErrorHandler[F]) extends Http4sDsl[F]{
   def allRoutes() = HttpRoutes.of[F] {
     case GET -> Root / "beaches" / IntVar(id) / "currentStatus" =>
       getStatus(B, id, H)

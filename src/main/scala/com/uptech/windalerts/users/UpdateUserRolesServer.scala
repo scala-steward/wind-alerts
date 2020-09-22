@@ -4,7 +4,7 @@ import cats.effect.{IO, _}
 import cats.implicits._
 import com.softwaremill.sttp.HttpURLConnectionBackend
 import com.uptech.windalerts.LazyRepos
-import com.uptech.windalerts.alerts.{AlertsEndpoints, AlertsService}
+import com.uptech.windalerts.alerts.AlertsService
 import com.uptech.windalerts.domain.logger._
 import com.uptech.windalerts.domain.{HttpErrorHandler, errors, secrets, swellAdjustments}
 import com.uptech.windalerts.status._

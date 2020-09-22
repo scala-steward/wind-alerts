@@ -6,9 +6,10 @@ import cats.implicits._
 import com.google.firebase.messaging._
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.alerts.AlertsService
+import com.uptech.windalerts.alerts.domain.AlertT
 import com.uptech.windalerts.domain.beaches.Beach
 import com.uptech.windalerts.domain.config.AppConfig
-import com.uptech.windalerts.domain.domain.{AlertT, AlertWithUserWithBeach, BeachId, UserT}
+import com.uptech.windalerts.domain.domain.{AlertWithUserWithBeach, BeachId, UserT}
 import com.uptech.windalerts.domain.{HttpErrorHandler, domain}
 import com.uptech.windalerts.status.BeachService
 import org.log4s.getLogger

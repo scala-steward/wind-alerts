@@ -4,11 +4,13 @@ import cats.Eval
 import cats.effect.{ContextShift, IO}
 import com.google.api.services.androidpublisher.AndroidPublisher
 import com.turo.pushy.apns.auth.ApnsSigningKey
-import com.uptech.windalerts.alerts.{AlertsRepositoryT, MongoAlertsRepositoryAlgebra}
+import com.uptech.windalerts.alerts.AlertsRepositoryT
+import com.uptech.windalerts.alerts.domain.AlertT
 import com.uptech.windalerts.domain.beaches.Beach
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.secrets
-import com.uptech.windalerts.notifications.{MongoNotificationsRepository, NotificationRepository}
+import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoAlertsRepositoryAlgebra, MongoAndroidPurchaseRepository, MongoCredentialsRepository, MongoFeedbackRepository, MongoNotificationsRepository, MongoOtpRepository, MongoRefreshTokenRepositoryAlgebra, MongoSocialCredentialsRepository, MongoUserRepository}
+import com.uptech.windalerts.notifications.NotificationRepository
 import com.uptech.windalerts.users._
 import org.mongodb.scala.{MongoClient, MongoDatabase}
 

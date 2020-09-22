@@ -1,6 +1,7 @@
 package com.uptech.windalerts.domain
 
 import cats.data.EitherT
+import com.uptech.windalerts.alerts.domain.AlertT
 import com.uptech.windalerts.domain.domain.UserType.Trial
 import io.scalaland.chimney.dsl._
 import org.log4s.getLogger
@@ -210,48 +211,7 @@ object domain {
 
   case class AlertsT(alerts: Seq[AlertT])
 
-  case class AlertT(
-                     _id: ObjectId,
-                     owner: String,
-                     beachId: Long,
-                     days: Seq[Long],
-                     swellDirections: Seq[String],
-                     timeRanges: Seq[TimeRange],
-                     waveHeightFrom: Double,
-                     waveHeightTo: Double,
-                     windDirections: Seq[String],
-                     tideHeightStatuses: Seq[String] = Seq("Rising", "Falling"),
-                     enabled: Boolean,
-                     timeZone: String = "Australia/Sydney") {
-    def isToBeNotified(beach: Beach): Boolean = {
-      logger.error(s"beach to check $beach")
-      logger.error(s"self $swellDirections $waveHeightFrom $waveHeightTo $windDirections")
 
-      swellDirections.contains(beach.tide.swell.directionText) &&
-        waveHeightFrom <= beach.tide.swell.height && waveHeightTo >= beach.tide.swell.height &&
-        windDirections.contains(beach.wind.directionText) &&
-        (tideHeightStatuses.contains(beach.tide.height.status) || tideHeightStatuses.contains(
-          {
-            if (beach.tide.height.status.equals("Increasing")) "Rising" else "Falling"
-          }))
-
-    }
-
-    def isToBeAlertedAt(minutes: Int): Boolean = timeRanges.exists(_.isWithinRange(minutes))
-
-    def asDTO(): Alert = {
-      this.into[Alert].withFieldComputed(_.id, _._id.toHexString).transform
-    }
-  }
-
-  object AlertT {
-    def apply(owner: String, beachId: Long, days: Seq[Long], swellDirections: Seq[String], timeRanges: Seq[TimeRange], waveHeightFrom: Double, waveHeightTo: Double, windDirections: Seq[String], tideHeightStatuses: Seq[String], enabled: Boolean, timeZone: String): AlertT
-    = new AlertT(new ObjectId(), owner, beachId, days, swellDirections, timeRanges, waveHeightFrom, waveHeightTo, windDirections, tideHeightStatuses, enabled, timeZone)
-
-    def apply(alertRequest: AlertRequest, user: String): AlertT = {
-      alertRequest.into[AlertT].withFieldComputed(_.owner, u => user).withFieldComputed(_._id, a => new ObjectId()).transform
-    }
-  }
 
   case class Alert(
                     id: String,
