@@ -5,7 +5,7 @@ import cats.data.EitherT
 import cats.effect.{ContextShift, IO}
 import com.uptech.windalerts.domain.{SurfsUpError, TokenNotFoundError}
 import com.uptech.windalerts.domain.domain.AndroidToken
-import com.uptech.windalerts.users.AndroidTokenRepository
+import com.uptech.windalerts.social.subcriptions.AndroidTokenRepository
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.{and, equal}

@@ -1,23 +1,16 @@
-package com.uptech.windalerts.users
-
+package com.uptech.windalerts.infrastructure.repositories.mongo
 import cats.data.EitherT
 import cats.effect.{ContextShift, IO}
-import com.uptech.windalerts.domain.{TokenNotFoundError, SurfsUpError}
 import com.uptech.windalerts.domain.domain.AppleToken
+import com.uptech.windalerts.domain.{SurfsUpError, TokenNotFoundError}
+import com.uptech.windalerts.social.subcriptions.AppleTokenRepository
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.model.Filters.{and, equal}
+import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.Sorts._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait AppleTokenRepository[F[_]] {
-  def getPurchaseByToken(purchaseToken: String): EitherT[F, SurfsUpError, AppleToken]
-
-  def getLastForUser(userId: String): EitherT[F, SurfsUpError, AppleToken]
-
-  def create(token: AppleToken): EitherT[F, SurfsUpError, AppleToken]
-}
 
 class MongoApplePurchaseRepository(collection: MongoCollection[AppleToken])(implicit cs: ContextShift[IO]) extends AppleTokenRepository[IO] {
 

@@ -1,4 +1,4 @@
-package com.uptech.windalerts.users
+package com.uptech.windalerts.social.subcriptions
 
 import java.io.{File, InputStreamReader}
 import java.util.Collections
@@ -34,6 +34,23 @@ object AndroidPublisherHelper {
 
   private var dataStoreFactory:FileDataStoreFactory  = null
 
+  import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
+  import com.google.api.services.androidpublisher.AndroidPublisher
+
+
+  def init(applicationName: String, serviceAccountEmail: String): AndroidPublisher = {
+    // Authorization.
+    newTrustedTransport()
+    var credential:Credential = null
+    if (serviceAccountEmail == null || serviceAccountEmail.isEmpty) credential = authorizeWithInstalledApplication
+    else credential = authorizeWithServiceAccount(serviceAccountEmail)
+    // Set up and return API client.
+    new AndroidPublisher.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential).setApplicationName(applicationName).build
+  }
+
+  private def newTrustedTransport(): Unit = {
+    if (null == HTTP_TRANSPORT) HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport
+  }
 
   private def authorizeWithServiceAccount(serviceAccountEmail: String) = {
     val keyFile = if (new File("/app/resources/key.p12").exists()) "/app/resources/key.p12" else SRC_RESOURCES_KEY_P12
@@ -66,21 +83,5 @@ object AndroidPublisherHelper {
     }
   }
 
-  import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
-  import com.google.api.services.androidpublisher.AndroidPublisher
 
-
-  def init(applicationName: String, serviceAccountEmail: String): AndroidPublisher = {
-    // Authorization.
-    newTrustedTransport()
-    var credential:Credential = null
-    if (serviceAccountEmail == null || serviceAccountEmail.isEmpty) credential = authorizeWithInstalledApplication
-    else credential = authorizeWithServiceAccount(serviceAccountEmail)
-    // Set up and return API client.
-    new AndroidPublisher.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential).setApplicationName(applicationName).build
-  }
-
-  private def newTrustedTransport(): Unit = {
-    if (null == HTTP_TRANSPORT) HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport
-  }
 }

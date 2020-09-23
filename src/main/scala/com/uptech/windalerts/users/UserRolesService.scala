@@ -8,6 +8,7 @@ import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain.UserType.{Premium, PremiumExpired, Trial}
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain._
+import com.uptech.windalerts.social.subcriptions.SubscriptionsService
 import io.circe.parser.parse
 
 class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: SubscriptionsService[F]) {

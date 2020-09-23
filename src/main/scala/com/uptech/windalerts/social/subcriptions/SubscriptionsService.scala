@@ -1,12 +1,13 @@
-package com.uptech.windalerts.users
+package com.uptech.windalerts.social.subcriptions
 
 import cats.data.EitherT
 import cats.effect.Sync
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.domain.codecs._
-import com.uptech.windalerts.domain.{UnknownError, SurfsUpError, domain}
 import com.uptech.windalerts.domain.domain.{AndroidReceiptValidationRequest, ApplePurchaseVerificationRequest, AppleSubscriptionPurchase}
+import com.uptech.windalerts.domain.{SurfsUpError, UnknownError, domain}
+import com.uptech.windalerts.users.ApplicationConfig
 import io.circe.optics.JsonPath.root
 import io.circe.parser
 import io.circe.syntax._
@@ -21,7 +22,7 @@ class SubscriptionsService[F[_] : Sync](repos: Repos[F]) {
 
   def getAndroidPurchase(productId: String, token: String): EitherT[F, SurfsUpError, domain.SubscriptionPurchase] = {
     EitherT.pure({
-      repos.androidConf().purchases().subscriptions().get(ApplicationConfig.PACKAGE_NAME, productId, token).execute().into[domain.SubscriptionPurchase].enableBeanGetters
+      repos.androidPublisher().purchases().subscriptions().get(ApplicationConfig.PACKAGE_NAME, productId, token).execute().into[domain.SubscriptionPurchase].enableBeanGetters
         .withFieldComputed(_.expiryTimeMillis, _.getExpiryTimeMillis.toLong)
         .withFieldComputed(_.startTimeMillis, _.getStartTimeMillis.toLong).transform
     })

@@ -1,20 +1,18 @@
-package com.uptech.windalerts.users
+package com.uptech.windalerts.social.login
 
 import java.io.{DataInputStream, File}
-import java.util.concurrent.TimeUnit
+import java.math.BigInteger
+import java.security.spec.RSAPublicKeySpec
+import java.security.{KeyFactory, PrivateKey}
+import java.util.Base64
 
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.turo.pushy.apns.auth.ApnsSigningKey
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain.{ApplePublicKeyList, AppleUser, TokenResponse}
 import io.circe.parser
-import pdi.jwt._
-import java.math.BigInteger
-import java.security.{KeyFactory, PrivateKey}
-import java.security.spec.RSAPublicKeySpec
-import java.util.Base64
-
 import org.log4s.getLogger
+import pdi.jwt._
 
 object AppleLogin extends App {
   def getUser(authorizationCode: String, privateKey: PrivateKey): AppleUser = {

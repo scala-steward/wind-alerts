@@ -9,8 +9,11 @@ import com.uptech.windalerts.alerts.domain.AlertT
 import com.uptech.windalerts.domain.beaches.Beach
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.secrets
-import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoAlertsRepositoryAlgebra, MongoAndroidPurchaseRepository, MongoCredentialsRepository, MongoFeedbackRepository, MongoNotificationsRepository, MongoOtpRepository, MongoRefreshTokenRepositoryAlgebra, MongoSocialCredentialsRepository, MongoUserRepository}
+import com.uptech.windalerts.infrastructure.EmailSender
+import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoAlertsRepositoryAlgebra, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoFeedbackRepository, MongoNotificationsRepository, MongoOtpRepository, MongoRefreshTokenRepositoryAlgebra, MongoSocialCredentialsRepository, MongoUserRepository}
 import com.uptech.windalerts.notifications.NotificationRepository
+import com.uptech.windalerts.social.login.AppleLogin
+import com.uptech.windalerts.social.subcriptions.{AndroidPublisherHelper, AndroidTokenRepository, AppleTokenRepository}
 import com.uptech.windalerts.users._
 import org.mongodb.scala.{MongoClient, MongoDatabase}
 
@@ -39,7 +42,7 @@ trait Repos[F[_]] {
 
   def notificationsRepo(): NotificationRepository[F]
 
-  def androidConf(): AndroidPublisher
+  def androidPublisher(): AndroidPublisher
 
   def appleLoginConf() : ApnsSigningKey
 
@@ -183,7 +186,7 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
     maybeDb
   }
 
-  override def androidConf(): AndroidPublisher = {
+  override def androidPublisher(): AndroidPublisher = {
     andConf.value
   }
 
