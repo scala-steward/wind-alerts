@@ -4,7 +4,7 @@ import cats.data.OptionT
 import com.uptech.windalerts.domain.domain.Credentials
 
 
-trait CredentialsRepositoryAlgebra[F[_]] {
+trait CredentialsRepository[F[_]] {
   def count(email: String, deviceType: String): F[Int]
 
   def create(credentials: Credentials): F[Credentials]

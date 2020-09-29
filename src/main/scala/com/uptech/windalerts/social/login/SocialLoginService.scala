@@ -70,17 +70,12 @@ class SocialLoginService[F[_] : Sync](repos: Repos[F], userService: UserService[
     for {
       savedCreds <- EitherT.liftF(credentialCreator(user))
       savedUser <- EitherT.liftF(repos.usersRepo().create(
-        UserT.create(
+        UserT.createSocialUser(
           new ObjectId(savedCreds._id.toHexString),
           user.email,
           user.name,
           user.deviceToken,
-          user.deviceType,
-          System.currentTimeMillis(),
-          Trial.value,
-          -1,
-          false,
-          4)))
+          user.deviceType)))
     } yield (savedUser, savedCreds)
   }
 

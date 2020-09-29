@@ -27,7 +27,7 @@ trait Repos[F[_]] {
 
   def usersRepo(): UserRepositoryAlgebra[F]
 
-  def credentialsRepo(): CredentialsRepositoryAlgebra[F]
+  def credentialsRepo(): CredentialsRepository[F]
 
   def androidPurchaseRepo(): AndroidTokenRepository[F]
 
@@ -137,7 +137,7 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
     uRepo.value
   }
 
-  override def credentialsRepo: CredentialsRepositoryAlgebra[IO] = {
+  override def credentialsRepo: CredentialsRepository[IO] = {
     cRepo.value
   }
 
