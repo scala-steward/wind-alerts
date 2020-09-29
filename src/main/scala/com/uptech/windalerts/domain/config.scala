@@ -1,16 +1,14 @@
 package com.uptech.windalerts.domain
 
-import io.circe.syntax._
 import java.io.File
 
-import com.uptech.windalerts.domain.beaches.{Beach, Beaches}
-import com.uptech.windalerts.domain.swellAdjustments.Adjustments
-import com.uptech.windalerts.social.login.AppleLogin
+import com.uptech.windalerts.domain.beaches.Beaches
 import io.circe._
 import io.circe.config.parser
 import io.circe.generic.auto._
 import io.circe.generic.semiauto._
 import io.circe.parser.decode
+import io.circe.syntax._
 
 import scala.io.Source
 import scala.util.{Failure, Success, Try}

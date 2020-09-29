@@ -31,7 +31,6 @@ object AndroidPublisherHelper {
 
   private val INST_APP_USER_ID = "user"
 
-
   private var dataStoreFactory:FileDataStoreFactory  = null
 
   import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport

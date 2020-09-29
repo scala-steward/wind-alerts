@@ -1,22 +1,41 @@
-package com.uptech.windalerts.social.login
+package com.uptech.windalerts.infrastructure.social.login
 
 import java.io.{DataInputStream, File}
-import java.math.BigInteger
-import java.security.spec.RSAPublicKeySpec
-import java.security.{KeyFactory, PrivateKey}
-import java.util.Base64
+import java.security.PrivateKey
 
+import cats.data.EitherT
+import cats.effect.{ContextShift, IO}
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.turo.pushy.apns.auth.ApnsSigningKey
+import com.uptech.windalerts.domain.UserNotFoundError
 import com.uptech.windalerts.domain.codecs._
-import com.uptech.windalerts.domain.domain.{ApplePublicKeyList, AppleUser, TokenResponse}
+import com.uptech.windalerts.domain.domain.{AppleUser, SocialUser, SurfsUpEitherT, TokenResponse}
+import com.uptech.windalerts.social.login.domain.{AppleAccessRequest, SocialPlatform}
 import io.circe.parser
 import org.log4s.getLogger
 import pdi.jwt._
 
-object AppleLogin extends App {
-  def getUser(authorizationCode: String, privateKey: PrivateKey): AppleUser = {
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
+
+class ApplePlatform(filename: String)(implicit cs: ContextShift[IO]) extends SocialPlatform[IO, AppleAccessRequest] {
+  val privateKey = getPrivateKey(filename)
+
+  override def fetchUserFromPlatform(credentials: AppleAccessRequest): SurfsUpEitherT[IO, SocialUser] = {
+    fetchUserFromPlatform_(credentials).leftMap(_=>UserNotFoundError())
+  }
+
+  private def fetchUserFromPlatform_(credentials: AppleAccessRequest): SurfsUpEitherT[IO, SocialUser]  = {
+    EitherT.liftF(IO.fromFuture(IO(Future(getUser(credentials.authorizationCode)))))
+      .map(appleUser => SocialUser(appleUser.sub, appleUser.email, credentials.deviceType, credentials.deviceToken, credentials.name))
+  }
+
+  def getUser(authorizationCode: String): AppleUser = {
+    getUser(authorizationCode, privateKey)
+  }
+
+  private def getUser(authorizationCode: String, privateKey: PrivateKey): AppleUser = {
     val req = sttp.body(Map(
       "client_id" -> "com.passiondigital.surfsup.ios",
       "client_secret" -> generateJWT(privateKey),
@@ -27,31 +46,16 @@ object AppleLogin extends App {
 
     implicit val backend = HttpURLConnectionBackend()
 
-    val body = req.send().body
-    getLogger.error(body.toString)
-    val tokenResponse = body.flatMap(parser.parse(_)).flatMap(x => x.as[TokenResponse]).right.get
+    val responseBody = req.send().body
+    getLogger.error(responseBody.toString)
+    val tokenResponse = responseBody.flatMap(parser.parse(_)).flatMap(x => x.as[TokenResponse]).right.get
     val claims = Jwt.decode(tokenResponse.id_token, JwtOptions(signature = false))
     val parsedEither = parser.parse(claims.toOption.get.content)
     getLogger.error(claims.toOption.get.content)
     parsedEither.flatMap(x => x.as[AppleUser]).right.get
   }
 
-  private def createPublicKeyApple() = {
-    implicit val backend = HttpURLConnectionBackend()
-
-    val applePublicKey = sttp.get(uri"https://appleid.apple.com/auth/keys").send().body.flatMap(parser.parse(_))
-      .flatMap(x => x.as[ApplePublicKeyList])
-      .map(list => {
-        val x = list.keys.head
-        val modulus = new BigInteger(1, Base64.getUrlDecoder.decode(x.n))
-        val exponent = new BigInteger(1, Base64.getUrlDecoder.decode(x.e))
-        KeyFactory.getInstance("RSA").generatePublic(new RSAPublicKeySpec(modulus, exponent))
-      })
-    getLogger.error(applePublicKey.toString)
-    applePublicKey.right.get
-  }
-
-  def generateJWT(privateKey:PrivateKey) = {
+  private def generateJWT(privateKey:PrivateKey) = {
     val current = System.currentTimeMillis()
     val claims = JwtClaim(
       issuer = Some("W9WH7WV85S"),
@@ -67,7 +71,7 @@ object AppleLogin extends App {
   import java.io.FileInputStream
 
 
-  def getPrivateKey(filename: String) = {
+  private def getPrivateKey(filename: String) = {
     val f = new File(filename)
     val fis = new FileInputStream(f)
     val dis = new DataInputStream(fis)
@@ -76,4 +80,5 @@ object AppleLogin extends App {
     dis.close
     ApnsSigningKey.loadFromPkcs8File(new File(filename), "W9WH7WV85S", "A423X8QGF3")
   }
+
 }

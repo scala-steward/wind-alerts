@@ -2,59 +2,85 @@ package com.uptech.windalerts.social.login
 
 import cats.data.EitherT
 import cats.effect.Sync
-import com.restfb.{DefaultFacebookClient, Parameter, Version}
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.domain.domain.UserType.Trial
 import com.uptech.windalerts.domain.domain._
+import com.uptech.windalerts.social.login.domain.SocialPlatform
 import com.uptech.windalerts.users.{SocialCredentialsRepository, UserService}
 import org.mongodb.scala.bson.ObjectId
 
-class SocialLoginService [F[_] : Sync](repos: Repos[F], userService: UserService[F]) {
-  def registerOrLoginFacebookUser(credentials:FacebookRegisterRequest): SurfsUpEitherT[F, TokensWithUser] = {
-    for {
-      facebookClient <- EitherT.pure(new DefaultFacebookClient(credentials.accessToken, repos.fbSecret(), Version.LATEST))
-      facebookUser <- EitherT.pure(facebookClient.fetchObject("me", classOf[com.restfb.types.User], Parameter.`with`("fields", "name,id,email")))
-      repo = repos.facebookCredentialsRepo()
-      socialUser = SocialUser(facebookUser.getId, facebookUser.getEmail, credentials.deviceType, credentials.deviceToken, facebookUser.getFirstName)
-      tokens <- registerOrLoginSocialUser[FacebookCredentials](repo, socialUser, u=>FacebookCredentials(u.email, u.socialId, u.deviceType))
-    } yield tokens
+class SocialLoginService[F[_] : Sync](repos: Repos[F], userService: UserService[F]) {
+
+
+  def registerOrLoginAppleUser(credentials: domain.AppleAccessRequest): SurfsUpEitherT[F, TokensWithUser] = {
+    registerOrLoginUser[domain.AppleAccessRequest, AppleCredentials](credentials,
+      repos.applePlatform(),
+      socialUser => repos.appleCredentialsRepository().find(socialUser.email, socialUser.deviceType),
+      socialUser => repos.appleCredentialsRepository().create(AppleCredentials(socialUser.email, socialUser.socialId, socialUser.deviceType)))
   }
 
 
-  def registerOrLoginAppleUser(rr:AppleRegisterRequest): SurfsUpEitherT[F, TokensWithUser] = {
+  def registerOrLoginFacebookUser(credentials: domain.FacebookAccessRequest): SurfsUpEitherT[F, TokensWithUser] = {
+    registerOrLoginUser[domain.FacebookAccessRequest, FacebookCredentials](credentials,
+      repos.facebookPlatform(),
+      socialUser => repos.facebookCredentialsRepo().find(socialUser.email, socialUser.deviceType),
+      socialUser => repos.facebookCredentialsRepo().create(FacebookCredentials(socialUser.email, socialUser.socialId, socialUser.deviceType)))
+  }
+
+  def registerOrLoginUser[T <: com.uptech.windalerts.social.login.domain.AccessRequest, U <: SocialCredentials]
+  (credentials: T,
+   socialPlatform: SocialPlatform[F, T],
+   credentialFinder: SocialUser => F[Option[U]],
+   credentialCreator: SocialUser => F[U]): SurfsUpEitherT[F, TokensWithUser] = {
     for {
-      appleUser <- EitherT.pure(AppleLogin.getUser(rr.authorizationCode, repos.appleLoginConf()))
-      repo = repos.appleCredentialsRepository()
-      socialUser = SocialUser(appleUser.sub, appleUser.email, rr.deviceType, rr.deviceToken, rr.name)
-      tokens <- registerOrLoginSocialUser[AppleCredentials](repo, socialUser, u=>AppleCredentials(u.email, u.socialId, u.deviceType))
+      socialUser <- socialPlatform.fetchUserFromPlatform(credentials)
+      tokens <- registerOrLoginSocialUser(socialUser, credentialFinder, credentialCreator)
     } yield tokens
   }
 
-  def registerOrLoginSocialUser[T<:SocialCredentials](repo:SocialCredentialsRepository[F, T], socialUser: SocialUser, credentialCreator:SocialUser=>T): SurfsUpEitherT[F, TokensWithUser] = {
+  def registerOrLoginSocialUser[T <: SocialCredentials](
+                                                         socialUser: SocialUser,
+                                                         credentialFinder: SocialUser => F[Option[T]],
+                                                         credentialCreator: SocialUser => F[T]): SurfsUpEitherT[F, TokensWithUser] = {
     for {
-      existingCredential <- EitherT.liftF(repo.find(socialUser.email, socialUser.deviceType))
-      tokens <- {
-        if (existingCredential.isEmpty) {
-          for {
-            _ <- userService.doesNotExist(socialUser.email, socialUser.deviceType)
-            result <- createUser[T](socialUser, repo, credentialCreator)
-            tokens <- userService.generateNewTokens(result._1)
-          } yield tokens
-        } else {
-          for {
-            dbUser <- userService.getUser(socialUser.email, socialUser.deviceType)
-            tokens <- userService.resetUserSession(dbUser, socialUser.deviceToken)
-          } yield tokens
-        }
-      }
+      existingCredential <- EitherT.liftF(credentialFinder(socialUser))
+      tokens <- existingCredential.map(_ => tokensForExistingUser(socialUser))
+        .getOrElse(tokensForNewUser(socialUser, credentialCreator))
     } yield tokens
   }
 
-  def createUser[T<:SocialCredentials](user: SocialUser, repo:SocialCredentialsRepository[F, T], credentialCreator:SocialUser=>T): SurfsUpEitherT[F, (UserT, SocialCredentials)] = {
+  private def tokensForNewUser[T <: SocialCredentials](socialUser: SocialUser, credentialCreator: SocialUser => F[T]) = {
     for {
-      savedCreds <- EitherT.liftF(repo.create(credentialCreator.apply(user)))
-      savedUser <- EitherT.liftF(repos.usersRepo().create(UserT.create(new ObjectId(savedCreds._id.toHexString), user.email,
-        user.name,  user.deviceToken, user.deviceType, System.currentTimeMillis(), Trial.value, -1, false, 4)))
+      _ <- userService.doesNotExist(socialUser.email, socialUser.deviceType)
+      result <- createUser[T](socialUser, credentialCreator)
+      tokens <- userService.generateNewTokens(result._1)
+    } yield tokens
+  }
+
+  private def tokensForExistingUser[T <: SocialCredentials](socialUser: SocialUser) = {
+    for {
+      dbUser <- userService.getUser(socialUser.email, socialUser.deviceType)
+      tokens <- userService.resetUserSession(dbUser, socialUser.deviceToken)
+    } yield tokens
+  }
+
+  def createUser[T <: SocialCredentials](user: SocialUser,
+                                         credentialCreator: SocialUser => F[T])
+  : SurfsUpEitherT[F, (UserT, SocialCredentials)] = {
+    for {
+      savedCreds <- EitherT.liftF(credentialCreator(user))
+      savedUser <- EitherT.liftF(repos.usersRepo().create(
+        UserT.create(
+          new ObjectId(savedCreds._id.toHexString),
+          user.email,
+          user.name,
+          user.deviceToken,
+          user.deviceType,
+          System.currentTimeMillis(),
+          Trial.value,
+          -1,
+          false,
+          4)))
     } yield (savedUser, savedCreds)
   }
 

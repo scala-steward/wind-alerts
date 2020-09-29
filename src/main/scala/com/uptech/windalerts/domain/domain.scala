@@ -142,22 +142,17 @@ object domain {
 
   final case class UserWithCount(userId: String, count: Int)
 
-  trait SocialRegisterRequest {
-    def accessToken: String
-
-    def deviceType: String
-
-    def deviceToken: String
+  case class FacebookRegisterRequest(accessToken: String, deviceType: String, deviceToken: String) {
+    def asDomain(): com.uptech.windalerts.social.login.domain.FacebookAccessRequest  = {
+      this.into[com.uptech.windalerts.social.login.domain.FacebookAccessRequest].transform
+    }
   }
 
-
-  case class FacebookRegisterRequest(accessToken: String, deviceType: String, deviceToken: String)
-
-  case class FacebookLoginRequest(accessToken: String, deviceType: String, deviceToken: String)
-
-  case class AppleRegisterRequest(authorizationCode: String, nonce: String, deviceType: String, deviceToken: String, name: String)
-
-  case class AppleLoginRequest(authorizationCode: String, nonce: String, deviceType: String, deviceToken: String, name: String)
+  case class AppleRegisterRequest(authorizationCode: String, nonce: String, deviceType: String, deviceToken: String, name: String) {
+    def asDomain(): com.uptech.windalerts.social.login.domain.AppleAccessRequest  = {
+      this.into[com.uptech.windalerts.social.login.domain.AppleAccessRequest].transform
+    }
+  }
 
   case class RegisterRequest(email: String, name: String, password: String, deviceType: String, deviceToken: String)
 
@@ -307,8 +302,6 @@ object domain {
   case class AppleUser(sub: String, email: String)
 
   case class SocialUser(socialId: String, email: String, deviceType:String, deviceToken:String, name:String)
-
-  case class FacebookUser(sub: String, email: String)
 
 
   case class Feedback(_id: ObjectId, topic: String, message: String, userId: String)
