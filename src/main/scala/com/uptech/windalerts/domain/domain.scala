@@ -2,7 +2,7 @@ package com.uptech.windalerts.domain
 
 import cats.data.EitherT
 import com.uptech.windalerts.alerts.domain.AlertT
-import com.uptech.windalerts.domain.domain.UserType.Trial
+import com.uptech.windalerts.domain.domain.UserType.{Registered, Trial}
 import io.scalaland.chimney.dsl._
 import org.log4s.getLogger
 import org.mongodb.scala.bson.ObjectId
@@ -62,7 +62,7 @@ object domain {
   case class AppleCredentials(override val _id: ObjectId, override val email: String, override val socialId: String, override val deviceType: String) extends SocialCredentials
 
   object AppleCredentials {
-    def apply(email: String, appleId: String, deviceType: String): AppleCredentials = new AppleCredentials(new ObjectId(), email, appleId, deviceType)
+    def apply(email: String, socialId: String, deviceType: String): AppleCredentials = new AppleCredentials(new ObjectId(), email, socialId, deviceType)
   }
 
   case class Credentials(_id: ObjectId, email: String, password: String, deviceType: String)
@@ -128,10 +128,17 @@ object domain {
   }
 
   object UserT {
-    def create(_id: ObjectId, email: String, name: String, deviceToken: String, deviceType: String, startTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long) =
-      UserT(_id, email, name, deviceToken, deviceType, startTrialAt, if (startTrialAt == -1) -1L else (startTrialAt + (30L * 24L * 60L * 60L * 1000L)), userType, snoozeTill, disableAllAlerts, notificationsPerHour, -1, -1)
+    def createSocialUser(_id: ObjectId, email: String, name: String, deviceToken: String, deviceType: String) =
+      create(_id, email, name, deviceToken, deviceType, System.currentTimeMillis(), Trial.value)
 
-    def apply(email: String, name: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long): UserT = new UserT(new ObjectId(), email, name, deviceToken, deviceType, startTrialAt, endTrialAt, userType, snoozeTill, disableAllAlerts, notificationsPerHour, lastPaymentAt, nextPaymentAt)
+    def createEmailUser(_id: ObjectId, email: String, name: String, deviceToken: String, deviceType: String) =
+      create(_id, email, name, deviceToken, deviceType, -1, Registered.value)
+
+    def create(_id: ObjectId, email: String, name: String, deviceToken: String, deviceType: String, startTrialAt: Long, userType: String) =
+      UserT(_id, email, name, deviceToken, deviceType, startTrialAt, if (startTrialAt == -1) -1L else (startTrialAt + (30L * 24L * 60L * 60L * 1000L)), userType, -1, false, 4, -1, -1)
+
+    def apply(email: String, name: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long): UserT
+    = new UserT(new ObjectId(), email, name, deviceToken, deviceType, startTrialAt, endTrialAt, userType, snoozeTill, disableAllAlerts, notificationsPerHour, lastPaymentAt, nextPaymentAt)
   }
 
   final case class AlertWithUser(alert: Alert, user: UserT)

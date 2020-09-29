@@ -24,7 +24,12 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService:UserCrede
     for {
       _ <- doesNotExist(credentials.email, credentials.deviceType)
       savedCreds <- EitherT.liftF(repos.credentialsRepo().create(credentials))
-      saved <- EitherT.liftF(repos.usersRepo().create(UserT.create(new ObjectId(savedCreds._id.toHexString), rr.email, rr.name,  rr.deviceToken, rr.deviceType, -1, Registered.value, -1, false, 4)))
+      saved <- EitherT.liftF(repos.usersRepo().create(
+        UserT.createEmailUser(new ObjectId(savedCreds._id.toHexString),
+          rr.email,
+          rr.name,
+          rr.deviceToken,
+          rr.deviceType)))
     } yield (saved, savedCreds)
   }
 

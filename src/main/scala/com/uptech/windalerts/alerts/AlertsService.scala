@@ -20,6 +20,8 @@ class AlertsService[F[_]: Sync](repo: Repos[F]) {
   def getAllForUser(user: String): F[AlertsT] = repo.alertsRepository().getAllForUser(user)
 
   def getAllForDayAndTimeRange()(implicit F: Sync[F]): F[Seq[AlertT]] = {
+    def getMinutes(cal: Calendar) = cal.get(HOUR_OF_DAY) * 60 + cal.get(MINUTE)
+
     val cal = Calendar.getInstance(TimeZone.getTimeZone("Australia/Sydney"))
     repo.alertsRepository().getAllForDay(cal.get(DAY_OF_WEEK), _.isToBeAlertedAt(getMinutes(cal)))
   }
@@ -27,7 +29,6 @@ class AlertsService[F[_]: Sync](repo: Repos[F]) {
   def deleteT(requester: String, alertId: String): EitherT[F, SurfsUpError, Unit] = {
     repo.alertsRepository()delete(requester, alertId)
   }
-  private def getMinutes(cal: Calendar) = cal.get(HOUR_OF_DAY) * 60 + cal.get(MINUTE)
 }
 
 
