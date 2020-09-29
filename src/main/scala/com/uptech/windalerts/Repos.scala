@@ -1,20 +1,24 @@
 package com.uptech.windalerts
 
+import java.io.File
+
 import cats.Eval
 import cats.effect.{ContextShift, IO}
 import com.google.api.services.androidpublisher.AndroidPublisher
-import com.turo.pushy.apns.auth.ApnsSigningKey
 import com.uptech.windalerts.alerts.AlertsRepositoryT
 import com.uptech.windalerts.alerts.domain.AlertT
 import com.uptech.windalerts.domain.beaches.Beach
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.secrets
-import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoAlertsRepositoryAlgebra, MongoAndroidPurchaseRepository, MongoCredentialsRepository, MongoFeedbackRepository, MongoNotificationsRepository, MongoOtpRepository, MongoRefreshTokenRepositoryAlgebra, MongoSocialCredentialsRepository, MongoUserRepository}
+import com.uptech.windalerts.infrastructure.EmailSender
+import com.uptech.windalerts.infrastructure.repositories.mongo._
+import com.uptech.windalerts.infrastructure.social.login.{ApplePlatform, FacebookPlatform}
 import com.uptech.windalerts.notifications.NotificationRepository
+import com.uptech.windalerts.social.login.domain
+import com.uptech.windalerts.social.login.domain.SocialPlatform
+import com.uptech.windalerts.social.subcriptions.{AndroidPublisherHelper, AndroidTokenRepository, AppleTokenRepository}
 import com.uptech.windalerts.users._
 import org.mongodb.scala.{MongoClient, MongoDatabase}
-
-import scala.util.Try
 
 trait Repos[F[_]] {
   def otp(): OtpRepository[F]
@@ -39,15 +43,18 @@ trait Repos[F[_]] {
 
   def notificationsRepo(): NotificationRepository[F]
 
-  def androidConf(): AndroidPublisher
-
-  def appleLoginConf() : ApnsSigningKey
+  def androidPublisher(): AndroidPublisher
 
   def emailConf() : EmailSender[F]
 
   def fbSecret() : String
 
   def beaches() : Map[Long, Beach]
+
+  def applePlatform(): SocialPlatform[F, com.uptech.windalerts.social.login.domain.AppleAccessRequest]
+
+  def facebookPlatform(): SocialPlatform[F, com.uptech.windalerts.social.login.domain.FacebookAccessRequest]
+
 }
 
 
@@ -104,9 +111,6 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
 
   val andConf = Eval.later(AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL))
 
-  val appleLogin = Eval.later{
-    Try(AppleLogin.getPrivateKey(s"/app/resources/Apple-${sys.env("projectId")}.p8"))
-    .getOrElse(AppleLogin.getPrivateKey(s"src/main/resources/Apple.p8"))}
 
   val email = Eval.later {
     val emailConf = com.uptech.windalerts.domain.secrets.read.surfsUp.email
@@ -183,12 +187,8 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
     maybeDb
   }
 
-  override def androidConf(): AndroidPublisher = {
+  override def androidPublisher(): AndroidPublisher = {
     andConf.value
-  }
-
-  override def appleLoginConf() = {
-    appleLogin.value
   }
 
   override def emailConf()  = email.value
@@ -196,4 +196,13 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
   override  def fbSecret = fbKey.value
 
   override  def beaches = b.value
+
+
+  override def applePlatform(): SocialPlatform[IO, domain.AppleAccessRequest] = {
+    if (new File(s"/app/resources/Apple-${sys.env("projectId")}.p8").exists())
+      new ApplePlatform(s"/app/resources/Apple-${sys.env("projectId")}.p8")
+    else new ApplePlatform(s"src/main/resources/Apple.p8")
+  }
+
+  override def facebookPlatform(): SocialPlatform[IO, domain.FacebookAccessRequest] = new FacebookPlatform(fbKey.value)
 }

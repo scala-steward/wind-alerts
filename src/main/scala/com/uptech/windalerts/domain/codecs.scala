@@ -147,14 +147,6 @@ object codecs {
 
   implicit def srEntityEncoder[F[_] : Applicative]: EntityEncoder[F, FacebookRegisterRequest] = jsonEncoderOf
 
-  lazy implicit val slDecoder: Decoder[FacebookLoginRequest] = deriveDecoder[FacebookLoginRequest]
-
-  implicit def slEntityDecoder[F[_] : Sync]: EntityDecoder[F, FacebookLoginRequest] = jsonOf
-
-  lazy implicit val slEncoder: Encoder[FacebookLoginRequest] = deriveEncoder[FacebookLoginRequest]
-
-  implicit def slEntityEncoder[F[_] : Applicative]: EntityEncoder[F, FacebookLoginRequest] = jsonEncoderOf
-
   lazy implicit val rDecoder: Decoder[RegisterRequest] = deriveDecoder[RegisterRequest]
 
   implicit def rEntityDecoder[F[_] : Sync]: EntityDecoder[F, RegisterRequest] = jsonOf
@@ -332,14 +324,6 @@ object codecs {
   lazy implicit val appleUserEncoder: Encoder[AppleUser] = deriveEncoder[AppleUser]
 
   implicit def appleUserEntityEncoder[F[_] : Applicative]: EntityEncoder[F, AppleUser] = jsonEncoderOf
-
-  lazy implicit val appleLoginRequestDecoder: Decoder[AppleLoginRequest] = deriveDecoder[AppleLoginRequest]
-
-  implicit def appleLoginRequestEntityDecoder[F[_] : Sync]: EntityDecoder[F, AppleLoginRequest] = jsonOf
-
-  lazy implicit val appleLoginRequestEncoder: Encoder[AppleLoginRequest] = deriveEncoder[AppleLoginRequest]
-
-  implicit def appleLoginRequestEntityEncoder[F[_] : Applicative]: EntityEncoder[F, AppleLoginRequest] = jsonEncoderOf
 
   lazy implicit val feedbackRequestDecoder: Decoder[FeedbackRequest] = deriveDecoder[FeedbackRequest]
 

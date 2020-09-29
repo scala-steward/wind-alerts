@@ -7,6 +7,8 @@ import com.uptech.windalerts.Repos
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain.{AppleRegisterRequest, ChangePasswordRequest, FacebookRegisterRequest, ResetPasswordRequest, _}
 import com.uptech.windalerts.domain.{HttpErrorHandler, http, secrets, _}
+import com.uptech.windalerts.social.login.SocialLoginService
+import com.uptech.windalerts.social.subcriptions.SubscriptionsService
 import com.uptech.windalerts.users._
 import io.circe.parser._
 import org.http4s.{AuthedRoutes, HttpRoutes}
@@ -145,12 +147,12 @@ class UsersEndpoints[F[_] : Effect]
     HttpRoutes.of[F] {
       case req@POST -> Root => {
         val facebookRegisterRequest = req.as[FacebookRegisterRequest]
-        handle(facebookRegisterRequest, socialLoginService.registerOrLoginFacebookUser(_))
+        handle(facebookRegisterRequest.map(_.asDomain()), socialLoginService.registerOrLoginFacebookUser(_))
       }
 
       case req@POST -> Root / "login" =>
         val facebookLoginRequest = req.as[FacebookRegisterRequest]
-        handle(facebookLoginRequest, socialLoginService.registerOrLoginFacebookUser(_))
+        handle(facebookLoginRequest.map(_.asDomain()), socialLoginService.registerOrLoginFacebookUser(_))
     }
   }
 
@@ -158,11 +160,11 @@ class UsersEndpoints[F[_] : Effect]
     HttpRoutes.of[F] {
       case req@POST -> Root =>
         val appleRegisterRequest = req.as[AppleRegisterRequest]
-        handle(appleRegisterRequest, socialLoginService.registerOrLoginAppleUser(_))
+        handle(appleRegisterRequest.map(_.asDomain()), socialLoginService.registerOrLoginAppleUser(_))
 
       case req@POST -> Root / "login" =>
         val appleLoginRequest = req.as[AppleRegisterRequest]
-        handle(appleLoginRequest, socialLoginService.registerOrLoginAppleUser(_))
+        handle(appleLoginRequest.map(_.asDomain()), socialLoginService.registerOrLoginAppleUser(_))
     }
 
   }

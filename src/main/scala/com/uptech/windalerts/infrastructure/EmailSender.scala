@@ -1,4 +1,4 @@
-package com.uptech.windalerts.users
+package com.uptech.windalerts.infrastructure
 
 import cats.Monad
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}

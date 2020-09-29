@@ -4,10 +4,10 @@ import cats.effect.{IO, _}
 import cats.implicits._
 import com.softwaremill.sttp.HttpURLConnectionBackend
 import com.uptech.windalerts.LazyRepos
-import com.uptech.windalerts.alerts.AlertsService
 import com.uptech.windalerts.domain.logger._
-import com.uptech.windalerts.domain.{HttpErrorHandler, errors, secrets, swellAdjustments}
-import com.uptech.windalerts.status._
+import com.uptech.windalerts.domain.{HttpErrorHandler, errors}
+import com.uptech.windalerts.infrastructure.endpoints.UpdateUserRolesEndpoints
+import com.uptech.windalerts.social.subcriptions.SubscriptionsService
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder

@@ -4,11 +4,10 @@ import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
 import com.uptech.windalerts.Repos
-import com.uptech.windalerts.domain.codecs._
+import com.uptech.windalerts.domain._
 import com.uptech.windalerts.domain.domain.UserType.{Premium, PremiumExpired, Trial}
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain._
-import io.circe.parser.parse
+import com.uptech.windalerts.social.subcriptions.SubscriptionsService
 
 class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: SubscriptionsService[F]) {
   def makeUserTrial(user: UserT): EitherT[F, SurfsUpError, UserT] = {

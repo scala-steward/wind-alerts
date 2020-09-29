@@ -1,8 +1,9 @@
-package com.uptech.windalerts.users
+package com.uptech.windalerts.infrastructure.endpoints
 
 import cats.effect.{ContextShift, Effect}
 import cats.implicits._
 import com.uptech.windalerts.domain.HttpErrorHandler
+import com.uptech.windalerts.users.UserRolesService
 import org.http4s.HttpRoutes
 import org.http4s.dsl.Http4sDsl
 
