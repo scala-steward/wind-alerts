@@ -53,7 +53,6 @@ class TidesService[F[_] : Sync](apiKey: String, repos:Repos[F])(implicit backend
   private def interpolate(zoneId:ZoneId, currentTimeGmt: Long, sorted: List[Datum]) = {
     val before = sorted.filterNot(s => s.x > currentTimeGmt)
     val after = sorted.filter(s => s.x > currentTimeGmt)
-
     val interpolated = before.last.interpolateWith(currentTimeGmt, after.head)
     val nextHigh_ = after.filter(_.description == "high").head
     val nextHigh = nextHigh_.copy(x = nextHigh_.x - ZonedDateTime.now(zoneId).getOffset.getTotalSeconds)
