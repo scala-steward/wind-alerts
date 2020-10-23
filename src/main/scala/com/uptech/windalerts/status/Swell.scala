@@ -25,15 +25,17 @@ class SwellsService[F[_] : Sync](apiKey: String, adjustments: Adjustments)(impli
 
   def getFromWillyWeatther(apiKey: String, beachId: BeachId): Either[UnknownError, domain.Swell] = {
     val body = sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecasts=swell&days=1").send().body
-    body
+    val either = body
       .left.map(UnknownError(_))
       .flatMap(parser.parse(_))
       .map(root.forecasts.swell.days.each.entries.each.json.getAll(_))
-      .left.map(e=>UnknownError(e.getMessage))
-      .map(
+      .left.map(e => UnknownError(e.getMessage))
+    println(either)
+    either
+      .flatMap(
         _.flatMap(j => j.as[Swell].toSeq.filter(isCurrentHour(body, _)))
           .map(swell => swell.copy(height = adjustments.adjust(swell.height)))
-          .head)
+          .headOption.toRight(UnknownError("Empty response from WW")))
       .map(swell => domain.Swell(swell.height, swell.direction, swell.directionText))
   }
 
