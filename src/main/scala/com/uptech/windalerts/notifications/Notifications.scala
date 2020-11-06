@@ -26,36 +26,38 @@ class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long
     val usersToBeNotifiedEitherT = for {
       alerts                          <- EitherT.liftF(A.getAllForDayAndTimeRange)
       alertsByBeaches                 =  alerts.groupBy(_.beachId).map(kv => (BeachId(kv._1), kv._2))
-      _                               <- EitherT.liftF(IO(logger.error(s"alertsByBeaches $alertsByBeaches")))
+      _                               <- EitherT.liftF(IO(logger.error(s"alertsByBeaches ${alertsByBeaches.mapValues(v=>v.map(_.beachId)).mkString}")))
       beaches                         <- B.getAll(alertsByBeaches.keys.toSeq)
       x                               =  alertsByBeaches.map(kv => (beaches(kv._1), kv._2))
       alertsToBeNotified              =  x.map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)).map(a => domain.AlertWithBeach(a, kv._1))))
-      _                               <- EitherT.liftF(IO(logger.error(s"alertsToBeNotified $alertsToBeNotified")))
+      _                               <- EitherT.liftF(IO(logger.error(s"alertsToBeNotified ${alertsToBeNotified.mkString}")))
       usersToBeNotified               <- alertsToBeNotified.values.flatten.map(v => repos.usersRepo().getByUserIdEitherT(v.alert.owner)).toList.sequence
       userIdToUser                    =  usersToBeNotified.map(u => (u._id.toHexString, u)).toMap
       alertWithUserWithBeach          =  alertsToBeNotified.values.flatten.map(v => AlertWithUserWithBeach(v.alert, userIdToUser(v.alert.owner), v.beach))
-      _                               <- EitherT.liftF(IO(logger.error(s"alertWithUserWithBeach $alertWithUserWithBeach")))
+      _                               <- EitherT.liftF(IO(logger.error(s"alertWithUserWithBeach ${alertWithUserWithBeach.map(_.alert._id).mkString}")))
       usersToBeDisabledAlertsFiltered =  alertWithUserWithBeach.filterNot(f => f.user.disableAllAlerts)
       usersToBeNotifiedSnoozeFiltered =  usersToBeDisabledAlertsFiltered.filterNot(f => f.user.snoozeTill > System.currentTimeMillis())
-      loggedOutUserFiltered           =  usersToBeNotifiedSnoozeFiltered.filterNot(f => "".equals(f.user.deviceToken))
-
+      loggedOutUserFiltered           =  usersToBeNotifiedSnoozeFiltered.filterNot(f => f.user.deviceToken == null || f.user.deviceToken.isEmpty())
+      a                               = EitherT.liftF(IO(logger.error(s"loggedOutUserFiltered ${loggedOutUserFiltered.map(_.alert._id).mkString}")))
       usersWithCounts                 <- loggedOutUserFiltered.map(u => repos.notificationsRepo().countNotificationInLastHour(u.user._id.toHexString)).toList.sequence
       usersWithCountsMap              =  usersWithCounts.map(u => (u.userId, u.count)).toMap
       usersToBeFilteredWithCount      =  loggedOutUserFiltered.filter(u => usersWithCountsMap(u.user._id.toHexString) < u.user.notificationsPerHour)
+      _                               = EitherT.liftF(IO(logger.error(s"usersToBeFilteredWithCount ${usersToBeFilteredWithCount.map(_.alert._id).mkString}")))
+
     } yield usersToBeFilteredWithCount
 
     for {
       submittedTasks <- usersToBeNotifiedEitherT.map(l => Future (l.map(submit(_))))
-      result          = submittedTasks.onComplete(s => logger.info(s"Result : ${s.toEither.toOption}"))
+      result          = submittedTasks.onComplete(s => logger.error(s"Result : ${s.toEither.toOption}"))
     } yield result
   }
 
 
   private def submit(u: AlertWithUserWithBeach) = {
-    logger.info("Submitting " + u)
+    logger.error("Submitting " + u)
 
     Thread.sleep(2000)
-    logger.info("Submitting " + u)
+    logger.error("Submitting " + u)
     val beachName = beaches(u.alert.beachId).location
     val title = config.surfsUp.notifications.title.replaceAll("BEACH_NAME", beachName)
     val body = config.surfsUp.notifications.body
@@ -84,9 +86,11 @@ class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long
     }
     catch {
       case e: Exception => {
-        logger.error(e)(s"Error while sending notification")
-
+        logger.error(e)(s"error while sending to ${u.email} for ${a._id.toHexString}")
       }
+    }
+    finally {
+      logger.error(s" Sent to ${u.email} for ${a._id.toHexString}")
     }
   }
 

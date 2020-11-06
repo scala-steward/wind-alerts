@@ -33,6 +33,8 @@ class TidesService[F[_] : Sync](apiKey: String, repos:Repos[F])(implicit backend
     EitherT.fromEither(getFromWillyWeatther(apiKey, beachId))
 
   def getFromWillyWeatther(apiKey: String, beachId: BeachId) = {
+    logger.error(s"Fetching tides status for $beachId")
+
     val tz = timeZoneForRegion.getOrElse(repos.beaches()(beachId.id).region, "Australia/NSW")
     val tzId = ZoneId.of(tz)
     val startDateFormatted = startDateFormat.format(ZonedDateTime.now(tzId).minusDays(1))
@@ -48,20 +50,29 @@ class TidesService[F[_] : Sync](apiKey: String, repos:Repos[F])(implicit backend
       .map(root.forecastGraphs.tides.dataConfig.series.groups.each.points.each.json.getAll(_))
       .map(_.flatMap(j => j.as[Datum].toSeq.sortBy(_.x)))
       .map(interpolate(tzId, currentTimeGmt, _))
+      .orElse(Right(domain.TideHeight(Double.NaN, "NA", Long.MinValue, Long.MinValue)))
   }
 
   private def interpolate(zoneId:ZoneId, currentTimeGmt: Long, sorted: List[Datum]) = {
-    val before = sorted.filterNot(s => s.x > currentTimeGmt)
-    val after = sorted.filter(s => s.x > currentTimeGmt)
-    val interpolated = before.last.interpolateWith(currentTimeGmt, after.head)
-    val nextHigh_ = after.filter(_.description == "high").head
-    val nextHigh = nextHigh_.copy(x = nextHigh_.x - ZonedDateTime.now(zoneId).getOffset.getTotalSeconds)
-    val nextLow_ = after.filter(_.description == "low").head
-    val nextLow = nextLow_.copy(x = nextLow_.x - ZonedDateTime.now(zoneId).getOffset.getTotalSeconds)
+    try {
+      val before = sorted.filterNot(s => s.x > currentTimeGmt)
+      val after = sorted.filter(s => s.x > currentTimeGmt)
 
-    val status = if (nextLow.x < nextHigh.x) "Decreasing" else "Increasing"
+      val interpolated = before.last.interpolateWith(currentTimeGmt, after.head)
+      val nextHigh_ = after.filter(_.description == "high").head
+      val nextHigh = nextHigh_.copy(x = nextHigh_.x - ZonedDateTime.now(zoneId).getOffset.getTotalSeconds)
+      val nextLow_ = after.filter(_.description == "low").head
+      val nextLow = nextLow_.copy(x = nextLow_.x - ZonedDateTime.now(zoneId).getOffset.getTotalSeconds)
 
-    TideHeight(interpolated.y, status, nextLow.x, nextHigh.x)
+      val status = if (nextLow.x < nextHigh.x) "Decreasing" else "Increasing"
+
+      TideHeight(interpolated.y, status, nextLow.x, nextHigh.x)
+    }catch {
+      case e: Exception => {
+        logger.error(e)(s"error while interpolating tide")
+        TideHeight(Double.NaN, "NA", Long.MinValue, Long.MinValue)
+      }
+    }
   }
 }
 
