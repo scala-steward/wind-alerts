@@ -51,6 +51,11 @@ class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit
     findByCriteria(equal("owner", user)).map(AlertsT(_))
   }
 
+
+  override def getAllEnabled(): IO[Seq[AlertT]]  = {
+    findByCriteria( equal("enabled", true))
+  }
+
   override def save(alertRequest: AlertRequest, user: String): IO[AlertT] = {
     val alert = AlertT(alertRequest, user)
 

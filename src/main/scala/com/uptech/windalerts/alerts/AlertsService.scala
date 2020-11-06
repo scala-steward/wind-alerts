@@ -1,8 +1,6 @@
 package com.uptech.windalerts.alerts
 
-import java.util.Calendar.{DAY_OF_WEEK, HOUR_OF_DAY, MINUTE}
-import java.util.{Calendar, TimeZone}
-
+import cats.Functor
 import cats.data.EitherT
 import cats.effect.Sync
 import com.uptech.windalerts.Repos
@@ -19,15 +17,13 @@ class AlertsService[F[_]: Sync](repo: Repos[F]) {
 
   def getAllForUser(user: String): F[AlertsT] = repo.alertsRepository().getAllForUser(user)
 
-  def getAllForDayAndTimeRange()(implicit F: Sync[F]): F[Seq[AlertT]] = {
-    def getMinutes(cal: Calendar) = cal.get(HOUR_OF_DAY) * 60 + cal.get(MINUTE)
 
-    val cal = Calendar.getInstance(TimeZone.getTimeZone("Australia/Sydney"))
-    repo.alertsRepository().getAllForDay(cal.get(DAY_OF_WEEK), _.isToBeAlertedAt(getMinutes(cal)))
+  def getAllForDayAndTimeRange()(implicit F: Functor[F]): EitherT[F, Exception, Seq[AlertT]] = {
+    EitherT.liftF(repo.alertsRepository().getAllEnabled())
+      .map(_.filter(_.isToBeAlertedNow()))
   }
-
   def deleteT(requester: String, alertId: String): EitherT[F, SurfsUpError, Unit] = {
-    repo.alertsRepository()delete(requester, alertId)
+    repo.alertsRepository().delete(requester, alertId)
   }
 }
 
