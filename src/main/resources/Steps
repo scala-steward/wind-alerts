@@ -1,0 +1,7 @@
+1) Remove the column with those filter (2,5,7 ...), that is not needed for us.
+2) Add header : "id	location	postCode	region"
+3) Replace all empty postCode values with -1.
+4) Goto https://www.convertcsv.com/csv-to-json.htm
+5) Copy contents of csv (no extra rows or columns)
+6) Select 'Choose output options' and then put 'beaches' in 'Add Top Level Property Name'
+7) Click csv to json.

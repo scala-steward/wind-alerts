@@ -1,5 +1,8 @@
 package com.uptech.windalerts.alerts
 
+import java.util.Calendar.{DAY_OF_WEEK, HOUR_OF_DAY, MINUTE}
+import java.util.{Calendar, TimeZone}
+
 import com.uptech.windalerts.domain.domain.{Alert, AlertRequest, Beach, TimeRange}
 import io.scalaland.chimney.dsl._
 import org.log4s.getLogger
@@ -36,6 +39,14 @@ object domain {
     }
 
     def isToBeAlertedAt(minutes: Int): Boolean = timeRanges.exists(_.isWithinRange(minutes))
+    def isToBeAlertedNow(): Boolean = {
+      val cal = Calendar.getInstance(TimeZone.getTimeZone(timeZone))
+      val day = cal.get(DAY_OF_WEEK)
+      val minutes = cal.get(HOUR_OF_DAY) * 60 + cal.get(MINUTE)
+      days.contains(day) && timeRanges.exists(_.isWithinRange(minutes))
+    }
+
+    def isToBeAlertedAtMinutes(minutes: Int): Boolean = timeRanges.exists(_.isWithinRange(minutes))
 
     def asDTO(): Alert = {
       this.into[Alert].withFieldComputed(_.id, _._id.toHexString).transform

@@ -65,9 +65,9 @@ object beaches {
   implicit val beachEncoder: Encoder[Beach] = deriveEncoder
 
   def read: Map[Long, Beach] = {
-    val tryProd = Try(Source.fromFile("/app/resources/beaches-v3.json").getLines.mkString)
+    val tryProd = Try(Source.fromFile("/app/resources/beaches-v4.json").getLines.mkString)
     val jsonContents = tryProd match {
-      case Failure(_) => Source.fromFile("src/main/resources/beaches-v3.json").getLines.mkString
+      case Failure(_) => Source.fromFile("src/main/resources/beaches-v4.json").getLines.mkString
       case Success(_) => tryProd.get
     }
     decode[Beaches](jsonContents).toOption.get.beaches.groupBy(_.id).toMap.mapValues(x=>x.head).toMap
@@ -75,9 +75,9 @@ object beaches {
 }
 
 object A extends App {
-  val tryProd = Try(Source.fromFile("/app/resources/beaches-v3.json").getLines.mkString)
+  val tryProd = Try(Source.fromFile("/app/resources/beaches-v4.json").getLines.mkString)
   val jsonContents = tryProd match {
-    case Failure(_) => Source.fromFile("src/main/resources/beaches-v3.json").getLines.mkString
+    case Failure(_) => Source.fromFile("src/main/resources/beaches-v4.json").getLines.mkString
     case Success(_) => tryProd.get
   }
   val all = decode[Beaches](jsonContents).toOption.get.beaches

@@ -24,7 +24,7 @@ class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long
 
   def sendNotification = {
     val usersToBeNotifiedEitherT = for {
-      alerts                          <- EitherT.liftF(A.getAllForDayAndTimeRange)
+      alerts                          <- A.getAllForDayAndTimeRange
       alertsByBeaches                 =  alerts.groupBy(_.beachId).map(kv => (BeachId(kv._1), kv._2))
       _                               <- EitherT.liftF(IO(logger.error(s"alertsByBeaches ${alertsByBeaches.mapValues(v=>v.map(_.beachId)).mkString}")))
       beaches                         <- B.getAll(alertsByBeaches.keys.toSeq)

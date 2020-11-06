@@ -1,22 +1,16 @@
 package com.uptech.windalerts.alerts
 
-import cats.data.{EitherT, OptionT}
-import cats.effect.{ContextShift, IO}
+import cats.data.EitherT
 import com.uptech.windalerts.alerts.domain.AlertT
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.{AlertNotFoundError, SurfsUpError, conversions, domain}
-import io.scalaland.chimney.dsl._
-import org.mongodb.scala.MongoCollection
-import org.mongodb.scala.bson.ObjectId
-import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.model.Filters.{and, equal}
-
-import scala.concurrent.ExecutionContext.Implicits.global
+import com.uptech.windalerts.domain.{SurfsUpError, domain}
 
 trait AlertsRepositoryT[F[_]] {
   def disableAllButOneAlerts(userId: String): F[Seq[AlertT]]
 
   def getById(id: String): F[Option[AlertT]]
+
+  def getAllEnabled(): F[Seq[AlertT]]
 
   def getAllForDay(day: Int, p:AlertT=>Boolean): F[Seq[AlertT]]
 

@@ -10,7 +10,6 @@ class NotificationEndpoints[F[_] : Effect](notifications: Notifications, httpErr
   def allRoutes() =
     routes().orNotFound
 
-
   def routes() = {
     HttpRoutes.of[F] {
       case GET -> Root / "notify" => {
