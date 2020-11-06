@@ -81,7 +81,6 @@ object A extends App {
     case Success(_) => tryProd.get
   }
   val all = decode[Beaches](jsonContents).toOption.get.beaches
-  println(Beaches(all.sortBy(f=>f.location)).asJson)
 }
 
 object config {
