@@ -11,7 +11,6 @@ import org.mongodb.scala.bson.ObjectId
 
 class SocialLoginService[F[_] : Sync](repos: Repos[F], userService: UserService[F]) {
 
-
   def registerOrLoginAppleUser(credentials: domain.AppleAccessRequest): SurfsUpEitherT[F, TokensWithUser] = {
     registerOrLoginUser[domain.AppleAccessRequest, AppleCredentials](credentials,
       repos.applePlatform(),
