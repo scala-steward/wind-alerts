@@ -42,11 +42,11 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService:UserCrede
   }
 
 
-  def resetUserSession(dbUser:UserT, deviceToken:String) = {
+  def resetUserSession(dbUser:UserT, newDeviceToken:String) = {
     for {
-      _ <- updateDeviceToken(dbUser._id.toHexString, deviceToken)
+      _ <- updateDeviceToken(dbUser._id.toHexString, newDeviceToken)
       _ <- EitherT.liftF(repos.refreshTokenRepo().deleteForUserId(dbUser._id.toHexString))
-      tokens <- generateNewTokens(dbUser)
+      tokens <- generateNewTokens(dbUser.copy(deviceToken = newDeviceToken))
     } yield tokens
   }
 
