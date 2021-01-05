@@ -45,10 +45,7 @@ class UserCredentialService[F[_] : Sync](repos: Repos[F])  {
   }
 
   def updatePassword(userId: String, password: String): SurfsUpEitherT[F, Unit] = {
-    for {
-      _ <- repos.credentialsRepo().updatePassword(userId, password.bcrypt).toRight(CouldNotUpdatePasswordError())
-      result <- EitherT.liftF(repos.refreshTokenRepo().deleteForUserId(userId))
-    } yield result
+    repos.credentialsRepo().updatePassword(userId, password.bcrypt).toRight(CouldNotUpdatePasswordError())
   }
 
 }
