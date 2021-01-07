@@ -41,11 +41,16 @@ object domain {
     def isToBeAlertedAt(minutes: Int): Boolean = timeRanges.exists(_.isWithinRange(minutes))
     def isToBeAlertedNow(): Boolean = {
       val cal = Calendar.getInstance(TimeZone.getTimeZone(timeZone))
-      val day = cal.get(DAY_OF_WEEK)
+      val day = adjustDay(cal.get(DAY_OF_WEEK))
       val minutes = cal.get(HOUR_OF_DAY) * 60 + cal.get(MINUTE)
       days.contains(day) && timeRanges.exists(_.isWithinRange(minutes))
     }
 
+    def adjustDay(day : Int) = {
+      if (day == 1)
+        7
+      else day -1
+    }
     def isToBeAlertedAtMinutes(minutes: Int): Boolean = timeRanges.exists(_.isWithinRange(minutes))
 
     def asDTO(): Alert = {
