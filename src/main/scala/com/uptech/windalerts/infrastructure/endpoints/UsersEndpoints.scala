@@ -12,6 +12,7 @@ import com.uptech.windalerts.social.subcriptions.SubscriptionsService
 import com.uptech.windalerts.users._
 import io.circe.parser._
 import org.http4s.{AuthedRoutes, HttpRoutes}
+import org.log4s.getLogger
 
 class UsersEndpoints[F[_] : Effect]
 (repos: Repos[F], userCredentialsService:UserCredentialService[F], userService: UserService[F], socialLoginService:SocialLoginService[F], userRolesService: UserRolesService[F], subscriptionsService: SubscriptionsService[F], httpErrorHandler: HttpErrorHandler[F]) extends http[F](httpErrorHandler) {
@@ -68,7 +69,9 @@ class UsersEndpoints[F[_] : Effect]
 
   def authedService(): AuthedRoutes[UserId, F] =
     AuthedRoutes {
+
       case authReq@PUT -> Root / "profile" as user => {
+        getLogger.error(s"Updating ${user.id} profile")
         handleOk(authReq, user, (u: UserId, request: UpdateUserRequest) =>
           userService.updateUserProfile(u.id, request.name, request.snoozeTill, request.disableAllAlerts, request.notificationsPerHour)
             .map(_.asDTO)
@@ -90,6 +93,7 @@ class UsersEndpoints[F[_] : Effect]
       }
 
       case _@POST -> Root / "logout" as user => {
+        getLogger.error(s"logout ${user.id}")
         handleOkNoDecode(user, (u: UserId) => userService.logoutUser(user.id))
       }
 

@@ -5,7 +5,6 @@ import cats.effect.Sync
 import com.github.t3hnar.bcrypt._
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.domain._
-import com.uptech.windalerts.domain.domain.UserType._
 import com.uptech.windalerts.domain.domain.{Credentials, SurfsUpEitherT, _}
 import org.mongodb.scala.bson.ObjectId
 
