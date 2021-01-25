@@ -5,7 +5,7 @@ import cats.effect.Effect
 import cats.implicits._
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.domain.codecs._
-import com.uptech.windalerts.domain.domain.{AppleRegisterRequest, ChangePasswordRequest, FacebookRegisterRequest, ResetPasswordRequest, _}
+import com.uptech.windalerts.domain.domain.{AppleRegisterRequest, ChangePasswordRequest, FacebookRegisterRequest, ResetPasswordRequest, UserDTO, _}
 import com.uptech.windalerts.domain.{HttpErrorHandler, http, secrets, _}
 import com.uptech.windalerts.social.login.SocialLoginService
 import com.uptech.windalerts.social.subcriptions.SubscriptionsService
@@ -75,6 +75,13 @@ class UsersEndpoints[F[_] : Effect]
         handleOk(authReq, user, (u: UserId, request: UpdateUserRequest) =>
           userService.updateUserProfile(u.id, request.name, request.snoozeTill, request.disableAllAlerts, request.notificationsPerHour)
             .map(_.asDTO)
+        )
+      }
+
+      case _@GET -> Root / "profile" as user => {
+        handleOkNoDecode(user, (u: UserId) => {
+          repos.usersRepo().getByUserIdEitherT(u.id).map(_.asDTO()).leftMap(_=>UserNotFoundError())
+        }
         )
       }
 
