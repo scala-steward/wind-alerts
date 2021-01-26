@@ -85,6 +85,14 @@ class UsersEndpoints[F[_] : Effect]
         )
       }
 
+      case authReq@PUT -> Root / "deviceToken" as user => {
+        getLogger.error(s"Updating ${user.id} token")
+        handleOk(authReq, user, (u: UserId, request: UpdateUserDeviceTokenRequest) =>
+          userService.updateDeviceToken(u.id, request.deviceToken)
+            .map(_.asDTO)
+        )
+      }
+
       case _@POST -> Root / "sendOTP" as user => {
         handleOkNoDecode(user, (u: UserId) => userService.sendOtp(user.id))
       }
