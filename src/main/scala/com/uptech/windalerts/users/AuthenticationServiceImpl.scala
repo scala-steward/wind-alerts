@@ -97,12 +97,16 @@ class AuthenticationServiceImpl(repos: Repos[IO]) extends AuthenticationService[
   }
 
   def checkForNonPremiumUser(alertId: String, alerts: AlertsT, alertRequest: AlertRequest) = {
-    val alert = alerts.alerts.sortBy(_._id).head
-    if (alert._id.toHexString != alertId) {
-      false
-    } else {
-      allFieldExceptStatusAreSame(alert, alertRequest)
-    }
+    val alertOption = alerts.alerts.sortBy(_.createdAt).headOption
+
+
+    alertOption.map(alert=> {
+      if (alert._id.toHexString != alertId) {
+        false
+      } else {
+        allFieldExceptStatusAreSame(alert, alertRequest)
+      }
+    }).getOrElse(false)
   }
 
 
