@@ -1,12 +1,12 @@
 package com.uptech.windalerts.users
 
 import java.util.concurrent.TimeUnit
-
-import cats.data.EitherT
+import cats.data.{EitherT, OptionT}
 import cats.effect.IO
 import com.uptech.windalerts.Repos
+import com.uptech.windalerts.alerts.domain.AlertT
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.{OperationNotAllowed, SurfsUpError, domain}
+import com.uptech.windalerts.domain.{AlertNotFoundError, OperationNotAllowed, SurfsUpError, UserNotFoundError, domain}
 import dev.profunktor.auth.JwtAuthMiddleware
 import dev.profunktor.auth.jwt.{JwtAuth, JwtSecretKey, JwtToken}
 import io.circe.parser._
@@ -24,10 +24,11 @@ trait AuthenticationService[F[_]] {
 
   def authorizePremiumUsers(user: domain.UserT): EitherT[F, SurfsUpError, UserT]
 
+  def authorizeAlertEditRequest(user: UserT, alertId: String, alertRequest: AlertRequest): EitherT[F, SurfsUpError, UserT]
+
   def tokens(accessToken: String, refreshToken: RefreshToken, expiredAt: Long, user: UserT): EitherT[F, SurfsUpError, TokensWithUser]
 
-  def createOtp(n: Int) : F[String]
-
+  def createOtp(n: Int): F[String]
 }
 
 
@@ -79,5 +80,46 @@ class AuthenticationServiceImpl(repos: Repos[IO]) extends AuthenticationService[
     } else {
       Left(OperationNotAllowed(s"Please subscribe to perform this action"))
     })
+  }
+
+  override def authorizeAlertEditRequest(user: UserT, alertId: String, alertRequest: AlertRequest): EitherT[IO, SurfsUpError, UserT] = {
+    EitherT.liftF(repos.alertsRepository().getAllForUser(user._id.toHexString))
+      .flatMap(alerts => EitherT.fromEither(authorizeAlertEditRequest(user, alertId, alerts, alertRequest)))
+  }
+
+  private def authorizeAlertEditRequest(user: UserT, alertId: String, alert: AlertsT, alertRequest: AlertRequest): Either[OperationNotAllowed, UserT] = {
+    if (UserType(user.userType) == UserType.Premium || UserType(user.userType) == UserType.Trial) {
+      Right(user)
+    } else {
+      if (checkForNonPremiumUser(alertId, alert, alertRequest)) Right(user)
+      else Left(OperationNotAllowed(s"Please subscribe to perform this action"))
+    }
+  }
+
+  def checkForNonPremiumUser(alertId: String, alerts: AlertsT, alertRequest: AlertRequest) = {
+    val alertOption = alerts.alerts.sortBy(_.createdAt).headOption
+
+
+    alertOption.map(alert=> {
+      if (alert._id.toHexString != alertId) {
+        false
+      } else {
+        allFieldExceptStatusAreSame(alert, alertRequest)
+      }
+    }).getOrElse(false)
+  }
+
+
+  def allFieldExceptStatusAreSame(alert: AlertT, alertRequest: AlertRequest) = {
+    AlertRequest(
+      alert.beachId,
+      alert.days,
+      alert.swellDirections,
+      alert.timeRanges,
+      alert.waveHeightFrom,
+      alert.waveHeightTo,
+      alert.windDirections,
+      alert.tideHeightStatuses,
+      alertRequest.enabled) == alertRequest
   }
 }
