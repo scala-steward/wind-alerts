@@ -24,11 +24,7 @@ class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit
     for {
       all <- getAllForUser(userId)
       updatedIOs <- IO({
-        all.alerts.filter(_.enabled) match {
-          case Seq() => List[IO[AlertT]]()
-          case Seq(only) => List[IO[AlertT]](IO(only))
-          case longSeq => longSeq.tail.map(alert => update(alert._id.toHexString, alert.copy(enabled = false)))
-        }
+        all.alerts.sortBy(_._id).filter(_.enabled).tail.map(alert => update(alert._id.toHexString, alert.copy(enabled = false)))
       }
       )
       updatedAlerts <- conversions.toIOSeq(updatedIOs)
@@ -50,7 +46,6 @@ class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit
   override def getAllForUser(user: String): IO[AlertsT] = {
     findByCriteria(equal("owner", user)).map(AlertsT(_))
   }
-
 
   override def getAllEnabled(): IO[Seq[AlertT]]  = {
     findByCriteria( equal("enabled", true))

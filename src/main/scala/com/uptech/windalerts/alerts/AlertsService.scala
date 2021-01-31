@@ -7,13 +7,17 @@ import com.uptech.windalerts.Repos
 import com.uptech.windalerts.alerts.domain.AlertT
 import com.uptech.windalerts.domain.SurfsUpError
 import com.uptech.windalerts.domain.domain.{AlertRequest, AlertsT}
+import com.uptech.windalerts.users.AuthenticationService
 
-class AlertsService[F[_]: Sync](repo: Repos[F]) {
+class AlertsService[F[_]: Sync](repo: Repos[F], auth: AuthenticationService[F]) {
   def save(alertRequest: AlertRequest, user: String): F[AlertT] = {
     repo.alertsRepository().save(alertRequest, user)
   }
 
-  def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest) = repo.alertsRepository().updateT(requester, alertId, updateAlertRequest)
+  def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest) = {
+    auth.authorizePremiumUsers(requester)
+    repo.alertsRepository().updateT(requester, alertId, updateAlertRequest)
+  }
 
   def getAllForUser(user: String): F[AlertsT] = repo.alertsRepository().getAllForUser(user)
 
