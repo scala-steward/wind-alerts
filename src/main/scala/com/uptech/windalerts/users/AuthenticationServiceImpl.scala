@@ -117,7 +117,7 @@ class AuthenticationServiceImpl(repos: Repos[IO]) extends AuthenticationService[
       alert.waveHeightFrom == alertRequest.waveHeightFrom &&
       alert.waveHeightTo == alertRequest.waveHeightTo &&
       alert.windDirections.sorted == alertRequest.windDirections.sorted &&
-      alert.tideHeightStatuses.sorted == alertRequest.tideHeightStatuses.sorted
+      alert.tideHeightStatuses.sorted == alertRequest.tideHeightStatuses.sorted &&
       alert.timeZone == alertRequest.timeZone
   }
 }
