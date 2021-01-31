@@ -111,15 +111,13 @@ class AuthenticationServiceImpl(repos: Repos[IO]) extends AuthenticationService[
 
 
   def allFieldExceptStatusAreSame(alert: AlertT, alertRequest: AlertRequest) = {
-    AlertRequest(
-      alert.beachId,
-      alert.days,
-      alert.swellDirections,
-      alert.timeRanges,
-      alert.waveHeightFrom,
-      alert.waveHeightTo,
-      alert.windDirections,
-      alert.tideHeightStatuses,
-      alertRequest.enabled) == alertRequest
+      alert.days.sorted == alertRequest.days.sorted &&
+      alert.swellDirections.sorted == alertRequest.swellDirections.sorted &&
+      alert.timeRanges.sortBy(_.from) == alertRequest.timeRanges.sortBy(_.from) &&
+      alert.waveHeightFrom == alertRequest.waveHeightFrom &&
+      alert.waveHeightTo == alertRequest.waveHeightTo &&
+      alert.windDirections.sorted == alertRequest.windDirections.sorted &&
+      alert.tideHeightStatuses.sorted == alertRequest.tideHeightStatuses.sorted
+      alert.timeZone == alertRequest.timeZone
   }
 }
