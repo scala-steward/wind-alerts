@@ -6,7 +6,7 @@ import com.restfb.types.User
 import com.restfb.{DefaultFacebookClient, Parameter, Version}
 import com.uptech.windalerts.domain.UserNotFoundError
 import com.uptech.windalerts.domain.domain.{SocialUser, SurfsUpEitherT}
-import com.uptech.windalerts.social.login.domain.{FacebookAccessRequest, SocialPlatform}
+import com.uptech.windalerts.core.social.SocialLoginDomain.{FacebookAccessRequest, SocialPlatform}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

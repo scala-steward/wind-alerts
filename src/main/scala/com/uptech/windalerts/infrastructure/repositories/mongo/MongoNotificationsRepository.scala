@@ -2,9 +2,9 @@ package com.uptech.windalerts.infrastructure.repositories.mongo
 
 import cats.data.EitherT
 import cats.effect.{ContextShift, IO}
+import com.uptech.windalerts.core.NotificationRepository
 import com.uptech.windalerts.domain.domain
 import com.uptech.windalerts.domain.domain.{Notification, UserWithCount}
-import com.uptech.windalerts.notifications.NotificationRepository
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.model.Filters._
 

@@ -1,8 +1,4 @@
-package com.uptech.windalerts.social.subcriptions
-
-import java.io.{File, InputStreamReader}
-import java.util.Collections
-import java.util.Collections.singleton
+package com.uptech.windalerts.core.social
 
 import com.google.api.client.auth.oauth2.Credential
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp
@@ -11,6 +7,10 @@ import com.google.api.client.googleapis.auth.oauth2.{GoogleAuthorizationCodeFlow
 import com.google.api.client.http.HttpTransport
 import com.google.api.client.util.store.FileDataStoreFactory
 import com.google.api.services.androidpublisher.AndroidPublisherScopes
+
+import java.io.{File, InputStreamReader}
+import java.util.Collections
+import java.util.Collections.singleton
 
 
 object AndroidPublisherHelper {

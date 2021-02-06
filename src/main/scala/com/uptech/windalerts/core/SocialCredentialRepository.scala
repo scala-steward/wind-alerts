@@ -1,4 +1,4 @@
-package com.uptech.windalerts.users
+package com.uptech.windalerts.core
 
 trait SocialCredentialsRepository[F[_], T] {
   def create(credentials: T): F[T]

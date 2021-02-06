@@ -1,32 +1,31 @@
-package com.uptech.windalerts.social.login
+package com.uptech.windalerts.core.social
 
 import cats.data.EitherT
 import cats.effect.Sync
 import com.uptech.windalerts.Repos
-import com.uptech.windalerts.domain.domain.UserType.Trial
+import com.uptech.windalerts.core.UserService
+import com.uptech.windalerts.core.social.SocialLoginDomain.SocialPlatform
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.social.login.domain.SocialPlatform
-import com.uptech.windalerts.users.{SocialCredentialsRepository, UserService}
 import org.mongodb.scala.bson.ObjectId
 
 class SocialLoginService[F[_] : Sync](repos: Repos[F], userService: UserService[F]) {
 
-  def registerOrLoginAppleUser(credentials: domain.AppleAccessRequest): SurfsUpEitherT[F, TokensWithUser] = {
-    registerOrLoginUser[domain.AppleAccessRequest, AppleCredentials](credentials,
+  def registerOrLoginAppleUser(credentials: SocialLoginDomain.AppleAccessRequest): SurfsUpEitherT[F, TokensWithUser] = {
+    registerOrLoginUser[SocialLoginDomain.AppleAccessRequest, AppleCredentials](credentials,
       repos.applePlatform(),
       socialUser => repos.appleCredentialsRepository().find(socialUser.email, socialUser.deviceType),
       socialUser => repos.appleCredentialsRepository().create(AppleCredentials(socialUser.email, socialUser.socialId, socialUser.deviceType)))
   }
 
 
-  def registerOrLoginFacebookUser(credentials: domain.FacebookAccessRequest): SurfsUpEitherT[F, TokensWithUser] = {
-    registerOrLoginUser[domain.FacebookAccessRequest, FacebookCredentials](credentials,
+  def registerOrLoginFacebookUser(credentials: SocialLoginDomain.FacebookAccessRequest): SurfsUpEitherT[F, TokensWithUser] = {
+    registerOrLoginUser[SocialLoginDomain.FacebookAccessRequest, FacebookCredentials](credentials,
       repos.facebookPlatform(),
       socialUser => repos.facebookCredentialsRepo().find(socialUser.email, socialUser.deviceType),
       socialUser => repos.facebookCredentialsRepo().create(FacebookCredentials(socialUser.email, socialUser.socialId, socialUser.deviceType)))
   }
 
-  def registerOrLoginUser[T <: com.uptech.windalerts.social.login.domain.AccessRequest, U <: SocialCredentials]
+  def registerOrLoginUser[T <: SocialLoginDomain.AccessRequest, U <: SocialCredentials]
   (credentials: T,
    socialPlatform: SocialPlatform[F, T],
    credentialFinder: SocialUser => F[Option[U]],
