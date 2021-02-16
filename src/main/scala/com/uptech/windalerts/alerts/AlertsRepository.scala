@@ -1,7 +1,7 @@
-package com.uptech.windalerts.core
+package com.uptech.windalerts.alerts
 
 import cats.data.EitherT
-import com.uptech.windalerts.core.domain.AlertT
+import com.uptech.windalerts.alerts.domain.AlertT
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.{SurfsUpError, domain}
 

@@ -1,6 +1,7 @@
 package com.uptech.windalerts.notifications
 
 import java.io.FileInputStream
+
 import cats.effect.{ExitCode, IO, IOApp}
 import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
@@ -8,11 +9,10 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.softwaremill.sttp.HttpURLConnectionBackend
 import com.uptech.windalerts.LazyRepos
-import com.uptech.windalerts.core.AlertsService
-import com.uptech.windalerts.core.beaches.BeachService
+import com.uptech.windalerts.alerts.AlertsService
 import com.uptech.windalerts.domain._
-import com.uptech.windalerts.infrastructure.beaches.{WillyWeatherBackedSwellService, WillyWeatherBackedTidesService, WillyWeatherBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints.NotificationEndpoints
+import com.uptech.windalerts.status.{BeachService, SwellsService, TidesService, WindsService}
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
 
@@ -48,7 +48,7 @@ object SendNotifications extends IOApp {
   val key = conf.surfsUp.willyWeather.key
   lazy val beachSeq = beaches.read
   lazy val adjustments = swellAdjustments.read
-  val beachesService = new BeachService[IO](new WillyWeatherBackedWindsService[IO](key), new WillyWeatherBackedTidesService[IO](key, repos), new WillyWeatherBackedSwellService[IO](key, swellAdjustments.read))
+  val beachesService = new BeachService[IO](new WindsService[IO](key), new TidesService[IO](key, repos), new SwellsService[IO](key, swellAdjustments.read))
 
 
   implicit val httpErrorHandler: HttpErrorHandler[IO] = new HttpErrorHandler[IO]

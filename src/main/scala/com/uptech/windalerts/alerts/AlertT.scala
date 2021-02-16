@@ -1,12 +1,12 @@
-package com.uptech.windalerts.core
+package com.uptech.windalerts.alerts
+
+import java.util.Calendar.{DAY_OF_WEEK, HOUR_OF_DAY, MINUTE}
+import java.util.{Calendar, TimeZone}
 
 import com.uptech.windalerts.domain.domain.{Alert, AlertRequest, Beach, TimeRange}
 import io.scalaland.chimney.dsl._
 import org.log4s.getLogger
 import org.mongodb.scala.bson.ObjectId
-
-import java.util.Calendar.{DAY_OF_WEEK, HOUR_OF_DAY, MINUTE}
-import java.util.{Calendar, TimeZone}
 
 object domain {
   private val logger = getLogger
@@ -36,6 +36,7 @@ object domain {
           {
             if (beach.tide.height.status.equals("Increasing")) "Rising" else "Falling"
           }))
+
     }
 
     def isToBeAlertedAt(minutes: Int): Boolean = timeRanges.exists(_.isWithinRange(minutes))

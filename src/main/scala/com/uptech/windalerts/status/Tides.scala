@@ -1,14 +1,15 @@
-package com.uptech.windalerts.infrastructure.beaches
+package com.uptech.windalerts.status
+import java.time.format.DateTimeFormatter
+import java.time.{ZoneId, ZonedDateTime}
 
 import cats.data.EitherT
 import cats.effect.Sync
 import cats.{Applicative, Functor}
 import com.softwaremill.sttp._
 import com.uptech.windalerts.Repos
-import com.uptech.windalerts.core.beaches.TideService
 import com.uptech.windalerts.domain.domain.{BeachId, SurfsUpEitherT, TideHeight}
-import com.uptech.windalerts.domain.{UnknownError, domain}
-import com.uptech.windalerts.infrastructure.beaches.Tides.{Datum, TideDecoders}
+import com.uptech.windalerts.domain.{UnknownError, beaches, domain}
+import com.uptech.windalerts.status.Tides.{Datum, TideDecoders}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.optics.JsonPath._
 import io.circe.{Decoder, Encoder, parser}
@@ -16,24 +17,19 @@ import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
 import org.log4s.getLogger
 
-import java.time.format.DateTimeFormatter
-import java.time.{ZoneId, ZonedDateTime}
-
-class WillyWeatherBackedTidesService[F[_] : Sync](apiKey: String, repos:Repos[F])(implicit backend: SttpBackend[Id, Nothing])
-  extends TideService[F] {
+class TidesService[F[_] : Sync](apiKey: String, repos:Repos[F])(implicit backend: SttpBackend[Id, Nothing]) {
   private val logger = getLogger
   val startDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
   val timeZoneForRegion = Map("TAS" ->"Australia/Tasmania",
-    "WA" -> "Australia/Perth",
-    "VIC" -> "Australia/Victoria",
-    "QLD" -> "Australia/Queensland",
-    "SA" -> "Australia/Adelaide",
-    "ACT" -> "Australia/ACT",
-    "NSW"  -> "Australia/NSW",
-    "NT"  -> "Australia/Darwin")
-
-  override def get(beachId: BeachId)(implicit F: Functor[F]): SurfsUpEitherT[F, domain.TideHeight] =
+                               "WA" -> "Australia/Perth",
+                              "VIC" -> "Australia/Victoria",
+                              "QLD" -> "Australia/Queensland",
+                               "SA" -> "Australia/Adelaide",
+                              "ACT" -> "Australia/ACT",
+                             "NSW"  -> "Australia/NSW",
+                              "NT"  -> "Australia/Darwin")
+  def get(beachId: BeachId)(implicit F: Functor[F]): SurfsUpEitherT[F, domain.TideHeight] =
     EitherT.fromEither(getFromWillyWeatther(apiKey, beachId))
 
   def getFromWillyWeatther(apiKey: String, beachId: BeachId) = {

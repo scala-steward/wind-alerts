@@ -1,4 +1,4 @@
-package com.uptech.windalerts.core
+package com.uptech.windalerts.users
 
 import cats.data.{EitherT, OptionT}
 import cats.effect.Sync
@@ -6,7 +6,6 @@ import com.github.t3hnar.bcrypt._
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.domain._
 import com.uptech.windalerts.domain.domain.{Credentials, SurfsUpEitherT, _}
-import com.uptech.windalerts.users.AuthenticationService
 import org.mongodb.scala.bson.ObjectId
 
 class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService:UserCredentialService[F], otpService: OTPService[F], auth: AuthenticationService[F]) {

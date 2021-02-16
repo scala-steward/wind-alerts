@@ -1,4 +1,4 @@
-package com.uptech.windalerts.core
+package com.uptech.windalerts.users
 
 import cats.data.EitherT
 import com.uptech.windalerts.domain.OtpNotFoundError

@@ -1,8 +1,8 @@
-package com.uptech.windalerts.core.social
+package com.uptech.windalerts.social.login
 
 import com.uptech.windalerts.domain.domain.{SocialUser, SurfsUpEitherT}
 
-object SocialLoginDomain {
+object domain {
   sealed trait AccessRequest
 
   case class FacebookAccessRequest(

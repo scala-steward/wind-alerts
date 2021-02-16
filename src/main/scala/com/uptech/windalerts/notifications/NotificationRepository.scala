@@ -1,4 +1,4 @@
-package com.uptech.windalerts.core
+package com.uptech.windalerts.notifications
 
 import cats.data.EitherT
 import com.uptech.windalerts.domain.domain.{Notification, UserWithCount}

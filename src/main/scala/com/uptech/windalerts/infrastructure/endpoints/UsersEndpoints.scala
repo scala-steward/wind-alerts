@@ -4,11 +4,11 @@ import cats.data.EitherT
 import cats.effect.Effect
 import cats.implicits._
 import com.uptech.windalerts.Repos
-import com.uptech.windalerts.core.{UserCredentialService, UserRolesService, UserService}
-import com.uptech.windalerts.core.social.{SocialLoginService, SubscriptionsService}
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain.{AppleRegisterRequest, ChangePasswordRequest, FacebookRegisterRequest, ResetPasswordRequest, UserDTO, _}
 import com.uptech.windalerts.domain.{HttpErrorHandler, http, secrets, _}
+import com.uptech.windalerts.social.login.SocialLoginService
+import com.uptech.windalerts.social.subcriptions.SubscriptionsService
 import com.uptech.windalerts.users._
 import io.circe.parser._
 import org.http4s.{AuthedRoutes, HttpRoutes}
