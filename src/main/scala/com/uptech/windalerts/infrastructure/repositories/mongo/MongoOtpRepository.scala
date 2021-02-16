@@ -2,13 +2,14 @@ package com.uptech.windalerts.infrastructure.repositories.mongo
 
 import cats.data.EitherT
 import cats.effect.{ContextShift, IO}
+import com.uptech.windalerts.core.OtpRepository
 import com.uptech.windalerts.domain.OtpNotFoundError
 import com.uptech.windalerts.domain.domain.OTPWithExpiry
-import com.uptech.windalerts.users.OtpRepository
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model.UpdateOptions
 import org.mongodb.scala.model.Updates._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class MongoOtpRepository(collection: MongoCollection[OTPWithExpiry])(implicit cs: ContextShift[IO]) extends OtpRepository[IO] {

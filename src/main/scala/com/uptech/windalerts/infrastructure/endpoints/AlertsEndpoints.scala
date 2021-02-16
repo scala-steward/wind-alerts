@@ -2,11 +2,11 @@ package com.uptech.windalerts.infrastructure.endpoints
 
 import cats.data.EitherT
 import cats.effect.Effect
-import com.uptech.windalerts.alerts.AlertsService
+import com.uptech.windalerts.core.{AlertsService, UserService}
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.{HttpErrorHandler, http}
-import com.uptech.windalerts.users.{AuthenticationService, UserService}
+import com.uptech.windalerts.users.AuthenticationService
 import org.http4s.AuthedRoutes
 
 class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F], usersService: UserService[F], auth: AuthenticationService[F], httpErrorHandler: HttpErrorHandler[F]) extends http[F](httpErrorHandler) {

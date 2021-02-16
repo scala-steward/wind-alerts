@@ -1,4 +1,4 @@
-package com.uptech.windalerts.social.subcriptions
+package com.uptech.windalerts.core.social
 
 import cats.data.EitherT
 import com.uptech.windalerts.domain.SurfsUpError

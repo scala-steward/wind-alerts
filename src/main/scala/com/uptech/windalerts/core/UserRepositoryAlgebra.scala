@@ -1,5 +1,4 @@
-package com.uptech.windalerts.users
-
+package com.uptech.windalerts.core
 
 import cats.data.{EitherT, OptionT}
 import com.uptech.windalerts.domain.SurfsUpError

@@ -1,4 +1,4 @@
-package com.uptech.windalerts.users
+package com.uptech.windalerts.core
 
 import com.uptech.windalerts.domain.domain.Feedback
 
