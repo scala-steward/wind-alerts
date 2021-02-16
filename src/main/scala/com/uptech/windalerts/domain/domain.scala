@@ -13,11 +13,13 @@ import scala.util.control.NonFatal
 
 
 object domain {
-  type SurfsUpEitherT[F[_], T] = EitherT[F, SurfsUpError, T]
+  type SurfsUpEitherT[F[_],  T] = EitherT[F, SurfsUpError, T]
 
   private val logger = getLogger
 
   case class UpdateUserRequest(name: String, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long)
+
+  case class UpdateUserDeviceTokenRequest(deviceToken:String)
 
   case class UserId(id: String)
 

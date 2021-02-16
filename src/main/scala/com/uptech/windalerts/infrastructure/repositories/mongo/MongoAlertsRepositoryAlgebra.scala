@@ -24,11 +24,7 @@ class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit
     for {
       all <- getAllForUser(userId)
       updatedIOs <- IO({
-        all.alerts.filter(_.enabled) match {
-          case Seq() => List[IO[AlertT]]()
-          case Seq(only) => List[IO[AlertT]](IO(only))
-          case longSeq => longSeq.tail.map(alert => update(alert._id.toHexString, alert.copy(enabled = false)))
-        }
+        all.alerts.sortBy(_.createdAt).drop(1).map(alert => update(alert._id.toHexString, alert.copy(enabled = false)))
       }
       )
       updatedAlerts <- conversions.toIOSeq(updatedIOs)
@@ -51,7 +47,6 @@ class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit
     findByCriteria(equal("owner", user)).map(AlertsT(_))
   }
 
-
   override def getAllEnabled(): IO[Seq[AlertT]]  = {
     findByCriteria( equal("enabled", true))
   }
@@ -67,8 +62,12 @@ class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit
   }
 
   override def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest):EitherT[IO, SurfsUpError, AlertT] = {
-    val alertUpdated = updateAlertRequest.into[AlertT].withFieldComputed(_._id, u => new ObjectId(alertId)).withFieldComputed(_.owner, _ => requester).transform
     for {
+      oldAlert <- OptionT(getById(alertId)).toRight(AlertNotFoundError())
+      alertUpdated = updateAlertRequest.into[AlertT]
+                        .withFieldComputed(_._id, u => new ObjectId(alertId))
+                        .withFieldComputed(_.owner, _ => requester)
+                        .withFieldComputed(_.createdAt, _=> oldAlert.createdAt).transform
       _ <- EitherT.liftF(IO(collection.replaceOne(equal("_id", new ObjectId(alertId)), alertUpdated).toFuture()))
       alert <-  EitherT.liftF(getById(alertId)).map(alertOption=>alertOption.get)
     } yield alert

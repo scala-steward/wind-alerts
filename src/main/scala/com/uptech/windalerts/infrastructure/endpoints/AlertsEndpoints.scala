@@ -27,7 +27,7 @@ class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F], usersServic
         handleOk(authReq, user, (u: UserId, r: AlertRequest) => {
           for {
             dbUser <- usersService.getUser(u.id)
-            _ <- auth.authorizePremiumUsers(dbUser)
+            _ <- auth.authorizeAlertEditRequest(dbUser, alertId, r)
             saved <- alertService.updateT(u.id, alertId, r).map(_.asDTO())
           } yield saved
         }

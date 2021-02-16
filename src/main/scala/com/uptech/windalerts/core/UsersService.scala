@@ -90,8 +90,13 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService:UserCrede
     repos.usersRepo().update(user.copy(name = name, snoozeTill = snoozeTill, disableAllAlerts = disableAllAlerts, notificationsPerHour = notificationsPerHour)).toRight(CouldNotUpdateUserError())
   }
 
-  def updateDeviceToken(userId: String, deviceToken: String): SurfsUpEitherT[F, Unit] =
-    repos.usersRepo().updateDeviceToken(userId, deviceToken).toRight(CouldNotUpdateUserDeviceError())
+  def updateDeviceToken(id: String, deviceToken:String): SurfsUpEitherT[F, UserT] = {
+    import cats.implicits._
+    for {
+      user <- getUser(id)
+      operationResult <- repos.usersRepo().update(user.copy(deviceToken = deviceToken)).toRight(CouldNotUpdateUserError()).leftWiden[SurfsUpError]
+    } yield operationResult
+  }
 
 
   def logoutUser(userId: String): SurfsUpEitherT[F, Unit] = {

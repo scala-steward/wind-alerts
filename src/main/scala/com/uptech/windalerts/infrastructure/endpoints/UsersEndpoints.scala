@@ -7,11 +7,12 @@ import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.{UserCredentialService, UserRolesService, UserService}
 import com.uptech.windalerts.core.social.{SocialLoginService, SubscriptionsService}
 import com.uptech.windalerts.domain.codecs._
-import com.uptech.windalerts.domain.domain.{AppleRegisterRequest, ChangePasswordRequest, FacebookRegisterRequest, ResetPasswordRequest, _}
+import com.uptech.windalerts.domain.domain.{AppleRegisterRequest, ChangePasswordRequest, FacebookRegisterRequest, ResetPasswordRequest, UserDTO, _}
 import com.uptech.windalerts.domain.{HttpErrorHandler, http, secrets, _}
 import com.uptech.windalerts.users._
 import io.circe.parser._
 import org.http4s.{AuthedRoutes, HttpRoutes}
+import org.log4s.getLogger
 
 class UsersEndpoints[F[_] : Effect]
 (repos: Repos[F], userCredentialsService:UserCredentialService[F], userService: UserService[F], socialLoginService:SocialLoginService[F], userRolesService: UserRolesService[F], subscriptionsService: SubscriptionsService[F], httpErrorHandler: HttpErrorHandler[F]) extends http[F](httpErrorHandler) {
@@ -68,9 +69,26 @@ class UsersEndpoints[F[_] : Effect]
 
   def authedService(): AuthedRoutes[UserId, F] =
     AuthedRoutes {
+
       case authReq@PUT -> Root / "profile" as user => {
+        getLogger.error(s"Updating ${user.id} profile")
         handleOk(authReq, user, (u: UserId, request: UpdateUserRequest) =>
           userService.updateUserProfile(u.id, request.name, request.snoozeTill, request.disableAllAlerts, request.notificationsPerHour)
+            .map(_.asDTO)
+        )
+      }
+
+      case _@GET -> Root / "profile" as user => {
+        handleOkNoDecode(user, (u: UserId) => {
+          repos.usersRepo().getByUserIdEitherT(u.id).map(_.asDTO()).leftMap(_=>UserNotFoundError())
+        }
+        )
+      }
+
+      case authReq@PUT -> Root / "deviceToken" as user => {
+        getLogger.error(s"Updating ${user.id} token")
+        handleOk(authReq, user, (u: UserId, request: UpdateUserDeviceTokenRequest) =>
+          userService.updateDeviceToken(u.id, request.deviceToken)
             .map(_.asDTO)
         )
       }
@@ -90,6 +108,7 @@ class UsersEndpoints[F[_] : Effect]
       }
 
       case _@POST -> Root / "logout" as user => {
+        getLogger.error(s"logout ${user.id}")
         handleOkNoDecode(user, (u: UserId) => userService.logoutUser(user.id))
       }
 
