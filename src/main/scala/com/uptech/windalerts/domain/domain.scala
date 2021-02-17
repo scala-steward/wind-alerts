@@ -173,7 +173,7 @@ object domain {
 
   final case class BeachId(id: Long) extends AnyVal
 
-  final case class Wind(direction: Double = 0, speed: Double = 0, directionText: String, trend: Double = 0)
+  final case class Wind(direction: Double = 0, speed: Double = 0, directionText: String, trend: String)
 
   final case class Swell(height: Double = 0, direction: Double = 0, directionText: String)
 
