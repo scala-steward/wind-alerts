@@ -48,8 +48,8 @@ class WindsService[F[_] : Sync](apiKey: String)(implicit backend: SttpBackend[Id
         .map(UnknownError(_))
       parsed <- parser.parse(body).left.map(f=>UnknownError(f.message))
       wind <- parsed.hcursor.downField("observational").downField("observations").downField("wind").as[Wind].left.map(f=>UnknownError(f.message))
-    } yield  domain.Wind(wind.direction, wind.speed, wind.directionText, wind.trend)
-    res.orElse(Right(domain.Wind(Double.NaN, Double.NaN, "NA", Double.NaN)))
+    } yield  domain.Wind(wind.direction, wind.speed, wind.directionText, if (wind.trend > 0)  "Increasing" else "Decreasing")
+    res.orElse(Right(domain.Wind(Double.NaN, Double.NaN, "NA", "NA")))
   }
 
 }
