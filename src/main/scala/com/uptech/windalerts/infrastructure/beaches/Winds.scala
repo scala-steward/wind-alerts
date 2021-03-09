@@ -1,11 +1,12 @@
-package com.uptech.windalerts.status
+package com.uptech.windalerts.infrastructure.beaches
 
 import cats.data.EitherT
 import cats.effect.Sync
 import cats.{Applicative, Functor, Monad}
-import com.softwaremill.sttp.{HttpURLConnectionBackend, _}
-import com.uptech.windalerts.domain.{UnknownError, domain}
+import com.softwaremill.sttp._
+import com.uptech.windalerts.core.beaches.WindsService
 import com.uptech.windalerts.domain.domain.{BeachId, SurfsUpEitherT}
+import com.uptech.windalerts.domain.{UnknownError, domain}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder, parser}
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
@@ -33,10 +34,12 @@ object Wind {
     jsonEncoderOf
 }
 
-class WindsService[F[_] : Sync](apiKey: String)(implicit backend: SttpBackend[Id, Nothing]) {
+
+
+class WWBackedWindsService[F[_] : Sync](apiKey: String)(implicit backend: SttpBackend[Id, Nothing]) extends WindsService[F]{
   private val logger = getLogger
 
-  def get(beachId: BeachId)(implicit F: Functor[F]): SurfsUpEitherT[F, domain.Wind] =
+  override def get(beachId: BeachId)(implicit F: Functor[F]): SurfsUpEitherT[F, domain.Wind] =
     EitherT.fromEither(getFromWillyWeatther(apiKey, beachId))
 
   def getFromWillyWeatther(apiKey: String, beachId: BeachId)(implicit F: Monad[F]): Either[UnknownError, domain.Wind] = {

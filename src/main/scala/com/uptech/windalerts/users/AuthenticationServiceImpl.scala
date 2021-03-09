@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit
 import cats.data.{EitherT, OptionT}
 import cats.effect.IO
 import com.uptech.windalerts.Repos
-import com.uptech.windalerts.alerts.domain.AlertT
+import com.uptech.windalerts.core.alerts.domain.AlertT
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.{AlertNotFoundError, OperationNotAllowed, SurfsUpError, UserNotFoundError, domain}
 import dev.profunktor.auth.JwtAuthMiddleware

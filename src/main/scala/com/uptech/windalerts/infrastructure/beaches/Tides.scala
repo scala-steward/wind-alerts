@@ -1,15 +1,15 @@
-package com.uptech.windalerts.status
+package com.uptech.windalerts.infrastructure.beaches
 import java.time.format.DateTimeFormatter
 import java.time.{ZoneId, ZonedDateTime}
-
 import cats.data.EitherT
 import cats.effect.Sync
 import cats.{Applicative, Functor}
 import com.softwaremill.sttp._
 import com.uptech.windalerts.Repos
+import com.uptech.windalerts.core.beaches.TidesService
 import com.uptech.windalerts.domain.domain.{BeachId, SurfsUpEitherT, TideHeight}
 import com.uptech.windalerts.domain.{UnknownError, beaches, domain}
-import com.uptech.windalerts.status.Tides.{Datum, TideDecoders}
+import com.uptech.windalerts.infrastructure.beaches.Tides.{Datum, TideDecoders}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.optics.JsonPath._
 import io.circe.{Decoder, Encoder, parser}
@@ -17,7 +17,10 @@ import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
 import org.log4s.getLogger
 
-class TidesService[F[_] : Sync](apiKey: String, repos:Repos[F])(implicit backend: SttpBackend[Id, Nothing]) {
+
+
+class WWBackedTidesService[F[_] : Sync](apiKey: String, repos:Repos[F])(implicit backend: SttpBackend[Id, Nothing])
+extends TidesService[F]{
   private val logger = getLogger
   val startDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
@@ -29,7 +32,7 @@ class TidesService[F[_] : Sync](apiKey: String, repos:Repos[F])(implicit backend
                               "ACT" -> "Australia/ACT",
                              "NSW"  -> "Australia/NSW",
                               "NT"  -> "Australia/Darwin")
-  def get(beachId: BeachId)(implicit F: Functor[F]): SurfsUpEitherT[F, domain.TideHeight] =
+  override def get(beachId: BeachId)(implicit F: Functor[F]): SurfsUpEitherT[F, domain.TideHeight] =
     EitherT.fromEither(getFromWillyWeatther(apiKey, beachId))
 
   def getFromWillyWeatther(apiKey: String, beachId: BeachId) = {

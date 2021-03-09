@@ -2,7 +2,7 @@ package com.uptech.windalerts.infrastructure.endpoints
 
 import cats.data.EitherT
 import cats.effect.Effect
-import com.uptech.windalerts.alerts.AlertsService
+import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.{HttpErrorHandler, http}

@@ -1,10 +1,10 @@
-package com.uptech.windalerts.alerts
+package com.uptech.windalerts.core.alerts
 
 import cats.Functor
 import cats.data.EitherT
 import cats.effect.Sync
 import com.uptech.windalerts.Repos
-import com.uptech.windalerts.alerts.domain.AlertT
+import com.uptech.windalerts.core.alerts.domain.AlertT
 import com.uptech.windalerts.domain.SurfsUpError
 import com.uptech.windalerts.domain.domain.{AlertRequest, AlertsT}
 
