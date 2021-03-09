@@ -1,8 +1,7 @@
 package com.uptech.windalerts.infrastructure.repositories.mongo
 
 import cats.effect.{ContextShift, IO}
-import com.uptech.windalerts.domain.domain.Feedback
-import com.uptech.windalerts.users.FeedbackRepository
+import com.uptech.windalerts.core.feedbacks.{Feedback, FeedbackRepository}
 import org.mongodb.scala.MongoCollection
 
 import scala.concurrent.ExecutionContext.Implicits.global

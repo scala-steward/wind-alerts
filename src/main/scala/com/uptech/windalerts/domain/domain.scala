@@ -308,12 +308,6 @@ object domain {
   case class SocialUser(socialId: String, email: String, deviceType:String, deviceToken:String, name:String)
 
 
-  case class Feedback(_id: ObjectId, topic: String, message: String, userId: String)
-
-  object Feedback {
-    def apply(topic: String, message: String, userId: String): Feedback = new Feedback(new ObjectId, topic, message, userId)
-  }
-
   case class FeedbackRequest(topic: String, message: String)
 
 }

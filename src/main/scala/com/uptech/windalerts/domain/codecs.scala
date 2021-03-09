@@ -3,6 +3,7 @@ package com.uptech.windalerts.domain
 import cats.Applicative
 import cats.effect.Sync
 import com.uptech.windalerts.core.alerts.domain.AlertT
+import com.uptech.windalerts.core.feedbacks.Feedback
 import com.uptech.windalerts.core.notifications.Notification
 import domain._
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
