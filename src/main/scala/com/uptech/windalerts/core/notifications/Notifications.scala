@@ -1,4 +1,4 @@
-package com.uptech.windalerts.notifications
+package com.uptech.windalerts.core.notifications
 
 import cats.data.EitherT
 import cats.effect.IO
@@ -81,7 +81,7 @@ class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long
             .putHeader("apns-priority", "10").build())
           .setAndroidConfig(AndroidConfig.builder().setPriority(AndroidConfig.Priority.HIGH).build())
         .build())
-      val s = repos.notificationsRepo().create(com.uptech.windalerts.domain.domain.Notification(a._id.toHexString, a.owner, u.deviceToken, title, body, System.currentTimeMillis()))
+      val s = repos.notificationsRepo().create(com.uptech.windalerts.core.notifications.Notification(a._id.toHexString, a.owner, u.deviceToken, title, body, System.currentTimeMillis()))
       logger.warn(s"unsafeRunSync ${s.unsafeRunSync()}")
 
       logger.warn(s" sending to ${u.email} for ${a._id.toHexString} status : ${sent}")
