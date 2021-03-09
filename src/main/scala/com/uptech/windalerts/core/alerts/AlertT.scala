@@ -1,4 +1,4 @@
-package com.uptech.windalerts.alerts
+package com.uptech.windalerts.core.alerts
 
 import java.util.Calendar.{DAY_OF_WEEK, HOUR_OF_DAY, MINUTE}
 import java.util.{Calendar, TimeZone}

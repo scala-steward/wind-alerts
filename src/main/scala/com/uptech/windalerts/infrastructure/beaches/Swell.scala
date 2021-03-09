@@ -1,17 +1,17 @@
-package com.uptech.windalerts.status
+package com.uptech.windalerts.infrastructure.beaches
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.TimeZone
-
 import cats.data.EitherT
 import cats.effect.Sync
 import cats.{Applicative, Functor}
 import com.softwaremill.sttp._
+import com.uptech.windalerts.core.beaches.SwellsService
 import com.uptech.windalerts.domain.{SurfsUpError, UnknownError, domain}
 import com.uptech.windalerts.domain.domain.{BeachId, SurfsUpEitherT}
 import com.uptech.windalerts.domain.swellAdjustments.Adjustments
-import com.uptech.windalerts.status.Swells.Swell
+import com.uptech.windalerts.infrastructure.beaches.Swells.Swell
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.optics.JsonPath._
 import io.circe.{Decoder, Encoder, parser}
@@ -19,11 +19,10 @@ import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
 import org.log4s.getLogger
 
-
-class SwellsService[F[_] : Sync](apiKey: String, adjustments: Adjustments)(implicit backend: SttpBackend[Id, Nothing]) {
+class WWBackedSwellsService[F[_] : Sync](apiKey: String, adjustments: Adjustments)(implicit backend: SttpBackend[Id, Nothing]) extends SwellsService[F] {
   private val logger = getLogger
 
-  def get(beachId: BeachId)(implicit F: Functor[F]): SurfsUpEitherT[F, domain.Swell] =
+  override def get(beachId: BeachId)(implicit F: Functor[F]): SurfsUpEitherT[F, domain.Swell] =
     EitherT.fromEither(getFromWillyWeatther(apiKey, beachId))
 
   def getFromWillyWeatther(apiKey: String, beachId: BeachId): Either[UnknownError, domain.Swell] = {

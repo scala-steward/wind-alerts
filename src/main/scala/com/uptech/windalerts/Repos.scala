@@ -5,8 +5,8 @@ import java.io.File
 import cats.Eval
 import cats.effect.{ContextShift, IO}
 import com.google.api.services.androidpublisher.AndroidPublisher
-import com.uptech.windalerts.alerts.AlertsRepositoryT
-import com.uptech.windalerts.alerts.domain.AlertT
+import com.uptech.windalerts.core.alerts.AlertsRepositoryT
+import com.uptech.windalerts.core.alerts.domain.AlertT
 import com.uptech.windalerts.domain.beaches.Beach
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.secrets

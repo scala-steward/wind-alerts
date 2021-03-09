@@ -1,4 +1,4 @@
-package com.uptech.windalerts.status
+package com.uptech.windalerts.core.beaches
 
 import cats.effect.Sync
 import cats.implicits._
