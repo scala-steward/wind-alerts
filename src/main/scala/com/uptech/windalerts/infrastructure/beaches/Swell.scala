@@ -9,7 +9,7 @@ import cats.{Applicative, Functor}
 import com.softwaremill.sttp._
 import com.uptech.windalerts.core.beaches.SwellsService
 import com.uptech.windalerts.domain.{SurfsUpError, UnknownError, domain}
-import com.uptech.windalerts.domain.domain.{BeachId, SurfsUpEitherT}
+import domain.{BeachId, SurfsUpEitherT}
 import com.uptech.windalerts.domain.swellAdjustments.Adjustments
 import com.uptech.windalerts.infrastructure.beaches.Swells.Swell
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}

@@ -5,8 +5,8 @@ import cats.effect.Sync
 import cats.implicits._
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.domain._
-import com.uptech.windalerts.domain.domain.UserType.{Premium, PremiumExpired, Trial}
-import com.uptech.windalerts.domain.domain._
+import domain.UserType.{Premium, PremiumExpired, Trial}
+import domain._
 import com.uptech.windalerts.social.subcriptions.SubscriptionsService
 
 class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: SubscriptionsService[F]) {

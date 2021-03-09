@@ -2,16 +2,16 @@ package com.uptech.windalerts.infrastructure.repositories.mongo
 
 import cats.data.EitherT
 import cats.effect.{ContextShift, IO}
+import com.uptech.windalerts.core.notifications.{Notification, NotificationRepository}
 import com.uptech.windalerts.domain.domain
-import com.uptech.windalerts.domain.domain.{Notification, UserWithCount}
-import com.uptech.windalerts.notifications.NotificationRepository
+import com.uptech.windalerts.domain.domain.UserWithCount
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.model.Filters._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class MongoNotificationsRepository(notifications: MongoCollection[Notification])(implicit cs: ContextShift[IO]) extends  NotificationRepository[IO] {
-  def create(notification: domain.Notification) = {
+  def create(notification: Notification) = {
     IO.fromFuture(IO(notifications.insertOne(notification).toFuture().map(_=>notification)))
   }
 

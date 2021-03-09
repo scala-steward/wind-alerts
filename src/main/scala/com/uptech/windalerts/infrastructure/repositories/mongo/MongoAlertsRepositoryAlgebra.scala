@@ -5,7 +5,7 @@ import cats.effect.{ContextShift, IO}
 import com.uptech.windalerts.core.alerts.AlertsRepositoryT
 import com.uptech.windalerts.core.alerts.domain.AlertT
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.{AlertNotFoundError, SurfsUpError, conversions, domain}
+import com.uptech.windalerts.domain.{AlertNotFoundError, SurfsUpError, conversions}
 import io.scalaland.chimney.dsl._
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId

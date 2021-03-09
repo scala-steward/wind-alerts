@@ -3,7 +3,8 @@ package com.uptech.windalerts.domain
 import cats.Applicative
 import cats.effect.Sync
 import com.uptech.windalerts.core.alerts.domain.AlertT
-import com.uptech.windalerts.domain.domain._
+import com.uptech.windalerts.core.notifications.Notification
+import domain._
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
@@ -13,7 +14,6 @@ import org.mongodb.scala.bson.codecs.DEFAULT_CODEC_REGISTRY
 import org.bson.codecs.configuration.CodecRegistries.{fromProviders, fromRegistries}
 
 object codecs {
-  Notification
   val codecRegistry = fromRegistries(
     fromProviders(classOf[Notification]),
     fromProviders(classOf[OTPWithExpiry]),

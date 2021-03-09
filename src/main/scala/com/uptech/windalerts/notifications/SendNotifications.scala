@@ -10,6 +10,7 @@ import com.softwaremill.sttp.HttpURLConnectionBackend
 import com.uptech.windalerts.LazyRepos
 import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.beaches.{BeachService, SwellsService, TidesService, WindsService}
+import com.uptech.windalerts.core.notifications.Notifications
 import com.uptech.windalerts.domain._
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints.NotificationEndpoints

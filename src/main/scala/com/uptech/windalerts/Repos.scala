@@ -1,19 +1,18 @@
 package com.uptech.windalerts
 
 import java.io.File
-
 import cats.Eval
 import cats.effect.{ContextShift, IO}
 import com.google.api.services.androidpublisher.AndroidPublisher
 import com.uptech.windalerts.core.alerts.AlertsRepositoryT
 import com.uptech.windalerts.core.alerts.domain.AlertT
+import com.uptech.windalerts.core.notifications.{Notification, NotificationRepository}
 import com.uptech.windalerts.domain.beaches.Beach
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.secrets
 import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.repositories.mongo._
 import com.uptech.windalerts.infrastructure.social.login.{ApplePlatform, FacebookPlatform}
-import com.uptech.windalerts.notifications.NotificationRepository
 import com.uptech.windalerts.social.login.domain
 import com.uptech.windalerts.social.login.domain.SocialPlatform
 import com.uptech.windalerts.social.subcriptions.{AndroidPublisherHelper, AndroidTokenRepository, AppleTokenRepository}
