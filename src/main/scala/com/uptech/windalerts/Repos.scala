@@ -6,6 +6,7 @@ import cats.effect.{ContextShift, IO}
 import com.google.api.services.androidpublisher.AndroidPublisher
 import com.uptech.windalerts.core.alerts.AlertsRepositoryT
 import com.uptech.windalerts.core.alerts.domain.AlertT
+import com.uptech.windalerts.core.feedbacks.{Feedback, FeedbackRepository}
 import com.uptech.windalerts.core.notifications.{Notification, NotificationRepository}
 import com.uptech.windalerts.domain.beaches.Beach
 import com.uptech.windalerts.domain.domain._

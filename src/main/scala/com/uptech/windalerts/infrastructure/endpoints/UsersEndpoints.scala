@@ -4,6 +4,7 @@ import cats.data.EitherT
 import cats.effect.Effect
 import cats.implicits._
 import com.uptech.windalerts.Repos
+import com.uptech.windalerts.core.feedbacks.Feedback
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain.{AppleRegisterRequest, ChangePasswordRequest, FacebookRegisterRequest, ResetPasswordRequest, UserDTO, _}
 import com.uptech.windalerts.domain.{HttpErrorHandler, http, secrets, _}
