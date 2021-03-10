@@ -11,7 +11,8 @@ import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken
 import com.uptech.windalerts.core.user.{UserRolesService, UserService, UserT}
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain.{AppleRegisterRequest, ChangePasswordRequest, FacebookRegisterRequest, ResetPasswordRequest, UserDTO, _}
-import com.uptech.windalerts.domain.{HttpErrorHandler, http, secrets, _}
+import com.uptech.windalerts.domain.{HttpErrorHandler, secrets, _}
+import com.uptech.windalerts.infrastructure.http
 import com.uptech.windalerts.users._
 import io.circe.parser._
 import org.http4s.{AuthedRoutes, HttpRoutes}

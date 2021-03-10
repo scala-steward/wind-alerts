@@ -6,7 +6,8 @@ import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.user.{AuthenticationService, UserService}
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.{HttpErrorHandler, http}
+import com.uptech.windalerts.domain.HttpErrorHandler
+import com.uptech.windalerts.infrastructure.http
 import org.http4s.AuthedRoutes
 
 class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F], usersService: UserService[F], auth: AuthenticationService[F], httpErrorHandler: HttpErrorHandler[F]) extends http[F](httpErrorHandler) {

@@ -38,14 +38,6 @@ object codecs {
     DEFAULT_CODEC_REGISTRY)
 
 
-  lazy implicit val sandroidReceiptValidationRequestDecoder: Decoder[SubscriptionPurchase] = deriveDecoder[SubscriptionPurchase]
-
-  implicit def sandroidReceiptValidationRequestEntityDecoder[F[_] : Sync]: EntityDecoder[F, SubscriptionPurchase] = jsonOf
-
-  lazy implicit val sandroidReceiptValidationRequestEncoder: Encoder[SubscriptionPurchase] = deriveEncoder[SubscriptionPurchase]
-
-  implicit def sandroidReceiptValidationRequestEntityEncoder[F[_] : Applicative]: EntityEncoder[F, SubscriptionPurchase] = jsonEncoderOf
-
   lazy implicit val beachIdDecoder: Decoder[BeachId] = deriveDecoder[BeachId]
 
   implicit def beachIdEntityDecoder[F[_] : Sync]: EntityDecoder[F, BeachId] = jsonOf
@@ -299,22 +291,6 @@ object codecs {
   lazy implicit val tokenResponseEncoder: Encoder[TokenResponse] = deriveEncoder[TokenResponse]
 
   implicit def tokenResponseEnityEncoder[F[_] : Applicative]: EntityEncoder[F, TokenResponse] = jsonEncoderOf
-
-  lazy implicit val applePublicKeyDecoder: Decoder[ApplePublicKey] = deriveDecoder[ApplePublicKey]
-
-  implicit def applePublicKeyEntityDecoder[F[_] : Sync]: EntityDecoder[F, ApplePublicKey] = jsonOf
-
-  lazy implicit val applePublicKeyEncoder: Encoder[ApplePublicKey] = deriveEncoder[ApplePublicKey]
-
-  implicit def applePublicKeyEncoder[F[_] : Applicative]: EntityEncoder[F, ApplePublicKey] = jsonEncoderOf
-
-  lazy implicit val applePublicKeyListDecoder: Decoder[ApplePublicKeyList] = deriveDecoder[ApplePublicKeyList]
-
-  implicit def applePublicKeyListEntityDecoder[F[_] : Sync]: EntityDecoder[F, ApplePublicKeyList] = jsonOf
-
-  lazy implicit val applePublicKeyListEncoder: Encoder[ApplePublicKeyList] = deriveEncoder[ApplePublicKeyList]
-
-  implicit def applePublicKeyListEntityEncoder[F[_] : Applicative]: EntityEncoder[F, ApplePublicKeyList] = jsonEncoderOf
 
   lazy implicit val appleRegisterRequestDecoder: Decoder[AppleRegisterRequest] = deriveDecoder[AppleRegisterRequest]
 
