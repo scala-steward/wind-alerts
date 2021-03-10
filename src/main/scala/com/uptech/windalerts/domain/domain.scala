@@ -3,15 +3,10 @@ package com.uptech.windalerts.domain
 import cats.data.EitherT
 import com.uptech.windalerts.core.alerts.TimeRange
 import com.uptech.windalerts.core.alerts.domain.AlertT
-import com.uptech.windalerts.core.social.login
 import com.uptech.windalerts.core.social.login.{AppleAccessRequest, FacebookAccessRequest}
 import com.uptech.windalerts.core.user.UserT
 import io.scalaland.chimney.dsl._
 import org.log4s.getLogger
-import org.mongodb.scala.bson.ObjectId
-
-import scala.beans.BeanProperty
-import scala.util.control.NonFatal
 
 
 object domain {
@@ -141,15 +136,6 @@ object domain {
 
   case class AppleSubscriptionPurchase(product_id: String, purchase_date_ms: Long, expires_date_ms: Long)
 
-  case class ApplePublicKeyList(keys: Seq[ApplePublicKey])
-
-  case class ApplePublicKey(
-                             kty: String,
-                             kid: String,
-                             use: String,
-                             alg: String,
-                             n: String,
-                             e: String)
 
   case class TokenResponse(access_token: String, id_token: String)
 
