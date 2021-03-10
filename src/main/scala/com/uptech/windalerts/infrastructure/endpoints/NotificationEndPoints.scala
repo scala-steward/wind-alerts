@@ -2,7 +2,8 @@ package com.uptech.windalerts.infrastructure.endpoints
 
 import cats.effect.Effect
 import com.uptech.windalerts.core.notifications.Notifications
-import com.uptech.windalerts.domain.{HttpErrorHandler, http}
+import com.uptech.windalerts.domain.HttpErrorHandler
+import com.uptech.windalerts.infrastructure.http
 import org.http4s.HttpRoutes
 import org.http4s.implicits._
 

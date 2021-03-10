@@ -4,7 +4,7 @@ import cats.data.EitherT
 import cats.effect.Sync
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.uptech.windalerts.Repos
-import com.uptech.windalerts.core.social.subscriptions.SubscriptionsService
+import com.uptech.windalerts.core.social.subscriptions.{SubscriptionPurchase, SubscriptionsService}
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain.{AndroidReceiptValidationRequest, ApplePurchaseVerificationRequest, AppleSubscriptionPurchase}
 import com.uptech.windalerts.domain.{SurfsUpError, UnknownError, domain}
@@ -17,13 +17,13 @@ import org.log4s.getLogger
 
 class SubscriptionsServiceImpl[F[_] : Sync](repos: Repos[F]) extends SubscriptionsService[F] {
 
-  override def getAndroidPurchase(request: AndroidReceiptValidationRequest): EitherT[F, SurfsUpError, domain.SubscriptionPurchase] = {
+  override def getAndroidPurchase(request: AndroidReceiptValidationRequest): EitherT[F, SurfsUpError, SubscriptionPurchase] = {
     getAndroidPurchase(request.productId, request.token)
   }
 
-  override def getAndroidPurchase(productId: String, token: String): EitherT[F, SurfsUpError, domain.SubscriptionPurchase] = {
+  override def getAndroidPurchase(productId: String, token: String): EitherT[F, SurfsUpError, SubscriptionPurchase] = {
     EitherT.pure({
-      repos.androidPublisher().purchases().subscriptions().get(ApplicationConfig.PACKAGE_NAME, productId, token).execute().into[domain.SubscriptionPurchase].enableBeanGetters
+      repos.androidPublisher().purchases().subscriptions().get(ApplicationConfig.PACKAGE_NAME, productId, token).execute().into[SubscriptionPurchase].enableBeanGetters
         .withFieldComputed(_.expiryTimeMillis, _.getExpiryTimeMillis.toLong)
         .withFieldComputed(_.startTimeMillis, _.getStartTimeMillis.toLong).transform
     })

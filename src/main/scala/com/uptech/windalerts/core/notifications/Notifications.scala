@@ -11,7 +11,7 @@ import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.user.UserT
 import com.uptech.windalerts.domain.beaches.Beach
 import com.uptech.windalerts.domain.config.AppConfig
-import com.uptech.windalerts.domain.domain.{AlertWithUserWithBeach, BeachId}
+import com.uptech.windalerts.domain.domain.{ BeachId}
 import com.uptech.windalerts.domain.{HttpErrorHandler, domain}
 import org.log4s.getLogger
 
@@ -22,6 +22,8 @@ class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long
                     config: AppConfig) {
   private val logger = getLogger
 
+  final case class AlertWithBeach(alert: AlertT, beach: domain.Beach)
+  final case class AlertWithUserWithBeach(alert: AlertT, user: UserT, beach: domain.Beach)
 
   def sendNotification = {
     val usersToBeNotifiedEitherT = for {
@@ -30,7 +32,7 @@ class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long
       _                               <- EitherT.liftF(IO(logger.error(s"alertsByBeaches ${alertsByBeaches.mapValues(v=>v.map(_.beachId)).mkString}")))
       beaches                         <- B.getAll(alertsByBeaches.keys.toSeq)
       x                               =  alertsByBeaches.map(kv => (beaches(kv._1), kv._2))
-      alertsToBeNotified              =  x.map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)).map(a => domain.AlertWithBeach(a, kv._1))))
+      alertsToBeNotified              =  x.map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)).map(a => AlertWithBeach(a, kv._1))))
       _                               <- EitherT.liftF(IO(logger.error(s"alertsToBeNotified ${alertsToBeNotified.map(_._2.map(_.alert._id)).mkString}")))
       usersToBeNotified               <- alertsToBeNotified.values.flatten.map(v => repos.usersRepo().getByUserIdEitherT(v.alert.owner)).toList.sequence
       userIdToUser                    =  usersToBeNotified.map(u => (u._id.toHexString, u)).toMap

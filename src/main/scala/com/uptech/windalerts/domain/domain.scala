@@ -2,17 +2,12 @@ package com.uptech.windalerts.domain
 
 import cats.data.EitherT
 import com.uptech.windalerts.core.alerts.TimeRange
-import com.uptech.windalerts.core.alerts.domain.AlertT
 import com.uptech.windalerts.core.social.login.{AppleAccessRequest, FacebookAccessRequest}
-import com.uptech.windalerts.core.user.UserT
 import io.scalaland.chimney.dsl._
-import org.log4s.getLogger
 
 
 object domain {
   type SurfsUpEitherT[F[_],  T] = EitherT[F, SurfsUpError, T]
-
-  private val logger = getLogger
 
   case class UpdateUserRequest(name: String, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long)
 
@@ -20,18 +15,11 @@ object domain {
 
   case class UserId(id: String)
 
-  case class UserSettings(userId: String)
-
   case class TokensWithUser(accessToken: String, refreshToken: String, expiredAt: Long, user: UserDTO)
 
 
-  case class SubscriptionPurchase(startTimeMillis: Long,
-                                  expiryTimeMillis: Long)
 
   case class AccessTokenRequest(refreshToken: String)
-
-
-
 
 
   final case class OTP(otp: String)
@@ -42,14 +30,6 @@ object domain {
 
   }
 
-
-  final case class AlertWithUser(alert: Alert, user: UserT)
-
-  final case class AlertWithBeach(alert: AlertT, beach: domain.Beach)
-
-  final case class AlertWithUserWithBeach(alert: AlertT, user: UserT, beach: domain.Beach)
-
-  final case class UserWithCount(userId: String, count: Int)
 
   case class FacebookRegisterRequest(accessToken: String, deviceType: String, deviceToken: String) {
     def asDomain(): FacebookAccessRequest  = {
@@ -100,9 +80,6 @@ object domain {
 
   case class Alerts(alerts: Seq[Alert])
 
-
-
-
   case class Alert(
                     id: String,
                     owner: String,
@@ -118,14 +95,13 @@ object domain {
                     timeZone: String = "Australia/Sydney") {
   }
 
-
   case class AndroidReceiptValidationRequest(productId: String, token: String)
 
   case class ApplePurchaseToken(token: String)
 
-  case class AndroidUpdate(message: Message)
-
   case class Message(data: String)
+
+  case class AndroidUpdate(message: Message)
 
   case class SubscriptionNotificationWrapper(subscriptionNotification: SubscriptionNotification)
 
