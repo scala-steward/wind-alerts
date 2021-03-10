@@ -7,6 +7,7 @@ import com.uptech.windalerts.core.credentials.{AppleCredentials, Credentials, Fa
 import com.uptech.windalerts.core.feedbacks.Feedback
 import com.uptech.windalerts.core.notifications.Notification
 import com.uptech.windalerts.core.otp.OTPWithExpiry
+import com.uptech.windalerts.core.user.UserT
 import domain._
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}

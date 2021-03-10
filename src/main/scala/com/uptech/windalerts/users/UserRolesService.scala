@@ -4,6 +4,7 @@ import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
 import com.uptech.windalerts.Repos
+import com.uptech.windalerts.core.user.UserT
 import com.uptech.windalerts.domain._
 import domain.UserType.{Premium, PremiumExpired, Trial}
 import domain._

@@ -11,6 +11,7 @@ import com.uptech.windalerts.core.feedbacks.{Feedback, FeedbackRepository}
 import com.uptech.windalerts.core.notifications.{Notification, NotificationRepository}
 import com.uptech.windalerts.core.otp.{OTPWithExpiry, OtpRepository}
 import com.uptech.windalerts.core.social.login.{AppleAccessRequest, FacebookAccessRequest, SocialPlatform}
+import com.uptech.windalerts.core.user.UserT
 import com.uptech.windalerts.domain.beaches.Beach
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.secrets

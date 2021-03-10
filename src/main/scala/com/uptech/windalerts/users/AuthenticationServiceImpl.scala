@@ -5,6 +5,7 @@ import cats.data.{EitherT, OptionT}
 import cats.effect.IO
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.alerts.domain.AlertT
+import com.uptech.windalerts.core.user.UserT
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.{AlertNotFoundError, OperationNotAllowed, SurfsUpError, UserNotFoundError, domain}
 import dev.profunktor.auth.JwtAuthMiddleware
@@ -22,7 +23,7 @@ trait AuthenticationService[F[_]] {
 
   def createToken(userId: String, accessTokenId: String): EitherT[F, SurfsUpError, AccessTokenWithExpiry]
 
-  def authorizePremiumUsers(user: domain.UserT): EitherT[F, SurfsUpError, UserT]
+  def authorizePremiumUsers(user: UserT): EitherT[F, SurfsUpError, UserT]
 
   def authorizeAlertEditRequest(user: UserT, alertId: String, alertRequest: AlertRequest): EitherT[F, SurfsUpError, UserT]
 
@@ -74,7 +75,7 @@ class AuthenticationServiceImpl(repos: Repos[IO]) extends AuthenticationService[
     IO.pure((1 to n).map(_ => alpha(Random.nextInt.abs % size)).mkString)
   }
 
-  override def authorizePremiumUsers(user: domain.UserT): EitherT[IO, SurfsUpError, UserT] = {
+  override def authorizePremiumUsers(user: UserT): EitherT[IO, SurfsUpError, UserT] = {
     EitherT.fromEither(if (UserType(user.userType) == UserType.Premium || UserType(user.userType) == UserType.Trial) {
       Right(user)
     } else {
