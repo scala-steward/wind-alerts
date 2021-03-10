@@ -8,10 +8,10 @@ import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.beaches.{BeachService, SwellsService, TidesService, WindsService}
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.otp.OTPService
+import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.domain.logger._
 import com.uptech.windalerts.domain.{HttpErrorHandler, errors, secrets, swellAdjustments}
 import com.uptech.windalerts.infrastructure.endpoints.{AlertsEndpoints, BeachesEndpoints, UsersEndpoints}
-import com.uptech.windalerts.social.login.SocialLoginService
 import com.uptech.windalerts.infrastructure.beaches._
 import com.uptech.windalerts.social.subcriptions.SubscriptionsService
 import org.http4s.implicits._

@@ -2,6 +2,8 @@ package com.uptech.windalerts.domain
 
 import cats.data.EitherT
 import com.uptech.windalerts.core.alerts.domain.AlertT
+import com.uptech.windalerts.core.social.login
+import com.uptech.windalerts.core.social.login.{AppleAccessRequest, FacebookAccessRequest}
 import com.uptech.windalerts.domain.domain.UserType.{Registered, Trial}
 import io.scalaland.chimney.dsl._
 import org.log4s.getLogger
@@ -121,14 +123,14 @@ object domain {
   final case class UserWithCount(userId: String, count: Int)
 
   case class FacebookRegisterRequest(accessToken: String, deviceType: String, deviceToken: String) {
-    def asDomain(): com.uptech.windalerts.social.login.domain.FacebookAccessRequest  = {
-      this.into[com.uptech.windalerts.social.login.domain.FacebookAccessRequest].transform
+    def asDomain(): FacebookAccessRequest  = {
+      this.into[FacebookAccessRequest].transform
     }
   }
 
   case class AppleRegisterRequest(authorizationCode: String, nonce: String, deviceType: String, deviceToken: String, name: String) {
-    def asDomain(): com.uptech.windalerts.social.login.domain.AppleAccessRequest  = {
-      this.into[com.uptech.windalerts.social.login.domain.AppleAccessRequest].transform
+    def asDomain(): AppleAccessRequest  = {
+      this.into[AppleAccessRequest].transform
     }
   }
 
