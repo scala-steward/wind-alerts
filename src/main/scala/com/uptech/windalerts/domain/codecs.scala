@@ -5,6 +5,7 @@ import cats.effect.Sync
 import com.uptech.windalerts.core.alerts.domain.AlertT
 import com.uptech.windalerts.core.feedbacks.Feedback
 import com.uptech.windalerts.core.notifications.Notification
+import com.uptech.windalerts.core.otp.OTPWithExpiry
 import domain._
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}
