@@ -45,33 +45,8 @@ object domain {
       userId, accessTokenId)
   }
 
-  trait SocialCredentials {
-    def _id: ObjectId
 
-    def email: String
 
-    def socialId: String
-
-    def deviceType: String
-  }
-
-  case class FacebookCredentials(override val _id: ObjectId, override val email: String, override val socialId: String, override val deviceType: String) extends SocialCredentials
-
-  object FacebookCredentials {
-    def apply(email: String, socialId: String, deviceType: String): FacebookCredentials = new FacebookCredentials(new ObjectId(), email, socialId, deviceType)
-  }
-
-  case class AppleCredentials(override val _id: ObjectId, override val email: String, override val socialId: String, override val deviceType: String) extends SocialCredentials
-
-  object AppleCredentials {
-    def apply(email: String, socialId: String, deviceType: String): AppleCredentials = new AppleCredentials(new ObjectId(), email, socialId, deviceType)
-  }
-
-  case class Credentials(_id: ObjectId, email: String, password: String, deviceType: String)
-
-  object Credentials {
-    def apply(email: String, password: String, deviceType: String): Credentials = new Credentials(new ObjectId(), email, password, deviceType)
-  }
 
 
   sealed case class UserType(value: String)

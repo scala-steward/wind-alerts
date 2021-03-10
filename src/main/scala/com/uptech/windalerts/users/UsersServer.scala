@@ -6,6 +6,7 @@ import com.softwaremill.sttp.HttpURLConnectionBackend
 import com.uptech.windalerts.LazyRepos
 import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.beaches.{BeachService, SwellsService, TidesService, WindsService}
+import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.domain.logger._
 import com.uptech.windalerts.domain.{HttpErrorHandler, errors, secrets, swellAdjustments}
