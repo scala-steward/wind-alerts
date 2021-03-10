@@ -7,6 +7,7 @@ import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.credentials.{Credentials, UserCredentialService}
 import com.uptech.windalerts.core.feedbacks.Feedback
 import com.uptech.windalerts.core.otp.OTPService
+import com.uptech.windalerts.core.user.UserT
 import com.uptech.windalerts.domain._
 import domain.{SurfsUpEitherT, _}
 import org.mongodb.scala.bson.ObjectId
