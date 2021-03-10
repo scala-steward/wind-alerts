@@ -1,4 +1,4 @@
-package com.uptech.windalerts.users
+package com.uptech.windalerts.infrastructure.social.subscriptions
 
 object ApplicationConfig {
   /**

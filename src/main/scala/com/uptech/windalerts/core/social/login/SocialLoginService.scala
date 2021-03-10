@@ -4,9 +4,8 @@ import cats.data.EitherT
 import cats.effect.Sync
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.credentials.{AppleCredentials, FacebookCredentials, SocialCredentials}
-import com.uptech.windalerts.core.user.UserT
+import com.uptech.windalerts.core.user.{UserService, UserT}
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.users.UserService
 import org.mongodb.scala.bson.ObjectId
 
 class SocialLoginService[F[_] : Sync](repos: Repos[F], userService: UserService[F]) {

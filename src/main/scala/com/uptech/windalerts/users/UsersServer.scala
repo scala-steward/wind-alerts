@@ -9,11 +9,13 @@ import com.uptech.windalerts.core.beaches.{BeachService, SwellsService, TidesSer
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.social.login.SocialLoginService
+import com.uptech.windalerts.core.social.subscriptions.SubscriptionsService
+import com.uptech.windalerts.core.user.{AuthenticationServiceImpl, UserRolesService, UserService}
 import com.uptech.windalerts.domain.logger._
 import com.uptech.windalerts.domain.{HttpErrorHandler, errors, secrets, swellAdjustments}
 import com.uptech.windalerts.infrastructure.endpoints.{AlertsEndpoints, BeachesEndpoints, UsersEndpoints}
 import com.uptech.windalerts.infrastructure.beaches._
-import com.uptech.windalerts.social.subcriptions.SubscriptionsService
+import com.uptech.windalerts.infrastructure.social.subscriptions.SubscriptionsServiceImpl
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
@@ -35,7 +37,7 @@ object UsersServer extends IOApp {
     usersService <- IO(new UserService(repos, userCredentialsService, otpService, auth))
     socialLoginService <- IO(new SocialLoginService(repos, usersService))
 
-    subscriptionsService <- IO(new SubscriptionsService[IO](repos))
+    subscriptionsService <- IO(new SubscriptionsServiceImpl[IO](repos))
     userRolesService <- IO(new UserRolesService[IO](repos, subscriptionsService))
 
     apiKey <- IO(secrets.read.surfsUp.willyWeather.key)

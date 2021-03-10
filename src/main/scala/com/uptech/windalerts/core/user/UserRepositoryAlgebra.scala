@@ -1,8 +1,6 @@
-package com.uptech.windalerts.users
-
+package com.uptech.windalerts.core.user
 
 import cats.data.{EitherT, OptionT}
-import com.uptech.windalerts.core.user.UserT
 import com.uptech.windalerts.domain.SurfsUpError
 
 trait UserRepositoryAlgebra[F[_]] {

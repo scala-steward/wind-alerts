@@ -3,7 +3,7 @@ package com.uptech.windalerts.core.alerts
 import java.util.Calendar.{DAY_OF_WEEK, HOUR_OF_DAY, MINUTE}
 import java.util.{Calendar, TimeZone}
 
-import com.uptech.windalerts.domain.domain.{Alert, AlertRequest, Beach, TimeRange}
+import com.uptech.windalerts.domain.domain.{Alert, AlertRequest, Beach}
 import io.scalaland.chimney.dsl._
 import org.log4s.getLogger
 import org.mongodb.scala.bson.ObjectId
