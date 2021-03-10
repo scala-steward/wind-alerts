@@ -4,8 +4,8 @@ import cats.Monad
 import cats.data.EitherT
 import cats.implicits._
 import com.uptech.windalerts.Repos
+import com.uptech.windalerts.core.user.AuthenticationService
 import com.uptech.windalerts.domain.SurfsUpError
-import com.uptech.windalerts.users.AuthenticationService
 
 class OTPService[F[_]](repos: Repos[F], auth: AuthenticationService[F]) {
   def send(userId: String, email: String)(implicit M: Monad[F]):EitherT[F, SurfsUpError, Unit] = {

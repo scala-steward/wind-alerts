@@ -1,11 +1,11 @@
 package com.uptech.windalerts.domain
 
 import cats.data.EitherT
+import com.uptech.windalerts.core.alerts.TimeRange
 import com.uptech.windalerts.core.alerts.domain.AlertT
 import com.uptech.windalerts.core.social.login
 import com.uptech.windalerts.core.social.login.{AppleAccessRequest, FacebookAccessRequest}
 import com.uptech.windalerts.core.user.UserT
-import com.uptech.windalerts.domain.domain.UserType.{Registered, Trial}
 import io.scalaland.chimney.dsl._
 import org.log4s.getLogger
 import org.mongodb.scala.bson.ObjectId
@@ -35,47 +35,9 @@ object domain {
 
   case class AccessTokenRequest(refreshToken: String)
 
-  case class RefreshToken(_id: ObjectId, refreshToken: String, expiry: Long, userId: String, accessTokenId: String) {
-    def isExpired() = System.currentTimeMillis() > expiry
-  }
-
-  object RefreshToken {
-    val REFRESH_TOKEN_EXPIRY = 14L * 24L * 60L * 60L * 1000L
-
-    def apply(userId: String, accessTokenId: String): RefreshToken = new RefreshToken(new ObjectId(),
-      conversions.generateRandomString(40),
-      System.currentTimeMillis() + REFRESH_TOKEN_EXPIRY,
-      userId, accessTokenId)
-  }
 
 
 
-
-
-  sealed case class UserType(value: String)
-
-  object UserType {
-
-    object Registered extends UserType("Registered")
-
-    object PremiumExpired extends UserType("PremiumExpired")
-
-    object Trial extends UserType("Trial")
-
-    object TrialExpired extends UserType("TrialExpired")
-
-    object Premium extends UserType("Premium")
-
-    val values = Seq(Registered, PremiumExpired, Trial, TrialExpired, Premium)
-
-    def apply(value: String): UserType = value match {
-      case Registered.value => Registered
-      case PremiumExpired.value => PremiumExpired
-      case Trial.value => Trial
-      case TrialExpired.value => TrialExpired
-      case Premium.value => Premium
-    }
-  }
 
   final case class OTP(otp: String)
 
@@ -128,19 +90,6 @@ object domain {
 
   final case class Beach(beachId: BeachId, wind: Wind, tide: Tide)
 
-  case class TimeRange(@BeanProperty from: Int, @BeanProperty to: Int) {
-    def isWithinRange(hourAndMinutes: Int): Boolean = from <= hourAndMinutes && to > hourAndMinutes
-  }
-
-  object TimeRange {
-    def unapply(values: Map[String, Long]): Option[TimeRange] = try {
-      Some(new TimeRange(values("from").toInt, values("to").toInt))
-    }
-    catch {
-      case NonFatal(_) => None
-    }
-  }
-
 
   case class AlertRequest(
                            beachId: Long,
@@ -156,7 +105,6 @@ object domain {
 
   case class Alerts(alerts: Seq[Alert])
 
-  case class AlertsT(alerts: Seq[AlertT])
 
 
 
@@ -176,40 +124,9 @@ object domain {
   }
 
 
-
-  case class AppleReceiptValidationRequest(`receipt-data`: String, password: String)
-
   case class AndroidReceiptValidationRequest(productId: String, token: String)
 
   case class ApplePurchaseToken(token: String)
-
-  case class AndroidPurchase(_id: ObjectId,
-                             userId: String,
-                             acknowledgementState: Int,
-                             consumptionState: Int,
-                             developerPayload: String,
-                             kind: String,
-                             orderId: String,
-                             purchaseState: Int,
-                             purchaseTimeMillis: Long,
-                             purchaseType: Int
-                            )
-
-  object AndroidPurchase {
-    def apply(userId: String, acknowledgementState: Int, consumptionState: Int, developerPayload: String, kind: String, orderId: String, purchaseState: Int, purchaseTimeMillis: Long, purchaseType: Int): AndroidPurchase
-    = new AndroidPurchase(new ObjectId(), userId, acknowledgementState, consumptionState, developerPayload, kind, orderId, purchaseState, purchaseTimeMillis, purchaseType)
-  }
-
-  case class AndroidToken(_id: ObjectId,
-                          userId: String,
-                          subscriptionId: String,
-                          purchaseToken: String,
-                          creationTime: Long
-                         )
-
-  object AndroidToken {
-    def apply(userId: String, subscriptionId: String, purchaseToken: String, creationTime: Long): AndroidToken = new AndroidToken(new ObjectId(), userId, subscriptionId, purchaseToken, creationTime)
-  }
 
   case class AndroidUpdate(message: Message)
 
@@ -223,16 +140,6 @@ object domain {
   case class ApplePurchaseVerificationRequest(`receipt-data`: String, password: String, `exclude-old-transactions`: Boolean)
 
   case class AppleSubscriptionPurchase(product_id: String, purchase_date_ms: Long, expires_date_ms: Long)
-
-  case class AppleToken(_id: ObjectId,
-                        userId: String,
-                        purchaseToken: String,
-                        creationTime: Long
-                       )
-
-  object AppleToken {
-    def apply(userId: String, purchaseToken: String, creationTime: Long): AppleToken = new AppleToken(new ObjectId(), userId, purchaseToken, creationTime)
-  }
 
   case class ApplePublicKeyList(keys: Seq[ApplePublicKey])
 
@@ -248,7 +155,6 @@ object domain {
 
   case class AppleUser(sub: String, email: String)
 
-  case class SocialUser(socialId: String, email: String, deviceType:String, deviceToken:String, name:String)
 
 
   case class FeedbackRequest(topic: String, message: String)

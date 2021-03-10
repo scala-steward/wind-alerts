@@ -1,4 +1,4 @@
-package com.uptech.windalerts.users
+package com.uptech.windalerts.core.user
 
 import cats.data.{EitherT, OptionT}
 import cats.effect.Sync
@@ -7,9 +7,9 @@ import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.credentials.{Credentials, UserCredentialService}
 import com.uptech.windalerts.core.feedbacks.Feedback
 import com.uptech.windalerts.core.otp.OTPService
-import com.uptech.windalerts.core.user.UserT
+import com.uptech.windalerts.core.refresh.tokens.RefreshToken
 import com.uptech.windalerts.domain._
-import domain.{SurfsUpEitherT, _}
+import com.uptech.windalerts.domain.domain.{SurfsUpEitherT, _}
 import org.mongodb.scala.bson.ObjectId
 
 class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService: UserCredentialService[F], otpService: OTPService[F], auth: AuthenticationService[F]) {

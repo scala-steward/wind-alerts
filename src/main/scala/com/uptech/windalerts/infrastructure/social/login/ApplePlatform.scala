@@ -6,10 +6,10 @@ import cats.data.EitherT
 import cats.effect.{ContextShift, IO}
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.turo.pushy.apns.auth.ApnsSigningKey
-import com.uptech.windalerts.core.social.login.{AppleAccessRequest, SocialPlatform}
+import com.uptech.windalerts.core.social.login.{AppleAccessRequest, SocialPlatform, SocialUser}
 import com.uptech.windalerts.domain.UserNotFoundError
 import com.uptech.windalerts.domain.codecs._
-import com.uptech.windalerts.domain.domain.{AppleUser, SocialUser, SurfsUpEitherT, TokenResponse}
+import com.uptech.windalerts.domain.domain.{AppleUser, SurfsUpEitherT, TokenResponse}
 import io.circe.parser
 import org.log4s.getLogger
 import pdi.jwt._

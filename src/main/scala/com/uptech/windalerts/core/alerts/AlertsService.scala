@@ -6,14 +6,14 @@ import cats.effect.Sync
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.alerts.domain.AlertT
 import com.uptech.windalerts.domain.SurfsUpError
-import com.uptech.windalerts.domain.domain.{AlertRequest, AlertsT}
+import com.uptech.windalerts.domain.domain.{AlertRequest}
 
 class AlertsService[F[_]: Sync](repo: Repos[F]) {
   def save(alertRequest: AlertRequest, user: String): F[AlertT] = {
     repo.alertsRepository().save(alertRequest, user)
   }
 
-  def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest) = repo.alertsRepository().updateT(requester, alertId, updateAlertRequest)
+  def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest): EitherT[F, SurfsUpError, AlertT] = repo.alertsRepository().updateT(requester, alertId, updateAlertRequest)
 
   def getAllForUser(user: String): F[AlertsT] = repo.alertsRepository().getAllForUser(user)
 

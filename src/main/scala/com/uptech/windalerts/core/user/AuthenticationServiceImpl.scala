@@ -1,19 +1,19 @@
-package com.uptech.windalerts.users
+package com.uptech.windalerts.core.user
 
-import java.util.concurrent.TimeUnit
-import cats.data.{EitherT, OptionT}
+import cats.data.EitherT
 import cats.effect.IO
 import com.uptech.windalerts.Repos
+import com.uptech.windalerts.core.alerts.AlertsT
 import com.uptech.windalerts.core.alerts.domain.AlertT
-import com.uptech.windalerts.core.user.UserT
+import com.uptech.windalerts.core.refresh.tokens.RefreshToken
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.{AlertNotFoundError, OperationNotAllowed, SurfsUpError, UserNotFoundError, domain}
+import com.uptech.windalerts.domain.{OperationNotAllowed, SurfsUpError, domain}
 import dev.profunktor.auth.JwtAuthMiddleware
 import dev.profunktor.auth.jwt.{JwtAuth, JwtSecretKey, JwtToken}
 import io.circe.parser._
-import io.scalaland.chimney.dsl._
 import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim}
 
+import java.util.concurrent.TimeUnit
 import scala.util.Random
 
 case class AccessTokenWithExpiry(accessToken: String, expiredAt: Long)

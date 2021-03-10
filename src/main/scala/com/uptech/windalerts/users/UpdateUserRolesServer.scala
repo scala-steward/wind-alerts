@@ -5,10 +5,12 @@ import cats.implicits._
 import com.softwaremill.sttp.HttpURLConnectionBackend
 import com.uptech.windalerts.LazyRepos
 import com.uptech.windalerts.core.otp.OTPService
+import com.uptech.windalerts.core.social.subscriptions.SubscriptionsService
+import com.uptech.windalerts.core.user.{AuthenticationServiceImpl, UserRolesService}
 import com.uptech.windalerts.domain.logger._
 import com.uptech.windalerts.domain.{HttpErrorHandler, errors}
 import com.uptech.windalerts.infrastructure.endpoints.UpdateUserRolesEndpoints
-import com.uptech.windalerts.social.subcriptions.SubscriptionsService
+import com.uptech.windalerts.infrastructure.social.subscriptions.SubscriptionsServiceImpl
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
@@ -26,7 +28,7 @@ object UpdateUserRolesServer extends IOApp {
     authService <- IO(new AuthenticationServiceImpl(repos))
     otpService <-  IO(new OTPService[IO](repos, authService))
     httpErrorHandler <- IO(new HttpErrorHandler[IO])
-    subscriptionsService <- IO(new SubscriptionsService[IO](repos))
+    subscriptionsService <- IO(new SubscriptionsServiceImpl[IO](repos))
     endpoints <- IO(new UpdateUserRolesEndpoints[IO](new UserRolesService[IO](repos, subscriptionsService), httpErrorHandler))
 
 
