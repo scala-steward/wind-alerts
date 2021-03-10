@@ -2,7 +2,7 @@ package com.uptech.windalerts.infrastructure.repositories.mongo
 
 
 import cats.effect.{ContextShift, IO}
-import com.uptech.windalerts.users.SocialCredentialsRepository
+import com.uptech.windalerts.core.credentials.SocialCredentialsRepository
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.{and, equal}

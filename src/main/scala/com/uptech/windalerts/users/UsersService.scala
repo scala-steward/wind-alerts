@@ -4,13 +4,14 @@ import cats.data.{EitherT, OptionT}
 import cats.effect.Sync
 import com.github.t3hnar.bcrypt._
 import com.uptech.windalerts.Repos
+import com.uptech.windalerts.core.credentials.{Credentials, UserCredentialService}
 import com.uptech.windalerts.core.feedbacks.Feedback
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.domain._
-import domain.{Credentials, SurfsUpEitherT, _}
+import domain.{SurfsUpEitherT, _}
 import org.mongodb.scala.bson.ObjectId
 
-class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService:UserCredentialService[F], otpService: OTPService[F], auth: AuthenticationService[F]) {
+class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService: UserCredentialService[F], otpService: OTPService[F], auth: AuthenticationService[F]) {
 
   def register(registerRequest: RegisterRequest): SurfsUpEitherT[F, TokensWithUser] = {
     for {
@@ -34,7 +35,7 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService:UserCrede
     } yield (saved, savedCreds)
   }
 
-  def login(credentials:LoginRequest): SurfsUpEitherT[F, TokensWithUser] = {
+  def login(credentials: LoginRequest): SurfsUpEitherT[F, TokensWithUser] = {
     for {
       dbCredentials <- userCredentialsService.getByCredentials(credentials.email, credentials.password, credentials.deviceType)
       dbUser <- getUser(dbCredentials.email, dbCredentials.deviceType)
@@ -43,7 +44,7 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService:UserCrede
   }
 
 
-  def resetUserSession(dbUser:UserT, newDeviceToken:String) = {
+  def resetUserSession(dbUser: UserT, newDeviceToken: String) = {
     for {
       _ <- updateDeviceToken(dbUser._id.toHexString, newDeviceToken)
       _ <- EitherT.liftF(repos.refreshTokenRepo().deleteForUserId(dbUser._id.toHexString))
@@ -51,11 +52,11 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService:UserCrede
     } yield tokens
   }
 
-  def refresh(refreshToken:AccessTokenRequest): SurfsUpEitherT[F, TokensWithUser] = {
+  def refresh(refreshToken: AccessTokenRequest): SurfsUpEitherT[F, TokensWithUser] = {
     for {
       oldRefreshToken <- repos.refreshTokenRepo().getByRefreshToken(refreshToken.refreshToken).toRight(RefreshTokenNotFoundError())
       oldValidRefreshToken <- {
-        val eitherT: SurfsUpEitherT[F, RefreshToken] =  {
+        val eitherT: SurfsUpEitherT[F, RefreshToken] = {
           if (oldRefreshToken.isExpired()) {
             EitherT.fromEither(Left(RefreshTokenExpiredError()))
           } else {
@@ -71,7 +72,7 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService:UserCrede
     } yield tokens
   }
 
-  def generateNewTokens(user :UserT): SurfsUpEitherT[F, TokensWithUser] = {
+  def generateNewTokens(user: UserT): SurfsUpEitherT[F, TokensWithUser] = {
     for {
       accessTokenId <- EitherT.pure(conversions.generateRandomString(10))
       token <- auth.createToken(user._id.toHexString, accessTokenId)
@@ -91,7 +92,7 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService:UserCrede
     repos.usersRepo().update(user.copy(name = name, snoozeTill = snoozeTill, disableAllAlerts = disableAllAlerts, notificationsPerHour = notificationsPerHour)).toRight(CouldNotUpdateUserError())
   }
 
-  def updateDeviceToken(id: String, deviceToken:String): SurfsUpEitherT[F, UserT] = {
+  def updateDeviceToken(id: String, deviceToken: String): SurfsUpEitherT[F, UserT] = {
     import cats.implicits._
     for {
       user <- getUser(id)
@@ -146,7 +147,7 @@ object UserService {
   def apply[F[_] : Sync](
                           repos: Repos[F],
                           userCredentialService: UserCredentialService[F],
-                          otpService:OTPService[F],
+                          otpService: OTPService[F],
                           authenticationService: AuthenticationService[F]
                         ): UserService[F] =
     new UserService(repos, userCredentialService, otpService, authenticationService)

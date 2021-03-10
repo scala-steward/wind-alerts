@@ -3,8 +3,7 @@ package com.uptech.windalerts.infrastructure.repositories.mongo
 
 import cats.data.OptionT
 import cats.effect.{ContextShift, IO}
-import com.uptech.windalerts.domain.domain.Credentials
-import com.uptech.windalerts.users.CredentialsRepository
+import com.uptech.windalerts.core.credentials.{Credentials, CredentialsRepository}
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId
 import org.mongodb.scala.bson.conversions.Bson
