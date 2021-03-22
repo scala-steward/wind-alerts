@@ -4,8 +4,9 @@ import cats.data.EitherT
 import cats.effect.Sync
 import com.github.t3hnar.bcrypt._
 import com.uptech.windalerts.Repos
+import com.uptech.windalerts.core.utils
 import com.uptech.windalerts.domain.domain.{ChangePasswordRequest, SurfsUpEitherT}
-import com.uptech.windalerts.domain.{UserAuthenticationFailedError, conversions, _}
+import com.uptech.windalerts.domain.{CouldNotUpdatePasswordError, UserAuthenticationFailedError}
 
 class UserCredentialService[F[_] : Sync](repos: Repos[F])  {
   def getByCredentials(
@@ -29,7 +30,7 @@ class UserCredentialService[F[_] : Sync](repos: Repos[F])  {
                    ): SurfsUpEitherT[F, Credentials] =
     for {
       creds <- repos.credentialsRepo().findByCreds(email, deviceType).toRight(UserAuthenticationFailedError(email))
-      newPassword <- EitherT.pure(conversions.generateRandomString(10))
+      newPassword <- EitherT.pure(utils.generateRandomString(10))
       _ <- updatePassword(creds._id.toHexString, newPassword)
       _ <- EitherT.liftF(repos.refreshTokenRepo().deleteForUserId(creds._id.toHexString))
       user <- EitherT.liftF(repos.usersRepo().getByUserId(creds._id.toHexString))

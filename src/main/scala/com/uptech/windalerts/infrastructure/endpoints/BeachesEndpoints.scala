@@ -4,7 +4,6 @@ package com.uptech.windalerts.infrastructure.endpoints
 import cats.effect.Effect
 import cats.implicits._
 import com.uptech.windalerts.core.beaches.BeachService
-import com.uptech.windalerts.domain.HttpErrorHandler
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain.BeachId
 import org.http4s._

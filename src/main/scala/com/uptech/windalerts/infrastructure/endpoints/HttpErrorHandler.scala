@@ -1,7 +1,7 @@
-package com.uptech.windalerts.domain
-
+package com.uptech.windalerts.infrastructure.endpoints
 
 import cats.Monad
+import com.uptech.windalerts.domain._
 import org.http4s.Response
 import org.http4s.dsl.Http4sDsl
 import org.log4s.getLogger

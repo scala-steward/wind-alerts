@@ -11,9 +11,9 @@ import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.social.subscriptions.SubscriptionsService
 import com.uptech.windalerts.core.user.{AuthenticationServiceImpl, UserRolesService, UserService}
-import com.uptech.windalerts.domain.logger._
-import com.uptech.windalerts.domain.{HttpErrorHandler, errors, secrets, swellAdjustments}
-import com.uptech.windalerts.infrastructure.endpoints.{AlertsEndpoints, BeachesEndpoints, UsersEndpoints}
+import com.uptech.windalerts.infrastructure.endpoints.logger._
+import com.uptech.windalerts.domain.{secrets, swellAdjustments}
+import com.uptech.windalerts.infrastructure.endpoints.{AlertsEndpoints, BeachesEndpoints, HttpErrorHandler, UsersEndpoints, errors}
 import com.uptech.windalerts.infrastructure.beaches._
 import com.uptech.windalerts.infrastructure.social.subscriptions.SubscriptionsServiceImpl
 import org.http4s.implicits._
@@ -46,7 +46,7 @@ object UsersServer extends IOApp {
 
     endpoints <- IO(new UsersEndpoints(repos, userCredentialsService, usersService, socialLoginService, userRolesService, subscriptionsService, httpErrorHandler))
 
-    alertService <- IO(new AlertsService[IO](repos))
+    alertService <- IO(new AlertsService[IO](usersService, auth, repos))
     alertsEndPoints <- IO(new AlertsEndpoints(alertService, usersService, auth, httpErrorHandler))
 
     httpApp <- IO(errors.errorMapper(Logger.httpApp(true, true, logAction = requestLogger)(
