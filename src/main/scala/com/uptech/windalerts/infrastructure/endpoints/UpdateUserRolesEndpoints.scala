@@ -3,7 +3,6 @@ package com.uptech.windalerts.infrastructure.endpoints
 import cats.effect.{ContextShift, Effect}
 import cats.implicits._
 import com.uptech.windalerts.core.user.UserRolesService
-import com.uptech.windalerts.domain.HttpErrorHandler
 import org.http4s.HttpRoutes
 import org.http4s.dsl.Http4sDsl
 

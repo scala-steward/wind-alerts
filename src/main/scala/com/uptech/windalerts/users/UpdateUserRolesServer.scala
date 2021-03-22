@@ -7,9 +7,8 @@ import com.uptech.windalerts.LazyRepos
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.social.subscriptions.SubscriptionsService
 import com.uptech.windalerts.core.user.{AuthenticationServiceImpl, UserRolesService}
-import com.uptech.windalerts.domain.logger._
-import com.uptech.windalerts.domain.{HttpErrorHandler, errors}
-import com.uptech.windalerts.infrastructure.endpoints.UpdateUserRolesEndpoints
+import com.uptech.windalerts.infrastructure.endpoints.logger._
+import com.uptech.windalerts.infrastructure.endpoints.{HttpErrorHandler, UpdateUserRolesEndpoints, errors}
 import com.uptech.windalerts.infrastructure.social.subscriptions.SubscriptionsServiceImpl
 import org.http4s.implicits._
 import org.http4s.server.Router

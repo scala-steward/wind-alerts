@@ -27,14 +27,7 @@ object Wind {
 
   implicit def windEntityDecoder[F[_] : Sync]: EntityDecoder[F, Wind] =
     jsonOf
-
-  implicit val windEncoder: Encoder[Wind] = deriveEncoder[Wind]
-
-  implicit def windEntityEncoder[F[_] : Applicative]: EntityEncoder[F, Wind] =
-    jsonEncoderOf
 }
-
-
 
 class WWBackedWindsService[F[_] : Sync](apiKey: String)(implicit backend: SttpBackend[Id, Nothing]) extends WindsService[F]{
   private val logger = getLogger

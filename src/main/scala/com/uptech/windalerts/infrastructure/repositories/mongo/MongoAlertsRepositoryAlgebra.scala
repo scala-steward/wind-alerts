@@ -4,8 +4,9 @@ import cats.data.{EitherT, OptionT}
 import cats.effect.{ContextShift, IO}
 import com.uptech.windalerts.core.alerts.{AlertsRepositoryT, AlertsT}
 import com.uptech.windalerts.core.alerts.domain.AlertT
+import com.uptech.windalerts.core.utils
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.{AlertNotFoundError, SurfsUpError, conversions}
+import com.uptech.windalerts.domain.{AlertNotFoundError, SurfsUpError}
 import io.scalaland.chimney.dsl._
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId
@@ -27,7 +28,7 @@ class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit
         all.alerts.sortBy(_.createdAt).drop(1).map(alert => update(alert._id.toHexString, alert.copy(enabled = false)))
       }
       )
-      updatedAlerts <- conversions.toIOSeq(updatedIOs)
+      updatedAlerts <- toIOSeq(updatedIOs)
     } yield updatedAlerts
   }
 
@@ -73,4 +74,13 @@ class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit
     } yield alert
   }
 
+
+  def toIO[T](x: List[IO[T]]): IO[List[T]] = {
+    import cats.implicits._
+    x.sequence
+  }
+
+  def toIOSeq[T](x: Seq[IO[T]]):IO[Seq[T]] = {
+    toIO(x.toList).map(_.toSeq)
+  }
 }

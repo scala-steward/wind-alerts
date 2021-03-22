@@ -1,4 +1,4 @@
-package com.uptech.windalerts.domain
+package com.uptech.windalerts.infrastructure.endpoints
 
 import cats.effect.IO
 import org.http4s.{HttpApp, Service, Status}

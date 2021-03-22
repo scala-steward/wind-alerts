@@ -4,6 +4,7 @@ import cats.data.{EitherT, OptionT}
 import cats.effect.Sync
 import com.github.t3hnar.bcrypt._
 import com.uptech.windalerts.Repos
+import com.uptech.windalerts.core.utils
 import com.uptech.windalerts.core.credentials.{Credentials, UserCredentialService}
 import com.uptech.windalerts.core.feedbacks.Feedback
 import com.uptech.windalerts.core.otp.OTPService
@@ -75,7 +76,7 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService: UserCred
 
   def generateNewTokens(user: UserT): SurfsUpEitherT[F, TokensWithUser] = {
     for {
-      accessTokenId <- EitherT.pure(conversions.generateRandomString(10))
+      accessTokenId <- EitherT.pure(utils.generateRandomString(10))
       token <- auth.createToken(user._id.toHexString, accessTokenId)
       newRefreshToken <- EitherT.liftF(repos.refreshTokenRepo().create(RefreshToken(user._id.toHexString, accessTokenId)))
       tokens <- auth.tokens(token.accessToken, newRefreshToken, token.expiredAt, user)
