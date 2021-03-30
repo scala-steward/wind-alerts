@@ -59,6 +59,17 @@ object domain {
     def asDTO(): Alert = {
       this.into[Alert].withFieldComputed(_.id, _._id.toHexString).transform
     }
+
+    def allFieldExceptStatusAreSame(alertRequest: AlertRequest) = {
+      days.sorted == alertRequest.days.sorted &&
+        swellDirections.sorted == alertRequest.swellDirections.sorted &&
+        timeRanges.sortBy(_.from) == alertRequest.timeRanges.sortBy(_.from) &&
+        waveHeightFrom == alertRequest.waveHeightFrom &&
+        waveHeightTo == alertRequest.waveHeightTo &&
+        windDirections.sorted == alertRequest.windDirections.sorted &&
+        tideHeightStatuses.sorted == alertRequest.tideHeightStatuses.sorted &&
+        timeZone == alertRequest.timeZone
+    }
   }
 
   object AlertT {

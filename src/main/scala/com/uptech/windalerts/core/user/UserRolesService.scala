@@ -4,6 +4,7 @@ import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
 import com.uptech.windalerts.Repos
+import com.uptech.windalerts.core.alerts.AlertsT
 import com.uptech.windalerts.core.social.subscriptions.SubscriptionsService
 import com.uptech.windalerts.core.user.UserType.{Premium, PremiumExpired, Trial}
 import com.uptech.windalerts.domain._
@@ -100,6 +101,42 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
 
     val eitherOfList: Stack[List[A]] = list.sequence
     eitherOfList
+  }
+
+
+  def authorizePremiumUsers(user: UserT): EitherT[F, SurfsUpError, UserT] = {
+    EitherT.fromEither(if (UserType(user.userType) == UserType.Premium || UserType(user.userType) == UserType.Trial) {
+      Right(user)
+    } else {
+      Left(OperationNotAllowed(s"Please subscribe to perform this action"))
+    })
+  }
+  
+  def authorizeAlertEditRequest(user: UserT, alertId: String, alertRequest: AlertRequest): EitherT[F, SurfsUpError, UserT] = {
+    EitherT.liftF(repos.alertsRepository().getAllForUser(user._id.toHexString))
+      .flatMap(alerts => EitherT.fromEither(authorizeAlertEditRequest(user, alertId, alerts, alertRequest)))
+  }
+
+  private def authorizeAlertEditRequest(user: UserT, alertId: String, alert: AlertsT, alertRequest: AlertRequest): Either[OperationNotAllowed, UserT] = {
+    if (UserType(user.userType) == UserType.Premium || UserType(user.userType) == UserType.Trial) {
+      Right(user)
+    } else {
+      if (checkForNonPremiumUser(alertId, alert, alertRequest)) Right(user)
+      else Left(OperationNotAllowed(s"Please subscribe to perform this action"))
+    }
+  }
+
+  def checkForNonPremiumUser(alertId: String, alerts: AlertsT, alertRequest: AlertRequest) = {
+    val alertOption = alerts.alerts.sortBy(_.createdAt).headOption
+
+
+    alertOption.map(alert => {
+      if (alert._id.toHexString != alertId) {
+        false
+      } else {
+        alert.allFieldExceptStatusAreSame(alertRequest)
+      }
+    }).getOrElse(false)
   }
 
 }

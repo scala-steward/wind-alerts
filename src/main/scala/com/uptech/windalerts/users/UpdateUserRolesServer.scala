@@ -6,7 +6,7 @@ import com.softwaremill.sttp.HttpURLConnectionBackend
 import com.uptech.windalerts.LazyRepos
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.social.subscriptions.SubscriptionsService
-import com.uptech.windalerts.core.user.{AuthenticationServiceImpl, UserRolesService}
+import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService}
 import com.uptech.windalerts.infrastructure.endpoints.logger._
 import com.uptech.windalerts.infrastructure.endpoints.{HttpErrorHandler, UpdateUserRolesEndpoints, errors}
 import com.uptech.windalerts.infrastructure.social.subscriptions.SubscriptionsServiceImpl
@@ -24,8 +24,8 @@ object UpdateUserRolesServer extends IOApp {
     _ <- IO(getLogger.error("Starting"))
 
     repos = new LazyRepos()
-    authService <- IO(new AuthenticationServiceImpl(repos))
-    otpService <-  IO(new OTPService[IO](repos, authService))
+    authService <- IO(new AuthenticationService(repos))
+    otpService <-  IO(new OTPService[IO](repos))
     httpErrorHandler <- IO(new HttpErrorHandler[IO])
     subscriptionsService <- IO(new SubscriptionsServiceImpl[IO](repos))
     endpoints <- IO(new UpdateUserRolesEndpoints[IO](new UserRolesService[IO](repos, subscriptionsService), httpErrorHandler))
