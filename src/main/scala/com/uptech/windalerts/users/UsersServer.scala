@@ -10,7 +10,7 @@ import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.social.subscriptions.SubscriptionsService
-import com.uptech.windalerts.core.user.{AuthenticationServiceImpl, UserRolesService, UserService}
+import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
 import com.uptech.windalerts.infrastructure.endpoints.logger._
 import com.uptech.windalerts.domain.{secrets, swellAdjustments}
 import com.uptech.windalerts.infrastructure.endpoints.{AlertsEndpoints, BeachesEndpoints, HttpErrorHandler, UsersEndpoints, errors}
@@ -31,8 +31,8 @@ object UsersServer extends IOApp {
     _ <- IO(getLogger.error("Starting"))
 
     repos = new LazyRepos()
-    auth <- IO(new AuthenticationServiceImpl(repos))
-    otpService <- IO(new OTPService[IO](repos, auth))
+    auth <- IO(new AuthenticationService(repos))
+    otpService <- IO(new OTPService[IO](repos))
     userCredentialsService <- IO(new UserCredentialService[IO](repos))
     usersService <- IO(new UserService(repos, userCredentialsService, otpService, auth))
     socialLoginService <- IO(new SocialLoginService(repos, usersService))
@@ -46,7 +46,7 @@ object UsersServer extends IOApp {
 
     endpoints <- IO(new UsersEndpoints(repos, userCredentialsService, usersService, socialLoginService, userRolesService, subscriptionsService, httpErrorHandler))
 
-    alertService <- IO(new AlertsService[IO](usersService, auth, repos))
+    alertService <- IO(new AlertsService[IO](usersService, userRolesService, repos))
     alertsEndPoints <- IO(new AlertsEndpoints(alertService, usersService, auth, httpErrorHandler))
 
     httpApp <- IO(errors.errorMapper(Logger.httpApp(true, true, logAction = requestLogger)(

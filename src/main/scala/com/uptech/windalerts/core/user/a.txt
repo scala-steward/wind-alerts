@@ -1,0 +1,20 @@
+{
+    "accessToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJ3aW5kLWFsZXJ0cy5jb20iLCJzdWIiOiI1ZmY0NzViNWZiNWRlYjMwZDJlMTViMmEiLCJleHAiOjE2MTcxMDA4MDgsImlhdCI6MTYxNzEwMDc0OCwiYWNjZXNzVG9rZW5JZCI6IjdYNXdFc0FQMXkifQ.2F1M3gbGKA7zi59Rv_Ck0TAICElM5lWPqM4shAnmYTM",
+    "refreshToken": "mEk74bgoECHXR0qvx5jA2BuOntIeTGqmjXkqDDnp",
+    "expiredAt": 1617100808,
+    "user": {
+        "id": "5ff475b5fb5deb30d2e15b2a",
+        "email": "amanmanocha12@yopmail.com",
+        "name": "aa",
+        "deviceToken": "aaa",
+        "deviceType": "Android",
+        "startTrialAt": 1609856472724,
+        "endTrialAt": 1612095942000,
+        "userType": "TrialExpired",
+        "snoozeTill": -1,
+        "disableAllAlerts": false,
+        "notificationsPerHour": 4,
+        "lastPaymentAt": -1,
+        "nextPaymentAt": -1
+    }
+}

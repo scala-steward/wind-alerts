@@ -13,10 +13,12 @@ import com.uptech.windalerts.core.beaches.{BeachService, SwellsService, TidesSer
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.notifications.Notifications
 import com.uptech.windalerts.core.otp.OTPService
-import com.uptech.windalerts.core.user.{AuthenticationServiceImpl, UserService}
+import com.uptech.windalerts.core.social.subscriptions.SubscriptionsService
+import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
 import com.uptech.windalerts.domain._
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints.{HttpErrorHandler, NotificationEndpoints}
+import com.uptech.windalerts.infrastructure.social.subscriptions.SubscriptionsServiceImpl
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
 
@@ -58,12 +60,15 @@ object SendNotifications extends IOApp {
   implicit val httpErrorHandler: HttpErrorHandler[IO] = new HttpErrorHandler[IO]
 
 
-  val auth = new AuthenticationServiceImpl(repos)
-  val otpService = new OTPService[IO](repos, auth)
+  val auth = new AuthenticationService(repos)
+  val otpService = new OTPService[IO](repos)
   val userCredentialsService = new UserCredentialService[IO](repos)
   val usersService = new UserService(repos, userCredentialsService, otpService, auth)
+  val subscriptionService = new SubscriptionsServiceImpl(repos)
 
-  val alerts = new AlertsService[IO](usersService, auth, repos)
+  val userRolesService = new UserRolesService(repos, subscriptionService)
+
+  val alerts = new AlertsService[IO](usersService, userRolesService, repos)
   val notifications = new Notifications(alerts, beachesService, beachSeq, repos, dbWithAuth, httpErrorHandler, config = config.read)
   val notificationsEndPoints = new NotificationEndpoints[IO](notifications, httpErrorHandler)
 
