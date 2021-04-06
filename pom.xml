@@ -16,6 +16,16 @@
     </properties>
     <dependencies>
         <dependency>
+            <groupId>org.http4s</groupId>
+            <artifactId>rho-swagger_2.13</artifactId>
+            <version>0.21.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.http4s</groupId>
+            <artifactId>rho-swagger-ui_2.13</artifactId>
+            <version>0.21.0</version>
+        </dependency>
+        <dependency>
             <groupId>io.scalaland</groupId>
             <artifactId>chimney_2.13</artifactId>
             <version>0.4.1</version>

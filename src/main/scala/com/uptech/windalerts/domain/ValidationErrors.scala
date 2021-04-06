@@ -3,6 +3,8 @@ package com.uptech.windalerts.domain
 trait SurfsUpError extends RuntimeException with Serializable
 case class TokenExpiredError() extends SurfsUpError
 case class UserNotFoundError() extends SurfsUpError
+case class BeachNotFoundError() extends SurfsUpError
+
 case class OtpNotFoundError() extends SurfsUpError
 case class TokenNotFoundError() extends SurfsUpError
 case class AlertNotFoundError() extends SurfsUpError
