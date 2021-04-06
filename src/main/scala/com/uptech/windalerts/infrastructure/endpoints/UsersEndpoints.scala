@@ -14,11 +14,11 @@ import com.uptech.windalerts.domain.domain.{AppleRegisterRequest, ChangePassword
 import com.uptech.windalerts.domain.{SurfsUpError, UnknownError, UserNotFoundError, secrets, statics}
 import com.uptech.windalerts.users._
 import io.circe.parser._
-import org.http4s.{AuthedRoutes, HttpRoutes}
+import org.http4s.{AuthedRoutes, HttpRoutes, Request}
 import org.log4s.getLogger
 
 class UsersEndpoints[F[_] : Effect]
-(repos: Repos[F], userCredentialsService:UserCredentialService[F], userService: UserService[F], socialLoginService:SocialLoginService[F], userRolesService: UserRolesService[F], subscriptionsService: SubscriptionsService[F], httpErrorHandler: HttpErrorHandler[F]) extends http[F](httpErrorHandler) {
+(repos: Repos[F], userCredentialsService: UserCredentialService[F], userService: UserService[F], socialLoginService: SocialLoginService[F], userRolesService: UserRolesService[F], subscriptionsService: SubscriptionsService[F], httpErrorHandler: HttpErrorHandler[F]) extends http[F](httpErrorHandler) {
 
   def openEndpoints(): HttpRoutes[F] =
     HttpRoutes.of[F] {
@@ -54,21 +54,19 @@ class UsersEndpoints[F[_] : Effect]
         })
 
       case req@POST -> Root / "purchase" / "android" / "update" => {
-        val action: EitherT[F, SurfsUpError, UserT] = for {
-          update <- EitherT.liftF(req.as[AndroidUpdate])
-          decoded <- EitherT.fromEither[F](Either.right(new String(java.util.Base64.getDecoder.decode(update.message.data))))
-          subscription <- asSubscription(decoded)
-          token <- repos.androidPurchaseRepo().getPurchaseByToken(subscription.subscriptionNotification.purchaseToken)
-          purchase <- subscriptionsService.getAndroidPurchase(token.subscriptionId, subscription.subscriptionNotification.purchaseToken)
-          user <- userService.getUser(token.userId)
-          updatedUser <- userRolesService.updateSubscribedUserRole(user, purchase.startTimeMillis, purchase.expiryTimeMillis)
-        } yield updatedUser
+        val action: EitherT[F, SurfsUpError, UserT] =
+          for {
+            update <- EitherT.liftF(req.as[AndroidUpdate])
+            user <- userRolesService.handleAndroidUpdate(update)
+          } yield user
+
         action.value.flatMap {
           case Right(_) => Ok()
           case Left(error) => httpErrorHandler.handleThrowable(error)
         }
       }
     }
+
 
   def authedService(): AuthedRoutes[UserId, F] =
     AuthedRoutes {
@@ -83,7 +81,7 @@ class UsersEndpoints[F[_] : Effect]
 
       case _@GET -> Root / "profile" as user => {
         handleOkNoDecode(user, (u: UserId) => {
-          repos.usersRepo().getByUserIdEitherT(u.id).map(_.asDTO()).leftMap(_=>UserNotFoundError())
+          repos.usersRepo().getByUserIdEitherT(u.id).map(_.asDTO()).leftMap(_ => UserNotFoundError())
         }
         )
       }
@@ -101,12 +99,8 @@ class UsersEndpoints[F[_] : Effect]
       }
 
       case authReq@POST -> Root / "verifyEmail" as user => {
-        handleOk(authReq, user, (u: UserId, request: OTP) =>
-          for {
-            _ <- repos.otp().exists(request.otp, user.id)
-            user <- userService.getUser(user.id)
-            updateResult <- userRolesService.makeUserTrial(user).map(_.asDTO())
-          } yield updateResult
+        handleOk(authReq, user, (_: UserId, request: OTP) =>
+          userRolesService.verifyEmail(user, request)
         )
       }
 
@@ -122,47 +116,27 @@ class UsersEndpoints[F[_] : Effect]
       }
 
       case _@GET -> Root / "purchase" / "android" as user => {
-        handleOkNoDecode(user, (u: UserId) => {
-          for {
-            token <- repos.androidPurchaseRepo().getLastForUser(u.id)
-            purchase <- subscriptionsService.getAndroidPurchase(token.subscriptionId, token.purchaseToken)
-            dbUser <- userService.getUser(u.id)
-            premiumUser <- userRolesService.updateSubscribedUserRole(dbUser, purchase.startTimeMillis, purchase.expiryTimeMillis).map(_.asDTO())
-          } yield premiumUser
-        }
-        )
+        handleOkNoDecode(user, (u: UserId) => userRolesService.getAndroidPurchase(u))
       }
 
       case authReq@POST -> Root / "purchase" / "android" as user => {
         handleEmptyOk(authReq, user, (u: UserId, request: AndroidReceiptValidationRequest) =>
-          for {
-            _ <- subscriptionsService.getAndroidPurchase(request)
-            savedToken <- repos.androidPurchaseRepo().create(AndroidToken(user.id, request.productId, request.token, System.currentTimeMillis()))
-          } yield savedToken
+          subscriptionsService.getAndroidPurchase(user, request)
         )
       }
 
       case _@GET -> Root / "purchase" / "apple" as user => {
-        handleOkNoDecode(user, (u: UserId) => {
-          for {
-            token <- repos.applePurchaseRepo().getLastForUser(user.id)
-            purchase <- subscriptionsService.getApplePurchase(token.purchaseToken, secrets.read.surfsUp.apple.appSecret)
-            dbUser <- userService.getUser(user.id)
-            premiumUser <- userRolesService.updateSubscribedUserRole(dbUser, purchase.purchase_date_ms, purchase.expires_date_ms).map(_.asDTO())
-          } yield premiumUser
-        }
-        )
+        handleOkNoDecode(user, (u: UserId) => userRolesService.updateAppleUser(user))
       }
 
       case authReq@POST -> Root / "purchase" / "apple" as user => {
         handleEmptyOk(authReq, user, (u: UserId, req: ApplePurchaseToken) =>
-          for {
-            _ <- subscriptionsService.getApplePurchase(req.token, secrets.read.surfsUp.apple.appSecret)
-            savedToken <- repos.applePurchaseRepo().create(AppleToken(user.id, req.token, System.currentTimeMillis()))
-          } yield savedToken
+          subscriptionsService.updateApplePurchase(user, req)
         )
       }
     }
+
+
 
   def facebookEndpoints(): HttpRoutes[F] = {
 
@@ -188,14 +162,6 @@ class UsersEndpoints[F[_] : Effect]
         val appleLoginRequest = req.as[AppleRegisterRequest]
         handle(appleLoginRequest.map(_.asDomain()), socialLoginService.registerOrLoginAppleUser(_))
     }
-
-  }
-
-  private def asSubscription(response: String): EitherT[F, SurfsUpError, SubscriptionNotificationWrapper] = {
-    EitherT.fromEither((for {
-      parsed <- parse(response)
-      decoded <- parsed.as[SubscriptionNotificationWrapper].leftWiden[io.circe.Error]
-    } yield decoded).leftMap(error => UnknownError(error.getMessage)).leftWiden[SurfsUpError])
 
   }
 }

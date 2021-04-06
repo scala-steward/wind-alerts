@@ -58,7 +58,7 @@ object UsersServer extends IOApp {
         socialLoginService <- IO(new SocialLoginService(repos, usersService))
 
         subscriptionsService <- IO(new SubscriptionsServiceImpl[IO](repos))
-        userRolesService <- IO(new UserRolesService[IO](repos, subscriptionsService))
+        userRolesService <- IO(new UserRolesService[IO](repos, subscriptionsService, usersService))
 
         apiKey <- IO(secrets.read.surfsUp.willyWeather.key)
         beaches <- IO(new BeachService[IO](new WWBackedWindsService[IO](apiKey), new WWBackedTidesService[IO](apiKey, repos), new WWBackedSwellsService[IO](apiKey, swellAdjustments.read)))
