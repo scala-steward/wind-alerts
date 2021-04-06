@@ -59,7 +59,7 @@ class SubscriptionsServiceImpl[F[_] : Sync](repos: Repos[F]) extends Subscriptio
   }
 
 
-  override def updateApplePurchase(user: UserId, req: ApplePurchaseToken) = {
+  override def updateApplePurchase(user: UserId, req: ApplePurchaseToken):EitherT[F, SurfsUpError, AppleToken] = {
     for {
       _ <- getApplePurchase(req.token, secrets.read.surfsUp.apple.appSecret)
       savedToken <- repos.applePurchaseRepo().create(AppleToken(user.id, req.token, System.currentTimeMillis()))
