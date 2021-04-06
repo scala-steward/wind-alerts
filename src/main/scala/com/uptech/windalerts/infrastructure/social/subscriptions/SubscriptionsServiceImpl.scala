@@ -2,18 +2,18 @@ package com.uptech.windalerts.infrastructure.social.subscriptions
 
 import cats.data.EitherT
 import cats.effect.Sync
+import cats.implicits._
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.uptech.windalerts.Repos
-import com.uptech.windalerts.core.social.subscriptions.{SubscriptionPurchase, SubscriptionsService}
+import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken, SubscriptionPurchase, SubscriptionsService}
 import com.uptech.windalerts.domain.codecs._
-import com.uptech.windalerts.domain.domain.{AndroidReceiptValidationRequest, ApplePurchaseVerificationRequest, AppleSubscriptionPurchase}
-import com.uptech.windalerts.domain.{SurfsUpError, UnknownError, domain}
+import com.uptech.windalerts.domain.domain._
+import com.uptech.windalerts.domain.{SurfsUpError, UnknownError, secrets}
 import io.circe.optics.JsonPath.root
 import io.circe.parser
 import io.circe.syntax._
 import io.scalaland.chimney.dsl._
 import org.log4s.getLogger
-
 
 class SubscriptionsServiceImpl[F[_] : Sync](repos: Repos[F]) extends SubscriptionsService[F] {
 
@@ -50,4 +50,20 @@ class SubscriptionsServiceImpl[F[_] : Sync](repos: Repos[F]) extends Subscriptio
         .left.map(e => UnknownError(e.getMessage))
     )
   }
+
+  def getAndroidPurchase(user: UserId, request: AndroidReceiptValidationRequest):EitherT[F, SurfsUpError, AndroidToken] = {
+    for {
+      _ <- getAndroidPurchase(request)
+      savedToken <- repos.androidPurchaseRepo().create(AndroidToken(user.id, request.productId, request.token, System.currentTimeMillis()))
+    } yield savedToken
+  }
+
+
+  override def updateApplePurchase(user: UserId, req: ApplePurchaseToken) = {
+    for {
+      _ <- getApplePurchase(req.token, secrets.read.surfsUp.apple.appSecret)
+      savedToken <- repos.applePurchaseRepo().create(AppleToken(user.id, req.token, System.currentTimeMillis()))
+    } yield savedToken
+  }
+
 }

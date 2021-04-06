@@ -66,7 +66,7 @@ object SendNotifications extends IOApp {
   val usersService = new UserService(repos, userCredentialsService, otpService, auth)
   val subscriptionService = new SubscriptionsServiceImpl(repos)
 
-  val userRolesService = new UserRolesService(repos, subscriptionService)
+  val userRolesService = new UserRolesService(repos, subscriptionService, usersService)
 
   val alerts = new AlertsService[IO](usersService, userRolesService, repos)
   val notifications = new Notifications(alerts, beachesService, beachSeq, repos, dbWithAuth, httpErrorHandler, config = config.read)
