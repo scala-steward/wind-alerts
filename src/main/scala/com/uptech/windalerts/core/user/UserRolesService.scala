@@ -7,10 +7,12 @@ import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.alerts.AlertsT
 import com.uptech.windalerts.core.social.subscriptions.SubscriptionsService
 import com.uptech.windalerts.core.user.UserType.{Premium, PremiumExpired, Trial}
-import com.uptech.windalerts.domain._
+import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
+import com.uptech.windalerts.domain.{SurfsUpError, UnknownError, _}
+import io.circe.parser.parse
 
-class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: SubscriptionsService[F]) {
+class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: SubscriptionsService[F], userService: UserService[F]) {
   def makeUserTrial(user: UserT): EitherT[F, SurfsUpError, UserT] = {
     repos.usersRepo().update(user.copy(
       userType = Trial.value,
@@ -139,4 +141,51 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
     }).getOrElse(false)
   }
 
+
+  def handleAndroidUpdate(update: AndroidUpdate):EitherT[F, SurfsUpError, UserT] = {
+    for {
+      decoded <- EitherT.fromEither[F](Either.right(new String(java.util.Base64.getDecoder.decode(update.message.data))))
+      subscription <- asSubscription(decoded)
+      token <- repos.androidPurchaseRepo().getPurchaseByToken(subscription.subscriptionNotification.purchaseToken)
+      purchase <- subscriptionsService.getAndroidPurchase(token.subscriptionId, subscription.subscriptionNotification.purchaseToken)
+      user <- userService.getUser(token.userId)
+      updatedUser <- updateSubscribedUserRole(user, purchase.startTimeMillis, purchase.expiryTimeMillis)
+    } yield updatedUser
+  }
+
+
+  def verifyEmail(user: UserId, request: OTP) = {
+    for {
+      _ <- repos.otp().exists(request.otp, user.id)
+      user <- userService.getUser(user.id)
+      updateResult <- makeUserTrial(user).map(_.asDTO())
+    } yield updateResult
+  }
+
+  def getAndroidPurchase(u: UserId) = {
+    for {
+      token <- repos.androidPurchaseRepo().getLastForUser(u.id)
+      purchase <- subscriptionsService.getAndroidPurchase(token.subscriptionId, token.purchaseToken)
+      dbUser <- userService.getUser(u.id)
+      premiumUser <- updateSubscribedUserRole(dbUser, purchase.startTimeMillis, purchase.expiryTimeMillis).map(_.asDTO())
+    } yield premiumUser
+  }
+
+  private def asSubscription(response: String): EitherT[F, SurfsUpError, SubscriptionNotificationWrapper] = {
+    EitherT.fromEither((for {
+      parsed <- parse(response)
+      decoded <- parsed.as[SubscriptionNotificationWrapper].leftWiden[io.circe.Error]
+    } yield decoded).leftMap(error => UnknownError(error.getMessage)).leftWiden[SurfsUpError])
+
+  }
+
+
+  def updateAppleUser(user: UserId) = {
+    for {
+      token <- repos.applePurchaseRepo().getLastForUser(user.id)
+      purchase <- subscriptionsService.getApplePurchase(token.purchaseToken, secrets.read.surfsUp.apple.appSecret)
+      dbUser <- userService.getUser(user.id)
+      premiumUser <- updateSubscribedUserRole(dbUser, purchase.purchase_date_ms, purchase.expires_date_ms).map(_.asDTO())
+    } yield premiumUser
+  }
 }
