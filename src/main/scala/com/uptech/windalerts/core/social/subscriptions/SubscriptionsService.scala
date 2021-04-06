@@ -14,5 +14,5 @@ trait SubscriptionsService[F[_]] {
 
   def getApplePurchase(receiptData: String, password: String): EitherT[F, SurfsUpError, AppleSubscriptionPurchase]
 
-  def updateApplePurchase(user: UserId, req: domain.ApplePurchaseToken)
+  def updateApplePurchase(user: UserId, req: domain.ApplePurchaseToken):EitherT[F, SurfsUpError, AppleToken]
 }
