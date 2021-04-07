@@ -5,7 +5,7 @@ import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 import cats.data.EitherT
 import cats.effect.Sync
-import cats.{Applicative, Functor}
+import cats.{Applicative, Functor, Monad}
 import com.softwaremill.sttp._
 import com.uptech.windalerts.core.beaches.SwellsService
 import com.uptech.windalerts.domain.{SurfsUpError, UnknownError, domain}
@@ -14,7 +14,7 @@ import com.uptech.windalerts.domain.swellAdjustments.Adjustments
 import com.uptech.windalerts.infrastructure.beaches.Swells.Swell
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.optics.JsonPath._
-import io.circe.{Decoder, Encoder, parser}
+import io.circe.{Decoder, Encoder, Json, parser}
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
 import org.log4s.getLogger
@@ -25,38 +25,33 @@ class WWBackedSwellsService[F[_] : Sync](apiKey: String, adjustments: Adjustment
   override def get(beachId: BeachId)(implicit F: Functor[F]): SurfsUpEitherT[F, domain.Swell] =
     EitherT.fromEither(getFromWillyWeatther(apiKey, beachId))
 
-  def getFromWillyWeatther(apiKey: String, beachId: BeachId): Either[UnknownError, domain.Swell] = {
+  def getFromWillyWeatther(apiKey: String, beachId: BeachId): Either[SurfsUpError, domain.Swell] = {
     logger.error(s"Fetching swell status for $beachId")
 
-    val body = sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecasts=swell&days=1").send().body
-    val either = body
-      .left.map(UnknownError(_))
-      .flatMap(parser.parse(_))
-      .map(root.forecasts.swell.days.each.entries.each.json.getAll(_))
-      .left.map(e => UnknownError(e.getMessage))
-    either
-      .flatMap(
-        _.flatMap(j => j.as[Swell].toSeq.filter(isCurrentHour(body, _)))
-          .map(swell => swell.copy(height = adjustments.adjust(swell.height)))
-          .headOption.toRight(UnknownError("Empty response from WW")))
-      .map(swell => domain.Swell(swell.height, swell.direction, swell.directionText))
-      .orElse(Right(domain.Swell(Double.NaN, Double.NaN, "NA")))
+    val result =
+      for {
+        body <- sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecasts=swell&days=1")
+          .send()
+          .body
+          .left
+          .map(WillyWeatherHelper.extractError(_))
+        parsed <- parser.parse(body).left.map(f => UnknownError(f.message))
+        tz <- parsed.hcursor.downField("location").downField("timeZone").as[String].left.map(f => UnknownError(f.message))
+        forecasts = root.forecasts.swell.days.each.entries.each.json.getAll(parsed)
+        swells = forecasts.flatMap(_.as[Swell].toSeq.filter(isCurrentHour(tz, _)))
+        adjusted <- swells.map(swell => swell.copy(height = adjustments.adjust(swell.height))).headOption.toRight(UnknownError("Empty response from WW"))
+        domainSwell = domain.Swell(adjusted.height, adjusted.direction, adjusted.directionText)
+      } yield domainSwell
+
+
+    WillyWeatherHelper.leftOnBeachNotFoundError(result, domain.Swell(Double.NaN, Double.NaN, "NA"))
   }
 
-  private def isCurrentHour(body: Either[String, String], s: Swell) = {
+  private def isCurrentHour(tz: String, s: Swell) = {
     val sdf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-    val eitherTimezone: Either[Exception, String] =
-      body.left.map(new RuntimeException(_)).flatMap(parser.parse(_)).flatMap(_.hcursor.downField("location").downField("timeZone").as[String])
-    eitherTimezone match {
-      case Left(_) => false
-      case Right(tz) => {
-        val timeZone = TimeZone.getTimeZone(tz)
-
-        val entry = LocalDateTime.parse(s.dateTime, sdf).atZone(timeZone.toZoneId).withZoneSameInstant(TimeZone.getDefault.toZoneId)
-
-        entry.getHour == LocalDateTime.now().getHour
-      }
-    }
+    val timeZone = TimeZone.getTimeZone(tz)
+    val entry = LocalDateTime.parse(s.dateTime, sdf).atZone(timeZone.toZoneId).withZoneSameInstant(TimeZone.getDefault.toZoneId)
+    entry.getHour == LocalDateTime.now().getHour
   }
 }
 

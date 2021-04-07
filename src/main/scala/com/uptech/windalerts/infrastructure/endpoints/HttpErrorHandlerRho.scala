@@ -1,14 +1,18 @@
 package com.uptech.windalerts.infrastructure.endpoints
 
 import cats.Monad
+import cats.effect.Effect
 import com.uptech.windalerts.domain._
 import org.http4s.Response
 import org.http4s.dsl.Http4sDsl
+import org.http4s.rho.Result.BaseResult
+import org.http4s.rho.RhoRoutes
 import org.log4s.getLogger
 
 
-class HttpErrorHandler[F[_] : Monad] extends Http4sDsl[F] {
-  val handleThrowable: Throwable => F[Response[F]] = {
+class HttpErrorHandlerRho[F[+_]: Effect] extends RhoRoutes[F] {
+
+  val handleThrowable: Throwable => F[BaseResult[F]] = {
     case e: SurfsUpError => {
       handleError(e)
     }
@@ -18,7 +22,7 @@ class HttpErrorHandler[F[_] : Monad] extends Http4sDsl[F] {
     }
   }
 
-  val handleError: SurfsUpError => F[Response[F]] = {
+  val handleError: SurfsUpError => F[BaseResult[F]] = {
     case e@UserAlreadyExistsError(email, deviceType) => {
       getLogger.error(e)(e.getMessage)
       Conflict(s"The user with email $email for device type $deviceType already exists")
@@ -34,10 +38,6 @@ class HttpErrorHandler[F[_] : Monad] extends Http4sDsl[F] {
     case e@TokenNotFoundError() => {
       getLogger.error(e)(e.getMessage)
       BadRequest(s"Token not found")
-    }
-    case e@BeachNotFoundError() => {
-      getLogger.error(e)(e.getMessage)
-      NotFound(s"Beach not found")
     }
     case e@TokenExpiredError() => {
       getLogger.error(e)(e.getMessage)
