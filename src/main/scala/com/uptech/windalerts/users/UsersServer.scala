@@ -13,7 +13,7 @@ import com.uptech.windalerts.core.social.subscriptions.SubscriptionsService
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
 import com.uptech.windalerts.infrastructure.endpoints.logger._
 import com.uptech.windalerts.domain.{secrets, swellAdjustments}
-import com.uptech.windalerts.infrastructure.endpoints.{AlertsEndpoints, BeachesEndpoints, BeachesEndpointsRho, HttpErrorHandler, HttpErrorHandlerRho, UsersEndpoints, errors}
+import com.uptech.windalerts.infrastructure.endpoints.{AlertsEndpoints, BeachesEndpoints, BeachesEndpointsRho, HttpErrorHandler, HttpErrorHandlerRho, UsersEndpoints, UsersEndpointsRho, errors}
 import com.uptech.windalerts.infrastructure.beaches._
 import com.uptech.windalerts.infrastructure.social.subscriptions.SubscriptionsServiceImpl
 import org.http4s.implicits._
@@ -41,14 +41,23 @@ object UsersServer extends IOApp {
     Blocker[IO].use { blocker =>
       for {
         _ <- IO(getLogger.error("Starting"))
-        metadata = SwaggerMetadata(
-          apiInfo = Info(title = "Rho demo", version = "1.2.3"),
-          basePath = Some("/v1/x"),
-          tags = List(Tag(name = "hello", description = Some("These are the hello routes.")))
+        metadataBeaches = SwaggerMetadata(
+          apiInfo = Info(title = "Beaches ", version = "v2"),
+          basePath = Some("/v2/x"),
+          tags = List(Tag(name = "Beaches", description = Some("These are the beach status routes.")))
         )
 
-        swaggerUiRhoMiddleware =
-        SwaggerUi[IO].createRhoMiddleware(blocker, swaggerMetadata = metadata)
+        swaggerUiRhoMiddlewareBeaches =
+        SwaggerUi[IO].createRhoMiddleware(blocker, swaggerMetadata = metadataBeaches)
+
+        metadataUsers = SwaggerMetadata(
+          apiInfo = Info(title = "Users ", version = "v2"),
+          basePath = Some("/v2/users"),
+          tags = List(Tag(name = "Users", description = Some("These are the users status routes.")))
+        )
+
+        swaggerUiRhoMiddlewareUsers =
+        SwaggerUi[IO].createRhoMiddleware(blocker, swaggerMetadata = metadataUsers)
 
         repos = new LazyRepos()
         auth <- IO(new AuthenticationService(repos))
@@ -67,10 +76,11 @@ object UsersServer extends IOApp {
         httpErrorHandlerRho <- IO(new HttpErrorHandlerRho[IO])
 
         endpoints <- IO(new UsersEndpoints(repos, userCredentialsService, usersService, socialLoginService, userRolesService, subscriptionsService, httpErrorHandler))
+        endpointsRho <- IO(new UsersEndpointsRho[IO](repos, userCredentialsService, usersService, socialLoginService, userRolesService, subscriptionsService, httpErrorHandler).toRoutes(swaggerUiRhoMiddlewareUsers))
 
         alertService <- IO(new AlertsService[IO](usersService, userRolesService, repos))
         alertsEndPoints <- IO(new AlertsEndpoints(alertService, usersService, auth, httpErrorHandler))
-        myRoutes = new BeachesEndpointsRho[IO](beaches, httpErrorHandlerRho).toRoutes(swaggerUiRhoMiddleware)
+        myRoutes = new BeachesEndpointsRho[IO](beaches, httpErrorHandlerRho).toRoutes(swaggerUiRhoMiddlewareBeaches)
 
         httpApp <- IO(errors.errorMapper(Logger.httpApp(true, true, logAction = requestLogger)(
           Router(
@@ -79,8 +89,10 @@ object UsersServer extends IOApp {
             "/v1/users/social/facebook" -> endpoints.facebookEndpoints(),
             "/v1/users/social/apple" -> endpoints.appleEndpoints(),
             "/v1/users/alerts" -> auth.middleware(alertsEndPoints.allUsersService()),
-            "/v1/x" -> myRoutes,
+            "/v2/x" -> myRoutes,
+            "/v2/users" -> endpointsRho,
             "" -> new BeachesEndpoints[IO](beaches, httpErrorHandler).allRoutes(),
+
 
           ).orNotFound)))
         server <- BlazeServerBuilder[IO]

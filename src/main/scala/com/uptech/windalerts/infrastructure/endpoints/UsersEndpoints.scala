@@ -7,14 +7,12 @@ import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.feedbacks.Feedback
 import com.uptech.windalerts.core.social.login.SocialLoginService
-import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken, SubscriptionsService}
+import com.uptech.windalerts.core.social.subscriptions.SubscriptionsService
 import com.uptech.windalerts.core.user.{UserRolesService, UserService, UserT}
 import com.uptech.windalerts.domain.codecs._
-import com.uptech.windalerts.domain.domain.{AppleRegisterRequest, ChangePasswordRequest, FacebookRegisterRequest, ResetPasswordRequest, UserDTO, _}
-import com.uptech.windalerts.domain.{SurfsUpError, UnknownError, UserNotFoundError, secrets, statics}
-import com.uptech.windalerts.users._
-import io.circe.parser._
-import org.http4s.{AuthedRoutes, HttpRoutes, Request}
+import com.uptech.windalerts.domain.domain.{AppleRegisterRequest, ChangePasswordRequest, FacebookRegisterRequest, ResetPasswordRequest, _}
+import com.uptech.windalerts.domain.{SurfsUpError, UserNotFoundError, statics}
+import org.http4s.{AuthedRoutes, HttpRoutes}
 import org.log4s.getLogger
 
 class UsersEndpoints[F[_] : Effect]
