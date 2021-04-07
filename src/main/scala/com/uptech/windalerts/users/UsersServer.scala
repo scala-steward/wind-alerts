@@ -55,13 +55,12 @@ object UsersServer extends IOApp {
         beaches <- IO(new BeachService[IO](new WWBackedWindsService[IO](apiKey), new WWBackedTidesService[IO](apiKey, repos), new WWBackedSwellsService[IO](apiKey, swellAdjustments.read)))
 
         httpErrorHandler <- IO(new HttpErrorHandler[IO])
-        httpErrorHandlerRho <- IO(new HttpErrorHandlerRho[IO])
 
         endpoints <- IO(new UsersEndpoints(repos, userCredentialsService, usersService, socialLoginService, userRolesService, subscriptionsService, httpErrorHandler))
 
         alertService <- IO(new AlertsService[IO](usersService, userRolesService, repos))
         alertsEndPoints <- IO(new AlertsEndpoints(alertService, usersService, auth, httpErrorHandler))
-        beachesEndpointsRho = new BeachesEndpointsRho[IO](beaches, httpErrorHandlerRho).toRoutes(swaggerUiRhoMiddleware)
+        beachesEndpointsRho = new BeachesEndpointsRho[IO](beaches).toRoutes(swaggerUiRhoMiddleware)
 
         httpApp <- IO(errors.errorMapper(Logger.httpApp(true, true, logAction = requestLogger)(
           Router(

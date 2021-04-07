@@ -9,7 +9,7 @@ import com.uptech.windalerts.domain.domain.BeachId
 import org.http4s.Request
 import org.http4s.rho.RhoRoutes
 
-class BeachesEndpointsRho[F[+_] : Effect](B: BeachService[F], H: HttpErrorHandlerRho[F]) extends RhoRoutes[F] {
+class BeachesEndpointsRho[F[+_] : Effect](B: BeachService[F]) extends RhoRoutes[F] {
 
 
   val id = pathVar[Int]("id")
