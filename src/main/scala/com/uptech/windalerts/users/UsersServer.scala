@@ -1,37 +1,29 @@
 package com.uptech.windalerts.users
 
-import cats.effect.{IO, _}
+import cats.effect.{Blocker, ExitCode, IO, IOApp}
 import cats.implicits._
+import com.http4s.rho.swagger.ui.SwaggerUi
 import com.softwaremill.sttp.HttpURLConnectionBackend
 import com.uptech.windalerts.LazyRepos
 import com.uptech.windalerts.core.alerts.AlertsService
-import com.uptech.windalerts.core.beaches.{BeachService, SwellsService, TidesService, WindsService}
+import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.social.login.SocialLoginService
-import com.uptech.windalerts.core.social.subscriptions.SubscriptionsService
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
-import com.uptech.windalerts.infrastructure.endpoints.logger._
 import com.uptech.windalerts.domain.{secrets, swellAdjustments}
 import com.uptech.windalerts.infrastructure.endpoints.{AlertsEndpoints, BeachesEndpoints, BeachesEndpointsRho, HttpErrorHandler, HttpErrorHandlerRho, UsersEndpoints, UsersEndpointsRho, errors}
 import com.uptech.windalerts.infrastructure.beaches._
+import com.uptech.windalerts.infrastructure.endpoints.logger._
+import com.uptech.windalerts.infrastructure.endpoints._
 import com.uptech.windalerts.infrastructure.social.subscriptions.SubscriptionsServiceImpl
 import org.http4s.implicits._
+import org.http4s.rho.swagger.SwaggerMetadata
+import org.http4s.rho.swagger.models.{Info, Tag}
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.Logger
 import org.log4s.getLogger
-import org.http4s.rho.swagger.syntax.{io => ioSwagger}
-import cats.effect.{Blocker, ExitCode, IO, IOApp}
-import org.http4s.implicits._
-import org.http4s.rho.swagger.SwaggerMetadata
-import org.http4s.rho.swagger.models.{Info, Tag}
-import org.http4s.rho.swagger.syntax.{io => ioSwagger}
-import org.http4s.server.blaze.BlazeServerBuilder
-import org.log4s.getLogger
-import com.http4s.rho.swagger.ui.SwaggerUi
-
-import scala.concurrent.ExecutionContext.global
 object UsersServer extends IOApp {
 
 
@@ -43,7 +35,7 @@ object UsersServer extends IOApp {
         _ <- IO(getLogger.error("Starting"))
         metadataBeaches = SwaggerMetadata(
           apiInfo = Info(title = "Beaches ", version = "v2"),
-          basePath = Some("/v2/x"),
+          basePath = Some("/v2/beaches"),
           tags = List(Tag(name = "Beaches", description = Some("These are the beach status routes.")))
         )
 
@@ -73,14 +65,13 @@ object UsersServer extends IOApp {
         beaches <- IO(new BeachService[IO](new WWBackedWindsService[IO](apiKey), new WWBackedTidesService[IO](apiKey, repos), new WWBackedSwellsService[IO](apiKey, swellAdjustments.read)))
 
         httpErrorHandler <- IO(new HttpErrorHandler[IO])
-        httpErrorHandlerRho <- IO(new HttpErrorHandlerRho[IO])
 
         endpoints <- IO(new UsersEndpoints(repos, userCredentialsService, usersService, socialLoginService, userRolesService, subscriptionsService, httpErrorHandler))
         endpointsRho <- IO(new UsersEndpointsRho[IO](repos, userCredentialsService, usersService, socialLoginService, userRolesService, subscriptionsService, httpErrorHandler).toRoutes(swaggerUiRhoMiddlewareUsers))
 
         alertService <- IO(new AlertsService[IO](usersService, userRolesService, repos))
         alertsEndPoints <- IO(new AlertsEndpoints(alertService, usersService, auth, httpErrorHandler))
-        myRoutes = new BeachesEndpointsRho[IO](beaches, httpErrorHandlerRho).toRoutes(swaggerUiRhoMiddlewareBeaches)
+        beachesEndpointsRho = new BeachesEndpointsRho[IO](beaches).toRoutes(swaggerUiRhoMiddlewareBeaches)
 
         httpApp <- IO(errors.errorMapper(Logger.httpApp(true, true, logAction = requestLogger)(
           Router(
@@ -89,11 +80,9 @@ object UsersServer extends IOApp {
             "/v1/users/social/facebook" -> endpoints.facebookEndpoints(),
             "/v1/users/social/apple" -> endpoints.appleEndpoints(),
             "/v1/users/alerts" -> auth.middleware(alertsEndPoints.allUsersService()),
-            "/v2/x" -> myRoutes,
+            "/v2/beaches" -> beachesEndpointsRho,
             "/v2/users" -> endpointsRho,
             "" -> new BeachesEndpoints[IO](beaches, httpErrorHandler).allRoutes(),
-
-
           ).orNotFound)))
         server <- BlazeServerBuilder[IO]
           .bindHttp(sys.env("PORT").toInt, "0.0.0.0")

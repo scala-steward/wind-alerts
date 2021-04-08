@@ -185,13 +185,4 @@ class UsersEndpointsRho[F[+_] : Effect]
   //  }
 
 
-  def handle[Res](handler: () => SurfsUpEitherT[F, Res])(implicit encoder: EntityEncoder[F, Res]) = {
-    val action: SurfsUpEitherT[F, Res] = for {
-      response <- handler()
-    } yield response
-    action.value.flatMap {
-      case Right(res) => Ok(res)
-      case Left(error) => httpErrorHandler.handleThrowable(error)
-    }
-  }
 }
