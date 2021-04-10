@@ -42,7 +42,7 @@ class WWBackedTidesService[F[_] : Sync](apiKey: String, repos: Repos[F])(implici
 
     val beachesConfig = repos.beaches()
     if (!beachesConfig.contains(beachId.id)) {
-      Left(BeachNotFoundError())
+      Left(BeachNotFoundError("Beach not found"))
     } else {
       val tz = timeZoneForRegion.getOrElse(beachesConfig(beachId.id).region, "Australia/NSW")
       val tzId = ZoneId.of(tz)

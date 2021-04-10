@@ -18,7 +18,7 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
       userType = Trial.value,
       startTrialAt = System.currentTimeMillis(),
       endTrialAt = System.currentTimeMillis() + (30L * 24L * 60L * 60L * 1000L),
-    )).toRight(UserNotFoundError())
+    )).toRight(UserNotFoundError("User not found"))
   }
 
   def makeUserPremium(user: UserT, start: Long, expiry: Long): EitherT[F, SurfsUpError, UserT] = {
@@ -93,7 +93,7 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
 
   def update(user: UserT): EitherT[F, UserNotFoundError, UserT] =
     for {
-      saved <- repos.usersRepo().update(user).toRight(UserNotFoundError())
+      saved <- repos.usersRepo().update(user).toRight(UserNotFoundError("User not found"))
     } yield saved
 
   def convert[A](list: List[EitherT[F, SurfsUpError, A]]) = {

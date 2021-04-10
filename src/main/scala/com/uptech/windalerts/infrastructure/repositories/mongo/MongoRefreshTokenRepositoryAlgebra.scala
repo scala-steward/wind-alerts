@@ -44,7 +44,7 @@ class MongoRefreshTokenRepositoryAlgebra(collection: MongoCollection[RefreshToke
   override def updateExpiry(id: String, expiry: Long): EitherT[IO, TokenNotFoundError, RefreshToken] = {
     for {
       _ <- EitherT.liftF(IO.fromFuture(IO(collection.updateOne(equal("_id", new ObjectId(id)), set("expiry", expiry)).toFuture())))
-      updated <- getById(id).toRight(TokenNotFoundError())
+      updated <- getById(id).toRight(TokenNotFoundError("Token not found"))
     } yield updated
   }
 

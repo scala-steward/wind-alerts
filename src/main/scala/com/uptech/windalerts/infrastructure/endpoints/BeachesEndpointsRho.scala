@@ -20,7 +20,7 @@ class BeachesEndpointsRho[F[+_] : Effect](B: BeachService[F]) extends RhoRoutes[
   GET / statusById |>> { (_: Request[F], id: Int) => {
     B.get(BeachId(id)).value.flatMap {
       case Right(value) => Ok(value)
-      case Left(BeachNotFoundError()) => NotFound(s"Beach not found $id")
+      case Left(BeachNotFoundError(_)) => NotFound(s"Beach not found $id")
     }
   }
   }

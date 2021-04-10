@@ -44,7 +44,7 @@ class UsersEndpoints[F[_] : Effect]
           user <- userService.login(credentials)
         } yield user).value.flatMap {
           case Right(tokensWithUser) => Ok(tokensWithUser)
-          case Left(UserNotFoundError()) => NotFound("User not found")
+          case Left(UserNotFoundError(_)) => NotFound("User not found")
           case Left(UserAuthenticationFailedError(name)) => BadRequest(s"Authentication failed for user $name")
         }
       }
@@ -55,10 +55,10 @@ class UsersEndpoints[F[_] : Effect]
           user <- userService.refresh(refreshToken)
         } yield user).value.flatMap {
           case Right(tokensWithUser) => Ok(tokensWithUser)
-          case Left(RefreshTokenNotFoundError()) => BadRequest(s"Refresh token not found")
-          case Left(RefreshTokenExpiredError()) => BadRequest(s"Refresh token expired")
-          case Left(TokenNotFoundError()) => BadRequest(s"Token not found")
-          case Left(UserNotFoundError()) => NotFound("User not found")
+          case Left(RefreshTokenNotFoundError(_)) => BadRequest(s"Refresh token not found")
+          case Left(RefreshTokenExpiredError(_)) => BadRequest(s"Refresh token expired")
+          case Left(TokenNotFoundError(_)) => BadRequest(s"Token not found")
+          case Left(UserNotFoundError(_)) => NotFound("User not found")
         }
 
       case req@POST -> Root / "changePassword" =>
@@ -77,7 +77,7 @@ class UsersEndpoints[F[_] : Effect]
         } yield user).value.flatMap {
           case Right(_) => Ok()
           case Left(UserAuthenticationFailedError(name)) => BadRequest(s"Authentication failed for user $name")
-          case Left(UserNotFoundError()) => NotFound("User not found")
+          case Left(UserNotFoundError(_)) => NotFound("User not found")
         }
 
       case req@POST -> Root / "purchase" / "android" / "update" => {
@@ -103,7 +103,7 @@ class UsersEndpoints[F[_] : Effect]
                 .map(_.asDTO)
             } yield response).value.flatMap {
               case Right(response) => Ok(response)
-              case Left(UserNotFoundError()) => NotFound("User not found")
+              case Left(UserNotFoundError(_)) => NotFound("User not found")
             }
         })
       }
@@ -114,7 +114,7 @@ class UsersEndpoints[F[_] : Effect]
             response <- userService.getUser(user.id).map(_.asDTO())
           } yield response).value.flatMap {
             case Right(response) => Ok(response)
-            case Left(UserNotFoundError()) => NotFound("User not found")
+            case Left(UserNotFoundError(_)) => NotFound("User not found")
           }
         )
       }
@@ -127,7 +127,7 @@ class UsersEndpoints[F[_] : Effect]
                 .map(_.asDTO)
             } yield response).value.flatMap {
               case Right(response) => Ok(response)
-              case Left(UserNotFoundError()) => NotFound("User not found")
+              case Left(UserNotFoundError(_)) => NotFound("User not found")
             }
         })
       }
@@ -136,8 +136,8 @@ class UsersEndpoints[F[_] : Effect]
         OptionT.liftF((for {
           response <- userService.sendOtp(user.id)
         } yield response).value.flatMap {
-          case Right(response) => Ok()
-          case Left(UserNotFoundError()) => NotFound("User not found")
+          case Right(_) => Ok()
+          case Left(UserNotFoundError(_)) => NotFound("User not found")
         })
       }
 
@@ -148,8 +148,8 @@ class UsersEndpoints[F[_] : Effect]
               response <- userRolesService.verifyEmail(user, req)
             } yield response).value.flatMap {
               case Right(response) => Ok(response)
-              case Left(OtpNotFoundError()) => NotFound("Invalid or expired OTP")
-              case Left(UserNotFoundError()) => NotFound("User not found")
+              case Left(OtpNotFoundError(_)) => NotFound("Invalid or expired OTP")
+              case Left(UserNotFoundError(_)) => NotFound("User not found")
             }
         })
       }
@@ -160,7 +160,7 @@ class UsersEndpoints[F[_] : Effect]
             response <- userService.logoutUser(user.id)
           } yield response).value.flatMap {
             case Right(response) => Ok(response)
-            case Left(UserNotFoundError()) => NotFound("User not found")
+            case Left(UserNotFoundError(_)) => NotFound("User not found")
           }
         })
       }
@@ -185,8 +185,8 @@ class UsersEndpoints[F[_] : Effect]
             response <- userRolesService.getAndroidPurchase(user)
           } yield response).value.flatMap {
             case Right(response) => Ok(response)
-            case Left(TokenNotFoundError()) => NotFound("Token not found")
-            case Left(UserNotFoundError()) => NotFound("User not found")
+            case Left(TokenNotFoundError(_)) => NotFound("Token not found")
+            case Left(UserNotFoundError(_)) => NotFound("User not found")
           }
         )
       }
@@ -198,8 +198,9 @@ class UsersEndpoints[F[_] : Effect]
               response <- subscriptionsService.getAndroidPurchase(user, req)
             } yield response).value.flatMap {
               case Right(_) => Ok()
-              case Left(TokenNotFoundError()) => NotFound("Token not found")
-              case Left(UserNotFoundError()) => NotFound("User not found")            }
+              case Left(TokenNotFoundError(_)) => NotFound("Token not found")
+              case Left(UserNotFoundError(_)) => NotFound("User not found")
+            }
         })
       }
 
@@ -209,8 +210,8 @@ class UsersEndpoints[F[_] : Effect]
             response <- userRolesService.updateAppleUser(user)
           } yield response).value.flatMap {
             case Right(response) => Ok(response)
-            case Left(TokenNotFoundError()) => NotFound("Token not found")
-            case Left(UserNotFoundError()) => NotFound("User not found")
+            case Left(TokenNotFoundError(_)) => NotFound("Token not found")
+            case Left(UserNotFoundError(_)) => NotFound("User not found")
           }
         )
       }
@@ -222,8 +223,8 @@ class UsersEndpoints[F[_] : Effect]
               response <- subscriptionsService.updateApplePurchase(user, req)
             } yield response).value.flatMap {
               case Right(response) => Ok()
-              case Left(TokenNotFoundError()) => NotFound("Token not found")
-              case Left(UserNotFoundError()) => NotFound("User not found")
+              case Left(TokenNotFoundError(_)) => NotFound("Token not found")
+              case Left(UserNotFoundError(_)) => NotFound("User not found")
             }
         })
       }
@@ -240,7 +241,7 @@ class UsersEndpoints[F[_] : Effect]
         } yield tokensWithUser).value.flatMap {
           case Right(tokensWithUser) => Ok(tokensWithUser)
           case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")
-          case Left(UserNotFoundError()) => NotFound("User not found")
+          case Left(UserNotFoundError(_)) => NotFound("User not found")
         }
       }
 
@@ -251,11 +252,12 @@ class UsersEndpoints[F[_] : Effect]
         } yield tokensWithUser).value.flatMap {
           case Right(tokensWithUser) => Ok(tokensWithUser)
           case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")
-          case Left(UserNotFoundError()) => NotFound("User not found")
+          case Left(UserNotFoundError(_)) => NotFound("User not found")
         }
       }
     }
   }
+
   def appleEndpoints(): HttpRoutes[F] = {
     HttpRoutes.of[F] {
       case req@POST -> Root => {
@@ -265,7 +267,7 @@ class UsersEndpoints[F[_] : Effect]
         } yield tokensWithUser).value.flatMap {
           case Right(tokensWithUser) => Ok(tokensWithUser)
           case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")
-          case Left(UserNotFoundError()) => NotFound("User not found")
+          case Left(UserNotFoundError(_)) => NotFound("User not found")
         }
       }
 
@@ -276,7 +278,7 @@ class UsersEndpoints[F[_] : Effect]
         } yield tokensWithUser).value.flatMap {
           case Right(tokensWithUser) => Ok(tokensWithUser)
           case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")
-          case Left(UserNotFoundError()) => NotFound("User not found")
+          case Left(UserNotFoundError(_)) => NotFound("User not found")
         }
 
     }

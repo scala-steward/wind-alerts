@@ -11,7 +11,7 @@ object WillyWeatherHelper {
       errorCode <- parsed.hcursor.downField("error").downField("code").as[String].left.map(f => UnknownError(f.message))
     } yield errorCode).map(error => {
       error match {
-        case "model-not-found" => BeachNotFoundError()
+        case "model-not-found" => BeachNotFoundError("Beach not found")
         case _ => UnknownError(json)
       }
     }
@@ -21,7 +21,7 @@ object WillyWeatherHelper {
   def leftOnBeachNotFoundError[T](result: Either[SurfsUpError, T], default: T) = {
     if (result.isLeft) {
       result.left.get match {
-        case e@BeachNotFoundError() => Left(e)
+        case e@BeachNotFoundError(_) => Left(e)
         case _ => Right(default)
       }
     } else {

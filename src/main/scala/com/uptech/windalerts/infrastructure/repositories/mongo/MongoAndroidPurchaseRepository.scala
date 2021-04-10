@@ -29,6 +29,6 @@ class MongoAndroidPurchaseRepository(collection: MongoCollection[AndroidToken])(
   private def findLastByCreationTime(criteria: Bson):EitherT[IO, TokenNotFoundError, AndroidToken] = {
     EitherT.fromOptionF(for {
       all <- IO.fromFuture(IO(collection.find(criteria).sort(orderBy(descending("creationTime"))).collect().toFuture()))
-    } yield all.headOption, TokenNotFoundError())
+    } yield all.headOption, TokenNotFoundError("Token not found"))
   }
 }
