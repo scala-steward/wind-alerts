@@ -44,12 +44,6 @@ class MongoUserRepository(collection: MongoCollection[UserT])(implicit cs: Conte
     OptionT.liftF(IO.fromFuture(IO(collection.updateOne(equal("_id", new ObjectId(userId)), set("deviceToken", deviceToken)).toFuture().map(_ => ()))))
   }
 
-  override def findTrialExpiredUsers(): EitherT[IO, SurfsUpError, Seq[UserT]] = {
-    EitherT.liftF(findAllByCriteria(and(equal("userType", Trial.value),
-      lt("endTrialAt", System.currentTimeMillis())
-    )))
-  }
-
   private def findByCriteria(criteria: Bson) = {
     OptionT(findAllByCriteria(criteria).map(_.headOption))
   }
@@ -57,20 +51,26 @@ class MongoUserRepository(collection: MongoCollection[UserT])(implicit cs: Conte
   private def findAllByCriteria(criteria: Bson) =
     IO.fromFuture(IO(collection.find(criteria).toFuture()))
 
-  override def findAndroidPremiumExpiredUsers(): EitherT[IO, SurfsUpError, Seq[UserT]] = {
-    EitherT.liftF(findAllByCriteria(
+  override def findTrialExpiredUsers(): IO[Seq[UserT]] = {
+    findAllByCriteria(and(equal("userType", Trial.value),
+      lt("endTrialAt", System.currentTimeMillis())
+    ))
+  }
+
+  override def findAndroidPremiumExpiredUsers() = {
+    findAllByCriteria(
       and(equal("userType", Premium.value),
         equal("deviceType", "ANDROID"),
         lt("nextPaymentAt", System.currentTimeMillis())
-      )))
+      ))
   }
 
-  override def findApplePremiumExpiredUsers(): EitherT[IO, SurfsUpError, Seq[UserT]] = {
-    EitherT.liftF(findAllByCriteria(
+  override def findApplePremiumExpiredUsers() = {
+    findAllByCriteria(
       and(
         equal("userType", Premium.value),
         equal("deviceType", "IOS"),
         lt("nextPaymentAt", System.currentTimeMillis())
-      )))
+      ))
   }
 }

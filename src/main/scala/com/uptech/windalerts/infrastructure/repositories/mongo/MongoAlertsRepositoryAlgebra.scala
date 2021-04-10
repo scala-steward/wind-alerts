@@ -2,11 +2,10 @@ package com.uptech.windalerts.infrastructure.repositories.mongo
 
 import cats.data.{EitherT, OptionT}
 import cats.effect.{ContextShift, IO}
-import com.uptech.windalerts.core.alerts.{AlertsRepositoryT, AlertsT}
 import com.uptech.windalerts.core.alerts.domain.AlertT
-import com.uptech.windalerts.core.utils
+import com.uptech.windalerts.core.alerts.{AlertsRepositoryT, AlertsT}
+import com.uptech.windalerts.domain.AlertNotFoundError
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.{AlertNotFoundError, SurfsUpError}
 import io.scalaland.chimney.dsl._
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId
@@ -36,8 +35,8 @@ class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit
     IO.fromFuture(IO(collection.replaceOne(equal("_id", new ObjectId(alertId)), alert).toFuture().map(_ => alert)))
   }
 
-  override def getById(id: String): IO[Option[AlertT]] = {
-    findByCriteria(equal("_id", new ObjectId(id))).map(_.headOption)
+  def getById(id: String): OptionT[IO, AlertT] = {
+    OptionT(findByCriteria(equal("_id", new ObjectId(id))).map(_.headOption))
   }
 
   override def getAllForDay(day: Int, p:AlertT=>Boolean): IO[Seq[AlertT]] = {
@@ -58,19 +57,22 @@ class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit
     IO.fromFuture(IO(collection.insertOne(alert).toFuture().map(_ => alert)))
   }
 
-  override def delete(requester: String, alertId: String): EitherT[IO, SurfsUpError, Unit] = {
-    EitherT.liftF(IO.fromFuture(IO(collection.deleteOne(equal("_id", new ObjectId(alertId))).toFuture().map(_=>()))))
+  override def delete(requester: String, alertId: String): EitherT[IO, AlertNotFoundError, Unit] = {
+    for {
+      _ <- getById(alertId).toRight(AlertNotFoundError())
+      deleted <- EitherT.right(IO.fromFuture(IO(collection.deleteOne(equal("_id", new ObjectId(alertId))).toFuture().map(_=>()))))
+    } yield deleted
   }
 
-  override def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest):EitherT[IO, SurfsUpError, AlertT] = {
+  override def update(requester: String, alertId: String, updateAlertRequest: AlertRequest):EitherT[IO, AlertNotFoundError, AlertT] = {
     for {
-      oldAlert <- OptionT(getById(alertId)).toRight(AlertNotFoundError())
+      oldAlert <- getById(alertId).toRight(AlertNotFoundError())
       alertUpdated = updateAlertRequest.into[AlertT]
                         .withFieldComputed(_._id, u => new ObjectId(alertId))
                         .withFieldComputed(_.owner, _ => requester)
                         .withFieldComputed(_.createdAt, _=> oldAlert.createdAt).transform
       _ <- EitherT.liftF(IO(collection.replaceOne(equal("_id", new ObjectId(alertId)), alertUpdated).toFuture()))
-      alert <-  EitherT.liftF(getById(alertId)).map(alertOption=>alertOption.get)
+      alert <- getById(alertId).toRight(AlertNotFoundError())
     } yield alert
   }
 

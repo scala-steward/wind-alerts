@@ -5,7 +5,7 @@ import cats.effect.Sync
 import cats.implicits._
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.alerts.AlertsT
-import com.uptech.windalerts.core.social.subscriptions.SubscriptionsService
+import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, SubscriptionPurchase, SubscriptionsService}
 import com.uptech.windalerts.core.user.UserType.{Premium, PremiumExpired, Trial}
 import com.uptech.windalerts.domain.codecs._
 import com.uptech.windalerts.domain.domain._
@@ -21,20 +21,20 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
     )).toRight(UserNotFoundError("User not found"))
   }
 
-  def makeUserPremium(user: UserT, start: Long, expiry: Long): EitherT[F, SurfsUpError, UserT] = {
+  def makeUserPremium(user: UserT, start: Long, expiry: Long): EitherT[F, UserNotFoundError, UserT] = {
     for {
-      operationResult <- repos.usersRepo().update(user.copy(userType = Premium.value, lastPaymentAt = start, nextPaymentAt = expiry)).toRight(CouldNotUpdateUserError()).leftWiden[SurfsUpError]
+      operationResult <- repos.usersRepo().update(user.copy(userType = Premium.value, lastPaymentAt = start, nextPaymentAt = expiry)).toRight(UserNotFoundError())
     } yield operationResult
   }
 
-  def makeUserPremiumExpired(user: UserT): EitherT[F, SurfsUpError, UserT] = {
+  def makeUserPremiumExpired(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
     for {
-      operationResult <- repos.usersRepo().update(user.copy(userType = PremiumExpired.value, nextPaymentAt = -1)).toRight(CouldNotUpdateUserError())
+      operationResult <- repos.usersRepo().update(user.copy(userType = PremiumExpired.value, nextPaymentAt = -1)).toRight(UserNotFoundError())
       _ <- EitherT.liftF(repos.alertsRepository().disableAllButOneAlerts(user._id.toHexString))
     } yield operationResult
   }
 
-  private def makeUserTrialExpired(eitherUser: UserT): EitherT[F, SurfsUpError, UserT] = {
+  private def makeUserTrialExpired(eitherUser: UserT): EitherT[F, UserNotFoundError, UserT] = {
     for {
       updated <- update(eitherUser.copy(userType = UserType.TrialExpired.value, lastPaymentAt = -1, nextPaymentAt = -1))
       _ <- EitherT.liftF(repos.alertsRepository().disableAllButOneAlerts(updated._id.toHexString))
@@ -51,35 +51,38 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
         }
       }
     } yield userWithUpdatedRole
-
   }
 
   def updateTrialUsers() = {
     for {
-      users <- repos.usersRepo().findTrialExpiredUsers()
-      _ <- convert(users.map(user => makeUserTrialExpired(user)).toList)
+      users <- EitherT.right(repos.usersRepo().findTrialExpiredUsers())
+      _ <- makeAllTrialExpired(users)
     } yield ()
+  }
+
+  private def makeAllTrialExpired(users: Seq[UserT]):EitherT[F, UserNotFoundError, List[UserT]] = {
+    users.map(user => makeUserTrialExpired(user)).toList.sequence
   }
 
   def updateAndroidSubscribedUsers() = {
     for {
-      users <- repos.usersRepo().findAndroidPremiumExpiredUsers()
-      _ <- convert(users.map(user=>updateAndroidSubscribedUser(user)).toList)
+      users <- EitherT.right(repos.usersRepo().findAndroidPremiumExpiredUsers())
+      _ <- users.map(user=>updateAndroidSubscribedUser(user)).toList.sequence
     } yield ()
   }
 
-  private def updateAndroidSubscribedUser(user:UserT ) = {
+  private def updateAndroidSubscribedUser(user:UserT ):EitherT[F, SurfsUpError, Unit] = {
     for {
       token <- repos.androidPurchaseRepo().getLastForUser(user._id.toHexString)
       purchase <- subscriptionsService.getAndroidPurchase(token.subscriptionId, token.purchaseToken)
-      _ <- updateSubscribedUserRole(user, purchase.startTimeMillis, purchase.expiryTimeMillis)
+      _ <- updateSubscribedUserRole(user, purchase.startTimeMillis, purchase.expiryTimeMillis).leftWiden[SurfsUpError]
     } yield ()
   }
 
-  def updateAppleSubscribedUsers() = {
+  def updateAppleSubscribedUsers():EitherT[F, SurfsUpError, Unit] = {
     for {
-      users <- repos.usersRepo().findApplePremiumExpiredUsers()
-      _ <- convert(users.map(user=>updateAppleSubscribedUser(user)).toList)
+      users <- EitherT.right(repos.usersRepo().findApplePremiumExpiredUsers())
+      _ <- users.map(user=>updateAppleSubscribedUser(user)).toList.sequence
     } yield ()
   }
 
@@ -87,7 +90,7 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
     for {
       token <- repos.applePurchaseRepo().getLastForUser(user._id.toHexString)
       purchase <- subscriptionsService.getApplePurchase(token.purchaseToken, secrets.read.surfsUp.apple.appSecret)
-      _ <- updateSubscribedUserRole(user, purchase.purchase_date_ms, purchase.expires_date_ms)
+      _ <- updateSubscribedUserRole(user, purchase.purchase_date_ms, purchase.expires_date_ms).leftWiden[SurfsUpError]
     } yield ()
   }
 
@@ -114,7 +117,7 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
     })
   }
   
-  def authorizeAlertEditRequest(user: UserT, alertId: String, alertRequest: AlertRequest): EitherT[F, SurfsUpError, UserT] = {
+  def authorizeAlertEditRequest(user: UserT, alertId: String, alertRequest: AlertRequest): EitherT[F, OperationNotAllowed, UserT] = {
     EitherT.liftF(repos.alertsRepository().getAllForUser(user._id.toHexString))
       .flatMap(alerts => EitherT.fromEither(authorizeAlertEditRequest(user, alertId, alerts, alertRequest)))
   }
@@ -149,7 +152,7 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
       token <- repos.androidPurchaseRepo().getPurchaseByToken(subscription.subscriptionNotification.purchaseToken)
       purchase <- subscriptionsService.getAndroidPurchase(token.subscriptionId, subscription.subscriptionNotification.purchaseToken)
       user <- userService.getUser(token.userId)
-      updatedUser <- updateSubscribedUserRole(user, purchase.startTimeMillis, purchase.expiryTimeMillis)
+      updatedUser <- updateSubscribedUserRole(user, purchase.startTimeMillis, purchase.expiryTimeMillis).leftWiden[SurfsUpError]
     } yield updatedUser
   }
 
@@ -166,8 +169,8 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
     for {
       token <- repos.androidPurchaseRepo().getLastForUser(u.id)
       purchase <- subscriptionsService.getAndroidPurchase(token.subscriptionId, token.purchaseToken)
-      dbUser <- userService.getUser(u.id)
-      premiumUser <- updateSubscribedUserRole(dbUser, purchase.startTimeMillis, purchase.expiryTimeMillis).map(_.asDTO())
+      dbUser <- userService.getUser(u.id).leftWiden[SurfsUpError]
+      premiumUser <- updateSubscribedUserRole(dbUser, purchase.startTimeMillis, purchase.expiryTimeMillis).map(_.asDTO()).leftWiden[SurfsUpError]
     } yield premiumUser
   }
 
@@ -184,8 +187,8 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
     for {
       token <- repos.applePurchaseRepo().getLastForUser(user.id)
       purchase <- subscriptionsService.getApplePurchase(token.purchaseToken, secrets.read.surfsUp.apple.appSecret)
-      dbUser <- userService.getUser(user.id)
-      premiumUser <- updateSubscribedUserRole(dbUser, purchase.purchase_date_ms, purchase.expires_date_ms).map(_.asDTO())
+      dbUser <- userService.getUser(user.id).leftWiden[SurfsUpError]
+      premiumUser <- updateSubscribedUserRole(dbUser, purchase.purchase_date_ms, purchase.expires_date_ms).map(_.asDTO()).leftWiden[SurfsUpError]
     } yield premiumUser
   }
 }

@@ -1,6 +1,5 @@
 package com.uptech.windalerts.notifications
 
-import java.io.FileInputStream
 import cats.effect.{ExitCode, IO, IOApp}
 import cats.implicits._
 import com.google.auth.oauth2.GoogleCredentials
@@ -9,19 +8,19 @@ import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.softwaremill.sttp.HttpURLConnectionBackend
 import com.uptech.windalerts.LazyRepos
 import com.uptech.windalerts.core.alerts.AlertsService
-import com.uptech.windalerts.core.beaches.{BeachService, SwellsService, TidesService, WindsService}
+import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.notifications.Notifications
 import com.uptech.windalerts.core.otp.OTPService
-import com.uptech.windalerts.core.social.subscriptions.SubscriptionsService
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
 import com.uptech.windalerts.domain._
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
-import com.uptech.windalerts.infrastructure.endpoints.{HttpErrorHandler, NotificationEndpoints}
+import com.uptech.windalerts.infrastructure.endpoints.NotificationEndpoints
 import com.uptech.windalerts.infrastructure.social.subscriptions.SubscriptionsServiceImpl
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
 
+import java.io.FileInputStream
 import scala.concurrent.duration.Duration
 import scala.util.Try
 
@@ -56,10 +55,6 @@ object SendNotifications extends IOApp {
   lazy val adjustments = swellAdjustments.read
   val beachesService = new BeachService[IO](new WWBackedWindsService[IO](key), new WWBackedTidesService[IO](key, repos), new WWBackedSwellsService[IO](key, swellAdjustments.read))
 
-
-  implicit val httpErrorHandler: HttpErrorHandler[IO] = new HttpErrorHandler[IO]
-
-
   val auth = new AuthenticationService(repos)
   val otpService = new OTPService[IO](repos)
   val userCredentialsService = new UserCredentialService[IO](repos)
@@ -69,8 +64,8 @@ object SendNotifications extends IOApp {
   val userRolesService = new UserRolesService(repos, subscriptionService, usersService)
 
   val alerts = new AlertsService[IO](usersService, userRolesService, repos)
-  val notifications = new Notifications(alerts, beachesService, beachSeq, repos, dbWithAuth, httpErrorHandler, config = config.read)
-  val notificationsEndPoints = new NotificationEndpoints[IO](notifications, httpErrorHandler)
+  val notifications = new Notifications(alerts, beachesService, beachSeq, repos, dbWithAuth, config = config.read)
+  val notificationsEndPoints = new NotificationEndpoints[IO](notifications)
 
 
   def run(args: List[String]): IO[ExitCode] = {

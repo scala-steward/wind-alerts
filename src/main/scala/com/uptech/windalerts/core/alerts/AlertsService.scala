@@ -1,12 +1,13 @@
 package com.uptech.windalerts.core.alerts
 
+import cats.Bifunctor.ops.toAllBifunctorOps
 import cats.Functor
 import cats.data.EitherT
 import cats.effect.Sync
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.alerts.domain.AlertT
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
-import com.uptech.windalerts.domain.SurfsUpError
+import com.uptech.windalerts.domain.{AlertNotFoundError, SurfsUpError}
 import com.uptech.windalerts.domain.domain.{Alert, AlertRequest, SurfsUpEitherT, UserId}
 
 class AlertsService[F[_] : Sync](usersService: UserService[F], userRolesService: UserRolesService[F], repo: Repos[F]) {
@@ -22,15 +23,15 @@ class AlertsService[F[_] : Sync](usersService: UserService[F], userRolesService:
     EitherT.liftF(repo.alertsRepository().save(r, u.id)).map(_.asDTO())
   }
 
-  def update(alertId: String, u: UserId, r: AlertRequest) = {
+  def update(alertId: String, u: UserId, r: AlertRequest):EitherT[F, SurfsUpError, Alert] = {
     for {
       dbUser <- usersService.getUser(u.id)
-      _ <- userRolesService.authorizeAlertEditRequest(dbUser, alertId, r)
-      saved <- updateT(u.id, alertId, r).map(_.asDTO())
+      _ <- userRolesService.authorizeAlertEditRequest(dbUser, alertId, r).leftWiden[SurfsUpError]
+      saved <- update(u.id, alertId, r).map(_.asDTO()).leftWiden[SurfsUpError]
     } yield saved
   }
 
-  def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest): EitherT[F, SurfsUpError, AlertT] = repo.alertsRepository().updateT(requester, alertId, updateAlertRequest)
+  def update(requester: String, alertId: String, updateAlertRequest: AlertRequest): EitherT[F, AlertNotFoundError, AlertT] = repo.alertsRepository().update(requester, alertId, updateAlertRequest)
 
   def getAllForUser(user: String): F[AlertsT] = repo.alertsRepository().getAllForUser(user)
 
@@ -40,7 +41,7 @@ class AlertsService[F[_] : Sync](usersService: UserService[F], userRolesService:
       .map(_.filter(_.isToBeAlertedNow()))
   }
 
-  def deleteT(requester: String, alertId: String): EitherT[F, SurfsUpError, Unit] = {
+  def deleteT(requester: String, alertId: String) = {
     repo.alertsRepository().delete(requester, alertId)
   }
 }

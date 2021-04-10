@@ -5,9 +5,8 @@ import cats.effect.Sync
 import com.github.t3hnar.bcrypt._
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.utils
-import com.uptech.windalerts.domain.domain.{ChangePasswordRequest, SurfsUpEitherT}
-import com.uptech.windalerts.domain.{CouldNotUpdatePasswordError, SurfsUpError, UserAuthenticationFailedError, UserNotFoundError}
-import cats.syntax.functor._
+import com.uptech.windalerts.domain.domain.ChangePasswordRequest
+import com.uptech.windalerts.domain.{SurfsUpError, UserAuthenticationFailedError, UserNotFoundError}
 
 class UserCredentialService[F[_] : Sync](repos: Repos[F])  {
   def getByCredentials(
@@ -19,11 +18,7 @@ class UserCredentialService[F[_] : Sync](repos: Repos[F])  {
     } yield passwordMatched
 
   private def isPasswordMatch(password: String, creds: Credentials) = {
-    EitherT.fromEither(if (password.isBcrypted(creds.password)) {
-      Right(creds)
-    } else {
-      Left(UserAuthenticationFailedError(creds.email))
-    })
+    EitherT.cond(password.isBcrypted(creds.password), creds, UserAuthenticationFailedError(creds.email))
   }
 
   def resetPassword(

@@ -13,8 +13,8 @@ import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
 import com.uptech.windalerts.domain.{secrets, swellAdjustments}
 import com.uptech.windalerts.infrastructure.beaches._
-import com.uptech.windalerts.infrastructure.endpoints.logger._
 import com.uptech.windalerts.infrastructure.endpoints._
+import com.uptech.windalerts.infrastructure.endpoints.logger._
 import com.uptech.windalerts.infrastructure.social.subscriptions.SubscriptionsServiceImpl
 import org.http4s.implicits._
 import org.http4s.rho.swagger.SwaggerMetadata
@@ -54,12 +54,10 @@ object UsersServer extends IOApp {
         apiKey <- IO(secrets.read.surfsUp.willyWeather.key)
         beaches <- IO(new BeachService[IO](new WWBackedWindsService[IO](apiKey), new WWBackedTidesService[IO](apiKey, repos), new WWBackedSwellsService[IO](apiKey, swellAdjustments.read)))
 
-        httpErrorHandler <- IO(new HttpErrorHandler[IO])
-
         endpoints <- IO(new UsersEndpoints(userCredentialsService, usersService, socialLoginService, userRolesService, subscriptionsService))
 
         alertService <- IO(new AlertsService[IO](usersService, userRolesService, repos))
-        alertsEndPoints <- IO(new AlertsEndpoints(alertService, usersService, auth, httpErrorHandler))
+        alertsEndPoints <- IO(new AlertsEndpoints(alertService))
         beachesEndpointsRho = new BeachesEndpointsRho[IO](beaches).toRoutes(swaggerUiRhoMiddleware)
 
         httpApp <- IO(errors.errorMapper(Logger.httpApp(true, true, logAction = requestLogger)(
@@ -70,7 +68,7 @@ object UsersServer extends IOApp {
             "/v1/users/social/apple" -> endpoints.appleEndpoints(),
             "/v1/users/alerts" -> auth.middleware(alertsEndPoints.allUsersService()),
             "/v2/beaches" -> beachesEndpointsRho,
-            "" -> new BeachesEndpoints[IO](beaches, httpErrorHandler).allRoutes(),
+            "" -> new BeachesEndpoints[IO](beaches).allRoutes(),
 
           ).orNotFound)))
         server <- BlazeServerBuilder[IO]
