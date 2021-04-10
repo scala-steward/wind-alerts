@@ -2,15 +2,11 @@ package com.uptech.windalerts.core.alerts
 
 import cats.data.EitherT
 import com.uptech.windalerts.core.alerts.domain.AlertT
-import com.uptech.windalerts.core.notifications
-import com.uptech.windalerts.domain
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.SurfsUpError
+import com.uptech.windalerts.domain.{AlertNotFoundError, SurfsUpError}
 
 trait AlertsRepositoryT[F[_]] {
   def disableAllButOneAlerts(userId: String): F[Seq[AlertT]]
-
-  def getById(id: String): F[Option[AlertT]]
 
   def getAllEnabled(): F[Seq[AlertT]]
 
@@ -20,7 +16,7 @@ trait AlertsRepositoryT[F[_]] {
 
   def save(alert: AlertRequest, user: String): F[AlertT]
 
-  def delete(requester: String, id: String): EitherT[F, SurfsUpError, Unit]
+  def delete(requester: String, id: String):  EitherT[F, AlertNotFoundError, Unit]
 
-  def updateT(requester: String, alertId: String, updateAlertRequest: AlertRequest): EitherT[F, SurfsUpError, AlertT]
+  def update(requester: String, alertId: String, updateAlertRequest: AlertRequest): EitherT[F, AlertNotFoundError, AlertT]
 }

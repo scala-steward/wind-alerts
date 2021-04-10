@@ -11,16 +11,14 @@ import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.user.UserT
 import com.uptech.windalerts.domain.beaches.Beach
 import com.uptech.windalerts.domain.config.AppConfig
-import com.uptech.windalerts.domain.domain.BeachId
 import com.uptech.windalerts.domain.domain
-import com.uptech.windalerts.infrastructure.endpoints.HttpErrorHandler
+import com.uptech.windalerts.domain.domain.BeachId
 import org.log4s.getLogger
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long, Beach], repos:Repos[IO], firebaseMessaging: FirebaseMessaging, H: HttpErrorHandler[IO],
-                    config: AppConfig) {
+class Notifications(A: AlertsService[IO], B: BeachService[IO], beaches: Map[Long, Beach], repos: Repos[IO], firebaseMessaging: FirebaseMessaging, config: AppConfig) {
   private val logger = getLogger
 
   final case class AlertWithBeach(alert: AlertT, beach: domain.Beach)

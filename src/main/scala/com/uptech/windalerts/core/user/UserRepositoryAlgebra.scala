@@ -17,9 +17,9 @@ trait UserRepositoryAlgebra[F[_]] {
 
   def updateDeviceToken(userId: String, deviceToken: String): OptionT[F, Unit]
 
-  def findTrialExpiredUsers(): EitherT[F, SurfsUpError, Seq[UserT]]
+  def findTrialExpiredUsers(): F[Seq[UserT]]
 
-  def findAndroidPremiumExpiredUsers(): EitherT[F, SurfsUpError, Seq[UserT]]
+  def findAndroidPremiumExpiredUsers(): F[Seq[UserT]]
 
-  def findApplePremiumExpiredUsers(): EitherT[F, SurfsUpError, Seq[UserT]]
+  def findApplePremiumExpiredUsers(): F[Seq[UserT]]
 }

@@ -3,11 +3,11 @@ package com.uptech.windalerts.infrastructure.endpoints
 import cats.effect.{ContextShift, Effect}
 import cats.implicits._
 import com.uptech.windalerts.core.user.UserRolesService
+import com.uptech.windalerts.domain.{TokenNotFoundError, UserNotFoundError}
 import org.http4s.HttpRoutes
 import org.http4s.dsl.Http4sDsl
 
-class UpdateUserRolesEndpoints[F[_]: Effect](userRoles: UserRolesService[F],
-                                             httpErrorHandler: HttpErrorHandler[F])(implicit cs: ContextShift[F]) extends Http4sDsl[F] {
+class UpdateUserRolesEndpoints[F[_]: Effect](userRoles: UserRolesService[F]) extends Http4sDsl[F] {
   def endpoints(): HttpRoutes[F] =
     HttpRoutes.of[F] {
       case _@GET -> Root / "update" / "trial" =>
@@ -16,7 +16,7 @@ class UpdateUserRolesEndpoints[F[_]: Effect](userRoles: UserRolesService[F],
         } yield response
         action.value.flatMap {
           case Right(_) => Ok()
-          case Left(error) => httpErrorHandler.handleThrowable(error)
+          case Left(UserNotFoundError(_)) => NotFound("User not found")
         }
 
       case _@GET -> Root / "update" / "subscribed" / "android" =>
@@ -25,7 +25,8 @@ class UpdateUserRolesEndpoints[F[_]: Effect](userRoles: UserRolesService[F],
         } yield response
         action.value.flatMap {
           case Right(_) => Ok()
-          case Left(error) => httpErrorHandler.handleThrowable(error)
+          case Left(UserNotFoundError(_)) => NotFound("User not found")
+          case Left(TokenNotFoundError(_)) => NotFound("Token not found")
         }
 
       case _@GET -> Root / "update" / "subscribed" / "apple" =>
@@ -34,7 +35,8 @@ class UpdateUserRolesEndpoints[F[_]: Effect](userRoles: UserRolesService[F],
         } yield response
         action.value.flatMap {
           case Right(_) => Ok()
-          case Left(error) => httpErrorHandler.handleThrowable(error)
+          case Left(UserNotFoundError(_)) => NotFound("User not found")
+          case Left(TokenNotFoundError(_)) => NotFound("Token not found")
         }
     }
 
