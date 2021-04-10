@@ -1,7 +1,5 @@
 package com.uptech.windalerts.core.user
 
-import cats.data.{EitherT, OptionT}
-import cats.effect.Sync
 import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
@@ -20,13 +18,13 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService: UserCred
 
   def register(registerRequest: RegisterRequest): EitherT[F, UserAlreadyExistsError, TokensWithUser] = {
     for {
-      createUserResponse <- createUser(registerRequest)
+      createUserResponse <- create(registerRequest)
       _ <- EitherT.right(otpService.send(createUserResponse._1._id.toHexString, createUserResponse._1.email))
       tokens <- EitherT.right(generateNewTokens(createUserResponse._1))
     } yield tokens
   }
 
-  def createUser(rr: RegisterRequest): EitherT[F, UserAlreadyExistsError, (UserT, Credentials)] = {
+  def create(rr: RegisterRequest): EitherT[F, UserAlreadyExistsError, (UserT, Credentials)] = {
     val credentials = Credentials(rr.email, rr.password.bcrypt, rr.deviceType)
     for {
       _ <- doesNotExist(credentials.email, credentials.deviceType)

@@ -21,7 +21,7 @@ class MongoOtpRepository(collection: MongoCollection[OTPWithExpiry])(implicit cs
         )
       ).collect().toFuture()))
     } yield all.headOption,
-      OtpNotFoundError())
+      OtpNotFoundError("OTP not found"))
   }
 
   override def updateForUser(userId: String, otp: OTPWithExpiry): IO[OTPWithExpiry] = {

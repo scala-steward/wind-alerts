@@ -31,6 +31,6 @@ class MongoApplePurchaseRepository(collection: MongoCollection[AppleToken])(impl
         criteria
       ).sort(orderBy(descending("creationTime"))).collect().toFuture()))
     } yield all.headOption,
-      TokenNotFoundError())
+      TokenNotFoundError("Token not found"))
   }
 }

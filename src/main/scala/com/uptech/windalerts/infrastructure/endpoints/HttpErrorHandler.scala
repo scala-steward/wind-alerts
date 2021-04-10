@@ -27,27 +27,27 @@ class HttpErrorHandler[F[_] : Monad] extends Http4sDsl[F] {
       getLogger.error(e)(e.getMessage)
       BadRequest(s"Authentication failed for user $name")
     }
-    case e@RefreshTokenNotFoundError() => {
+    case e@RefreshTokenNotFoundError(_) => {
       getLogger.error(e)(e.getMessage)
       BadRequest(s"Refresh token not found")
     }
-    case e@TokenNotFoundError() => {
+    case e@TokenNotFoundError(_) => {
       getLogger.error(e)(e.getMessage)
       BadRequest(s"Token not found")
     }
-    case e@BeachNotFoundError() => {
+    case e@BeachNotFoundError(_) => {
       getLogger.error(e)(e.getMessage)
       NotFound(s"Beach not found")
     }
-    case e@TokenExpiredError() => {
+    case e@TokenExpiredError(_) => {
       getLogger.error(e)(e.getMessage)
       BadRequest(s"Token expired")
     }
-    case e@RefreshTokenExpiredError() => {
+    case e@RefreshTokenExpiredError(_) => {
       getLogger.error(e)(e.getMessage)
       BadRequest(s"Refresh token expired")
     }
-    case e@AlertNotFoundError() => {
+    case e@AlertNotFoundError(_) => {
       getLogger.error(e)(e.getMessage)
       NotFound("Alert not found")
     }
@@ -55,15 +55,15 @@ class HttpErrorHandler[F[_] : Monad] extends Http4sDsl[F] {
       getLogger.error(e)(e.getMessage)
       Forbidden(message)
     }
-    case e@OtpNotFoundError() => {
+    case e@OtpNotFoundError(_) => {
       getLogger.error(e)(e.getMessage)
       Forbidden("Invalid or expired OTP")
     }
-    case e@UserNotFoundError() => {
+    case e@UserNotFoundError(_) => {
       getLogger.error(e)(e.getMessage)
       NotFound("User not found")
     }
-    case e@WWError() => {
+    case e@WWError(_) => {
       getLogger.error(e)(e.getMessage)
       InternalServerError("Error while fetching beach status")
     }

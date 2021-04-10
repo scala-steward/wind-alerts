@@ -1,21 +1,21 @@
 package com.uptech.windalerts.domain
 
-trait SurfsUpError extends RuntimeException with Serializable
-case class TokenExpiredError() extends SurfsUpError
-case class UserNotFoundError() extends SurfsUpError
-case class BeachNotFoundError() extends SurfsUpError
+class SurfsUpError(message:String) extends RuntimeException(message) with Serializable
+case class TokenExpiredError(message: String = "Token not found") extends SurfsUpError(message)
+case class UserNotFoundError(message: String = "User not found") extends SurfsUpError(message)
+case class BeachNotFoundError(message: String = "Beach not found") extends SurfsUpError(message)
 
-case class OtpNotFoundError() extends SurfsUpError
-case class TokenNotFoundError() extends SurfsUpError
-case class AlertNotFoundError() extends SurfsUpError
+case class OtpNotFoundError(message: String = "OTP not found") extends SurfsUpError(message)
+case class TokenNotFoundError(message: String = "Token not found") extends SurfsUpError(message)
+case class AlertNotFoundError(message: String = "Alert not found") extends SurfsUpError(message)
 
-case class UserAlreadyExistsError(email: String, deviceType:String) extends SurfsUpError
-case class UserAuthenticationFailedError(email: String) extends SurfsUpError
-case class RefreshTokenNotFoundError() extends SurfsUpError
-case class RefreshTokenExpiredError() extends SurfsUpError
-case class CouldNotUpdateUserDeviceError() extends SurfsUpError
-case class CouldNotUpdatePasswordError() extends SurfsUpError
-case class CouldNotUpdateUserError() extends SurfsUpError
-case class OperationNotAllowed(message:String) extends SurfsUpError
-case class UnknownError(message:String) extends SurfsUpError
-case class WWError() extends SurfsUpError
+case class UserAlreadyExistsError(email: String, deviceType:String) extends SurfsUpError("")
+case class UserAuthenticationFailedError(email: String) extends SurfsUpError("")
+case class RefreshTokenNotFoundError(message: String = "Refresh token not found") extends SurfsUpError(message)
+case class RefreshTokenExpiredError(message: String = "Refresh token expired") extends SurfsUpError(message)
+case class CouldNotUpdateUserDeviceError(message: String = "Could not update user device") extends SurfsUpError(message)
+case class CouldNotUpdatePasswordError(message: String = "Could not update password") extends SurfsUpError(message)
+case class CouldNotUpdateUserError(message: String = "Beach not found") extends SurfsUpError(message)
+case class OperationNotAllowed(message:String) extends SurfsUpError(message)
+case class UnknownError(message:String) extends SurfsUpError(message)
+case class WWError(message: String = "Error from WillyWeather") extends SurfsUpError(message)
