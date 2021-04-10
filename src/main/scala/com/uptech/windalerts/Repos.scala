@@ -2,7 +2,7 @@ package com.uptech.windalerts
 
 import java.io.File
 import cats.Eval
-import cats.effect.{ContextShift, IO}
+import cats.effect.{ContextShift, IO, Sync}
 import com.google.api.services.androidpublisher.AndroidPublisher
 import com.uptech.windalerts.core.alerts.AlertsRepositoryT
 import com.uptech.windalerts.core.alerts.domain.AlertT

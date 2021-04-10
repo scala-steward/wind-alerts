@@ -17,15 +17,15 @@ class MongoApplePurchaseRepository(collection: MongoCollection[AppleToken])(impl
     EitherT.liftF(IO.fromFuture(IO(collection.insertOne(token).toFuture().map(_ => token))))
   }
 
-  override def getLastForUser(userId: String): EitherT[IO, SurfsUpError, AppleToken] = {
+  override def getLastForUser(userId: String): EitherT[IO, TokenNotFoundError, AppleToken] = {
     findLastCreationTime(equal("userId", userId))
   }
 
-  override def getPurchaseByToken(purchaseToken: String) = {
+  override def getPurchaseByToken(purchaseToken: String): EitherT[IO, TokenNotFoundError, AppleToken] = {
     findLastCreationTime(equal("purchaseToken", purchaseToken))
   }
 
-  private def findLastCreationTime(criteria: Bson): EitherT[IO, SurfsUpError, AppleToken] = {
+  private def findLastCreationTime(criteria: Bson): EitherT[IO, TokenNotFoundError, AppleToken] = {
     EitherT.fromOptionF(for {
       all <- IO.fromFuture(IO(collection.find(
         criteria

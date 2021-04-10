@@ -56,7 +56,7 @@ object UsersServer extends IOApp {
 
         httpErrorHandler <- IO(new HttpErrorHandler[IO])
 
-        endpoints <- IO(new UsersEndpoints(repos, userCredentialsService, usersService, socialLoginService, userRolesService, subscriptionsService, httpErrorHandler))
+        endpoints <- IO(new UsersEndpoints(userCredentialsService, usersService, socialLoginService, userRolesService, subscriptionsService))
 
         alertService <- IO(new AlertsService[IO](usersService, userRolesService, repos))
         alertsEndPoints <- IO(new AlertsEndpoints(alertService, usersService, auth, httpErrorHandler))

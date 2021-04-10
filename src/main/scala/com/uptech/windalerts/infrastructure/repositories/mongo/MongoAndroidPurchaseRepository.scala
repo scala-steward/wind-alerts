@@ -14,11 +14,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class MongoAndroidPurchaseRepository(collection: MongoCollection[AndroidToken])(implicit cs: ContextShift[IO]) extends AndroidTokenRepository[IO]  {
 
-  override def create(token: AndroidToken): EitherT[IO, SurfsUpError, AndroidToken] = {
+  override def create(token: AndroidToken) = {
     EitherT.liftF(IO.fromFuture(IO(collection.insertOne(token).toFuture().map(_ => token))))
   }
 
-  override def getLastForUser(userId: String): EitherT[IO, SurfsUpError, AndroidToken] = {
+  override def getLastForUser(userId: String) = {
     findLastByCreationTime(equal("userId", userId))
   }
 
@@ -26,7 +26,7 @@ class MongoAndroidPurchaseRepository(collection: MongoCollection[AndroidToken])(
     findLastByCreationTime(equal("purchaseToken", purchaseToken))
   }
 
-  private def findLastByCreationTime(criteria: Bson):EitherT[IO, SurfsUpError, AndroidToken] = {
+  private def findLastByCreationTime(criteria: Bson):EitherT[IO, TokenNotFoundError, AndroidToken] = {
     EitherT.fromOptionF(for {
       all <- IO.fromFuture(IO(collection.find(criteria).sort(orderBy(descending("creationTime"))).collect().toFuture()))
     } yield all.headOption, TokenNotFoundError())

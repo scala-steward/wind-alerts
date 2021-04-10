@@ -17,15 +17,15 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class MongoUserRepository(collection: MongoCollection[UserT])(implicit cs: ContextShift[IO]) extends UserRepositoryAlgebra[IO] {
   override def getByUserIdEitherT(userId: String): EitherT[IO, Exception, UserT] = {
-    OptionT(getByUserId(userId)).toRight(UserNotFoundError())
+    getByUserId(userId).toRight(UserNotFoundError())
   }
 
-  override def getByUserId(userId: String): IO[Option[UserT]] = {
+  override def getByUserId(userId: String): OptionT[IO, UserT] = {
     findByCriteria(equal("_id", new ObjectId(userId)))
   }
 
 
-  override def getByEmailAndDeviceType(email: String, deviceType: String): IO[Option[UserT]] = {
+  override def getByEmailAndDeviceType(email: String, deviceType: String) = {
     findByCriteria(and(equal("email", email), equal("deviceType", deviceType)))
   }
 
@@ -34,11 +34,10 @@ class MongoUserRepository(collection: MongoCollection[UserT])(implicit cs: Conte
   }
 
   override def update(user: UserT): OptionT[IO, UserT] = {
-    OptionT.liftF(
-      for {
-        updateResultIO <- IO.fromFuture(IO(collection.replaceOne(equal("_id", user._id), user).toFuture()))
-        updatedUser <- getByUserId(user._id.toHexString).map(u=>u.get)
-      } yield updatedUser)
+    for {
+      _ <- OptionT.liftF(IO.fromFuture(IO(collection.replaceOne(equal("_id", user._id), user).toFuture())))
+      updatedUser <- getByUserId(user._id.toHexString)
+    } yield updatedUser
   }
 
   override def updateDeviceToken(userId: String, deviceToken: String): OptionT[IO, Unit] = {
@@ -52,7 +51,7 @@ class MongoUserRepository(collection: MongoCollection[UserT])(implicit cs: Conte
   }
 
   private def findByCriteria(criteria: Bson) = {
-    findAllByCriteria(criteria).map(_.headOption)
+    OptionT(findAllByCriteria(criteria).map(_.headOption))
   }
 
   private def findAllByCriteria(criteria: Bson) =

@@ -13,12 +13,12 @@ import com.uptech.windalerts.domain.{SurfsUpError, UnknownError, _}
 import io.circe.parser.parse
 
 class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: SubscriptionsService[F], userService: UserService[F]) {
-  def makeUserTrial(user: UserT): EitherT[F, SurfsUpError, UserT] = {
+  def makeUserTrial(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
     repos.usersRepo().update(user.copy(
       userType = Trial.value,
       startTrialAt = System.currentTimeMillis(),
       endTrialAt = System.currentTimeMillis() + (30L * 24L * 60L * 60L * 1000L),
-    )).toRight(CouldNotUpdateUserError())
+    )).toRight(UserNotFoundError())
   }
 
   def makeUserPremium(user: UserT, start: Long, expiry: Long): EitherT[F, SurfsUpError, UserT] = {
@@ -154,11 +154,11 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
   }
 
 
-  def verifyEmail(user: UserId, request: OTP) = {
+  def verifyEmail(user: UserId, request: OTP):EitherT[F, SurfsUpError, UserDTO] = {
     for {
       _ <- repos.otp().exists(request.otp, user.id)
       user <- userService.getUser(user.id)
-      updateResult <- makeUserTrial(user).map(_.asDTO())
+      updateResult <- makeUserTrial(user).map(_.asDTO()).leftWiden[SurfsUpError]
     } yield updateResult
   }
 

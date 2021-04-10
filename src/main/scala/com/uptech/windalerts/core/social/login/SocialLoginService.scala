@@ -5,8 +5,12 @@ import cats.effect.Sync
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.credentials.{AppleCredentials, FacebookCredentials, SocialCredentials}
 import com.uptech.windalerts.core.user.{UserService, UserT}
+import com.uptech.windalerts.domain.{SurfsUpError, UserAlreadyExistsError}
 import com.uptech.windalerts.domain.domain._
 import org.mongodb.scala.bson.ObjectId
+import cats.data.EitherT
+import cats.effect.Sync
+import cats.implicits._
 
 class SocialLoginService[F[_] : Sync](repos: Repos[F], userService: UserService[F]) {
 
@@ -39,19 +43,19 @@ class SocialLoginService[F[_] : Sync](repos: Repos[F], userService: UserService[
   def registerOrLoginSocialUser[T <: SocialCredentials](
                                                          socialUser: SocialUser,
                                                          credentialFinder: SocialUser => F[Option[T]],
-                                                         credentialCreator: SocialUser => F[T]): SurfsUpEitherT[F, TokensWithUser] = {
+                                                         credentialCreator: SocialUser => F[T]): EitherT[F, SurfsUpError, TokensWithUser] = {
     for {
       existingCredential <- EitherT.liftF(credentialFinder(socialUser))
-      tokens <- existingCredential.map(_ => tokensForExistingUser(socialUser))
-        .getOrElse(tokensForNewUser(socialUser, credentialCreator))
+      tokens <- existingCredential.map(_ => tokensForExistingUser(socialUser).leftWiden[SurfsUpError])
+        .getOrElse(tokensForNewUser(socialUser, credentialCreator).leftWiden[SurfsUpError])
     } yield tokens
   }
 
-  private def tokensForNewUser[T <: SocialCredentials](socialUser: SocialUser, credentialCreator: SocialUser => F[T]) = {
+  private def tokensForNewUser[T <: SocialCredentials](socialUser: SocialUser, credentialCreator: SocialUser => F[T]):EitherT[F, UserAlreadyExistsError, TokensWithUser] = {
     for {
       _ <- userService.doesNotExist(socialUser.email, socialUser.deviceType)
-      result <- createUser[T](socialUser, credentialCreator)
-      tokens <- userService.generateNewTokens(result._1)
+      result <- EitherT.right(createUser[T](socialUser, credentialCreator))
+      tokens <- EitherT.right(userService.generateNewTokens(result._1))
     } yield tokens
   }
 
@@ -64,16 +68,16 @@ class SocialLoginService[F[_] : Sync](repos: Repos[F], userService: UserService[
 
   def createUser[T <: SocialCredentials](user: SocialUser,
                                          credentialCreator: SocialUser => F[T])
-  : SurfsUpEitherT[F, (UserT, SocialCredentials)] = {
+  : F[(UserT, SocialCredentials)] = {
     for {
-      savedCreds <- EitherT.liftF(credentialCreator(user))
-      savedUser <- EitherT.liftF(repos.usersRepo().create(
+      savedCreds <- credentialCreator(user)
+      savedUser <- repos.usersRepo().create(
         UserT.createSocialUser(
           new ObjectId(savedCreds._id.toHexString),
           user.email,
           user.name,
           user.deviceToken,
-          user.deviceType)))
+          user.deviceType))
     } yield (savedUser, savedCreds)
   }
 

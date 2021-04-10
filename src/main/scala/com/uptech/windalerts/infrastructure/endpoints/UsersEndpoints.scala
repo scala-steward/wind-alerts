@@ -1,68 +1,92 @@
 package com.uptech.windalerts.infrastructure.endpoints
 
-import cats.data.EitherT
+import cats.data.{EitherT, OptionT}
 import cats.effect.Effect
 import cats.implicits._
-import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.feedbacks.Feedback
 import com.uptech.windalerts.core.social.login.SocialLoginService
-import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken, SubscriptionsService}
-import com.uptech.windalerts.core.user.{UserRolesService, UserService, UserT}
+import com.uptech.windalerts.core.social.subscriptions.SubscriptionsService
+import com.uptech.windalerts.core.user.{UserRolesService, UserService}
+import com.uptech.windalerts.domain._
 import com.uptech.windalerts.domain.codecs._
-import com.uptech.windalerts.domain.domain.{AppleRegisterRequest, ChangePasswordRequest, FacebookRegisterRequest, ResetPasswordRequest, UserDTO, _}
-import com.uptech.windalerts.domain.{SurfsUpError, UnknownError, UserNotFoundError, secrets, statics}
-import com.uptech.windalerts.users._
-import io.circe.parser._
-import org.http4s.{AuthedRoutes, HttpRoutes, Request}
-import org.log4s.getLogger
+import com.uptech.windalerts.domain.domain.{AppleRegisterRequest, ChangePasswordRequest, FacebookRegisterRequest, ResetPasswordRequest, _}
+import org.http4s.dsl.Http4sDsl
+import org.http4s.{AuthedRoutes, HttpRoutes}
 
 class UsersEndpoints[F[_] : Effect]
-(repos: Repos[F], userCredentialsService: UserCredentialService[F], userService: UserService[F], socialLoginService: SocialLoginService[F], userRolesService: UserRolesService[F], subscriptionsService: SubscriptionsService[F], httpErrorHandler: HttpErrorHandler[F]) extends http[F](httpErrorHandler) {
+(userCredentialsService: UserCredentialService[F], userService: UserService[F], socialLoginService: SocialLoginService[F], userRolesService: UserRolesService[F], subscriptionsService: SubscriptionsService[F])
+  extends Http4sDsl[F] {
 
   def openEndpoints(): HttpRoutes[F] =
     HttpRoutes.of[F] {
-      case _@GET -> Root / "ping" =>
-        handle(() => EitherT.pure("pong"))
+      case _@GET -> Root / "ping" => Ok("pong")
 
       case _@GET -> Root / "privacy-policy" =>
-        handle(() => EitherT.pure(statics.privacyPolicy))
+        Ok(statics.privacyPolicy)
 
       case _@GET -> Root / "about-surfs-up" =>
-        handle(() => EitherT.pure(statics.aboutSurfsUp))
+        Ok(statics.aboutSurfsUp)
 
-      case req@POST -> Root =>
-        val rr = req.as[RegisterRequest]
-        handle(rr, userService.register(_))
+      case req@POST -> Root => {
+        (for {
+          rr <- EitherT.liftF(req.as[RegisterRequest])
+          user <- userService.register(rr)
+        } yield user).value.flatMap {
+          case Right(tokensWithUser) => Ok(tokensWithUser)
+          case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")
+        }
+      }
 
-      case req@POST -> Root / "login" =>
-        val credentials = req.as[LoginRequest]
-        handle(credentials, userService.login(_))
+      case req@POST -> Root / "login" => {
+        (for {
+          credentials <- EitherT.liftF(req.as[LoginRequest])
+          user <- userService.login(credentials)
+        } yield user).value.flatMap {
+          case Right(tokensWithUser) => Ok(tokensWithUser)
+          case Left(UserNotFoundError()) => NotFound("User not found")
+          case Left(UserAuthenticationFailedError(name)) => BadRequest(s"Authentication failed for user $name")
+        }
+      }
 
       case req@POST -> Root / "refresh" =>
-        val refreshToken = req.as[AccessTokenRequest]
-        handle(refreshToken, userService.refresh(_))
+        (for {
+          refreshToken <- EitherT.liftF(req.as[AccessTokenRequest])
+          user <- userService.refresh(refreshToken)
+        } yield user).value.flatMap {
+          case Right(tokensWithUser) => Ok(tokensWithUser)
+          case Left(RefreshTokenNotFoundError()) => BadRequest(s"Refresh token not found")
+          case Left(RefreshTokenExpiredError()) => BadRequest(s"Refresh token expired")
+          case Left(TokenNotFoundError()) => BadRequest(s"Token not found")
+          case Left(UserNotFoundError()) => NotFound("User not found")
+        }
 
       case req@POST -> Root / "changePassword" =>
-        val changePasswordRequest = req.as[ChangePasswordRequest]
-        handle(changePasswordRequest, userCredentialsService.changePassword(_))
+        (for {
+          changePasswordRequest <- EitherT.liftF(req.as[ChangePasswordRequest])
+          user <- userCredentialsService.changePassword(changePasswordRequest)
+        } yield user).value.flatMap {
+          case Right(_) => Ok()
+          case Left(UserAuthenticationFailedError(name)) => BadRequest(s"Authentication failed for user $name")
+        }
 
       case req@POST -> Root / "resetPassword" =>
-        val resetPasswordRequest = req.as[ResetPasswordRequest]
-        handle(resetPasswordRequest, (x: ResetPasswordRequest) => {
-          userCredentialsService.resetPassword(x.email, x.deviceType).map(_ => ())
-        })
+        (for {
+          resetPasswordRequest <- EitherT.liftF(req.as[ResetPasswordRequest])
+          user <- userCredentialsService.resetPassword(resetPasswordRequest.email, resetPasswordRequest.deviceType)
+        } yield user).value.flatMap {
+          case Right(_) => Ok()
+          case Left(UserAuthenticationFailedError(name)) => BadRequest(s"Authentication failed for user $name")
+          case Left(UserNotFoundError()) => NotFound("User not found")
+        }
 
       case req@POST -> Root / "purchase" / "android" / "update" => {
-        val action: EitherT[F, SurfsUpError, UserT] =
-          for {
-            update <- EitherT.liftF(req.as[AndroidUpdate])
-            user <- userRolesService.handleAndroidUpdate(update)
-          } yield user
-
-        action.value.flatMap {
+        (for {
+          update <- EitherT.liftF(req.as[AndroidUpdate])
+          user <- userRolesService.handleAndroidUpdate(update)
+        } yield user).value.flatMap {
           case Right(_) => Ok()
-          case Left(error) => httpErrorHandler.handleThrowable(error)
+          case Left(error) => InternalServerError(error.getMessage)
         }
       }
     }
@@ -71,97 +95,193 @@ class UsersEndpoints[F[_] : Effect]
   def authedService(): AuthedRoutes[UserId, F] =
     AuthedRoutes {
 
-      case authReq@PUT -> Root / "profile" as user => {
-        getLogger.error(s"Updating ${user.id} profile")
-        handleOk(authReq, user, (u: UserId, request: UpdateUserRequest) =>
-          userService.updateUserProfile(u.id, request.name, request.snoozeTill, request.disableAllAlerts, request.notificationsPerHour)
-            .map(_.asDTO)
-        )
+      case authReq@PUT -> Root / "profile" as u => {
+        OptionT.liftF(authReq.req.decode[UpdateUserRequest] {
+          request =>
+            (for {
+              response <- userService.updateUserProfile(u.id, request.name, request.snoozeTill, request.disableAllAlerts, request.notificationsPerHour)
+                .map(_.asDTO)
+            } yield response).value.flatMap {
+              case Right(response) => Ok(response)
+              case Left(UserNotFoundError()) => NotFound("User not found")
+            }
+        })
       }
 
       case _@GET -> Root / "profile" as user => {
-        handleOkNoDecode(user, (u: UserId) => {
-          repos.usersRepo().getByUserIdEitherT(u.id).map(_.asDTO()).leftMap(_ => UserNotFoundError())
-        }
+        OptionT.liftF(
+          (for {
+            response <- userService.getUser(user.id).map(_.asDTO())
+          } yield response).value.flatMap {
+            case Right(response) => Ok(response)
+            case Left(UserNotFoundError()) => NotFound("User not found")
+          }
         )
       }
 
       case authReq@PUT -> Root / "deviceToken" as user => {
-        getLogger.error(s"Updating ${user.id} token")
-        handleOk(authReq, user, (u: UserId, request: UpdateUserDeviceTokenRequest) =>
-          userService.updateDeviceToken(u.id, request.deviceToken)
-            .map(_.asDTO)
-        )
+        OptionT.liftF(authReq.req.decode[UpdateUserDeviceTokenRequest] {
+          req =>
+            (for {
+              response <- userService.updateDeviceToken(user.id, req.deviceToken)
+                .map(_.asDTO)
+            } yield response).value.flatMap {
+              case Right(response) => Ok(response)
+              case Left(UserNotFoundError()) => NotFound("User not found")
+            }
+        })
       }
 
       case _@POST -> Root / "sendOTP" as user => {
-        handleOkNoDecode(user, (u: UserId) => userService.sendOtp(user.id))
+        OptionT.liftF((for {
+          response <- userService.sendOtp(user.id)
+        } yield response).value.flatMap {
+          case Right(response) => Ok()
+          case Left(UserNotFoundError()) => NotFound("User not found")
+        })
       }
 
       case authReq@POST -> Root / "verifyEmail" as user => {
-        handleOk(authReq, user, (_: UserId, request: OTP) =>
-          userRolesService.verifyEmail(user, request)
-        )
+        OptionT.liftF(authReq.req.decode[OTP] {
+          req =>
+            (for {
+              response <- userRolesService.verifyEmail(user, req)
+            } yield response).value.flatMap {
+              case Right(response) => Ok(response)
+              case Left(OtpNotFoundError()) => NotFound("Invalid or expired OTP")
+              case Left(UserNotFoundError()) => NotFound("User not found")
+            }
+        })
       }
 
       case _@POST -> Root / "logout" as user => {
-        getLogger.error(s"logout ${user.id}")
-        handleOkNoDecode(user, (u: UserId) => userService.logoutUser(user.id))
+        OptionT.liftF({
+          (for {
+            response <- userService.logoutUser(user.id)
+          } yield response).value.flatMap {
+            case Right(response) => Ok(response)
+            case Left(UserNotFoundError()) => NotFound("User not found")
+          }
+        })
       }
 
+
       case authReq@POST -> Root / "feedbacks" as user => {
-        handleEmptyOk(authReq, user, (u: UserId, request: FeedbackRequest) =>
-          userService.createFeedback(Feedback(request.topic, request.message, user.id))
-        )
+        OptionT.liftF(authReq.req.decode[FeedbackRequest] {
+          request =>
+            (for {
+              response <- OptionT.liftF(userService.createFeedback(Feedback(request.topic, request.message, user.id)))
+            } yield response)
+              .value
+              .flatMap {
+                case _ => Ok()
+              }
+        })
       }
 
       case _@GET -> Root / "purchase" / "android" as user => {
-        handleOkNoDecode(user, (u: UserId) => userRolesService.getAndroidPurchase(u))
+        OptionT.liftF(
+          (for {
+            response <- userRolesService.getAndroidPurchase(user)
+          } yield response).value.flatMap {
+            case Right(response) => Ok(response)
+            case Left(TokenNotFoundError()) => NotFound("Token not found")
+            case Left(UserNotFoundError()) => NotFound("User not found")
+          }
+        )
       }
 
       case authReq@POST -> Root / "purchase" / "android" as user => {
-        handleEmptyOk(authReq, user, (u: UserId, request: AndroidReceiptValidationRequest) =>
-          subscriptionsService.getAndroidPurchase(user, request)
-        )
+        OptionT.liftF(authReq.req.decode[AndroidReceiptValidationRequest] {
+          req =>
+            (for {
+              response <- subscriptionsService.getAndroidPurchase(user, req)
+            } yield response).value.flatMap {
+              case Right(_) => Ok()
+              case Left(TokenNotFoundError()) => NotFound("Token not found")
+              case Left(UserNotFoundError()) => NotFound("User not found")            }
+        })
       }
 
       case _@GET -> Root / "purchase" / "apple" as user => {
-        handleOkNoDecode(user, (u: UserId) => userRolesService.updateAppleUser(user))
+        OptionT.liftF(
+          (for {
+            response <- userRolesService.updateAppleUser(user)
+          } yield response).value.flatMap {
+            case Right(response) => Ok(response)
+            case Left(TokenNotFoundError()) => NotFound("Token not found")
+            case Left(UserNotFoundError()) => NotFound("User not found")
+          }
+        )
       }
 
       case authReq@POST -> Root / "purchase" / "apple" as user => {
-        handleEmptyOk(authReq, user, (u: UserId, req: ApplePurchaseToken) =>
-          subscriptionsService.updateApplePurchase(user, req)
-        )
+        OptionT.liftF(authReq.req.decode[ApplePurchaseToken] {
+          req =>
+            (for {
+              response <- subscriptionsService.updateApplePurchase(user, req)
+            } yield response).value.flatMap {
+              case Right(response) => Ok()
+              case Left(TokenNotFoundError()) => NotFound("Token not found")
+              case Left(UserNotFoundError()) => NotFound("User not found")
+            }
+        })
       }
     }
-
 
 
   def facebookEndpoints(): HttpRoutes[F] = {
 
     HttpRoutes.of[F] {
       case req@POST -> Root => {
-        val facebookRegisterRequest = req.as[FacebookRegisterRequest]
-        handle(facebookRegisterRequest.map(_.asDomain()), socialLoginService.registerOrLoginFacebookUser(_))
+        (for {
+          facebookRegisterRequest <- EitherT.liftF(req.as[FacebookRegisterRequest])
+          tokensWithUser <- socialLoginService.registerOrLoginFacebookUser(facebookRegisterRequest.asDomain())
+        } yield tokensWithUser).value.flatMap {
+          case Right(tokensWithUser) => Ok(tokensWithUser)
+          case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")
+          case Left(UserNotFoundError()) => NotFound("User not found")
+        }
+      }
+
+      case req@POST -> Root / "login" => {
+        (for {
+          facebookRegisterRequest <- EitherT.liftF(req.as[FacebookRegisterRequest])
+          tokensWithUser <- socialLoginService.registerOrLoginFacebookUser(facebookRegisterRequest.asDomain())
+        } yield tokensWithUser).value.flatMap {
+          case Right(tokensWithUser) => Ok(tokensWithUser)
+          case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")
+          case Left(UserNotFoundError()) => NotFound("User not found")
+        }
+      }
+    }
+  }
+  def appleEndpoints(): HttpRoutes[F] = {
+    HttpRoutes.of[F] {
+      case req@POST -> Root => {
+        (for {
+          appleRegisterRequest <- EitherT.liftF(req.as[AppleRegisterRequest])
+          tokensWithUser <- socialLoginService.registerOrLoginAppleUser(appleRegisterRequest.asDomain())
+        } yield tokensWithUser).value.flatMap {
+          case Right(tokensWithUser) => Ok(tokensWithUser)
+          case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")
+          case Left(UserNotFoundError()) => NotFound("User not found")
+        }
       }
 
       case req@POST -> Root / "login" =>
-        val facebookLoginRequest = req.as[FacebookRegisterRequest]
-        handle(facebookLoginRequest.map(_.asDomain()), socialLoginService.registerOrLoginFacebookUser(_))
-    }
-  }
+        (for {
+          appleRegisterRequest <- EitherT.liftF(req.as[AppleRegisterRequest])
+          tokensWithUser <- socialLoginService.registerOrLoginAppleUser(appleRegisterRequest.asDomain())
+        } yield tokensWithUser).value.flatMap {
+          case Right(tokensWithUser) => Ok(tokensWithUser)
+          case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")
+          case Left(UserNotFoundError()) => NotFound("User not found")
+        }
 
-  def appleEndpoints(): HttpRoutes[F] = {
-    HttpRoutes.of[F] {
-      case req@POST -> Root =>
-        val appleRegisterRequest = req.as[AppleRegisterRequest]
-        handle(appleRegisterRequest.map(_.asDomain()), socialLoginService.registerOrLoginAppleUser(_))
-
-      case req@POST -> Root / "login" =>
-        val appleLoginRequest = req.as[AppleRegisterRequest]
-        handle(appleLoginRequest.map(_.asDomain()), socialLoginService.registerOrLoginAppleUser(_))
     }
 
   }
+
+
 }
