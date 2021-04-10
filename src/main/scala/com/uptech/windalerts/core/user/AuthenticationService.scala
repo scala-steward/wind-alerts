@@ -36,7 +36,7 @@ class AuthenticationService[F[_] : Effect](repos: Repos[F]) {
 
   val middleware = JwtAuthMiddleware[F, UserId](jwtAuth, _ => authenticate)
 
-  def createToken(userId: String, accessTokenId: String): EitherT[F, SurfsUpError, AccessTokenWithExpiry] = {
+  def createToken(userId: String, accessTokenId: String): AccessTokenWithExpiry = {
     val current = System.currentTimeMillis()
     val expiry = current / 1000 + TimeUnit.MILLISECONDS.toSeconds(ACCESS_TOKEN_EXPIRY)
     val claims = JwtClaim(
@@ -46,10 +46,10 @@ class AuthenticationService[F[_] : Effect](repos: Repos[F]) {
       subject = Some(userId)
     ) + ("accessTokenId", accessTokenId)
 
-    EitherT.pure(AccessTokenWithExpiry(Jwt.encode(claims, key.value, JwtAlgorithm.HS256), expiry))
+    AccessTokenWithExpiry(Jwt.encode(claims, key.value, JwtAlgorithm.HS256), expiry)
   }
 
-  def tokens(accessToken: String, refreshToken: RefreshToken, expiredAt: Long, user: UserT): EitherT[F, SurfsUpError, TokensWithUser] =
-    EitherT.pure(domain.TokensWithUser(accessToken, refreshToken.refreshToken, expiredAt, user.asDTO()))
+  def tokens(accessToken: String, refreshToken: RefreshToken, expiredAt: Long, user: UserT): TokensWithUser =
+    domain.TokensWithUser(accessToken, refreshToken.refreshToken, expiredAt, user.asDTO())
 
 }

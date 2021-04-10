@@ -25,6 +25,6 @@ class MongoCredentialsRepository(collection: MongoCollection[Credentials])(impli
   private def findByCriteria(criteria: Bson) =
     IO.fromFuture(IO(collection.find(criteria).toFuture()))
 
-  override def updatePassword(userId: String, password: String): OptionT[IO, Unit] =
-    OptionT.liftF(IO.fromFuture(IO(collection.updateOne(equal("_id", new ObjectId(userId)), set("password", password)).toFuture().map(_ => ()))))
+  override def updatePassword(userId: String, password: String): IO[Unit] =
+    IO.fromFuture(IO(collection.updateOne(equal("_id", new ObjectId(userId)), set("password", password)).toFuture().map(_ => ())))
 }

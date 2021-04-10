@@ -10,5 +10,5 @@ trait CredentialsRepository[F[_]] {
 
   def findByCreds(email: String, deviceType: String): OptionT[F, Credentials]
 
-  def updatePassword(userId: String, password: String): OptionT[F, Unit]
+  def updatePassword(userId: String, password: String): F[Unit]
 }

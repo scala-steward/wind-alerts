@@ -7,9 +7,9 @@ trait UserRepositoryAlgebra[F[_]] {
 
   def getByUserIdEitherT(userId: String): EitherT[F, Exception, UserT]
 
-  def getByUserId(userId: String): F[Option[UserT]]
+  def getByUserId(userId: String): OptionT[F, UserT]
 
-  def getByEmailAndDeviceType(email: String, deviceType: String): F[Option[UserT]]
+  def getByEmailAndDeviceType(email: String, deviceType: String): OptionT[F, UserT]
 
   def create(user: UserT): F[UserT]
 

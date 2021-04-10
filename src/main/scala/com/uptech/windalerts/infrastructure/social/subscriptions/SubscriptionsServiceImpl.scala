@@ -54,7 +54,7 @@ class SubscriptionsServiceImpl[F[_] : Sync](repos: Repos[F]) extends Subscriptio
   def getAndroidPurchase(user: UserId, request: AndroidReceiptValidationRequest):EitherT[F, SurfsUpError, AndroidToken] = {
     for {
       _ <- getAndroidPurchase(request)
-      savedToken <- repos.androidPurchaseRepo().create(AndroidToken(user.id, request.productId, request.token, System.currentTimeMillis()))
+      savedToken <- repos.androidPurchaseRepo().create(AndroidToken(user.id, request.productId, request.token, System.currentTimeMillis())).leftWiden[SurfsUpError]
     } yield savedToken
   }
 
