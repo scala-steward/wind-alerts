@@ -10,8 +10,6 @@ trait AlertsRepositoryT[F[_]] {
 
   def getAllEnabled(): F[Seq[AlertT]]
 
-  def getAllForDay(day: Int, p:AlertT=>Boolean): F[Seq[AlertT]]
-
   def getAllForUser(user: String): F[AlertsT]
 
   def save(alert: AlertRequest, user: String): F[AlertT]

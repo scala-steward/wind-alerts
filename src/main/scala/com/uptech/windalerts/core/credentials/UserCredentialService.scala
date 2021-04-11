@@ -4,9 +4,11 @@ import cats.data.EitherT
 import cats.effect.Sync
 import com.github.t3hnar.bcrypt._
 import com.uptech.windalerts.Repos
+import com.uptech.windalerts.core.user.UserT
 import com.uptech.windalerts.core.utils
-import com.uptech.windalerts.domain.domain.ChangePasswordRequest
-import com.uptech.windalerts.domain.{SurfsUpError, UserAuthenticationFailedError, UserNotFoundError}
+import com.uptech.windalerts.domain.domain.{ChangePasswordRequest, RegisterRequest}
+import com.uptech.windalerts.domain.{SurfsUpError, UserAlreadyExistsError, UserAuthenticationFailedError, UserNotFoundError}
+import org.mongodb.scala.bson.ObjectId
 
 class UserCredentialService[F[_] : Sync](repos: Repos[F])  {
   def getByCredentials(
@@ -43,6 +45,31 @@ class UserCredentialService[F[_] : Sync](repos: Repos[F])  {
 
   def updatePassword(userId: String, password: String): F[Unit] = {
     repos.credentialsRepo().updatePassword(userId, password.bcrypt)
+  }
+
+
+  def createIfDoesNotExist(rr: RegisterRequest): EitherT[F, UserAlreadyExistsError, Credentials] = {
+    val credentials = Credentials(rr.email, rr.password.bcrypt, rr.deviceType)
+    for {
+      _ <- doesNotExist(credentials.email, credentials.deviceType)
+      savedCreds <- EitherT.right(repos.credentialsRepo().create(credentials))
+    } yield savedCreds
+  }
+
+  def doesNotExist(email: String, deviceType: String): EitherT[F, UserAlreadyExistsError, (Unit, Unit, Unit)] = {
+    for {
+      emailDoesNotExist <- countToEither(repos.credentialsRepo().count(email, deviceType))
+      facebookDoesNotExist <- countToEither(repos.facebookCredentialsRepo().count(email, deviceType))
+      appleDoesNotExist <- countToEither(repos.appleCredentialsRepository().count(email, deviceType))
+    } yield (emailDoesNotExist, facebookDoesNotExist, appleDoesNotExist)
+  }
+
+  private def countToEither(count: F[Int]) : EitherT[F, UserAlreadyExistsError, Unit] = {
+    EitherT.liftF(count).flatMap(c => {
+      val e: Either[UserAlreadyExistsError, Unit] = if (c > 0) Left(UserAlreadyExistsError("", ""))
+      else Right(())
+      EitherT.fromEither(e)
+    })
   }
 
 }

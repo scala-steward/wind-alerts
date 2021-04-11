@@ -39,10 +39,6 @@ class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit
     OptionT(findByCriteria(equal("_id", new ObjectId(id))).map(_.headOption))
   }
 
-  override def getAllForDay(day: Int, p:AlertT=>Boolean): IO[Seq[AlertT]] = {
-    findByCriteria(and(equal("days", day), equal("enabled", true))).map(s=>s.filter(p))
-  }
-
   override def getAllForUser(user: String): IO[AlertsT] = {
     findByCriteria(equal("owner", user)).map(AlertsT(_))
   }

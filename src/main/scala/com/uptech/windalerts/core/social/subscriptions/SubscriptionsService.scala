@@ -8,11 +8,9 @@ import com.uptech.windalerts.domain.{SurfsUpError, domain}
 trait SubscriptionsService[F[_]] {
   def getAndroidPurchase(productId: String, token: String): EitherT[F, SurfsUpError, SubscriptionPurchase]
 
-  def getAndroidPurchase(request: AndroidReceiptValidationRequest): EitherT[F, SurfsUpError, SubscriptionPurchase]
+  def updateAndroidPurchase(user: UserId, request: AndroidReceiptValidationRequest): EitherT[F, SurfsUpError, AndroidToken]
 
-  def getAndroidPurchase(user: UserId, request: AndroidReceiptValidationRequest): EitherT[F, SurfsUpError, AndroidToken]
-
-  def getApplePurchase(receiptData: String, password: String): EitherT[F, SurfsUpError, AppleSubscriptionPurchase]
+  def getApplePurchase(receiptData: String, password: String): EitherT[F, SurfsUpError, SubscriptionPurchase]
 
   def updateApplePurchase(user: UserId, req: domain.ApplePurchaseToken):EitherT[F, SurfsUpError, AppleToken]
 }

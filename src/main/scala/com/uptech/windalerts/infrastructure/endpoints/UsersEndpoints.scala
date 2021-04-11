@@ -195,7 +195,7 @@ class UsersEndpoints[F[_] : Effect]
         OptionT.liftF(authReq.req.decode[AndroidReceiptValidationRequest] {
           req =>
             (for {
-              response <- subscriptionsService.getAndroidPurchase(user, req)
+              response <- subscriptionsService.updateAndroidPurchase(user, req)
             } yield response).value.flatMap {
               case Right(_) => Ok()
               case Left(TokenNotFoundError(_)) => NotFound("Token not found")

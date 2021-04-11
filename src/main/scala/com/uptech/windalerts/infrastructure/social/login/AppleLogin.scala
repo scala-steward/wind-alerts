@@ -1,32 +1,34 @@
 package com.uptech.windalerts.infrastructure.social.login
 
-import java.io.{DataInputStream, File}
-import java.security.PrivateKey
 import cats.data.EitherT
 import cats.effect.{ContextShift, IO}
+import cats.implicits._
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.turo.pushy.apns.auth.ApnsSigningKey
-import com.uptech.windalerts.core.social.login.{AppleAccessRequest, SocialPlatform, SocialUser}
-import com.uptech.windalerts.domain.UserNotFoundError
+import com.uptech.windalerts.core.social.login.{AppleAccessRequest, SocialLogin, SocialUser}
+import com.uptech.windalerts.core.social.subscriptions.SubscriptionPurchase
 import com.uptech.windalerts.domain.codecs._
-import com.uptech.windalerts.domain.domain.{AppleUser, SurfsUpEitherT, TokenResponse}
+import com.uptech.windalerts.domain.domain.{ApplePurchaseVerificationRequest, AppleSubscriptionPurchase, AppleUser, TokenResponse}
+import com.uptech.windalerts.domain.{SurfsUpError, UnknownError}
+import io.circe.optics.JsonPath.root
 import io.circe.parser
+import io.circe.syntax._
 import org.log4s.getLogger
 import pdi.jwt._
 
+import java.io.{DataInputStream, File}
+import java.security.PrivateKey
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-
-class ApplePlatform(filename: String)(implicit cs: ContextShift[IO]) extends SocialPlatform[IO, AppleAccessRequest] {
+class AppleLogin(filename: String)(implicit cs: ContextShift[IO]) extends SocialLogin[IO, AppleAccessRequest] {
   val privateKey = getPrivateKey(filename)
-
-  override def fetchUserFromPlatform(credentials: AppleAccessRequest): SurfsUpEitherT[IO, SocialUser] = {
-    fetchUserFromPlatform_(credentials).leftMap(_=>UserNotFoundError())
+  override def fetchUserFromPlatform(credentials: AppleAccessRequest): IO[SocialUser] = {
+    fetchUserFromPlatform_(credentials)
   }
 
-  private def fetchUserFromPlatform_(credentials: AppleAccessRequest): SurfsUpEitherT[IO, SocialUser]  = {
-    EitherT.liftF(IO.fromFuture(IO(Future(getUser(credentials.authorizationCode)))))
+  private def fetchUserFromPlatform_(credentials: AppleAccessRequest) = {
+    IO.fromFuture(IO(Future(getUser(credentials.authorizationCode))))
       .map(appleUser => SocialUser(appleUser.sub, appleUser.email, credentials.deviceType, credentials.deviceToken, credentials.name))
   }
 
