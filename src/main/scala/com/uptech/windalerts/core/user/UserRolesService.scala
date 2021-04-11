@@ -126,8 +126,7 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
     if (UserType(user.userType) == UserType.Premium || UserType(user.userType) == UserType.Trial) {
       Right(user)
     } else {
-      if (checkForNonPremiumUser(alertId, alert, alertRequest)) Right(user)
-      else Left(OperationNotAllowed(s"Please subscribe to perform this action"))
+      Either.cond(checkForNonPremiumUser(alertId, alert, alertRequest), user, OperationNotAllowed(s"Please subscribe to perform this action"))
     }
   }
 
