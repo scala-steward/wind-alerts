@@ -16,7 +16,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 
 class MongoUserRepository(collection: MongoCollection[UserT])(implicit cs: ContextShift[IO]) extends UserRepositoryAlgebra[IO] {
-  override def getByUserIdEitherT(userId: String): EitherT[IO, Exception, UserT] = {
+  override def getByUserIdEitherT(userId: String): EitherT[IO, UserNotFoundError, UserT] = {
     getByUserId(userId).toRight(UserNotFoundError())
   }
 

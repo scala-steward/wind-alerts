@@ -16,7 +16,7 @@ import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService,
 import com.uptech.windalerts.domain._
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints.NotificationEndpoints
-import com.uptech.windalerts.infrastructure.social.subscriptions.SubscriptionsServiceImpl
+import com.uptech.windalerts.infrastructure.social.subscriptions.{AppleSubscription, SubscriptionsServiceImpl}
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
 
@@ -59,7 +59,10 @@ object SendNotifications extends IOApp {
   val otpService = new OTPService[IO](repos)
   val userCredentialsService = new UserCredentialService[IO](repos)
   val usersService = new UserService(repos, userCredentialsService, otpService, auth)
-  val subscriptionService = new SubscriptionsServiceImpl(repos)
+  val appleSubscription = new AppleSubscription[IO]
+  val androidSubscription = new AppleSubscription[IO]
+
+  val subscriptionService = new SubscriptionsServiceImpl(appleSubscription, androidSubscription, repos)
 
   val userRolesService = new UserRolesService(repos, subscriptionService, usersService)
 

@@ -3,7 +3,7 @@ package com.uptech.windalerts.core.social.login
 import cats.data.EitherT
 import cats.effect.Sync
 import com.uptech.windalerts.Repos
-import com.uptech.windalerts.core.credentials.{AppleCredentials, FacebookCredentials, SocialCredentials}
+import com.uptech.windalerts.core.credentials.{AppleCredentials, FacebookCredentials, SocialCredentials, UserCredentialService}
 import com.uptech.windalerts.core.user.{UserService, UserT}
 import com.uptech.windalerts.domain.{SurfsUpError, UserAlreadyExistsError}
 import com.uptech.windalerts.domain.domain._
@@ -12,7 +12,7 @@ import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
 
-class SocialLoginService[F[_] : Sync](repos: Repos[F], userService: UserService[F]) {
+class SocialLoginService[F[_] : Sync](repos: Repos[F], userService: UserService[F], credentialService: UserCredentialService[F]) {
 
   def registerOrLoginAppleUser(credentials: AppleAccessRequest): SurfsUpEitherT[F, TokensWithUser] = {
     registerOrLoginUser[AppleAccessRequest, AppleCredentials](credentials,
@@ -31,11 +31,11 @@ class SocialLoginService[F[_] : Sync](repos: Repos[F], userService: UserService[
 
   def registerOrLoginUser[T <: AccessRequest, U <: SocialCredentials]
   (credentials: T,
-   socialPlatform: SocialPlatform[F, T],
+   socialPlatform: SocialLogin[F, T],
    credentialFinder: SocialUser => F[Option[U]],
    credentialCreator: SocialUser => F[U]): SurfsUpEitherT[F, TokensWithUser] = {
     for {
-      socialUser <- socialPlatform.fetchUserFromPlatform(credentials)
+      socialUser <- EitherT.right(socialPlatform.fetchUserFromPlatform(credentials))
       tokens <- registerOrLoginSocialUser(socialUser, credentialFinder, credentialCreator)
     } yield tokens
   }
@@ -53,7 +53,7 @@ class SocialLoginService[F[_] : Sync](repos: Repos[F], userService: UserService[
 
   private def tokensForNewUser[T <: SocialCredentials](socialUser: SocialUser, credentialCreator: SocialUser => F[T]):EitherT[F, UserAlreadyExistsError, TokensWithUser] = {
     for {
-      _ <- userService.doesNotExist(socialUser.email, socialUser.deviceType)
+      _ <- credentialService.doesNotExist(socialUser.email, socialUser.deviceType)
       result <- EitherT.right(createUser[T](socialUser, credentialCreator))
       tokens <- EitherT.right(userService.generateNewTokens(result._1))
     } yield tokens

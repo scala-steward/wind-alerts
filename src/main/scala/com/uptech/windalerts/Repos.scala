@@ -11,7 +11,7 @@ import com.uptech.windalerts.core.feedbacks.{Feedback, FeedbackRepository}
 import com.uptech.windalerts.core.notifications.{Notification, NotificationRepository}
 import com.uptech.windalerts.core.otp.{OTPWithExpiry, OtpRepository}
 import com.uptech.windalerts.core.refresh.tokens.{RefreshToken, RefreshTokenRepositoryAlgebra}
-import com.uptech.windalerts.core.social.login.{AppleAccessRequest, FacebookAccessRequest, SocialPlatform}
+import com.uptech.windalerts.core.social.login.{AppleAccessRequest, FacebookAccessRequest, SocialLogin}
 import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AndroidTokenRepository, AppleToken, AppleTokenRepository}
 import com.uptech.windalerts.core.user.{UserRepositoryAlgebra, UserT}
 import com.uptech.windalerts.domain.beaches.Beach
@@ -19,7 +19,7 @@ import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.secrets
 import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.repositories.mongo._
-import com.uptech.windalerts.infrastructure.social.login.{ApplePlatform, FacebookPlatform}
+import com.uptech.windalerts.infrastructure.social.login.{AppleLogin, FacebookLogin}
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AndroidPublisherHelper, ApplicationConfig}
 import com.uptech.windalerts.users._
 import org.mongodb.scala.{MongoClient, MongoDatabase}
@@ -55,9 +55,9 @@ trait Repos[F[_]] {
 
   def beaches() : Map[Long, Beach]
 
-  def applePlatform(): SocialPlatform[F, AppleAccessRequest]
+  def applePlatform(): SocialLogin[F, AppleAccessRequest]
 
-  def facebookPlatform(): SocialPlatform[F, FacebookAccessRequest]
+  def facebookPlatform(): SocialLogin[F, FacebookAccessRequest]
 
 }
 
@@ -202,11 +202,11 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
   override  def beaches = b.value
 
 
-  override def applePlatform(): SocialPlatform[IO, AppleAccessRequest] = {
+  override def applePlatform(): SocialLogin[IO, AppleAccessRequest] = {
     if (new File(s"/app/resources/Apple-${sys.env("projectId")}.p8").exists())
-      new ApplePlatform(s"/app/resources/Apple-${sys.env("projectId")}.p8")
-    else new ApplePlatform(s"src/main/resources/Apple.p8")
+      new AppleLogin(s"/app/resources/Apple-${sys.env("projectId")}.p8")
+    else new AppleLogin(s"src/main/resources/Apple.p8")
   }
 
-  override def facebookPlatform(): SocialPlatform[IO, FacebookAccessRequest] = new FacebookPlatform(fbKey.value)
+  override def facebookPlatform(): SocialLogin[IO, FacebookAccessRequest] = new FacebookLogin(fbKey.value)
 }

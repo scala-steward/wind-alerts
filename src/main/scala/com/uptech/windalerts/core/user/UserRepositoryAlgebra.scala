@@ -1,11 +1,11 @@
 package com.uptech.windalerts.core.user
 
 import cats.data.{EitherT, OptionT}
-import com.uptech.windalerts.domain.SurfsUpError
+import com.uptech.windalerts.domain.{SurfsUpError, UserNotFoundError}
 
 trait UserRepositoryAlgebra[F[_]] {
 
-  def getByUserIdEitherT(userId: String): EitherT[F, Exception, UserT]
+  def getByUserIdEitherT(userId: String): EitherT[F, UserNotFoundError, UserT]
 
   def getByUserId(userId: String): OptionT[F, UserT]
 

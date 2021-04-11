@@ -90,24 +90,12 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
     for {
       token <- repos.applePurchaseRepo().getLastForUser(user._id.toHexString)
       purchase <- subscriptionsService.getApplePurchase(token.purchaseToken, secrets.read.surfsUp.apple.appSecret)
-      _ <- updateSubscribedUserRole(user, purchase.purchase_date_ms, purchase.expires_date_ms).leftWiden[SurfsUpError]
+      _ <- updateSubscribedUserRole(user, purchase.startTimeMillis, purchase.expiryTimeMillis).leftWiden[SurfsUpError]
     } yield ()
   }
 
   def update(user: UserT): EitherT[F, UserNotFoundError, UserT] =
-    for {
-      saved <- repos.usersRepo().update(user).toRight(UserNotFoundError("User not found"))
-    } yield saved
-
-  def convert[A](list: List[EitherT[F, SurfsUpError, A]]) = {
-    import cats.implicits._
-
-    type Stack[A] = EitherT[F, SurfsUpError, A]
-
-    val eitherOfList: Stack[List[A]] = list.sequence
-    eitherOfList
-  }
-
+    repos.usersRepo().update(user).toRight(UserNotFoundError("User not found"))
 
   def authorizePremiumUsers(user: UserT): EitherT[F, SurfsUpError, UserT] = {
     EitherT.fromEither(if (UserType(user.userType) == UserType.Premium || UserType(user.userType) == UserType.Trial) {
@@ -187,7 +175,7 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
       token <- repos.applePurchaseRepo().getLastForUser(user.id)
       purchase <- subscriptionsService.getApplePurchase(token.purchaseToken, secrets.read.surfsUp.apple.appSecret)
       dbUser <- userService.getUser(user.id).leftWiden[SurfsUpError]
-      premiumUser <- updateSubscribedUserRole(dbUser, purchase.purchase_date_ms, purchase.expires_date_ms).map(_.asDTO()).leftWiden[SurfsUpError]
+      premiumUser <- updateSubscribedUserRole(dbUser, purchase.startTimeMillis, purchase.expiryTimeMillis).map(_.asDTO()).leftWiden[SurfsUpError]
     } yield premiumUser
   }
 }

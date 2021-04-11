@@ -3,7 +3,6 @@ package com.uptech.windalerts.core.user
 import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
-import com.github.t3hnar.bcrypt._
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.credentials.{Credentials, UserCredentialService}
 import com.uptech.windalerts.core.feedbacks.Feedback
@@ -19,16 +18,14 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService: UserCred
   def register(registerRequest: RegisterRequest): EitherT[F, UserAlreadyExistsError, TokensWithUser] = {
     for {
       createUserResponse <- create(registerRequest)
-      _ <- EitherT.right(otpService.send(createUserResponse._1._id.toHexString, createUserResponse._1.email))
       tokens <- EitherT.right(generateNewTokens(createUserResponse._1))
+      _ <- EitherT.right(otpService.send(createUserResponse._1._id.toHexString, createUserResponse._1.email))
     } yield tokens
   }
 
   def create(rr: RegisterRequest): EitherT[F, UserAlreadyExistsError, (UserT, Credentials)] = {
-    val credentials = Credentials(rr.email, rr.password.bcrypt, rr.deviceType)
     for {
-      _ <- doesNotExist(credentials.email, credentials.deviceType)
-      savedCreds <- EitherT.right(repos.credentialsRepo().create(credentials))
+      savedCreds <- userCredentialsService.createIfDoesNotExist(rr)
       saved <- EitherT.right(repos.usersRepo().create(
         UserT.createEmailUser(new ObjectId(savedCreds._id.toHexString),
           rr.email,
@@ -46,7 +43,6 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService: UserCred
     } yield tokens
   }
 
-
   def resetUserSession(dbUser: UserT, newDeviceToken: String):EitherT[F, UserNotFoundError, TokensWithUser] = {
     for {
       _ <- updateDeviceToken(dbUser._id.toHexString, newDeviceToken)
@@ -58,21 +54,20 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService: UserCred
   def refresh(refreshToken: AccessTokenRequest): EitherT[F, SurfsUpError, TokensWithUser] = {
     for {
       oldRefreshToken <- repos.refreshTokenRepo().getByRefreshToken(refreshToken.refreshToken).toRight(RefreshTokenNotFoundError())
-      oldValidRefreshToken <- {
-        val eitherT: SurfsUpEitherT[F, RefreshToken] = {
-          if (oldRefreshToken.isExpired()) {
-            EitherT.fromEither(Left(RefreshTokenExpiredError()))
-          } else {
-            import cats.implicits._
-            repos.refreshTokenRepo().updateExpiry(oldRefreshToken._id.toHexString, (System.currentTimeMillis() + RefreshToken.REFRESH_TOKEN_EXPIRY)).leftWiden[SurfsUpError]
-          }
-        }
-        eitherT
-      }
+      oldValidRefreshToken <- updateIfNotExpired(oldRefreshToken)
       _ <- EitherT.liftF(repos.refreshTokenRepo().deleteForUserId(oldValidRefreshToken.userId))
       user <- getUser(oldRefreshToken.userId)
       tokens <- EitherT.right[SurfsUpError](generateNewTokens(user))
     } yield tokens
+  }
+
+  private def updateIfNotExpired(oldRefreshToken: RefreshToken): SurfsUpEitherT[F, RefreshToken] = {
+    if (oldRefreshToken.isExpired()) {
+      EitherT.fromEither(Left(RefreshTokenExpiredError()))
+    } else {
+      import cats.implicits._
+      repos.refreshTokenRepo().updateExpiry(oldRefreshToken._id.toHexString, (System.currentTimeMillis() + RefreshToken.REFRESH_TOKEN_EXPIRY)).leftWiden[SurfsUpError]
+    }
   }
 
   def generateNewTokens(user: UserT): F[TokensWithUser] = {
@@ -109,22 +104,6 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService: UserCred
       _ <- EitherT.liftF(repos.refreshTokenRepo().deleteForUserId(userId))
       _ <- updateDeviceToken(userId, "")
     } yield ()
-  }
-
-  def doesNotExist(email: String, deviceType: String): EitherT[F, UserAlreadyExistsError, (Unit, Unit, Unit)] = {
-    for {
-      emailDoesNotExist <- countToEither(repos.credentialsRepo().count(email, deviceType))
-      facebookDoesNotExist <- countToEither(repos.facebookCredentialsRepo().count(email, deviceType))
-      appleDoesNotExist <- countToEither(repos.appleCredentialsRepository().count(email, deviceType))
-    } yield (emailDoesNotExist, facebookDoesNotExist, appleDoesNotExist)
-  }
-
-  private def countToEither(count: F[Int]) : EitherT[F, UserAlreadyExistsError, Unit] = {
-    EitherT.liftF(count).flatMap(c => {
-      val e: Either[UserAlreadyExistsError, Unit] = if (c > 0) Left(UserAlreadyExistsError("", ""))
-      else Right(())
-      EitherT.fromEither(e)
-    })
   }
 
   def getUser(email: String, deviceType: String): EitherT[F, UserNotFoundError, UserT] =

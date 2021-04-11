@@ -15,7 +15,7 @@ import com.uptech.windalerts.domain.{secrets, swellAdjustments}
 import com.uptech.windalerts.infrastructure.beaches._
 import com.uptech.windalerts.infrastructure.endpoints._
 import com.uptech.windalerts.infrastructure.endpoints.logger._
-import com.uptech.windalerts.infrastructure.social.subscriptions.SubscriptionsServiceImpl
+import com.uptech.windalerts.infrastructure.social.subscriptions.{AndroidSubscription, AppleSubscription, SubscriptionsServiceImpl}
 import org.http4s.implicits._
 import org.http4s.rho.swagger.SwaggerMetadata
 import org.http4s.rho.swagger.models.{Info, Tag}
@@ -46,9 +46,11 @@ object UsersServer extends IOApp {
         otpService <- IO(new OTPService[IO](repos))
         userCredentialsService <- IO(new UserCredentialService[IO](repos))
         usersService <- IO(new UserService(repos, userCredentialsService, otpService, auth))
-        socialLoginService <- IO(new SocialLoginService(repos, usersService))
+        socialLoginService <- IO(new SocialLoginService(repos, usersService, userCredentialsService))
 
-        subscriptionsService <- IO(new SubscriptionsServiceImpl[IO](repos))
+        appleSubscription <- IO(new AppleSubscription[IO]())
+        androidSubscription <- IO(new AndroidSubscription[IO](repos))
+        subscriptionsService <- IO(new SubscriptionsServiceImpl[IO](appleSubscription, androidSubscription, repos))
         userRolesService <- IO(new UserRolesService[IO](repos, subscriptionsService, usersService))
 
         apiKey <- IO(secrets.read.surfsUp.willyWeather.key)
