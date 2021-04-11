@@ -13,15 +13,17 @@ class NotificationEndpoints[F[_] : Effect](notifications: Notifications) extends
   def routes() = {
     HttpRoutes.of[F] {
       case GET -> Root / "notify" => {
-        val res = notifications.sendNotification
-        val either = res.value.unsafeRunSync()
-        Ok()
+        notify()
       }
       case GET -> Root => {
-        val res = notifications.sendNotification
-        val either = res.value.unsafeRunSync()
-        Ok()
+        notify()
       }
     }
+  }
+
+  private def notify() = {
+    val res = notifications.sendNotification
+    val _ = res.value.unsafeRunSync()
+    Ok()
   }
 }
