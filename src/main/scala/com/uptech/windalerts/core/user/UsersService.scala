@@ -10,7 +10,7 @@ import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.refresh.tokens.RefreshToken
 import com.uptech.windalerts.core.utils
 import com.uptech.windalerts.domain._
-import com.uptech.windalerts.domain.domain.{SurfsUpEitherT, _}
+import com.uptech.windalerts.domain.domain.{ _}
 import org.mongodb.scala.bson.ObjectId
 
 class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService: UserCredentialService[F], otpService: OTPService[F], auth: AuthenticationService[F]) {
@@ -61,7 +61,7 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService: UserCred
     } yield tokens
   }
 
-  private def updateIfNotExpired(oldRefreshToken: RefreshToken): SurfsUpEitherT[F, RefreshToken] = {
+  private def updateIfNotExpired(oldRefreshToken: RefreshToken): cats.data.EitherT[F, com.uptech.windalerts.domain.SurfsUpError, RefreshToken] = {
     if (oldRefreshToken.isExpired()) {
       EitherT.fromEither(Left(RefreshTokenExpiredError()))
     } else {

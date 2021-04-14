@@ -5,7 +5,7 @@ import cats.effect.Sync
 import cats.{Functor, Monad}
 import com.softwaremill.sttp._
 import com.uptech.windalerts.core.beaches.WindsService
-import com.uptech.windalerts.domain.domain.{BeachId, SurfsUpEitherT}
+import com.uptech.windalerts.domain.domain.{BeachId}
 import com.uptech.windalerts.domain.{SurfsUpError, UnknownError, domain}
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.{Decoder, parser}
@@ -32,7 +32,7 @@ object Wind {
 class WWBackedWindsService[F[_] : Sync](apiKey: String)(implicit backend: SttpBackend[Id, Nothing]) extends WindsService[F] {
   private val logger = getLogger
 
-  override def get(beachId: BeachId)(implicit F: Functor[F]): SurfsUpEitherT[F, domain.Wind] =
+  override def get(beachId: BeachId)(implicit F: Functor[F]): cats.data.EitherT[F, com.uptech.windalerts.domain.SurfsUpError, domain.Wind] =
     EitherT.fromEither(getFromWillyWeatther(apiKey, beachId))
 
   def getFromWillyWeatther(apiKey: String, beachId: BeachId)(implicit F: Monad[F]): Either[SurfsUpError, domain.Wind] = {

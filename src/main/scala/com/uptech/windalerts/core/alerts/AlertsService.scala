@@ -8,7 +8,7 @@ import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.alerts.domain.AlertT
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
 import com.uptech.windalerts.domain.{AlertNotFoundError, SurfsUpError}
-import com.uptech.windalerts.domain.domain.{Alert, AlertRequest, SurfsUpEitherT, UserId}
+import com.uptech.windalerts.domain.domain.{Alert, AlertRequest, UserId}
 
 class AlertsService[F[_] : Sync](usersService: UserService[F], userRolesService: UserRolesService[F], repo: Repos[F]) {
   def createAlert(u: UserId, r: AlertRequest) = {
@@ -19,7 +19,7 @@ class AlertsService[F[_] : Sync](usersService: UserService[F], userRolesService:
     } yield saved
   }
 
-  private def save(u: UserId, r: AlertRequest):SurfsUpEitherT[F, Alert] = {
+  private def save(u: UserId, r: AlertRequest):cats.data.EitherT[F, com.uptech.windalerts.domain.SurfsUpError, Alert] = {
     EitherT.liftF(repo.alertsRepository().save(r, u.id)).map(_.asDTO())
   }
 

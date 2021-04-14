@@ -9,7 +9,7 @@ import cats.{Applicative, Functor, Monad}
 import com.softwaremill.sttp._
 import com.uptech.windalerts.core.beaches.SwellsService
 import com.uptech.windalerts.domain.{SurfsUpError, UnknownError, domain}
-import domain.{BeachId, SurfsUpEitherT}
+import domain.{BeachId}
 import com.uptech.windalerts.domain.swellAdjustments.Adjustments
 import com.uptech.windalerts.infrastructure.beaches.Swells.Swell
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
@@ -22,7 +22,7 @@ import org.log4s.getLogger
 class WWBackedSwellsService[F[_] : Sync](apiKey: String, adjustments: Adjustments)(implicit backend: SttpBackend[Id, Nothing]) extends SwellsService[F] {
   private val logger = getLogger
 
-  override def get(beachId: BeachId)(implicit F: Functor[F]): SurfsUpEitherT[F, domain.Swell] =
+  override def get(beachId: BeachId)(implicit F: Functor[F]): cats.data.EitherT[F, com.uptech.windalerts.domain.SurfsUpError, domain.Swell] =
     EitherT.fromEither(getFromWillyWeatther(apiKey, beachId))
 
   def getFromWillyWeatther(apiKey: String, beachId: BeachId): Either[SurfsUpError, domain.Swell] = {
