@@ -10,12 +10,13 @@ import com.uptech.windalerts.LazyRepos
 import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.credentials.UserCredentialService
-import com.uptech.windalerts.core.notifications.Notifications
+import com.uptech.windalerts.core.notifications.NotificationsService
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
 import com.uptech.windalerts.domain._
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints.NotificationEndpoints
+import com.uptech.windalerts.infrastructure.notifications.FirebaseBasedNotificationsSender
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AppleSubscription, SubscriptionsServiceImpl}
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
@@ -67,7 +68,8 @@ object SendNotifications extends IOApp {
   val userRolesService = new UserRolesService(repos, subscriptionService, usersService)
 
   val alerts = new AlertsService[IO](usersService, userRolesService, repos)
-  val notifications = new Notifications(alerts, beachesService, beachSeq, repos, dbWithAuth, config = config.read)
+  val notificationsSender = new FirebaseBasedNotificationsSender[IO](dbWithAuth, beachSeq, appConf )
+  val notifications = new NotificationsService(alerts, beachesService, repos, notificationsSender)
   val notificationsEndPoints = new NotificationEndpoints[IO](notifications)
 
 
