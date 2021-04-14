@@ -4,11 +4,9 @@ import cats.data.EitherT
 import cats.effect.Sync
 import com.github.t3hnar.bcrypt._
 import com.uptech.windalerts.Repos
-import com.uptech.windalerts.core.user.UserT
 import com.uptech.windalerts.core.utils
 import com.uptech.windalerts.domain.domain.{ChangePasswordRequest, RegisterRequest}
 import com.uptech.windalerts.domain.{SurfsUpError, UserAlreadyExistsError, UserAuthenticationFailedError, UserNotFoundError}
-import org.mongodb.scala.bson.ObjectId
 
 class UserCredentialService[F[_] : Sync](repos: Repos[F])  {
   def getByCredentials(
