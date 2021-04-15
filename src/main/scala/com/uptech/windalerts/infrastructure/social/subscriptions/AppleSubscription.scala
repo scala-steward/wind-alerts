@@ -5,15 +5,17 @@ import cats.effect.Async
 import cats.implicits._
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.uptech.windalerts.core.social.subscriptions.{SocialSubscription, SubscriptionPurchase}
-import com.uptech.windalerts.domain.codecs._
+import com.uptech.windalerts.infrastructure.endpoints.codecs._
 import com.uptech.windalerts.domain.domain.{ApplePurchaseVerificationRequest, AppleSubscriptionPurchase}
-import com.uptech.windalerts.domain.{UnknownError, secrets}
+import com.uptech.windalerts.domain.secrets
 import io.circe.optics.JsonPath.root
 import io.circe.parser
 import io.circe.syntax._
 import org.log4s.getLogger
 import cats.effect.Sync
 import cats.implicits._
+import com.uptech.windalerts.core.UnknownError
+
 import scala.concurrent.ExecutionContext
 
 class AppleSubscription[F[_] : Async](implicit F: Async[F]) extends SocialSubscription[F] {

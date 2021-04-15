@@ -29,7 +29,7 @@ class FirebaseBasedNotificationsSender[F[_] : Sync]
     val body = config.surfsUp.notifications.body
     builder().setAndroidConfig(AndroidConfig.builder().setPriority(AndroidConfig.Priority.HIGH).build())
       .setWebpushConfig(WebpushConfig.builder().putHeader("Urgency", "high").build())
-      .putData("beachId", s"$nd.beachId.id")
+      .putData("beachId", s"${nd.beachId.id}")
       .setNotification(new Notification(title, body))
       .setToken(nd.deviceToken)
       .setApnsConfig(ApnsConfig.builder()

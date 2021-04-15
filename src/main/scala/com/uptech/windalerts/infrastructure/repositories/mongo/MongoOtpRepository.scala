@@ -2,8 +2,8 @@ package com.uptech.windalerts.infrastructure.repositories.mongo
 
 import cats.data.EitherT
 import cats.effect.{ContextShift, IO}
+import com.uptech.windalerts.core.OtpNotFoundError
 import com.uptech.windalerts.core.otp.{OTPWithExpiry, OtpRepository}
-import com.uptech.windalerts.domain.OtpNotFoundError
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model.UpdateOptions

@@ -1,8 +1,7 @@
 package com.uptech.windalerts.core.social.subscriptions
 
 import cats.data.EitherT
-import cats.effect.IO
-import com.uptech.windalerts.domain.{SurfsUpError, TokenNotFoundError}
+import com.uptech.windalerts.core.TokenNotFoundError
 
 trait AndroidTokenRepository[F[_]]  {
   def getPurchaseByToken(purchaseToken: String) :EitherT[F, TokenNotFoundError, AndroidToken]

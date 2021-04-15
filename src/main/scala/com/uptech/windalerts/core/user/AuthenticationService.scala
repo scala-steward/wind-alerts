@@ -5,7 +5,7 @@ import cats.effect.Effect
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.refresh.tokens.RefreshToken
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.{SurfsUpError, domain}
+import com.uptech.windalerts.domain.domain
 import dev.profunktor.auth.JwtAuthMiddleware
 import dev.profunktor.auth.jwt.{JwtAuth, JwtSecretKey}
 import io.circe.parser._

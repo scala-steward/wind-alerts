@@ -1,4 +1,4 @@
-package com.uptech.windalerts.domain
+package com.uptech.windalerts.core
 
 class SurfsUpError(message:String) extends RuntimeException(message) with Serializable
 case class TokenExpiredError(message: String = "Token not found") extends SurfsUpError(message)

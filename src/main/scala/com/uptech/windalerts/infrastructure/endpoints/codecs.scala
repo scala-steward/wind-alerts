@@ -1,9 +1,9 @@
-package com.uptech.windalerts.domain
+package com.uptech.windalerts.infrastructure.endpoints
 
 import cats.Applicative
 import cats.effect.Sync
-import com.uptech.windalerts.core.alerts.{AlertsT, TimeRange}
 import com.uptech.windalerts.core.alerts.domain.AlertT
+import com.uptech.windalerts.core.alerts.{AlertsT, TimeRange}
 import com.uptech.windalerts.core.credentials.{AppleCredentials, Credentials, FacebookCredentials}
 import com.uptech.windalerts.core.feedbacks.Feedback
 import com.uptech.windalerts.core.notifications.Notification
@@ -11,14 +11,14 @@ import com.uptech.windalerts.core.otp.OTPWithExpiry
 import com.uptech.windalerts.core.refresh.tokens.RefreshToken
 import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken}
 import com.uptech.windalerts.core.user.UserT
-import domain._
+import com.uptech.windalerts.domain.domain._
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}
+import org.bson.codecs.configuration.CodecRegistries.{fromProviders, fromRegistries}
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
-import org.mongodb.scala.bson.codecs.Macros._
 import org.mongodb.scala.bson.codecs.DEFAULT_CODEC_REGISTRY
-import org.bson.codecs.configuration.CodecRegistries.{fromProviders, fromRegistries}
+import org.mongodb.scala.bson.codecs.Macros._
 
 object codecs {
   val codecRegistry = fromRegistries(
