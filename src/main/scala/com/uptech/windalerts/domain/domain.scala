@@ -7,8 +7,6 @@ import io.scalaland.chimney.dsl._
 
 
 object domain {
-  type SurfsUpEitherT[F[_],  T] = EitherT[F, SurfsUpError, T]
-
   case class UpdateUserRequest(name: String, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long)
 
   case class UpdateUserDeviceTokenRequest(deviceToken:String)

@@ -1,9 +1,9 @@
 package com.uptech.windalerts.core.alerts
 
 import cats.data.EitherT
+import com.uptech.windalerts.core.AlertNotFoundError
 import com.uptech.windalerts.core.alerts.domain.AlertT
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.{AlertNotFoundError, SurfsUpError}
 
 trait AlertsRepositoryT[F[_]] {
   def disableAllButOneAlerts(userId: String): F[Seq[AlertT]]

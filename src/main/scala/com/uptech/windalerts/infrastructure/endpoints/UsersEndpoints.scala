@@ -3,13 +3,14 @@ package com.uptech.windalerts.infrastructure.endpoints
 import cats.data.{EitherT, OptionT}
 import cats.effect.Effect
 import cats.implicits._
+import com.uptech.windalerts.core.{OtpNotFoundError, RefreshTokenExpiredError, RefreshTokenNotFoundError, TokenNotFoundError, UserAlreadyExistsError, UserAuthenticationFailedError, UserNotFoundError}
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.feedbacks.Feedback
 import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.social.subscriptions.SubscriptionsService
 import com.uptech.windalerts.core.user.{UserRolesService, UserService}
 import com.uptech.windalerts.domain._
-import com.uptech.windalerts.domain.codecs._
+import codecs._
 import com.uptech.windalerts.domain.domain.{AppleRegisterRequest, ChangePasswordRequest, FacebookRegisterRequest, ResetPasswordRequest, _}
 import org.http4s.dsl.Http4sDsl
 import org.http4s.{AuthedRoutes, HttpRoutes}

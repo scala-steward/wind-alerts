@@ -5,9 +5,10 @@ import cats.effect.Sync
 import cats.{Applicative, Functor}
 import com.softwaremill.sttp._
 import com.uptech.windalerts.Repos
+import com.uptech.windalerts.core.{BeachNotFoundError, SurfsUpError, UnknownError}
 import com.uptech.windalerts.core.beaches.TidesService
-import com.uptech.windalerts.domain.domain.{BeachId, SurfsUpEitherT, TideHeight}
-import com.uptech.windalerts.domain.{BeachNotFoundError, SurfsUpError, UnknownError, domain}
+import com.uptech.windalerts.domain.domain.{BeachId, TideHeight}
+import com.uptech.windalerts.domain.domain
 import com.uptech.windalerts.infrastructure.beaches.Tides.{Datum, TideDecoders}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.optics.JsonPath._
@@ -34,7 +35,7 @@ class WWBackedTidesService[F[_] : Sync](apiKey: String, repos: Repos[F])(implici
     "NSW" -> "Australia/NSW",
     "NT" -> "Australia/Darwin")
 
-  override def get(beachId: BeachId)(implicit F: Functor[F]): SurfsUpEitherT[F, domain.TideHeight] =
+  override def get(beachId: BeachId)(implicit F: Functor[F]): cats.data.EitherT[F, SurfsUpError, domain.TideHeight] =
     EitherT.fromEither(getFromWillyWeatther(apiKey, beachId))
 
   def getFromWillyWeatther(apiKey: String, beachId: BeachId) = {

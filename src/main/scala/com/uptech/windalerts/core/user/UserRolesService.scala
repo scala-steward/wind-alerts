@@ -4,12 +4,13 @@ import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
 import com.uptech.windalerts.Repos
+import com.uptech.windalerts.core.{OperationNotAllowed, SurfsUpError, UnknownError, UserNotFoundError}
 import com.uptech.windalerts.core.alerts.AlertsT
 import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, SubscriptionPurchase, SubscriptionsService}
 import com.uptech.windalerts.core.user.UserType.{Premium, PremiumExpired, Trial}
-import com.uptech.windalerts.domain.codecs._
+import com.uptech.windalerts.infrastructure.endpoints.codecs._
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.{SurfsUpError, UnknownError, _}
+import com.uptech.windalerts.domain.secrets
 import io.circe.parser.parse
 
 class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: SubscriptionsService[F], userService: UserService[F]) {

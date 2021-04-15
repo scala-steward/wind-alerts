@@ -2,19 +2,17 @@ package com.uptech.windalerts.core.social.login
 
 import cats.data.EitherT
 import cats.effect.Sync
+import cats.implicits._
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.credentials.{AppleCredentials, FacebookCredentials, SocialCredentials, UserCredentialService}
 import com.uptech.windalerts.core.user.{UserService, UserT}
-import com.uptech.windalerts.domain.{SurfsUpError, UserAlreadyExistsError}
+import com.uptech.windalerts.core.{SurfsUpError, UserAlreadyExistsError}
 import com.uptech.windalerts.domain.domain._
 import org.mongodb.scala.bson.ObjectId
-import cats.data.EitherT
-import cats.effect.Sync
-import cats.implicits._
 
 class SocialLoginService[F[_] : Sync](repos: Repos[F], userService: UserService[F], credentialService: UserCredentialService[F]) {
 
-  def registerOrLoginAppleUser(credentials: AppleAccessRequest): SurfsUpEitherT[F, TokensWithUser] = {
+  def registerOrLoginAppleUser(credentials: AppleAccessRequest): EitherT[F, SurfsUpError, TokensWithUser] = {
     registerOrLoginUser[AppleAccessRequest, AppleCredentials](credentials,
       repos.applePlatform(),
       socialUser => repos.appleCredentialsRepository().find(socialUser.email, socialUser.deviceType),
@@ -22,7 +20,7 @@ class SocialLoginService[F[_] : Sync](repos: Repos[F], userService: UserService[
   }
 
 
-  def registerOrLoginFacebookUser(credentials: FacebookAccessRequest): SurfsUpEitherT[F, TokensWithUser] = {
+  def registerOrLoginFacebookUser(credentials: FacebookAccessRequest): EitherT[F, SurfsUpError, TokensWithUser] = {
     registerOrLoginUser[FacebookAccessRequest, FacebookCredentials](credentials,
       repos.facebookPlatform(),
       socialUser => repos.facebookCredentialsRepo().find(socialUser.email, socialUser.deviceType),
@@ -33,7 +31,7 @@ class SocialLoginService[F[_] : Sync](repos: Repos[F], userService: UserService[
   (credentials: T,
    socialPlatform: SocialLogin[F, T],
    credentialFinder: SocialUser => F[Option[U]],
-   credentialCreator: SocialUser => F[U]): SurfsUpEitherT[F, TokensWithUser] = {
+   credentialCreator: SocialUser => F[U]): EitherT[F, SurfsUpError, TokensWithUser] = {
     for {
       socialUser <- EitherT.right(socialPlatform.fetchUserFromPlatform(credentials))
       tokens <- registerOrLoginSocialUser(socialUser, credentialFinder, credentialCreator)

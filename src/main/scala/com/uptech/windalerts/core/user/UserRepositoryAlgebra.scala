@@ -1,7 +1,7 @@
 package com.uptech.windalerts.core.user
 
 import cats.data.{EitherT, OptionT}
-import com.uptech.windalerts.domain.{SurfsUpError, UserNotFoundError}
+import com.uptech.windalerts.core.UserNotFoundError
 
 trait UserRepositoryAlgebra[F[_]] {
 

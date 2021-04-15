@@ -18,6 +18,7 @@ import com.uptech.windalerts.domain.beaches.Beach
 import com.uptech.windalerts.domain.domain._
 import com.uptech.windalerts.domain.secrets
 import com.uptech.windalerts.infrastructure.EmailSender
+import com.uptech.windalerts.infrastructure.endpoints.codecs
 import com.uptech.windalerts.infrastructure.repositories.mongo._
 import com.uptech.windalerts.infrastructure.social.login.{AppleLogin, FacebookLogin}
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AndroidPublisherHelper, ApplicationConfig}
@@ -177,7 +178,7 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
     val start = System.currentTimeMillis()
     val value = Eval.later {
       val client = MongoClient(com.uptech.windalerts.domain.secrets.read.surfsUp.mongodb.url)
-      client.getDatabase(sys.env("projectId")).withCodecRegistry(com.uptech.windalerts.domain.codecs.codecRegistry)
+      client.getDatabase(sys.env("projectId")).withCodecRegistry(codecs.codecRegistry)
     }
     val v = value.value
     println(System.currentTimeMillis() - start)

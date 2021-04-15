@@ -4,9 +4,9 @@ import cats.data.EitherT
 import cats.effect.{ContextShift, IO}
 import com.restfb.types.User
 import com.restfb.{DefaultFacebookClient, Parameter, Version}
+import com.uptech.windalerts.core.SurfsUpError
 import com.uptech.windalerts.core.social.login.{FacebookAccessRequest, SocialLogin, SocialUser}
 import com.uptech.windalerts.core.social.subscriptions.SubscriptionPurchase
-import com.uptech.windalerts.domain.SurfsUpError
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

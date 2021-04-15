@@ -3,9 +3,10 @@ package com.uptech.windalerts.infrastructure.repositories.mongo
 
 import cats.data.{EitherT, OptionT}
 import cats.effect.{ContextShift, IO}
+import com.uptech.windalerts.core.UserNotFoundError
 import com.uptech.windalerts.core.user.UserType.{Premium, Trial}
 import com.uptech.windalerts.core.user.{UserRepositoryAlgebra, UserT}
-import com.uptech.windalerts.domain.{SurfsUpError, UserNotFoundError, domain}
+import com.uptech.windalerts.domain.domain
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId
 import org.mongodb.scala.bson.conversions.Bson

@@ -4,8 +4,8 @@ import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
 import com.uptech.windalerts.Repos
+import com.uptech.windalerts.core.SurfsUpError
 import com.uptech.windalerts.core.social.subscriptions._
-import com.uptech.windalerts.domain.SurfsUpError
 import com.uptech.windalerts.domain.domain._
 
 class SubscriptionsServiceImpl[F[_] : Sync](appleSubscription: SocialSubscription[F], androidSubscription: SocialSubscription[F], repos: Repos[F]) extends SubscriptionsService[F] {

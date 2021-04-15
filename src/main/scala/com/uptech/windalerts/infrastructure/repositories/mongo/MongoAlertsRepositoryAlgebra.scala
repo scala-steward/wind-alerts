@@ -2,9 +2,9 @@ package com.uptech.windalerts.infrastructure.repositories.mongo
 
 import cats.data.{EitherT, OptionT}
 import cats.effect.{ContextShift, IO}
+import com.uptech.windalerts.core.AlertNotFoundError
 import com.uptech.windalerts.core.alerts.domain.AlertT
 import com.uptech.windalerts.core.alerts.{AlertsRepositoryT, AlertsT}
-import com.uptech.windalerts.domain.AlertNotFoundError
 import com.uptech.windalerts.domain.domain._
 import io.scalaland.chimney.dsl._
 import org.mongodb.scala.MongoCollection

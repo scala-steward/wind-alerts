@@ -3,10 +3,11 @@ package com.uptech.windalerts.infrastructure.endpoints
 import cats.data.OptionT
 import cats.effect.Effect
 import cats.implicits._
+import com.uptech.windalerts.core.{AlertNotFoundError, OperationNotAllowed, UserNotFoundError}
 import com.uptech.windalerts.core.alerts.AlertsService
-import com.uptech.windalerts.domain.codecs._
+import codecs._
 import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.{UserNotFoundError, _}
+import com.uptech.windalerts.domain._
 import org.http4s.AuthedRoutes
 import org.http4s.dsl.Http4sDsl
 

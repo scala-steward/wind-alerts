@@ -1,6 +1,6 @@
 package com.uptech.windalerts.infrastructure.beaches
 
-import com.uptech.windalerts.domain.{BeachNotFoundError, SurfsUpError, UnknownError}
+import com.uptech.windalerts.core.{BeachNotFoundError, SurfsUpError, UnknownError}
 import io.circe.parser
 
 object WillyWeatherHelper {

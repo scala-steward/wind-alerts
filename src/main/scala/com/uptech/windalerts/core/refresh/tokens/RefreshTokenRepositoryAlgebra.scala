@@ -1,7 +1,7 @@
 package com.uptech.windalerts.core.refresh.tokens
 
 import cats.data.{EitherT, OptionT}
-import com.uptech.windalerts.domain.TokenNotFoundError
+import com.uptech.windalerts.core.TokenNotFoundError
 
 trait RefreshTokenRepositoryAlgebra[F[_]] {
   def getByAccessTokenId(accessTokenId: String): OptionT[F, RefreshToken]

@@ -1,8 +1,8 @@
 package com.uptech.windalerts.infrastructure.repositories.mongo
 import cats.data.{EitherT, OptionT}
 import cats.effect.{ContextShift, IO}
+import com.uptech.windalerts.core.TokenNotFoundError
 import com.uptech.windalerts.core.refresh.tokens.{RefreshToken, RefreshTokenRepositoryAlgebra}
-import com.uptech.windalerts.domain.TokenNotFoundError
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId
 import org.mongodb.scala.bson.conversions.Bson
