@@ -1,7 +1,7 @@
 openapi: 3.0.0
 servers:
   - description: SurfsUp Swagger
-    url: http://localhost:9091/v1
+    url: /v1
 info:
   description: |
     End-points for SurfsUp.
