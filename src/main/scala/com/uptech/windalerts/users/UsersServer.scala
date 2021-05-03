@@ -4,6 +4,7 @@ import cats.effect.{Blocker, ExitCode, IO, IOApp}
 import cats.implicits._
 import com.http4s.rho.swagger.ui.SwaggerUi
 import com.softwaremill.sttp.HttpURLConnectionBackend
+import com.softwaremill.sttp.MediaTypes.Json
 import com.uptech.windalerts.LazyRepos
 import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.beaches.BeachService
@@ -23,6 +24,7 @@ import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.Logger
 import org.log4s.getLogger
+
 object UsersServer extends IOApp {
 
 
@@ -62,24 +64,25 @@ object UsersServer extends IOApp {
         alertsEndPoints <- IO(new AlertsEndpoints(alertService))
         beachesEndpointsRho = new BeachesEndpointsRho[IO](beaches).toRoutes(swaggerUiRhoMiddleware)
 
-        httpApp <- IO(errors.errorMapper(Logger.httpApp(true, true, logAction = requestLogger)(
-          Router(
-            "/v1/users" -> auth.middleware(endpoints.authedService()),
-            "/v1/users" -> endpoints.openEndpoints(),
-            "/v1/users/social/facebook" -> endpoints.facebookEndpoints(),
-            "/v1/users/social/apple" -> endpoints.appleEndpoints(),
-            "/v1/users/alerts" -> auth.middleware(alertsEndPoints.allUsersService()),
-            "/v2/beaches" -> beachesEndpointsRho,
-            "" -> new BeachesEndpoints[IO](beaches).allRoutes(),
+      httpApp <- IO(errors.errorMapper(Logger.httpApp(true, true, logAction = requestLogger)(
+        Router(
+          "/v1/users" -> auth.middleware(endpoints.authedService()),
+          "/v1/users" -> endpoints.openEndpoints(),
+          "/v1/users/social/facebook" -> endpoints.facebookEndpoints(),
+          "/v1/users/social/apple" -> endpoints.appleEndpoints(),
+          "/v1/users/alerts" -> auth.middleware(alertsEndPoints.allUsersService()),
+          "/v2/beaches" -> beachesEndpointsRho,
+          "v1/beaches" -> new BeachesEndpoints[IO](beaches).allRoutes(),
+          "" -> new SwaggerEndpoints[IO]().endpoints(blocker),
 
-          ).orNotFound)))
-        server <- BlazeServerBuilder[IO]
-          .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
-          .withHttpApp(httpApp)
-          .serve
-          .compile
-          .drain
-          .as(ExitCode.Success)
+        ).orNotFound)))
+      server <- BlazeServerBuilder[IO]
+        .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
+        .withHttpApp(httpApp)
+        .serve
+        .compile
+        .drain
+        .as(ExitCode.Success)
 
       } yield server
     }

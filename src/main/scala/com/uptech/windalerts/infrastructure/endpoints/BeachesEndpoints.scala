@@ -12,9 +12,7 @@ import org.http4s.dsl.Http4sDsl
 
 class BeachesEndpoints[F[_] : Effect](B: BeachService[F]) extends Http4sDsl[F] {
   def allRoutes() = HttpRoutes.of[F] {
-    case GET -> Root / "beaches" / IntVar(id) / "currentStatus" =>
-      getStatus(B, id)
-    case GET -> Root / "v1" / "beaches" / IntVar(id) / "currentStatus" =>
+    case GET -> Root / IntVar(id) / "currentStatus" =>
       getStatus(B, id)
   }
 
