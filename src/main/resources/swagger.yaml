@@ -1,0 +1,157 @@
+openapi: 3.0.0
+servers:
+  - description: SurfsUp Swagger
+    url: http://localhost:9091/v1
+info:
+  description: |
+    End-points for SurfsUp.
+  version: "v1"
+  title: Swagger SurfsUp
+  contact:
+    email: amanmanocha@yahoo.com
+tags:
+  - name: alerts
+    description: Everything about Alerts
+  - name: users
+    description: Everything about Alerts
+  - name: beaches
+    description: Status of beaches
+paths:
+  /users/alerts:
+    get:
+      tags:
+        - alerts
+      summary: Gets alerts for user
+      description: Get all alerts for user
+      operationId: getAlerts
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Alert'
+        '400':
+          description: Invalid status value
+      security:
+        - bearerAuth: [ ]
+  /users/login:
+    post:
+      tags:
+        - user
+      summary: Creates list of users with given input array
+      operationId: createUsersWithListInput
+      responses:
+        default:
+          description: successful operation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          description: Created user object
+          required: true
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        deviceType:
+          type: string
+        deviceToken:
+          type: string
+    TimeRange:
+      type: object
+      properties:
+        from:
+          type: integer
+        to:
+          type: integer
+    Alert:
+      type: object
+      properties:
+        id:
+          type: string
+        owner:
+          type: string
+        beachId:
+          type: integer
+        days:
+          type: array
+          items:
+            type: integer
+        swellDirections:
+          type: array
+          items:
+            type: string
+        timeRanges:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeRange'
+        waveHeightFrom:
+          type: number
+        waveHeightTo:
+          type: number
+        windDirections:
+          type: array
+          items:
+            type: string
+        tideHeightStatuses:
+          type: array
+          items:
+            type: string
+        enabled:
+          type: string
+        timeZone:
+          type: string
+    Alerts:
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Alert'
+      description: List of alerts
+  requestBodies:
+  LoginRequest:
+    content:
+      application/json:
+        schema:
+          $ref: '#/components/schemas/LoginRequest'
+    description: Login request
+    required: true
+    Pet:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Pet'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/Pet'
+      description: Pet object that needs to be added to the store
+      required: true
+
+    UserArray:
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/User'
+      description: List of user object
+      required: true
+  securitySchemes:
+    bearerAuth: # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT    # optional, arbitrary value for documentation purposes
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header
