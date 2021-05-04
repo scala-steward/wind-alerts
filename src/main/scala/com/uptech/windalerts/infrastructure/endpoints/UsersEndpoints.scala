@@ -160,7 +160,7 @@ class UsersEndpoints[F[_] : Effect]
           (for {
             response <- userService.logoutUser(user.id)
           } yield response).value.flatMap {
-            case Right(response) => Ok(response)
+            case Right(response) => Ok()
             case Left(UserNotFoundError(_)) => NotFound("User not found")
           }
         })
