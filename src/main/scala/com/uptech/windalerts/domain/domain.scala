@@ -63,7 +63,6 @@ object domain {
 
   final case class Beach(beachId: BeachId, wind: Wind, tide: Tide)
 
-
   case class AlertRequest(
                            beachId: Long,
                            days: Seq[Long],
