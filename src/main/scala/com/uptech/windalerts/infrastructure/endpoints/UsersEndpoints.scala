@@ -252,8 +252,8 @@ class UsersEndpoints[F[_] : Effect]
           tokensWithUser <- socialLoginService.registerOrLoginFacebookUser(facebookRegisterRequest.asDomain())
         } yield tokensWithUser).value.flatMap {
           case Right(tokensWithUser) => Ok(tokensWithUser)
-          case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")
           case Left(UserNotFoundError(_)) => NotFound("User not found")
+          case Left(UserAuthenticationFailedError(name)) => BadRequest(s"Authentication failed for user $name")
         }
       }
     }

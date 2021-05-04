@@ -62,7 +62,31 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/FacebookRegisterRequest'
+              $ref: '#/components/schemas/FacebookAccessRequest'
+          required: true
+  /users/social/apple:
+    post:
+      tags:
+        - users
+        - facebook
+      summary: Registers apple user
+      operationId: registerAppleUser
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TokenWithUser'
+        '409':
+          description: User already registered
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FacebookAccessRequest'
           required: true
   /users/login:
     post:
@@ -89,6 +113,54 @@ paths:
             schema:
               $ref: '#/components/schemas/LoginRequest'
           description: Created user object
+          required: true
+  /users/social/facebook/login:
+    post:
+      tags:
+        - users
+        - facebook
+      summary: Logs in facebook user
+      operationId: loginFacebookUser
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TokenWithUser'
+        '401':
+          description: User authentication failed
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FacebookAccessRequest'
+          required: true
+  /users/social/apple/login:
+    post:
+      tags:
+        - users
+        - facebook
+      summary: Logs in apple user
+      operationId: loginAppleUser
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TokenWithUser'
+        '401':
+          description: User authentication failed
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppleAccessRequest'
           required: true
   /users/refresh:
     post:
@@ -366,6 +438,58 @@ paths:
           description: Invalid status value
       security:
         - bearerAuth: [ ]
+  /users/alerts/{id}:
+    delete:
+      tags:
+        - alerts
+      summary: Delete alert with specified id
+      description: Get all alerts for user
+      operationId: deleteAlert
+      responses:
+        '204':
+          description: successful operation
+        '404':
+          description: Alert not found
+      security:
+        - bearerAuth: [ ]
+    put:
+      tags:
+        - alerts
+      summary: Updates alert with specified id
+      operationId: updateAlert
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Alert'
+        '403':
+          description: Operation not allowed
+        '404':
+          description: Alert not found
+      security:
+        - bearerAuth: [ ]
+    post:
+      tags:
+        - alerts
+      summary: Creates alert with specified id
+      operationId: createAlert
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Alert'
+        '403':
+          description: Operation not allowed
+      security:
+        - bearerAuth: [ ]
 components:
   schemas:
     RegisterRequest:
@@ -381,7 +505,7 @@ components:
           type: string
         deviceToken:
           type: string
-    FacebookRegisterRequest:
+    FacebookAccessRequest:
       type: object
       properties:
         accessToken:
@@ -389,6 +513,19 @@ components:
         deviceType:
           type: string
         deviceToken:
+          type: string
+    AppleAccessRequest:
+      type: object
+      properties:
+        authorizationCode:
+          type: string
+        nonce:
+          type: string
+        deviceType:
+          type: string
+        deviceToken:
+          type: string
+        name:
           type: string
     LoginRequest:
       type: object
@@ -506,6 +643,41 @@ components:
           type: integer
         to:
           type: integer
+    AlertRequest:
+      type: object
+      properties:
+        owner:
+          type: string
+        beachId:
+          type: integer
+        days:
+          type: array
+          items:
+            type: integer
+        swellDirections:
+          type: array
+          items:
+            type: string
+        timeRanges:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeRange'
+        waveHeightFrom:
+          type: number
+        waveHeightTo:
+          type: number
+        windDirections:
+          type: array
+          items:
+            type: string
+        tideHeightStatuses:
+          type: array
+          items:
+            type: string
+        enabled:
+          type: string
+        timeZone:
+          type: string
     Alert:
       type: object
       properties:
