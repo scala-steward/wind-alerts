@@ -13,10 +13,339 @@ tags:
   - name: alerts
     description: Everything about Alerts
   - name: users
-    description: Everything about Alerts
+    description: Everything about Users
   - name: beaches
-    description: Status of beaches
+    description: Status of Beaches
 paths:
+  /users/:
+    post:
+      tags:
+        - users
+      summary: Registers user
+      operationId: registerUser
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TokenWithUser'
+        '409':
+          description: User already registered
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          required: true
+  /users/social/facebook:
+    post:
+      tags:
+        - users
+        - facebook
+      summary: Registers facebook user
+      operationId: registerFacebookUser
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TokenWithUser'
+        '409':
+          description: User already registered
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FacebookRegisterRequest'
+          required: true
+  /users/login:
+    post:
+      tags:
+        - users
+      summary: Creates list of users with given input array
+      operationId: createUsersWithListInput
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TokenWithUser'
+        '404':
+          description: User not found
+        '401':
+          description: User authentication failed
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          description: Created user object
+          required: true
+  /users/refresh:
+    post:
+      tags:
+        - users
+      summary: Generates new access tokens
+      operationId: generateNewAccessTokens
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TokenWithUser'
+      '401':
+        description: Refresh token not found or Refresh token expired
+      '404':
+          description: User not found
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccessTokenRequest'
+          description: Created user object
+          required: true
+  /users/changePassword:
+    post:
+      tags:
+        - users
+      summary: Changes user's password
+      operationId: changePassword
+      responses:
+        '200':
+          description: successful operation
+      '400':
+        description: Authentication failed for user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+          required: true
+  /users/resetPassword:
+    post:
+      tags:
+        - users
+      summary: Resets user's password
+      operationId: changePassword
+      responses:
+        '200':
+          description: successful operation
+      '400':
+        description: Authentication failed for user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+          required: true
+  /users/profile:
+    put:
+      tags:
+        - users
+      summary: Updates users profile
+      description: Updates users profile
+      operationId: updateProfile
+      responses:
+        '200':
+          description: successful operation
+        '404':
+          description: User not found
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+          description: Created user object
+          required: true
+      security:
+        - bearerAuth: [ ]
+    get:
+      tags:
+        - users
+      summary: Get users profile
+      description: Gets users profile
+      operationId: getProfile
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+      security:
+        - bearerAuth: [ ]
+  /users/deviceToken:
+    put:
+      tags:
+        - users
+      summary: Updates users device token
+      description: Updates users device token
+      operationId: updateDeviceToken
+      responses:
+        '200':
+          description: successful operation
+        '404':
+          description: User not found
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserDeviceTokenRequest'
+          description: Created user object
+          required: true
+      security:
+        - bearerAuth: [ ]
+  /users/sendOTP:
+    post:
+      tags:
+        - users
+      summary: Sends OTP to user
+      description: Sends OTP to user
+      operationId: updateDeviceToken
+      responses:
+        '200':
+          description: successful operation
+        '404':
+          description: User not found
+      security:
+        - bearerAuth: [ ]
+  /users/verifyEmail:
+    post:
+      tags:
+        - users
+      summary: Verifies email
+      description: Verifies email by checking OTP
+      operationId: verifyEmail
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '404':
+          description: Invalid or expired OTP
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OTP'
+          description: Created user object
+          required: true
+      security:
+        - bearerAuth: [ ]
+  /users/logout:
+    post:
+      tags:
+        - users
+      summary: Logs out user
+      description: Logs out user
+      operationId: logoutUser
+      responses:
+        '200':
+          description: successful operation
+        '404':
+          description: User not found
+      security:
+        - bearerAuth: [ ]
+  /users/purchase/android:
+    get:
+      tags:
+        - users
+      summary: Gets android purchase
+      description: Gets android purchase by checking from Google. Also updates user's status based on response.
+      operationId: getAndroidPurchase
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+      security:
+        - bearerAuth: [ ]
+    post:
+      tags:
+        - users
+      summary: Registers android purchase
+      description: Verifies android purchase by checking from Google. Also updates user's status based on response.
+      operationId: verifyAndroidPurchase
+      responses:
+        '200':
+          description: successful operation
+        '404':
+          description: User not found
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AndroidReceiptValidationRequest'
+          description: Created user object
+          required: true
+      security:
+        - bearerAuth: [ ]
+  /users/purchase/apple:
+    get:
+      tags:
+        - users
+      summary: Gets apple purchase
+      description: Gets apple purchase by checking from Apple. Also updates user's status based on response.
+      operationId: getApplePurchase
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+      security:
+        - bearerAuth: [ ]
+    post:
+      tags:
+        - users
+      summary: Registers apple purchase
+      description: Verifies apple purchase by checking from Apple. Also updates user's status based on response.
+      operationId: verifyApplePurchase
+      responses:
+        '200':
+          description: successful operation
+        '404':
+          description: User not found
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppleReceiptValidationRequest'
+          description: Created user object
+          required: true
+      security:
+        - bearerAuth: [ ]
   /users/alerts:
     get:
       tags:
@@ -37,24 +366,30 @@ paths:
           description: Invalid status value
       security:
         - bearerAuth: [ ]
-  /users/login:
-    post:
-      tags:
-        - user
-      summary: Creates list of users with given input array
-      operationId: createUsersWithListInput
-      responses:
-        default:
-          description: successful operation
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LoginRequest'
-          description: Created user object
-          required: true
 components:
   schemas:
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+        password:
+          type: string
+        deviceType:
+          type: string
+        deviceToken:
+          type: string
+    FacebookRegisterRequest:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        deviceType:
+          type: string
+        deviceToken:
+          type: string
     LoginRequest:
       type: object
       properties:
@@ -66,6 +401,104 @@ components:
           type: string
         deviceToken:
           type: string
+    ChangePasswordRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        oldPassword:
+          type: string
+        newPassword:
+          type: string
+        deviceType:
+          type: string
+    ResetPasswordRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        deviceType:
+          type: string
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        userType:
+          type: string
+        snoozeTill:
+          type: integer
+        disableAllAlerts:
+          type: boolean
+        notificationsPerHour:
+          type: integer
+    UpdateUserDeviceTokenRequest:
+      type: object
+      properties:
+        deviceToken:
+          type: string
+    OTP:
+      type: object
+      properties:
+        otp:
+          type: string
+    AndroidReceiptValidationRequest:
+      type: object
+      properties:
+        productId:
+          type: string
+        token:
+          type: string
+    AppleReceiptValidationRequest:
+      type: object
+      properties:
+        token:
+          type: string
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        deviceToken:
+          type: string
+        deviceType:
+          type: string
+        startTrialAt:
+          type: integer
+        endTrialAt:
+          type: integer
+        userType:
+          type: string
+        snoozeTill:
+          type: integer
+        disableAllAlerts:
+          type: boolean
+        notificationsPerHour:
+          type: integer
+        lastPaymentAt:
+          type: integer
+        nextPaymentAt:
+          type: integer
+    AccessTokenRequest:
+      type: object
+      properties:
+        refreshToken:
+          type: string
+    TokenWithUser:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refeshToken:
+          type: string
+        expiredAt:
+          type: integer
+        user:
+          $ref: '#/components/schemas/User'
     TimeRange:
       type: object
       properties:
@@ -126,32 +559,9 @@ components:
           $ref: '#/components/schemas/LoginRequest'
     description: Login request
     required: true
-    Pet:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Pet'
-        application/xml:
-          schema:
-            $ref: '#/components/schemas/Pet'
-      description: Pet object that needs to be added to the store
-      required: true
 
-    UserArray:
-      content:
-        application/json:
-          schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/User'
-      description: List of user object
-      required: true
   securitySchemes:
-    bearerAuth: # arbitrary name for the security scheme
+    bearerAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT    # optional, arbitrary value for documentation purposes
-    api_key:
-      type: apiKey
-      name: api_key
-      in: header
+      bearerFormat: JWT
