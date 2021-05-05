@@ -72,7 +72,7 @@ object UsersServer extends IOApp {
           "/v1/users/social/apple" -> endpoints.appleEndpoints(),
           "/v1/users/alerts" -> auth.middleware(alertsEndPoints.allUsersService()),
           "/v2/beaches" -> beachesEndpointsRho,
-          "v1/beaches" -> new BeachesEndpoints[IO](beaches).allRoutes(),
+          "/v1/beaches" -> new BeachesEndpoints[IO](beaches).allRoutes(),
           "" -> new SwaggerEndpoints[IO]().endpoints(blocker),
 
         ).orNotFound)))

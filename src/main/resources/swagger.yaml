@@ -490,6 +490,27 @@ paths:
           description: Operation not allowed
       security:
         - bearerAuth: [ ]
+  /beaches/{id}/currentStatus:
+    get:
+      tags:
+        - beaches
+      summary: Returns the status of beach with specified id
+      operationId: getBeachStatus
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "ID of beach that needs to be fetched"
+          required: true
+          type: "integer"
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Beach'
 components:
   schemas:
     RegisterRequest:
@@ -723,15 +744,58 @@ components:
             items:
               $ref: '#/components/schemas/Alert'
       description: List of alerts
-  requestBodies:
-  LoginRequest:
-    content:
-      application/json:
-        schema:
-          $ref: '#/components/schemas/LoginRequest'
-    description: Login request
-    required: true
-
+    BeachId:
+      type: object
+      properties:
+        id:
+          type: integer
+    TideHeight:
+      type: object
+      properties:
+        height:
+          type: number
+        status:
+          type: string
+        nextLow:
+          type: integer
+        nextHigh:
+          type: integer
+    SwellOutput:
+      type: object
+      properties:
+        height:
+          type: number
+        direction:
+          type: number
+        directionText:
+          type: string
+    Tide:
+      type: object
+      properties:
+        height:
+          $ref: '#/components/schemas/TideHeight'
+        swell:
+          $ref: '#/components/schemas/SwellOutput'
+    Wind:
+      type: object
+      properties:
+        direction:
+          type: number
+        speed:
+          type: number
+        directionText:
+          type: string
+        trend:
+          type: string
+    Beach:
+      type: object
+      properties:
+        beachId:
+          $ref: '#/components/schemas/BeachId'
+        wind:
+          $ref: '#/components/schemas/Wind'
+        tide:
+          $ref: '#/components/schemas/Tide'
   securitySchemes:
     bearerAuth:
       type: http
