@@ -10,12 +10,13 @@ info:
   contact:
     email: amanmanocha@yahoo.com
 tags:
-  - name: alerts
-    description: Everything about Alerts
-  - name: users
-    description: Everything about Users
   - name: beaches
     description: Status of Beaches
+  - name: users
+    description: Everything about Users
+  - name: alerts
+    description: Everything about Alerts
+
 paths:
   /users/:
     post:
@@ -112,7 +113,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/LoginRequest'
-          description: Created user object
           required: true
   /users/social/facebook/login:
     post:
@@ -186,7 +186,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/AccessTokenRequest'
-          description: Created user object
           required: true
   /users/changePassword:
     post:
@@ -227,7 +226,6 @@ paths:
       tags:
         - users
       summary: Updates users profile
-      description: Updates users profile
       operationId: updateProfile
       responses:
         '200':
@@ -239,7 +237,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/UpdateUserRequest'
-          description: Created user object
           required: true
       security:
         - bearerAuth: [ ]
@@ -247,7 +244,6 @@ paths:
       tags:
         - users
       summary: Get users profile
-      description: Gets users profile
       operationId: getProfile
       responses:
         '200':
@@ -267,7 +263,6 @@ paths:
       tags:
         - users
       summary: Updates users device token
-      description: Updates users device token
       operationId: updateDeviceToken
       responses:
         '200':
@@ -279,7 +274,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/UpdateUserDeviceTokenRequest'
-          description: Created user object
           required: true
       security:
         - bearerAuth: [ ]
@@ -288,7 +282,6 @@ paths:
       tags:
         - users
       summary: Sends OTP to user
-      description: Sends OTP to user
       operationId: updateDeviceToken
       responses:
         '200':
@@ -302,7 +295,6 @@ paths:
       tags:
         - users
       summary: Verifies email
-      description: Verifies email by checking OTP
       operationId: verifyEmail
       responses:
         '200':
@@ -320,7 +312,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/OTP'
-          description: Created user object
           required: true
       security:
         - bearerAuth: [ ]
@@ -329,7 +320,6 @@ paths:
       tags:
         - users
       summary: Logs out user
-      description: Logs out user
       operationId: logoutUser
       responses:
         '200':
@@ -343,7 +333,6 @@ paths:
       tags:
         - users
       summary: Gets android purchase
-      description: Gets android purchase by checking from Google. Also updates user's status based on response.
       operationId: getAndroidPurchase
       responses:
         '200':
@@ -362,7 +351,6 @@ paths:
       tags:
         - users
       summary: Registers android purchase
-      description: Verifies android purchase by checking from Google. Also updates user's status based on response.
       operationId: verifyAndroidPurchase
       responses:
         '200':
@@ -383,7 +371,6 @@ paths:
       tags:
         - users
       summary: Gets apple purchase
-      description: Gets apple purchase by checking from Apple. Also updates user's status based on response.
       operationId: getApplePurchase
       responses:
         '200':
@@ -402,7 +389,6 @@ paths:
       tags:
         - users
       summary: Registers apple purchase
-      description: Verifies apple purchase by checking from Apple. Also updates user's status based on response.
       operationId: verifyApplePurchase
       responses:
         '200':
@@ -423,7 +409,6 @@ paths:
       tags:
         - alerts
       summary: Gets alerts for user
-      description: Get all alerts for user
       operationId: getAlerts
       responses:
         '200':
@@ -443,7 +428,6 @@ paths:
       tags:
         - alerts
       summary: Delete alert with specified id
-      description: Get all alerts for user
       operationId: deleteAlert
       responses:
         '204':
