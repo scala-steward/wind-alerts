@@ -25,32 +25,36 @@ class NotificationsService[F[_] : Sync](A: AlertsService[F], B: BeachService[F],
 
   def sendNotification() = {
 
-    val usersToBeNotifiedEitherT: EitherT[F, Exception, List[Try[String]]] = for {
+    for {
       alerts <- A.getAllForDayAndTimeRange
+
       alertsByBeaches = alerts.groupBy(_.beachId).map(kv => (BeachId(kv._1), kv._2))
       _ <- EitherT.liftF(F.delay(logger.error(s"alertsByBeaches ${alertsByBeaches.mapValues(v => v.map(_.beachId)).mkString}")))
+
       beaches <- B.getAll(alertsByBeaches.keys.toSeq)
-      x = alertsByBeaches.map(kv => (beaches(kv._1), kv._2))
-      alertsToBeNotified = x.map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)).map(a => AlertWithBeach(a, kv._1))))
+      alertsToBeNotified = alertsByBeaches.map(kv => (beaches(kv._1), kv._2)).map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)).map(a => AlertWithBeach(a, kv._1))))
       _ <- EitherT.liftF(F.delay(logger.error(s"alertsToBeNotified ${alertsToBeNotified.map(_._2.map(_.alert._id)).mkString}")))
       usersToBeNotified <- alertsToBeNotified.values.flatten.map(v => repos.usersRepo().getByUserIdEitherT(v.alert.owner)).toList.sequence
       userIdToUser = usersToBeNotified.map(u => (u._id.toHexString, u)).toMap
       alertWithUserWithBeach = alertsToBeNotified.values.flatten.map(v => AlertWithUserWithBeach(v.alert, userIdToUser(v.alert.owner), v.beach))
       _ <- EitherT.liftF(F.delay(logger.error(s"alertWithUserWithBeach ${alertWithUserWithBeach.map(_.alert._id).mkString}")))
+
       usersToBeDisabledAlertsFiltered = alertWithUserWithBeach.filterNot(f => f.user.disableAllAlerts)
       _ <- EitherT.liftF(F.delay(logger.error(s"usersToBeDisabledAlertsFiltered ${usersToBeDisabledAlertsFiltered.map(_.alert._id).mkString}")))
+
       usersToBeNotifiedSnoozeFiltered = usersToBeDisabledAlertsFiltered.filterNot(f => f.user.snoozeTill > System.currentTimeMillis())
       _ <- EitherT.liftF(F.delay(logger.error(s"usersToBeNotifiedSnoozeFiltered ${usersToBeNotifiedSnoozeFiltered.map(_.alert._id).mkString}")))
+
       loggedOutUserFiltered = usersToBeNotifiedSnoozeFiltered.filterNot(f => f.user.deviceToken == null || f.user.deviceToken.isEmpty())
       _ <- EitherT.liftF(F.delay(logger.error(s"loggedOutUserFiltered ${loggedOutUserFiltered.map(_.user.email).mkString}")))
+
       usersWithCounts <- loggedOutUserFiltered.map(u => repos.notificationsRepo().countNotificationInLastHour(u.user._id.toHexString)).toList.sequence
       usersWithCountsMap = usersWithCounts.map(u => (u.userId, u.count)).toMap
       usersToBeFilteredWithCount = loggedOutUserFiltered.filter(u => usersWithCountsMap(u.user._id.toHexString) < u.user.notificationsPerHour)
       _ = EitherT.liftF(F.delay(logger.error(s"usersToBeFilteredWithCount ${usersToBeFilteredWithCount.map(_.alert._id).mkString}")))
-      submitted <- EitherT.liftF(usersToBeFilteredWithCount.map(u=>submit(u)).toList.sequence)
 
+      submitted <- EitherT.liftF(usersToBeFilteredWithCount.map(u => submit(u)).toList.sequence)
     } yield submitted
-    usersToBeNotifiedEitherT
 
   }
 

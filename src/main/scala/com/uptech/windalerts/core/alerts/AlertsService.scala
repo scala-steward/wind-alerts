@@ -8,7 +8,7 @@ import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.{AlertNotFoundError, SurfsUpError}
 import com.uptech.windalerts.core.alerts.domain.AlertT
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
-import com.uptech.windalerts.domain.domain.{Alert, AlertRequest, UserId}
+import com.uptech.windalerts.domain.domain.{AlertDTO, AlertRequest, UserId}
 
 class AlertsService[F[_] : Sync](usersService: UserService[F], userRolesService: UserRolesService[F], repo: Repos[F]) {
   def createAlert(u: UserId, r: AlertRequest) = {
@@ -19,11 +19,11 @@ class AlertsService[F[_] : Sync](usersService: UserService[F], userRolesService:
     } yield saved
   }
 
-  private def save(u: UserId, r: AlertRequest):cats.data.EitherT[F, SurfsUpError, Alert] = {
+  private def save(u: UserId, r: AlertRequest):cats.data.EitherT[F, SurfsUpError, AlertDTO] = {
     EitherT.liftF(repo.alertsRepository().save(r, u.id)).map(_.asDTO())
   }
 
-  def update(alertId: String, u: UserId, r: AlertRequest):EitherT[F, SurfsUpError, Alert] = {
+  def update(alertId: String, u: UserId, r: AlertRequest):EitherT[F, SurfsUpError, AlertDTO] = {
     for {
       dbUser <- usersService.getUser(u.id)
       _ <- userRolesService.authorizeAlertEditRequest(dbUser, alertId, r).leftWiden[SurfsUpError]
