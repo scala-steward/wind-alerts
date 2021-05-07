@@ -1,6 +1,5 @@
 package com.uptech.windalerts.domain
 
-import cats.data.EitherT
 import com.uptech.windalerts.core.alerts.TimeRange
 import com.uptech.windalerts.core.social.login.{AppleAccessRequest, FacebookAccessRequest}
 import io.scalaland.chimney.dsl._
@@ -75,9 +74,9 @@ object domain {
                            enabled: Boolean,
                            timeZone: String = "Australia/Sydney")
 
-  case class Alerts(alerts: Seq[Alert])
+  case class AlertsDTO(alerts: Seq[AlertDTO])
 
-  case class Alert(
+  case class AlertDTO(
                     id: String,
                     owner: String,
                     beachId: Long,

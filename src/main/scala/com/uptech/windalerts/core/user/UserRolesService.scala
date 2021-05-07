@@ -23,9 +23,7 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
   }
 
   def makeUserPremium(user: UserT, start: Long, expiry: Long): EitherT[F, UserNotFoundError, UserT] = {
-    for {
-      operationResult <- repos.usersRepo().update(user.copy(userType = Premium.value, lastPaymentAt = start, nextPaymentAt = expiry)).toRight(UserNotFoundError())
-    } yield operationResult
+    repos.usersRepo().update(user.copy(userType = Premium.value, lastPaymentAt = start, nextPaymentAt = expiry)).toRight(UserNotFoundError())
   }
 
   def makeUserPremiumExpired(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
@@ -169,7 +167,6 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
     } yield decoded).leftMap(error => UnknownError(error.getMessage)).leftWiden[SurfsUpError])
 
   }
-
 
   def updateAppleUser(user: UserId) = {
     for {

@@ -3,7 +3,7 @@ package com.uptech.windalerts.core.alerts
 import java.util.Calendar.{DAY_OF_WEEK, HOUR_OF_DAY, MINUTE}
 import java.util.{Calendar, TimeZone}
 
-import com.uptech.windalerts.domain.domain.{Alert, AlertRequest, Beach}
+import com.uptech.windalerts.domain.domain.{AlertDTO, AlertRequest, Beach}
 import io.scalaland.chimney.dsl._
 import org.log4s.getLogger
 import org.mongodb.scala.bson.ObjectId
@@ -56,8 +56,8 @@ object domain {
 
     def isToBeAlertedAtMinutes(minutes: Int): Boolean = timeRanges.exists(_.isWithinRange(minutes))
 
-    def asDTO(): Alert = {
-      this.into[Alert].withFieldComputed(_.id, _._id.toHexString).transform
+    def asDTO(): AlertDTO = {
+      this.into[AlertDTO].withFieldComputed(_.id, _._id.toHexString).transform
     }
 
     def allFieldExceptStatusAreSame(alertRequest: AlertRequest) = {
