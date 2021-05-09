@@ -72,12 +72,6 @@ class AppleLogin(filename: String)(implicit cs: ContextShift[IO]) extends Social
 
 
   private def getPrivateKey(filename: String) = {
-    val f = new File(filename)
-    val fis = new FileInputStream(f)
-    val dis = new DataInputStream(fis)
-    val keyBytes = new Array[Byte](f.length.asInstanceOf[Int])
-    dis.readFully(keyBytes)
-    dis.close
     ApnsSigningKey.loadFromPkcs8File(new File(filename), "W9WH7WV85S", "A423X8QGF3")
   }
 

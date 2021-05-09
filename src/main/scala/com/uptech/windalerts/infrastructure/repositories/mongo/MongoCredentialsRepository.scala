@@ -19,7 +19,7 @@ class MongoCredentialsRepository(collection: MongoCollection[Credentials])(impli
   override def create(credentials: Credentials): IO[Credentials] =
     IO.fromFuture(IO(collection.insertOne(credentials).toFuture().map(_ => credentials)))
 
-  override def findByCreds(email: String, deviceType: String): OptionT[IO, Credentials] =
+  override def findByCredentials(email: String, deviceType: String): OptionT[IO, Credentials] =
     OptionT(findByCriteria(and(equal("email", email), equal("deviceType", deviceType))).map(_.headOption))
 
   private def findByCriteria(criteria: Bson) =

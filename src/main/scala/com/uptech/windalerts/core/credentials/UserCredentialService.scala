@@ -12,7 +12,7 @@ class UserCredentialService[F[_] : Sync](repos: Repos[F])  {
                         email: String, password: String, deviceType: String
                       ): EitherT[F, UserAuthenticationFailedError, Credentials] =
     for {
-      creds <- repos.credentialsRepo().findByCreds(email, deviceType).toRight(UserAuthenticationFailedError(email))
+      creds <- repos.credentialsRepo().findByCredentials(email, deviceType).toRight(UserAuthenticationFailedError(email))
       passwordMatched <- isPasswordMatch(password, creds)
     } yield passwordMatched
 
@@ -24,9 +24,9 @@ class UserCredentialService[F[_] : Sync](repos: Repos[F])  {
                      email: String, deviceType: String
                    ): EitherT[F, SurfsUpError, Credentials] =
     for {
-      creds <- repos.credentialsRepo().findByCreds(email, deviceType).toRight(UserAuthenticationFailedError(email))
+      creds <- repos.credentialsRepo().findByCredentials(email, deviceType).toRight(UserAuthenticationFailedError(email))
       newPassword <- EitherT.pure(utils.generateRandomString(10))
-      _ <- EitherT.right(updatePassword(creds._id.toHexString, newPassword))
+      _ <- EitherT.right(repos.credentialsRepo().updatePassword(creds._id.toHexString, newPassword.bcrypt))
       _ <- EitherT.right(repos.refreshTokenRepo().deleteForUserId(creds._id.toHexString))
       user <- repos.usersRepo().getByUserId(creds._id.toHexString).toRight(UserNotFoundError("User not found"))
       _ <- EitherT.pure(repos.emailConf().sendResetPassword(user.firstName(), email, newPassword))
@@ -36,21 +36,16 @@ class UserCredentialService[F[_] : Sync](repos: Repos[F])  {
   def changePassword(request:ChangePasswordRequest): EitherT[F, UserAuthenticationFailedError, Unit] = {
     for {
       credentials <- getByCredentials(request.email, request.oldPassword, request.deviceType)
-      result <- EitherT.right(updatePassword(credentials._id.toHexString, request.newPassword))
+      result <- EitherT.right(repos.credentialsRepo().updatePassword(credentials._id.toHexString, request.newPassword.bcrypt))
     } yield result
   }
-
-  def updatePassword(userId: String, password: String): F[Unit] = {
-    repos.credentialsRepo().updatePassword(userId, password.bcrypt)
-  }
-
 
   def createIfDoesNotExist(rr: RegisterRequest): EitherT[F, UserAlreadyExistsError, Credentials] = {
     val credentials = Credentials(rr.email, rr.password.bcrypt, rr.deviceType)
     for {
       _ <- doesNotExist(credentials.email, credentials.deviceType)
-      savedCreds <- EitherT.right(repos.credentialsRepo().create(credentials))
-    } yield savedCreds
+      savedCredentials <- EitherT.right(repos.credentialsRepo().create(credentials))
+    } yield savedCredentials
   }
 
   def doesNotExist(email: String, deviceType: String): EitherT[F, UserAlreadyExistsError, (Unit, Unit, Unit)] = {

@@ -5,7 +5,7 @@ import cats.effect.{Async, Sync}
 import cats.implicits._
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.alerts.AlertsService
-import com.uptech.windalerts.core.alerts.domain.AlertT
+import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.notifications.NotificationsSender.NotificationDetails
 import com.uptech.windalerts.core.user.UserT
@@ -19,9 +19,9 @@ class NotificationsService[F[_] : Sync](A: AlertsService[F], B: BeachService[F],
                                        (implicit F: Async[F]){
   private val logger = getLogger
 
-  final case class AlertWithBeach(alert: AlertT, beach: domain.Beach)
+  final case class AlertWithBeach(alert: Alert, beach: domain.Beach)
 
-  final case class AlertWithUserWithBeach(alert: AlertT, user: UserT, beach: domain.Beach)
+  final case class AlertWithUserWithBeach(alert: Alert, user: UserT, beach: domain.Beach)
 
   def sendNotification() = {
 

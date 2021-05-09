@@ -6,15 +6,15 @@ import com.uptech.windalerts.core.SurfsUpError
 import com.uptech.windalerts.domain.domain._
 
 
-class BeachService[F[_] : Sync](W: WindsService[F],
-                                T: TidesService[F],
-                                S: SwellsService[F]) {
+class BeachService[F[_] : Sync](windService: WindsService[F],
+                                tidesService: TidesService[F],
+                                swellsService: SwellsService[F]) {
 
   def get(beachId: BeachId): cats.data.EitherT[F, SurfsUpError, Beach] = {
     for {
-      wind <- W.get(beachId)
-      tide <- T.get(beachId)
-      swell <- S.get(beachId)
+      wind <- windService.get(beachId)
+      tide <- tidesService.get(beachId)
+      swell <- swellsService.get(beachId)
     } yield Beach(beachId, wind, Tide(tide, SwellOutput(swell.height, swell.direction, swell.directionText)))
   }
 
