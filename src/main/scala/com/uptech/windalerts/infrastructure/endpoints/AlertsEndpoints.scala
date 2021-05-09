@@ -27,7 +27,7 @@ class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F]) extends Htt
       case _@DELETE -> Root / alertId as user => {
         OptionT.liftF(
           (for {
-            resp <- alertService.deleteT(user.id, alertId)
+            resp <- alertService.delete(user.id, alertId)
           } yield resp).value.flatMap {
             case Right(_) => NoContent()
             case Left(AlertNotFoundError(_)) => NotFound("Alert not found")

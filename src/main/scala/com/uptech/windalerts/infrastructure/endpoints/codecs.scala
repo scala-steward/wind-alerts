@@ -2,8 +2,8 @@ package com.uptech.windalerts.infrastructure.endpoints
 
 import cats.Applicative
 import cats.effect.Sync
-import com.uptech.windalerts.core.alerts.domain.AlertT
-import com.uptech.windalerts.core.alerts.{AlertsT, TimeRange}
+import com.uptech.windalerts.core.alerts.domain.Alert
+import com.uptech.windalerts.core.alerts.{Alerts, TimeRange}
 import com.uptech.windalerts.core.credentials.{AppleCredentials, Credentials, FacebookCredentials}
 import com.uptech.windalerts.core.feedbacks.Feedback
 import com.uptech.windalerts.core.notifications.Notification
@@ -28,8 +28,8 @@ object codecs {
     fromProviders(classOf[RefreshToken]),
     fromProviders(classOf[UserT]),
     fromProviders(classOf[Credentials]),
-    fromProviders(classOf[AlertT]),
-    fromProviders(classOf[AlertsT]),
+    fromProviders(classOf[Alert]),
+    fromProviders(classOf[Alerts]),
     fromProviders(classOf[TimeRange]),
     fromProviders(classOf[FacebookCredentials]),
     fromProviders(classOf[AppleToken]),

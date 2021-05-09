@@ -5,7 +5,7 @@ import cats.effect.Sync
 import cats.implicits._
 import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.{OperationNotAllowed, SurfsUpError, UnknownError, UserNotFoundError}
-import com.uptech.windalerts.core.alerts.AlertsT
+import com.uptech.windalerts.core.alerts.Alerts
 import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, SubscriptionPurchase, SubscriptionsService}
 import com.uptech.windalerts.core.user.UserType.{Premium, PremiumExpired, Trial}
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
@@ -109,7 +109,7 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
       .flatMap(alerts => EitherT.fromEither(authorizeAlertEditRequest(user, alertId, alerts, alertRequest)))
   }
 
-  private def authorizeAlertEditRequest(user: UserT, alertId: String, alert: AlertsT, alertRequest: AlertRequest): Either[OperationNotAllowed, UserT] = {
+  private def authorizeAlertEditRequest(user: UserT, alertId: String, alert: Alerts, alertRequest: AlertRequest): Either[OperationNotAllowed, UserT] = {
     if (UserType(user.userType) == UserType.Premium || UserType(user.userType) == UserType.Trial) {
       Right(user)
     } else {
@@ -117,7 +117,7 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
     }
   }
 
-  def checkForNonPremiumUser(alertId: String, alerts: AlertsT, alertRequest: AlertRequest) = {
+  def checkForNonPremiumUser(alertId: String, alerts: Alerts, alertRequest: AlertRequest) = {
     val alertOption = alerts.alerts.sortBy(_.createdAt).headOption
 
 

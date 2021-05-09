@@ -11,7 +11,7 @@ import org.mongodb.scala.bson.ObjectId
 object domain {
   private val logger = getLogger
 
-  case class AlertT(
+  case class Alert(
                      _id: ObjectId,
                      owner: String,
                      beachId: Long,
@@ -72,9 +72,9 @@ object domain {
     }
   }
 
-  object AlertT {
-    def apply(alertRequest: AlertRequest, user: String): AlertT = {
-      alertRequest.into[AlertT].withFieldComputed(_.owner, u => user).withFieldComputed(_._id, a => new ObjectId()).withFieldComputed(_.createdAt, _=>System.currentTimeMillis()).transform
+  object Alert {
+    def apply(alertRequest: AlertRequest, user: String): Alert = {
+      alertRequest.into[Alert].withFieldComputed(_.owner, u => user).withFieldComputed(_._id, a => new ObjectId()).withFieldComputed(_.createdAt, _=>System.currentTimeMillis()).transform
     }
   }
 

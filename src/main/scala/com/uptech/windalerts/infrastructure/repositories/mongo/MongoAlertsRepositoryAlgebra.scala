@@ -3,8 +3,8 @@ package com.uptech.windalerts.infrastructure.repositories.mongo
 import cats.data.{EitherT, OptionT}
 import cats.effect.{ContextShift, IO}
 import com.uptech.windalerts.core.AlertNotFoundError
-import com.uptech.windalerts.core.alerts.domain.AlertT
-import com.uptech.windalerts.core.alerts.{AlertsRepositoryT, AlertsT}
+import com.uptech.windalerts.core.alerts.domain.Alert
+import com.uptech.windalerts.core.alerts.{AlertsRepositoryT, Alerts}
 import com.uptech.windalerts.domain.domain._
 import io.scalaland.chimney.dsl._
 import org.mongodb.scala.MongoCollection
@@ -14,13 +14,13 @@ import org.mongodb.scala.model.Filters.{and, equal}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit cs: ContextShift[IO]) extends AlertsRepositoryT[IO] {
+class MongoAlertsRepositoryAlgebra(collection: MongoCollection[Alert])(implicit cs: ContextShift[IO]) extends AlertsRepositoryT[IO] {
 
 
   private def findByCriteria(criteria: Bson) =
     IO.fromFuture(IO(collection.find(criteria).toFuture()))
 
-  override def disableAllButOneAlerts(userId: String): IO[Seq[AlertT]] = {
+  override def disableAllButOneAlerts(userId: String): IO[Seq[Alert]] = {
     for {
       all <- getAllForUser(userId)
       updatedIOs <- IO({
@@ -31,24 +31,24 @@ class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit
     } yield updatedAlerts
   }
 
-  private def update(alertId: String, alert: AlertT): IO[AlertT] = {
+  private def update(alertId: String, alert: Alert): IO[Alert] = {
     IO.fromFuture(IO(collection.replaceOne(equal("_id", new ObjectId(alertId)), alert).toFuture().map(_ => alert)))
   }
 
-  def getById(id: String): OptionT[IO, AlertT] = {
+  def getById(id: String): OptionT[IO, Alert] = {
     OptionT(findByCriteria(equal("_id", new ObjectId(id))).map(_.headOption))
   }
 
-  override def getAllForUser(user: String): IO[AlertsT] = {
-    findByCriteria(equal("owner", user)).map(AlertsT(_))
+  override def getAllForUser(user: String): IO[Alerts] = {
+    findByCriteria(equal("owner", user)).map(Alerts(_))
   }
 
-  override def getAllEnabled(): IO[Seq[AlertT]]  = {
+  override def getAllEnabled(): IO[Seq[Alert]]  = {
     findByCriteria( equal("enabled", true))
   }
 
-  override def save(alertRequest: AlertRequest, user: String): IO[AlertT] = {
-    val alert = AlertT(alertRequest, user)
+  override def save(alertRequest: AlertRequest, user: String): IO[Alert] = {
+    val alert = Alert(alertRequest, user)
 
     IO.fromFuture(IO(collection.insertOne(alert).toFuture().map(_ => alert)))
   }
@@ -60,10 +60,10 @@ class MongoAlertsRepositoryAlgebra(collection: MongoCollection[AlertT])(implicit
     } yield deleted
   }
 
-  override def update(requester: String, alertId: String, updateAlertRequest: AlertRequest):EitherT[IO, AlertNotFoundError, AlertT] = {
+  override def update(requester: String, alertId: String, updateAlertRequest: AlertRequest):EitherT[IO, AlertNotFoundError, Alert] = {
     for {
       oldAlert <- getById(alertId).toRight(AlertNotFoundError())
-      alertUpdated = updateAlertRequest.into[AlertT]
+      alertUpdated = updateAlertRequest.into[Alert]
                         .withFieldComputed(_._id, u => new ObjectId(alertId))
                         .withFieldComputed(_.owner, _ => requester)
                         .withFieldComputed(_.createdAt, _=> oldAlert.createdAt).transform

@@ -4,9 +4,9 @@ import cats.data.{EitherT, OptionT}
 import com.uptech.windalerts.core.TokenNotFoundError
 
 trait RefreshTokenRepositoryAlgebra[F[_]] {
-  def getByAccessTokenId(accessTokenId: String): OptionT[F, RefreshToken]
-
   def create(refreshToken: RefreshToken): F[RefreshToken]
+
+  def getByAccessTokenId(accessTokenId: String): OptionT[F, RefreshToken]
 
   def getByRefreshToken(refreshToken: String): OptionT[F, RefreshToken]
 
