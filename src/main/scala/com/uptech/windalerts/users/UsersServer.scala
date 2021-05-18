@@ -4,7 +4,6 @@ import cats.effect.{Blocker, ExitCode, IO, IOApp}
 import cats.implicits._
 import com.http4s.rho.swagger.ui.SwaggerUi
 import com.softwaremill.sttp.HttpURLConnectionBackend
-import com.softwaremill.sttp.MediaTypes.Json
 import com.uptech.windalerts.LazyRepos
 import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.beaches.BeachService
@@ -86,5 +85,7 @@ object UsersServer extends IOApp {
 
       } yield server
     }
+
+
 
 }

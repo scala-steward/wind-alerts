@@ -6,5 +6,5 @@ import com.uptech.windalerts.domain.domain
 import com.uptech.windalerts.domain.domain.BeachId
 
 trait WindsService[F[_]] {
-  def get(beachId: BeachId)(implicit F: Functor[F]): cats.data.EitherT[F, SurfsUpError, domain.Wind]
+  def get(beachId: BeachId): cats.data.EitherT[F, SurfsUpError, domain.Wind]
 }

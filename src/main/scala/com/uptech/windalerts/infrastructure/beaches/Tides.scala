@@ -1,7 +1,7 @@
 package com.uptech.windalerts.infrastructure.beaches
 
 import cats.data.EitherT
-import cats.effect.Sync
+import cats.effect.{Async, ContextShift, Sync}
 import cats.{Applicative, Functor}
 import com.softwaremill.sttp._
 import com.uptech.windalerts.Repos
@@ -9,20 +9,27 @@ import com.uptech.windalerts.core.{BeachNotFoundError, SurfsUpError, UnknownErro
 import com.uptech.windalerts.core.beaches.TidesService
 import com.uptech.windalerts.domain.domain.{BeachId, TideHeight}
 import com.uptech.windalerts.domain.domain
+import com.uptech.windalerts.infrastructure.beaches.Tides.TideDecoders.tideDecoder
 import com.uptech.windalerts.infrastructure.beaches.Tides.{Datum, TideDecoders}
+import com.uptech.windalerts.infrastructure.resilience
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.optics.JsonPath._
 import io.circe.{Decoder, Encoder, parser}
+import io.github.resilience4j.bulkhead.Bulkhead
+import io.github.resilience4j.circuitbreaker.CircuitBreaker
+import io.github.resilience4j.decorators.Decorators
+import io.github.resilience4j.retry.Retry
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
 import org.log4s.getLogger
 
 import java.time.format.DateTimeFormatter
 import java.time.{ZoneId, ZonedDateTime}
+import scala.concurrent.Future
 
 
-class WWBackedTidesService[F[_] : Sync](apiKey: String, repos: Repos[F])(implicit backend: SttpBackend[Id, Nothing])
-  extends TidesService[F] {
+class WWBackedTidesService[F[_] : Sync](apiKey: String, repos: Repos[F])(implicit backend: SttpBackend[Id, Nothing], F: Async[F], C: ContextShift[F])
+extends TidesService[F] {
   private val logger = getLogger
   val startDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
@@ -35,41 +42,54 @@ class WWBackedTidesService[F[_] : Sync](apiKey: String, repos: Repos[F])(implici
     "NSW" -> "Australia/NSW",
     "NT" -> "Australia/Darwin")
 
-  override def get(beachId: BeachId)(implicit F: Functor[F]): cats.data.EitherT[F, SurfsUpError, domain.TideHeight] =
-    EitherT.fromEither(getFromWillyWeatther(apiKey, beachId))
+  override def get(beachId: BeachId): cats.data.EitherT[F, SurfsUpError, domain.TideHeight] =
+    getFromWillyWeatther_(apiKey, beachId)
 
-  def getFromWillyWeatther(apiKey: String, beachId: BeachId) = {
+
+  def getFromWillyWeatther_(apiKey: String, beachId: BeachId): cats.data.EitherT[F, SurfsUpError, domain.TideHeight] = {
     logger.error(s"Fetching tides status for $beachId")
 
     val beachesConfig = repos.beaches()
     if (!beachesConfig.contains(beachId.id)) {
-      Left(BeachNotFoundError("Beach not found"))
+      EitherT.left[domain.TideHeight](F.pure(BeachNotFoundError("Beach not found")))
     } else {
       val tz = timeZoneForRegion.getOrElse(beachesConfig(beachId.id).region, "Australia/NSW")
       val tzId = ZoneId.of(tz)
       val startDateFormatted = startDateFormat.format(ZonedDateTime.now(tzId).minusDays(1))
 
       val currentTimeGmt = (System.currentTimeMillis() / 1000) + ZonedDateTime.now(tzId).getOffset.getTotalSeconds
+      sendRequestAndParseResponse(beachId, startDateFormatted, tzId, currentTimeGmt)
+    }
+  }
 
-      import TideDecoders._
+  def sendRequestAndParseResponse(beachId: BeachId, startDateFormatted: String, tzId: ZoneId, currentTimeGmt:Long) = {
+    val future: Future[Id[Response[String]]] =
+      resilience.willyWeatherRequestsDecorator(() => {
+        sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecastGraphs=tides&days=3&startDate=$startDateFormatted").send()
+      })
 
-      val result:Either[SurfsUpError, TideHeight] = for {
-        body <- sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecastGraphs=tides&days=3&startDate=$startDateFormatted").send().body
-          .left.map(left => {
+    EitherT(F.map(Async.fromFuture(F.pure(future)))(response=>parse(response, tzId, currentTimeGmt)))
+  }
+
+
+  def parse(response: Id[Response[String]], tzId: ZoneId, currentTimeGmt:Long) = {
+    val res = for {
+      body <- response
+        .body
+        .left
+        .map(left => {
           WillyWeatherHelper.extractError(left)
         })
-        parsed <- parser.parse(body).left.map(f => UnknownError(f.message))
-        forecasts = root.forecastGraphs.tides.dataConfig.series.groups.each.points.each.json.getAll(parsed)
-        datums = forecasts.flatMap(_.as[Datum].toSeq.sortBy(_.x))
-        interpolated = interpolate(tzId, currentTimeGmt, datums)
+      parsed <- parser.parse(body).left.map(f => UnknownError(f.message))
+      forecasts = root.forecastGraphs.tides.dataConfig.series.groups.each.points.each.json.getAll(parsed)
+      datums = forecasts.flatMap(_.as[Datum].toSeq.sortBy(_.x))
+      interpolated = interpolate(tzId, currentTimeGmt, datums)
+    } yield interpolated
 
-      } yield interpolated
-
-      WillyWeatherHelper.leftOnBeachNotFoundError(result, domain.TideHeight(Double.NaN, "NA", Long.MinValue, Long.MinValue))
-
-    }
-
+    WillyWeatherHelper.leftOnBeachNotFoundError(res, domain.TideHeight(Double.NaN, "NA", Long.MinValue, Long.MinValue))
   }
+
+
 
   private def interpolate(zoneId: ZoneId, currentTimeGmt: Long, sorted: List[Datum]) = {
     try {
