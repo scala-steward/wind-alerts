@@ -1,18 +1,21 @@
 package com.uptech.windalerts.infrastructure.beaches
 
+import cats.FlatMap
 import cats.data.EitherT
-import cats.effect.Sync
-import cats.{Functor, Monad}
+import cats.effect.{Async, ContextShift, Sync}
 import com.softwaremill.sttp._
-import com.uptech.windalerts.core.{SurfsUpError, UnknownError}
 import com.uptech.windalerts.core.beaches.WindsService
-import com.uptech.windalerts.domain.domain.BeachId
+import com.uptech.windalerts.core.{SurfsUpError, UnknownError}
 import com.uptech.windalerts.domain.domain
+import com.uptech.windalerts.domain.domain.BeachId
+import com.uptech.windalerts.infrastructure.resilience
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.{Decoder, parser}
 import org.http4s.EntityDecoder
 import org.http4s.circe.jsonOf
 import org.log4s.getLogger
+
+import scala.concurrent.Future
 
 
 case class Wind(
@@ -24,23 +27,35 @@ case class Wind(
                )
 
 object Wind {
+
   implicit val windDecoder: Decoder[Wind] = deriveDecoder[Wind]
 
   implicit def windEntityDecoder[F[_] : Sync]: EntityDecoder[F, Wind] =
     jsonOf
 }
 
-class WWBackedWindsService[F[_] : Sync](apiKey: String)(implicit backend: SttpBackend[Id, Nothing]) extends WindsService[F] {
+class WWBackedWindsService[F[_] : FlatMap : Sync](apiKey: String)(implicit backend: SttpBackend[Id, Nothing], F: Async[F], C: ContextShift[F]) extends WindsService[F] {
   private val logger = getLogger
 
-  override def get(beachId: BeachId)(implicit F: Functor[F]): cats.data.EitherT[F, SurfsUpError, domain.Wind] =
-    EitherT.fromEither(getFromWillyWeatther(apiKey, beachId))
+  override def get(beachId: BeachId): cats.data.EitherT[F, SurfsUpError, domain.Wind] = {
 
-  def getFromWillyWeatther(apiKey: String, beachId: BeachId)(implicit F: Monad[F]): Either[SurfsUpError, domain.Wind] = {
-    logger.error(s"Fetching wind status for $beachId")
+    getFromWillyWeather(beachId)
+  }
 
+
+  def getFromWillyWeather(beachId: BeachId) = {
+    val future: Future[Id[Response[String]]] =
+      resilience.willyWeatherRequestsDecorator(() => {
+        logger.error(s"Fetching wind status for $beachId")
+        sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?observational=true").send()
+      })
+
+    EitherT(F.map(Async.fromFuture(F.pure(future)))(parse(_)))
+  }
+
+  private def parse(response: Id[Response[String]]) = {
     val res = for {
-      body <- sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?observational=true").send()
+      body <- response
         .body
         .left
         .map(left => {
@@ -52,5 +67,6 @@ class WWBackedWindsService[F[_] : Sync](apiKey: String)(implicit backend: SttpBa
 
     WillyWeatherHelper.leftOnBeachNotFoundError(res, domain.Wind(Double.NaN, Double.NaN, "NA", "NA"))
   }
+
 }
 

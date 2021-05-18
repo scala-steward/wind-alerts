@@ -25,7 +25,7 @@ class NotificationsService[F[_] : Sync](A: AlertsService[F], B: BeachService[F],
 
   def sendNotification() = {
 
-    for {
+    val usersToBeNotifiedEitherT: EitherT[F, Exception, List[Try[String]]] = for {
       alerts <- A.getAllForDayAndTimeRange
 
       alertsByBeaches = alerts.groupBy(_.beachId).map(kv => (BeachId(kv._1), kv._2))
@@ -55,6 +55,7 @@ class NotificationsService[F[_] : Sync](A: AlertsService[F], B: BeachService[F],
 
       submitted <- EitherT.liftF(usersToBeFilteredWithCount.map(u => submit(u)).toList.sequence)
     } yield submitted
+    usersToBeNotifiedEitherT
 
   }
 
