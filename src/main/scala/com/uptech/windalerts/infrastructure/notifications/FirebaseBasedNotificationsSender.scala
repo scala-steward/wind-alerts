@@ -5,8 +5,8 @@ import com.google.firebase.messaging.Message._
 import com.google.firebase.messaging._
 import com.uptech.windalerts.core.notifications.NotificationsSender
 import com.uptech.windalerts.core.notifications.NotificationsSender.NotificationDetails
-import com.uptech.windalerts.domain.beaches.Beach
-import com.uptech.windalerts.domain.config.AppConfig
+import com.uptech.windalerts.config.beaches.Beach
+import com.uptech.windalerts.config.config.AppConfig
 
 import scala.util.Try
 

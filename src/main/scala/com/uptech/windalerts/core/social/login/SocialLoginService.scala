@@ -3,11 +3,11 @@ package com.uptech.windalerts.core.social.login
 import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
-import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.credentials.{AppleCredentials, FacebookCredentials, SocialCredentials, UserCredentialService}
-import com.uptech.windalerts.core.user.{UserService, UserT}
+import com.uptech.windalerts.core.user.{TokensWithUser, UserService, UserT}
 import com.uptech.windalerts.core.{SurfsUpError, UserAlreadyExistsError}
-import com.uptech.windalerts.domain.domain._
+import com.uptech.windalerts.infrastructure.endpoints.dtos._
+import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 import org.mongodb.scala.bson.ObjectId
 
 class SocialLoginService[F[_] : Sync](repos: Repos[F], userService: UserService[F], credentialService: UserCredentialService[F]) {

@@ -8,10 +8,10 @@ import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.feedbacks.Feedback
 import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.social.subscriptions.SubscriptionsService
-import com.uptech.windalerts.core.user.{UserRolesService, UserService}
-import com.uptech.windalerts.domain._
+import com.uptech.windalerts.core.user.{UserId, UserRolesService, UserService}
+import com.uptech.windalerts.config._
 import codecs._
-import com.uptech.windalerts.domain.domain.{AppleRegisterRequest, ChangePasswordRequest, FacebookRegisterRequest, ResetPasswordRequest, _}
+import dtos.{AppleRegisterRequest, ChangePasswordRequest, FacebookRegisterRequest, ResetPasswordRequest, _}
 import org.http4s.dsl.Http4sDsl
 import org.http4s.{AuthedRoutes, HttpRoutes}
 
@@ -34,7 +34,7 @@ class UsersEndpoints[F[_] : Effect]
           rr <- EitherT.liftF(req.as[RegisterRequest])
           user <- userService.register(rr)
         } yield user).value.flatMap {
-          case Right(tokensWithUser) => Ok(tokensWithUser)
+          case Right(tokensWithUser) => Ok(TokensWithUserDTO.fromDomain(tokensWithUser))
           case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")
         }
       }
@@ -44,7 +44,7 @@ class UsersEndpoints[F[_] : Effect]
           credentials <- EitherT.liftF(req.as[LoginRequest])
           user <- userService.login(credentials)
         } yield user).value.flatMap {
-          case Right(tokensWithUser) => Ok(tokensWithUser)
+          case Right(tokensWithUser) => Ok(TokensWithUserDTO.fromDomain(tokensWithUser))
           case Left(UserNotFoundError(_)) => NotFound("User not found")
           case Left(UserAuthenticationFailedError(name)) => BadRequest(s"Authentication failed for user $name")
         }
@@ -55,7 +55,7 @@ class UsersEndpoints[F[_] : Effect]
           refreshToken <- EitherT.liftF(req.as[AccessTokenRequest])
           user <- userService.refresh(refreshToken)
         } yield user).value.flatMap {
-          case Right(tokensWithUser) => Ok(tokensWithUser)
+          case Right(tokensWithUser) => Ok(TokensWithUserDTO.fromDomain(tokensWithUser))
           case Left(RefreshTokenNotFoundError(_)) => BadRequest(s"Refresh token not found")
           case Left(RefreshTokenExpiredError(_)) => BadRequest(s"Refresh token expired")
           case Left(TokenNotFoundError(_)) => BadRequest(s"Token not found")
@@ -240,7 +240,7 @@ class UsersEndpoints[F[_] : Effect]
           facebookRegisterRequest <- EitherT.liftF(req.as[FacebookRegisterRequest])
           tokensWithUser <- socialLoginService.registerOrLoginFacebookUser(facebookRegisterRequest.asDomain())
         } yield tokensWithUser).value.flatMap {
-          case Right(tokensWithUser) => Ok(tokensWithUser)
+          case Right(tokensWithUser) => Ok(TokensWithUserDTO.fromDomain(tokensWithUser))
           case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")
           case Left(UserNotFoundError(_)) => NotFound("User not found")
         }
@@ -251,7 +251,7 @@ class UsersEndpoints[F[_] : Effect]
           facebookRegisterRequest <- EitherT.liftF(req.as[FacebookRegisterRequest])
           tokensWithUser <- socialLoginService.registerOrLoginFacebookUser(facebookRegisterRequest.asDomain())
         } yield tokensWithUser).value.flatMap {
-          case Right(tokensWithUser) => Ok(tokensWithUser)
+          case Right(tokensWithUser) => Ok(TokensWithUserDTO.fromDomain(tokensWithUser))
           case Left(UserNotFoundError(_)) => NotFound("User not found")
           case Left(UserAuthenticationFailedError(name)) => BadRequest(s"Authentication failed for user $name")
         }
@@ -266,7 +266,7 @@ class UsersEndpoints[F[_] : Effect]
           appleRegisterRequest <- EitherT.liftF(req.as[AppleRegisterRequest])
           tokensWithUser <- socialLoginService.registerOrLoginAppleUser(appleRegisterRequest.asDomain())
         } yield tokensWithUser).value.flatMap {
-          case Right(tokensWithUser) => Ok(tokensWithUser)
+          case Right(tokensWithUser) => Ok(TokensWithUserDTO.fromDomain(tokensWithUser))
           case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")
           case Left(UserNotFoundError(_)) => NotFound("User not found")
         }
@@ -277,7 +277,7 @@ class UsersEndpoints[F[_] : Effect]
           appleRegisterRequest <- EitherT.liftF(req.as[AppleRegisterRequest])
           tokensWithUser <- socialLoginService.registerOrLoginAppleUser(appleRegisterRequest.asDomain())
         } yield tokensWithUser).value.flatMap {
-          case Right(tokensWithUser) => Ok(tokensWithUser)
+          case Right(tokensWithUser) => Ok(TokensWithUserDTO.fromDomain(tokensWithUser))
           case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")
           case Left(UserNotFoundError(_)) => NotFound("User not found")
         }

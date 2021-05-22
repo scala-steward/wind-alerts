@@ -1,41 +1,43 @@
-package com.uptech.windalerts.domain
+package com.uptech.windalerts.infrastructure.endpoints
 
 import com.uptech.windalerts.core.alerts.TimeRange
 import com.uptech.windalerts.core.social.login.{AppleAccessRequest, FacebookAccessRequest}
+import com.uptech.windalerts.core.user.TokensWithUser
 import io.scalaland.chimney.dsl._
 
 
-object domain {
+object dtos {
+
   case class UpdateUserRequest(name: String, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long)
 
-  case class UpdateUserDeviceTokenRequest(deviceToken:String)
-
-  case class UserId(id: String)
-
-  case class TokensWithUser(accessToken: String, refreshToken: String, expiredAt: Long, user: UserDTO)
-
-
+  case class UpdateUserDeviceTokenRequest(deviceToken: String)
 
   case class AccessTokenRequest(refreshToken: String)
 
+  case class TokensWithUserDTO(accessToken: String, refreshToken: String, expiredAt: Long, user: UserDTO)
+
+  object TokensWithUserDTO {
+    def fromDomain(tokenWithUser: TokensWithUser) = {
+      tokenWithUser.into[TokensWithUserDTO].withFieldComputed(_.user, _.user.asDTO()).transform
+    }
+  }
 
   final case class OTP(otp: String)
 
   final case class UserDTO(id: String, email: String, name: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long) {
     def this(id: String, email: String, name: String, deviceToken: String, deviceType: String, startTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long) =
       this(id, email, name, deviceToken, deviceType, startTrialAt, if (startTrialAt == -1) -1L else (startTrialAt + (30L * 24L * 60L * 60L * 1000L)), userType, snoozeTill, disableAllAlerts, notificationsPerHour, -1, -1)
-
   }
 
 
   case class FacebookRegisterRequest(accessToken: String, deviceType: String, deviceToken: String) {
-    def asDomain(): FacebookAccessRequest  = {
+    def asDomain(): FacebookAccessRequest = {
       this.into[FacebookAccessRequest].transform
     }
   }
 
   case class AppleRegisterRequest(authorizationCode: String, nonce: String, deviceType: String, deviceToken: String, name: String) {
-    def asDomain(): AppleAccessRequest  = {
+    def asDomain(): AppleAccessRequest = {
       this.into[AppleAccessRequest].transform
     }
   }
@@ -48,19 +50,19 @@ object domain {
 
   case class ResetPasswordRequest(email: String, deviceType: String)
 
-  final case class BeachId(id: Long) extends AnyVal
+  final case class BeachIdDTO(id: Long) extends AnyVal
 
-  final case class Wind(direction: Double = 0, speed: Double = 0, directionText: String, trend: String)
+  final case class WindDTO(direction: Double = 0, speed: Double = 0, directionText: String, trend: String)
 
-  final case class Swell(height: Double = 0, direction: Double = 0, directionText: String)
+  final case class SwellDTO(height: Double = 0, direction: Double = 0, directionText: String)
 
-  final case class TideHeight(height: Double, status: String, nextLow: Long, nextHigh: Long)
+  final case class TideHeightDTO(height: Double, status: String, nextLow: Long, nextHigh: Long)
 
-  final case class SwellOutput(height: Double = 0, direction: Double = 0, directionText: String)
+  final case class SwellOutputDTO(height: Double = 0, direction: Double = 0, directionText: String)
 
-  final case class Tide(height: TideHeight, swell: SwellOutput)
+  final case class TideDTO(height: TideHeightDTO, swell: SwellOutputDTO)
 
-  final case class Beach(beachId: BeachId, wind: Wind, tide: Tide)
+  final case class BeachDTO(beachId: BeachIdDTO, wind: WindDTO, tide: TideDTO)
 
   case class AlertRequest(
                            beachId: Long,
@@ -77,18 +79,18 @@ object domain {
   case class AlertsDTO(alerts: Seq[AlertDTO])
 
   case class AlertDTO(
-                    id: String,
-                    owner: String,
-                    beachId: Long,
-                    days: Seq[Long],
-                    swellDirections: Seq[String],
-                    timeRanges: Seq[TimeRange],
-                    waveHeightFrom: Double,
-                    waveHeightTo: Double,
-                    windDirections: Seq[String],
-                    tideHeightStatuses: Seq[String] = Seq("Rising", "Falling"),
-                    enabled: Boolean,
-                    timeZone: String = "Australia/Sydney") {
+                       id: String,
+                       owner: String,
+                       beachId: Long,
+                       days: Seq[Long],
+                       swellDirections: Seq[String],
+                       timeRanges: Seq[TimeRange],
+                       waveHeightFrom: Double,
+                       waveHeightTo: Double,
+                       windDirections: Seq[String],
+                       tideHeightStatuses: Seq[String] = Seq("Rising", "Falling"),
+                       enabled: Boolean,
+                       timeZone: String = "Australia/Sydney") {
   }
 
   case class AndroidReceiptValidationRequest(productId: String, token: String)
@@ -103,17 +105,13 @@ object domain {
 
   case class SubscriptionNotification(purchaseToken: String)
 
-
   case class ApplePurchaseVerificationRequest(`receipt-data`: String, password: String, `exclude-old-transactions`: Boolean)
 
   case class AppleSubscriptionPurchase(product_id: String, purchase_date_ms: Long, expires_date_ms: Long)
 
-
   case class TokenResponse(access_token: String, id_token: String)
 
   case class AppleUser(sub: String, email: String)
-
-
 
   case class FeedbackRequest(topic: String, message: String)
 

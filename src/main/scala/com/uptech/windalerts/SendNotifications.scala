@@ -1,4 +1,4 @@
-package com.uptech.windalerts.notifications
+package com.uptech.windalerts
 
 import cats.effect.{ExitCode, IO, IOApp}
 import cats.implicits._
@@ -6,17 +6,17 @@ import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.softwaremill.sttp.HttpURLConnectionBackend
-import com.uptech.windalerts.LazyRepos
+import com.uptech.windalerts.config._
 import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.notifications.NotificationsService
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
-import com.uptech.windalerts.domain._
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints.NotificationEndpoints
 import com.uptech.windalerts.infrastructure.notifications.FirebaseBasedNotificationsSender
+import com.uptech.windalerts.infrastructure.repositories.mongo.LazyRepos
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AppleSubscription, SubscriptionsServiceImpl}
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger

@@ -1,7 +1,8 @@
 package com.uptech.windalerts.core.notifications
 
 import com.uptech.windalerts.core.notifications.NotificationsSender.NotificationDetails
-import com.uptech.windalerts.domain.domain.{BeachId, UserId}
+import com.uptech.windalerts.core.user.UserId
+import com.uptech.windalerts.core.beaches.domain._
 
 import scala.util.Try
 

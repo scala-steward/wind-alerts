@@ -6,8 +6,8 @@ import cats.implicits._
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.uptech.windalerts.core.social.subscriptions.{SocialSubscription, SubscriptionPurchase}
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
-import com.uptech.windalerts.domain.domain.{ApplePurchaseVerificationRequest, AppleSubscriptionPurchase}
-import com.uptech.windalerts.domain.secrets
+import com.uptech.windalerts.infrastructure.endpoints.dtos.{ApplePurchaseVerificationRequest, AppleSubscriptionPurchase}
+import com.uptech.windalerts.config.secrets
 import io.circe.optics.JsonPath.root
 import io.circe.parser
 import io.circe.syntax._

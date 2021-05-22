@@ -1,20 +1,20 @@
-package com.uptech.windalerts.users
+package com.uptech.windalerts
 
 import cats.effect.{Blocker, ExitCode, IO, IOApp}
 import cats.implicits._
 import com.http4s.rho.swagger.ui.SwaggerUi
 import com.softwaremill.sttp.HttpURLConnectionBackend
-import com.uptech.windalerts.LazyRepos
+import com.uptech.windalerts.config.{secrets, swellAdjustments}
 import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
-import com.uptech.windalerts.domain.{secrets, swellAdjustments}
 import com.uptech.windalerts.infrastructure.beaches._
 import com.uptech.windalerts.infrastructure.endpoints._
 import com.uptech.windalerts.infrastructure.endpoints.logger._
+import com.uptech.windalerts.infrastructure.repositories.mongo.LazyRepos
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AndroidSubscription, AppleSubscription, SubscriptionsServiceImpl}
 import org.http4s.implicits._
 import org.http4s.rho.swagger.SwaggerMetadata

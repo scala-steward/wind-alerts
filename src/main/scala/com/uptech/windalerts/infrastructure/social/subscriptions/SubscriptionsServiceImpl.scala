@@ -3,10 +3,11 @@ package com.uptech.windalerts.infrastructure.social.subscriptions
 import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
-import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.SurfsUpError
 import com.uptech.windalerts.core.social.subscriptions._
-import com.uptech.windalerts.domain.domain._
+import com.uptech.windalerts.core.user.UserId
+import com.uptech.windalerts.infrastructure.endpoints.dtos._
+import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 
 class SubscriptionsServiceImpl[F[_] : Sync](appleSubscription: SocialSubscription[F], androidSubscription: SocialSubscription[F], repos: Repos[F]) extends SubscriptionsService[F] {
 

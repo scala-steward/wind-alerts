@@ -3,7 +3,7 @@ package com.uptech.windalerts.core.beaches
 import cats.effect.Sync
 import cats.implicits._
 import com.uptech.windalerts.core.SurfsUpError
-import com.uptech.windalerts.domain.domain._
+import com.uptech.windalerts.core.beaches.domain._
 
 
 class BeachService[F[_] : Sync](windService: WindsService[F],

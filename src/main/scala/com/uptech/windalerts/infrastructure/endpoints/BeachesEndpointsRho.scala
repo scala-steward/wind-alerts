@@ -5,7 +5,8 @@ import cats.implicits._
 import com.uptech.windalerts.core.BeachNotFoundError
 import com.uptech.windalerts.core.beaches.BeachService
 import codecs._
-import com.uptech.windalerts.domain.domain.BeachId
+import com.uptech.windalerts.core.beaches.domain.BeachId
+import io.circe.syntax.EncoderOps
 import org.http4s.Request
 import org.http4s.rho.RhoRoutes
 
