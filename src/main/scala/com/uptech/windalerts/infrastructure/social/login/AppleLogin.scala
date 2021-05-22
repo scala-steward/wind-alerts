@@ -8,7 +8,7 @@ import com.turo.pushy.apns.auth.ApnsSigningKey
 import com.uptech.windalerts.core.social.login.{AppleAccessRequest, SocialLogin, SocialUser}
 import com.uptech.windalerts.core.social.subscriptions.SubscriptionPurchase
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
-import com.uptech.windalerts.domain.domain.{ApplePurchaseVerificationRequest, AppleSubscriptionPurchase, AppleUser, TokenResponse}
+import com.uptech.windalerts.infrastructure.endpoints.dtos.{ApplePurchaseVerificationRequest, AppleSubscriptionPurchase, AppleUser, TokenResponse}
 import io.circe.optics.JsonPath.root
 import io.circe.parser
 import io.circe.syntax._

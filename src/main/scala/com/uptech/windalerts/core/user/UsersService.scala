@@ -3,14 +3,14 @@ package com.uptech.windalerts.core.user
 import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
-import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.credentials.{Credentials, UserCredentialService}
 import com.uptech.windalerts.core.feedbacks.Feedback
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.refresh.tokens.RefreshToken
 import com.uptech.windalerts.core.{RefreshTokenExpiredError, RefreshTokenNotFoundError, SurfsUpError, UserAlreadyExistsError, UserNotFoundError, utils}
-import com.uptech.windalerts.domain._
-import com.uptech.windalerts.domain.domain._
+import com.uptech.windalerts.config._
+import com.uptech.windalerts.infrastructure.endpoints.dtos._
+import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 import org.mongodb.scala.bson.ObjectId
 
 class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService: UserCredentialService[F], otpService: OTPService[F], auth: AuthenticationService[F]) {

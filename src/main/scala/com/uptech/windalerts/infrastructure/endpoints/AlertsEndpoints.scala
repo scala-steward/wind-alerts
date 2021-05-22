@@ -6,8 +6,9 @@ import cats.implicits._
 import com.uptech.windalerts.core.{AlertNotFoundError, OperationNotAllowed, UserNotFoundError}
 import com.uptech.windalerts.core.alerts.AlertsService
 import codecs._
-import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain._
+import com.uptech.windalerts.core.user.UserId
+import dtos._
+import com.uptech.windalerts.config._
 import org.http4s.AuthedRoutes
 import org.http4s.dsl.Http4sDsl
 

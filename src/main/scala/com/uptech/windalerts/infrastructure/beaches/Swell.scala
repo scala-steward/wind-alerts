@@ -6,9 +6,10 @@ import cats.effect.{Async, ContextShift, Sync}
 import com.softwaremill.sttp._
 import com.uptech.windalerts.core.beaches.SwellsService
 import com.uptech.windalerts.core.{SurfsUpError, UnknownError}
-import com.uptech.windalerts.domain.domain
-import com.uptech.windalerts.domain.domain.BeachId
-import com.uptech.windalerts.domain.swellAdjustments.Adjustments
+import com.uptech.windalerts.core.beaches.domain
+import com.uptech.windalerts.core.beaches.domain.BeachId
+import com.uptech.windalerts.core.beaches.domain
+import com.uptech.windalerts.config.swellAdjustments.Adjustments
 import com.uptech.windalerts.infrastructure.beaches.Swells.Swell
 import com.uptech.windalerts.infrastructure.resilience
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}

@@ -2,7 +2,7 @@ package com.uptech.windalerts.core.otp
 
 import cats.Monad
 import cats.implicits._
-import com.uptech.windalerts.Repos
+import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 
 import scala.util.Random
 

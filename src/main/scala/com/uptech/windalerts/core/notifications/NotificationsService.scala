@@ -3,15 +3,15 @@ package com.uptech.windalerts.core.notifications
 import cats.data.EitherT
 import cats.effect.{Async, Sync}
 import cats.implicits._
-import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.notifications.NotificationsSender.NotificationDetails
-import com.uptech.windalerts.core.user.UserT
-import com.uptech.windalerts.domain.domain
-import com.uptech.windalerts.domain.domain.{BeachId, UserId}
+import com.uptech.windalerts.core.user.{UserId, UserT}
 import org.log4s.getLogger
+import com.uptech.windalerts.core.beaches.domain._
+import com.uptech.windalerts.infrastructure.endpoints.dtos
+import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 
 import scala.util.Try
 
@@ -19,9 +19,9 @@ class NotificationsService[F[_] : Sync](A: AlertsService[F], B: BeachService[F],
                                        (implicit F: Async[F]){
   private val logger = getLogger
 
-  final case class AlertWithBeach(alert: Alert, beach: domain.Beach)
+  final case class AlertWithBeach(alert: Alert, beach: Beach)
 
-  final case class AlertWithUserWithBeach(alert: Alert, user: UserT, beach: domain.Beach)
+  final case class AlertWithUserWithBeach(alert: Alert, user: UserT, beach: Beach)
 
   def sendNotification() = {
 

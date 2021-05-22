@@ -1,12 +1,13 @@
-package com.uptech.windalerts
+package com.uptech.windalerts.infrastructure.repositories.mongo
 
-import java.io.File
 import cats.Eval
-import cats.effect.{ContextShift, IO, Sync}
+import cats.effect.{ContextShift, IO}
 import com.google.api.services.androidpublisher.AndroidPublisher
+import com.uptech.windalerts.config.beaches.Beach
+import com.uptech.windalerts.config.secrets
 import com.uptech.windalerts.core.alerts.AlertsRepositoryT
 import com.uptech.windalerts.core.alerts.domain.Alert
-import com.uptech.windalerts.core.credentials.{AppleCredentials, Credentials, CredentialsRepository, FacebookCredentials, SocialCredentialsRepository}
+import com.uptech.windalerts.core.credentials._
 import com.uptech.windalerts.core.feedbacks.{Feedback, FeedbackRepository}
 import com.uptech.windalerts.core.notifications.{Notification, NotificationRepository}
 import com.uptech.windalerts.core.otp.{OTPWithExpiry, OtpRepository}
@@ -14,16 +15,13 @@ import com.uptech.windalerts.core.refresh.tokens.{RefreshToken, RefreshTokenRepo
 import com.uptech.windalerts.core.social.login.{AppleAccessRequest, FacebookAccessRequest, SocialLogin}
 import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AndroidTokenRepository, AppleToken, AppleTokenRepository}
 import com.uptech.windalerts.core.user.{UserRepositoryAlgebra, UserT}
-import com.uptech.windalerts.domain.beaches.Beach
-import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.secrets
 import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.endpoints.codecs
-import com.uptech.windalerts.infrastructure.repositories.mongo._
 import com.uptech.windalerts.infrastructure.social.login.{AppleLogin, FacebookLogin}
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AndroidPublisherHelper, ApplicationConfig}
-import com.uptech.windalerts.users._
 import org.mongodb.scala.{MongoClient, MongoDatabase}
+
+import java.io.File
 
 trait Repos[F[_]] {
   def otp(): OtpRepository[F]
@@ -118,7 +116,7 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
 
 
   val email = Eval.later {
-    val emailConf = com.uptech.windalerts.domain.secrets.read.surfsUp.email
+    val emailConf = com.uptech.windalerts.config.secrets.read.surfsUp.email
     new EmailSender[IO](emailConf.apiKey)
   }
 
@@ -127,7 +125,7 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
   }
 
   val b = Eval.later {
-    com.uptech.windalerts.domain.beaches.read
+    com.uptech.windalerts.config.beaches.read
   }
 
   override def otp(): OtpRepository[IO] = {
@@ -177,7 +175,7 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
   private def acquireDb() = {
     val start = System.currentTimeMillis()
     val value = Eval.later {
-      val client = MongoClient(com.uptech.windalerts.domain.secrets.read.surfsUp.mongodb.url)
+      val client = MongoClient(com.uptech.windalerts.config.secrets.read.surfsUp.mongodb.url)
       client.getDatabase(sys.env("projectId")).withCodecRegistry(codecs.codecRegistry)
     }
     val v = value.value

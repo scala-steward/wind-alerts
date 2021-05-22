@@ -2,10 +2,10 @@ package com.uptech.windalerts.core.user
 
 import cats.data.EitherT
 import cats.effect.Effect
-import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.refresh.tokens.RefreshToken
-import com.uptech.windalerts.domain.domain._
-import com.uptech.windalerts.domain.domain
+import com.uptech.windalerts.infrastructure.endpoints.dtos
+import com.uptech.windalerts.infrastructure.endpoints.dtos._
+import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 import dev.profunktor.auth.JwtAuthMiddleware
 import dev.profunktor.auth.jwt.{JwtAuth, JwtSecretKey}
 import io.circe.parser._
@@ -50,6 +50,6 @@ class AuthenticationService[F[_] : Effect](repos: Repos[F]) {
   }
 
   def tokens(accessToken: String, refreshToken: RefreshToken, expiredAt: Long, user: UserT): TokensWithUser =
-    domain.TokensWithUser(accessToken, refreshToken.refreshToken, expiredAt, user.asDTO())
+    TokensWithUser(accessToken, refreshToken.refreshToken, expiredAt, user)
 
 }

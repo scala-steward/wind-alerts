@@ -6,7 +6,7 @@ import cats.effect.{ContextShift, IO}
 import com.uptech.windalerts.core.UserNotFoundError
 import com.uptech.windalerts.core.user.UserType.{Premium, Trial}
 import com.uptech.windalerts.core.user.{UserRepositoryAlgebra, UserT}
-import com.uptech.windalerts.domain.domain
+import com.uptech.windalerts.infrastructure.endpoints.dtos
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId
 import org.mongodb.scala.bson.conversions.Bson

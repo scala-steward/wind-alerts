@@ -1,24 +1,19 @@
 package com.uptech.windalerts.infrastructure.beaches
 
+import cats.Applicative
 import cats.data.EitherT
 import cats.effect.{Async, ContextShift, Sync}
-import cats.{Applicative, Functor}
 import com.softwaremill.sttp._
-import com.uptech.windalerts.Repos
+import com.uptech.windalerts.core.beaches.domain.{BeachId, TideHeight}
+import com.uptech.windalerts.core.beaches.{TidesService, domain}
 import com.uptech.windalerts.core.{BeachNotFoundError, SurfsUpError, UnknownError}
-import com.uptech.windalerts.core.beaches.TidesService
-import com.uptech.windalerts.domain.domain.{BeachId, TideHeight}
-import com.uptech.windalerts.domain.domain
+import com.uptech.windalerts.infrastructure.beaches.Tides.Datum
 import com.uptech.windalerts.infrastructure.beaches.Tides.TideDecoders.tideDecoder
-import com.uptech.windalerts.infrastructure.beaches.Tides.{Datum, TideDecoders}
+import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 import com.uptech.windalerts.infrastructure.resilience
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.optics.JsonPath._
 import io.circe.{Decoder, Encoder, parser}
-import io.github.resilience4j.bulkhead.Bulkhead
-import io.github.resilience4j.circuitbreaker.CircuitBreaker
-import io.github.resilience4j.decorators.Decorators
-import io.github.resilience4j.retry.Retry
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
 import org.log4s.getLogger

@@ -285,21 +285,21 @@
         <profile>
             <id>notifications</id>
             <properties>
-                <profile.mainClass>com.uptech.windalerts.notifications.SendNotifications</profile.mainClass>
+                <profile.mainClass>com.uptech.windalerts.SendNotifications</profile.mainClass>
                 <image>gcr.io/${envProjectId}/wind-alerts-send-notifications:${project.version}</image>
             </properties>
         </profile>
         <profile>
             <id>users</id>
             <properties>
-                <profile.mainClass>com.uptech.windalerts.users.UsersServer</profile.mainClass>
+                <profile.mainClass>com.uptech.windalerts.UsersServer</profile.mainClass>
                 <image>gcr.io/${envProjectId}/wind-alerts-users:${project.version}</image>
             </properties>
         </profile>
         <profile>
             <id>subscriptions</id>
             <properties>
-                <profile.mainClass>com.uptech.windalerts.users.UpdateUserRolesServer</profile.mainClass>
+                <profile.mainClass>com.uptech.windalerts.UpdateUserRolesServer</profile.mainClass>
                 <image>gcr.io/${envProjectId}/wind-alerts-subscriptions:${project.version}</image>
             </properties>
         </profile>

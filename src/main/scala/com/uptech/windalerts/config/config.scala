@@ -1,8 +1,8 @@
-package com.uptech.windalerts.domain
+package com.uptech.windalerts.config
 
 import java.io.File
 
-import com.uptech.windalerts.domain.beaches.Beaches
+import com.uptech.windalerts.config.beaches.Beaches
 import io.circe._
 import io.circe.config.parser
 import io.circe.generic.auto._

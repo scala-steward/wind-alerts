@@ -1,7 +1,7 @@
 package com.uptech.windalerts.core.user
 
 import com.uptech.windalerts.core.user.UserType.{Registered, Trial}
-import com.uptech.windalerts.domain.domain.UserDTO
+import com.uptech.windalerts.infrastructure.endpoints.dtos.UserDTO
 import org.bson.types.ObjectId
 import io.scalaland.chimney.dsl._
 

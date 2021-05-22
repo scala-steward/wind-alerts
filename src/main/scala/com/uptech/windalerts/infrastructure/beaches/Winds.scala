@@ -5,15 +5,15 @@ import cats.data.EitherT
 import cats.effect.{Async, ContextShift, Sync}
 import com.softwaremill.sttp._
 import com.uptech.windalerts.core.beaches.WindsService
+import com.uptech.windalerts.core.beaches.domain.BeachId
 import com.uptech.windalerts.core.{SurfsUpError, UnknownError}
-import com.uptech.windalerts.domain.domain
-import com.uptech.windalerts.domain.domain.BeachId
 import com.uptech.windalerts.infrastructure.resilience
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.{Decoder, parser}
 import org.http4s.EntityDecoder
 import org.http4s.circe.jsonOf
 import org.log4s.getLogger
+import com.uptech.windalerts.core.beaches.domain
 
 import scala.concurrent.Future
 

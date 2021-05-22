@@ -4,11 +4,11 @@ import cats.Bifunctor.ops.toAllBifunctorOps
 import cats.Functor
 import cats.data.EitherT
 import cats.effect.Sync
-import com.uptech.windalerts.Repos
 import com.uptech.windalerts.core.{AlertNotFoundError, SurfsUpError}
 import com.uptech.windalerts.core.alerts.domain.Alert
-import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
-import com.uptech.windalerts.domain.domain.{AlertDTO, AlertRequest, UserId}
+import com.uptech.windalerts.core.user.{AuthenticationService, UserId, UserRolesService, UserService}
+import com.uptech.windalerts.infrastructure.endpoints.dtos.{AlertDTO, AlertRequest}
+import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 
 class AlertsService[F[_] : Sync](usersService: UserService[F], userRolesService: UserRolesService[F], repo: Repos[F]) {
   def createAlert(u: UserId, r: AlertRequest) = {

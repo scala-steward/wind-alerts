@@ -4,14 +4,15 @@ import cats.Applicative
 import cats.effect.Sync
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.alerts.{Alerts, TimeRange}
+import com.uptech.windalerts.core.beaches.domain._
 import com.uptech.windalerts.core.credentials.{AppleCredentials, Credentials, FacebookCredentials}
 import com.uptech.windalerts.core.feedbacks.Feedback
 import com.uptech.windalerts.core.notifications.Notification
 import com.uptech.windalerts.core.otp.OTPWithExpiry
 import com.uptech.windalerts.core.refresh.tokens.RefreshToken
 import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken}
-import com.uptech.windalerts.core.user.UserT
-import com.uptech.windalerts.domain.domain._
+import com.uptech.windalerts.core.user.{TokensWithUser, UserT}
+import dtos._
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}
 import org.bson.codecs.configuration.CodecRegistries.{fromProviders, fromRegistries}
@@ -46,12 +47,8 @@ object codecs {
 
   implicit def beachIdEntityEncoder[F[_] : Applicative]: EntityEncoder[F, BeachId] = jsonEncoderOf
 
-  lazy implicit val beachDecoder: Decoder[Beach] = deriveDecoder[Beach]
-
-  implicit def beachEntityDecoder[F[_] : Sync]: EntityDecoder[F, Beach] = jsonOf
 
   lazy implicit val beachEncoder: Encoder[Beach] = deriveEncoder[Beach]
-
   implicit def beachEntityEncoder[F[_] : Applicative]: EntityEncoder[F, Beach] = jsonEncoderOf
 
   lazy implicit val swellDecoder: Decoder[Swell] = deriveDecoder[Swell]
@@ -154,13 +151,13 @@ object codecs {
 
   implicit def rEntityEncoder[F[_] : Applicative]: EntityEncoder[F, RegisterRequest] = jsonEncoderOf
 
-  lazy implicit val tokensDecoder: Decoder[TokensWithUser] = deriveDecoder[TokensWithUser]
+  lazy implicit val tokensDecoder: Decoder[TokensWithUserDTO] = deriveDecoder[TokensWithUserDTO]
 
-  implicit def tokensEntityDecoder[F[_] : Sync]: EntityDecoder[F, TokensWithUser] = jsonOf
+  implicit def tokensEntityDecoder[F[_] : Sync]: EntityDecoder[F, TokensWithUserDTO] = jsonOf
 
-  lazy implicit val tokenEncoder: Encoder[TokensWithUser] = deriveEncoder[TokensWithUser]
+  lazy implicit val tokenEncoder: Encoder[TokensWithUserDTO] = deriveEncoder[TokensWithUserDTO]
 
-  implicit def tokensEntityEncoder[F[_] : Applicative]: EntityEncoder[F, TokensWithUser] = jsonEncoderOf
+  implicit def tokensEntityEncoder[F[_] : Applicative]: EntityEncoder[F, TokensWithUserDTO] = jsonEncoderOf
 
   lazy implicit val accessTokenRequestDecoder: Decoder[AccessTokenRequest] = deriveDecoder[AccessTokenRequest]
 
