@@ -48,7 +48,7 @@ trait Repos[F[_]] {
 
   def androidPublisher(): AndroidPublisher
 
-  def emailConf() : EmailSender[F]
+  def emailSender() : EmailSender[F]
 
   def fbSecret() : String
 
@@ -194,7 +194,7 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
     andConf.value
   }
 
-  override def emailConf()  = email.value
+  override def emailSender()  = email.value
 
   override  def fbSecret = fbKey.value
 

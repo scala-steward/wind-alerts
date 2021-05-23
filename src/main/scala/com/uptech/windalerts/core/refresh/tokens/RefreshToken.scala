@@ -5,14 +5,14 @@ import org.bson.types.ObjectId
 
 
 case class RefreshToken(_id: ObjectId, refreshToken: String, expiry: Long, userId: String, accessTokenId: String) {
-    def isExpired() = System.currentTimeMillis() > expiry
-  }
+  def isExpired() = System.currentTimeMillis() > expiry
+}
 
-  object RefreshToken {
-    val REFRESH_TOKEN_EXPIRY = 14L * 24L * 60L * 60L * 1000L
+object RefreshToken {
+  val REFRESH_TOKEN_EXPIRY = 14L * 24L * 60L * 60L * 1000L
 
-    def apply(userId: String, accessTokenId: String): RefreshToken = new RefreshToken(new ObjectId(),
-      utils.generateRandomString(40),
-      System.currentTimeMillis() + REFRESH_TOKEN_EXPIRY,
-      userId, accessTokenId)
-  }
+  def apply(userId: String, accessTokenId: String): RefreshToken = new RefreshToken(new ObjectId(),
+    utils.generateRandomString(40),
+    System.currentTimeMillis() + REFRESH_TOKEN_EXPIRY,
+    userId, accessTokenId)
+}

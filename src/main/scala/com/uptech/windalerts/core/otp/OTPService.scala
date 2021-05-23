@@ -11,7 +11,7 @@ class OTPService[F[_]](repos: Repos[F]) {
     for {
       otp <- M.pure(createOtp(4))
       _ <- repos.otp().updateForUser(userId, OTPWithExpiry(otp, System.currentTimeMillis() + 5 * 60 * 1000, userId))
-      result <- repos.emailConf().sendOtp(email, otp)
+      result <- repos.emailSender().sendOtp(email, otp)
     } yield result
   }
 

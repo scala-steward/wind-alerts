@@ -29,7 +29,7 @@ class UserCredentialService[F[_] : Sync](repos: Repos[F])  {
       _ <- EitherT.right(repos.credentialsRepo().updatePassword(creds._id.toHexString, newPassword.bcrypt))
       _ <- EitherT.right(repos.refreshTokenRepo().deleteForUserId(creds._id.toHexString))
       user <- repos.usersRepo().getByUserId(creds._id.toHexString).toRight(UserNotFoundError("User not found"))
-      _ <- EitherT.pure(repos.emailConf().sendResetPassword(user.firstName(), email, newPassword))
+      _ <- EitherT.pure(repos.emailSender().sendResetPassword(user.firstName(), email, newPassword))
     } yield creds
 
 
