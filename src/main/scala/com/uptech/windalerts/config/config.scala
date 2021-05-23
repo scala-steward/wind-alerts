@@ -28,25 +28,19 @@ object swellAdjustments {
   case class Adjustment(from: Double, to: Double, factor: Double)
 
   implicit val adjustmentDecoder: Decoder[Adjustment] = deriveDecoder
-  implicit val adjustmentEncoder: Encoder[Adjustment] = deriveEncoder
   implicit val adjustmentsDecoder: Decoder[Adjustments] = deriveDecoder
-  implicit val adjustmentsEncoder: Encoder[Adjustments] = deriveEncoder
 
   def read = {
     val tryProd = Try(Source.fromFile("/app/resources/swell-adjustments.json").getLines.mkString)
-    val jsonContents = tryProd match {
-      case Failure(_) => Source.fromFile("src/main/resources/swell-adjustments.json").getLines.mkString
-      case Success(_) => tryProd.get
-    }
-    Adjustments(decode[Adjustments](jsonContents).toOption.get.adjustments.sortBy(_.from))
+    val json = tryProd.getOrElse(Source.fromFile("src/main/resources/swell-adjustments.json").getLines.mkString)
+
+    Adjustments(decode[Adjustments](json).toOption.get.adjustments.sortBy(_.from))
   }
 }
 object statics {
   def read(name:String) = {
-    Try(Source.fromFile(s"/app/resources/$name.md").getLines.mkString) match {
-      case Failure(_) => Source.fromFile(s"src/main/resources/$name.md").getLines.mkString
-      case Success(_) => Try(Source.fromFile(s"/app/resources/$name.md").getLines.mkString).get
-    }
+    Try(Source.fromFile(s"/app/resources/$name.md").getLines.mkString)
+      .getOrElse(Source.fromFile(s"src/main/resources/$name.md").getLines.mkString)
   }
 
   def privacyPolicy = read("privacy-policy")
