@@ -8,7 +8,7 @@ import com.uptech.windalerts.SendNotifications.repos
 import com.uptech.windalerts.config.{secrets, swellAdjustments}
 import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.beaches.BeachService
-import com.uptech.windalerts.core.credentials.UserCredentialService
+import com.uptech.windalerts.core.credentials.{AppleCredentials, Credentials, FacebookCredentials, UserCredentialService}
 import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry}
 import com.uptech.windalerts.core.refresh.tokens.RefreshToken
 import com.uptech.windalerts.core.social.login.SocialLoginService
@@ -17,7 +17,7 @@ import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.beaches._
 import com.uptech.windalerts.infrastructure.endpoints._
 import com.uptech.windalerts.infrastructure.endpoints.logger._
-import com.uptech.windalerts.infrastructure.repositories.mongo.{LazyRepos, MongoOtpRepository, MongoRefreshTokenRepository, MongoUserRepository, Repos}
+import com.uptech.windalerts.infrastructure.repositories.mongo.{LazyRepos, MongoCredentialsRepository, MongoOtpRepository, MongoRefreshTokenRepository, MongoSocialCredentialsRepository, MongoUserRepository, Repos}
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AndroidSubscription, AppleSubscription, SubscriptionsServiceImpl}
 import org.http4s.implicits._
 import org.http4s.rho.swagger.SwaggerMetadata
@@ -57,10 +57,13 @@ object UsersServer extends IOApp {
         otpRepositoy = new MongoOtpRepository[IO](db.getCollection[OTPWithExpiry]("otp"))
         otpService = new OTPService[IO](otpRepositoy, emailSender)
         usersRepository = new MongoUserRepository(db.getCollection[UserT]("users"))
+        credentialsRepository = new MongoCredentialsRepository(db.getCollection[Credentials]("credentials"))
+        facebookCredentialsRepository = new MongoSocialCredentialsRepository[IO, FacebookCredentials](db.getCollection[FacebookCredentials]("facebookCredentials"))
+        appleCredentialsRepository = new MongoSocialCredentialsRepository[IO, AppleCredentials](db.getCollection[AppleCredentials]("appleCredentials"))
 
-        userCredentialsService <- IO(new UserCredentialService[IO](usersRepository, refreshTokenRepository, emailSender, repos))
+        userCredentialsService <- IO(new UserCredentialService[IO](facebookCredentialsRepository, appleCredentialsRepository, credentialsRepository, usersRepository, refreshTokenRepository, emailSender))
         usersService <- IO(new UserService(usersRepository, repos, userCredentialsService, otpService, auth, refreshTokenRepository))
-        socialLoginService <- IO(new SocialLoginService(usersRepository, repos, usersService, userCredentialsService))
+        socialLoginService <- IO(new SocialLoginService(facebookCredentialsRepository, appleCredentialsRepository, usersRepository, repos, usersService, userCredentialsService))
 
         appleSubscription <- IO(new AppleSubscription[IO]())
         androidSubscription <- IO(new AndroidSubscription[IO](repos))

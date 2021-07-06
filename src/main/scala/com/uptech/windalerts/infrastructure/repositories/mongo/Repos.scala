@@ -10,12 +10,8 @@ import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.credentials._
 import com.uptech.windalerts.core.feedbacks.{Feedback, FeedbackRepository}
 import com.uptech.windalerts.core.notifications.{Notification, NotificationRepository}
-import com.uptech.windalerts.core.otp.{OTPWithExpiry, OtpRepository}
-import com.uptech.windalerts.core.refresh.tokens.{RefreshToken, RefreshTokenRepository}
 import com.uptech.windalerts.core.social.login.{AppleAccessRequest, FacebookAccessRequest, SocialLogin}
 import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AndroidTokenRepository, AppleToken, AppleTokenRepository}
-import com.uptech.windalerts.core.user.{UserRepository, UserT}
-import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.endpoints.codecs
 import com.uptech.windalerts.infrastructure.social.login.{AppleLogin, FacebookLogin}
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AndroidPublisherHelper, ApplicationConfig}
@@ -25,15 +21,9 @@ import java.io.File
 
 trait Repos[F[_]] {
 
-  def credentialsRepo(): CredentialsRepository[F]
-
   def androidPurchaseRepo(): AndroidTokenRepository[F]
 
   def applePurchaseRepo(): AppleTokenRepository[F]
-
-  def facebookCredentialsRepo(): SocialCredentialsRepository[F, FacebookCredentials]
-
-  def appleCredentialsRepository(): SocialCredentialsRepository[F, AppleCredentials]
 
   def feedbackRepository(): FeedbackRepository[F]
 
@@ -70,10 +60,6 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
   var  maybeDb:MongoDatabase = _
 
 
-  val cRepo = Eval.later {
-    new MongoCredentialsRepository(db.getCollection[Credentials]("credentials"))
-  }
-
   val andRepo = Eval.later {
     new MongoAndroidPurchaseRepository(db.getCollection[AndroidToken]("androidPurchases"))
   }
@@ -82,13 +68,6 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
     new MongoApplePurchaseRepository(db.getCollection[AppleToken]("applePurchases"))
   }
 
-  val fbRepo = Eval.later {
-    new MongoSocialCredentialsRepository[FacebookCredentials](db.getCollection[FacebookCredentials]("facebookCredentials"))
-  }
-
-  val appCRepo = Eval.later {
-    new MongoSocialCredentialsRepository[AppleCredentials](db.getCollection[AppleCredentials]("appleCredentials"))
-  }
 
   val fdRepo = Eval.later {
     new MongoFeedbackRepository(db.getCollection[Feedback]("feedbacks"))
@@ -113,24 +92,12 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
     com.uptech.windalerts.config.beaches.read
   }
 
-  override def credentialsRepo: CredentialsRepository[IO] = {
-    cRepo.value
-  }
-
   override def androidPurchaseRepo: AndroidTokenRepository[IO] = {
     andRepo.value
   }
 
   override def applePurchaseRepo: AppleTokenRepository[IO] = {
     appRepo.value
-  }
-
-  override def facebookCredentialsRepo: SocialCredentialsRepository[IO, FacebookCredentials] = {
-    fbRepo.value
-  }
-
-  override def appleCredentialsRepository:  SocialCredentialsRepository[IO, AppleCredentials] = {
-    appCRepo.value
   }
 
   override def feedbackRepository: FeedbackRepository[IO] = {
