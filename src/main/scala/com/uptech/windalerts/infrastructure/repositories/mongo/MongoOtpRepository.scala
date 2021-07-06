@@ -12,8 +12,8 @@ import org.mongodb.scala.model.Updates._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class MongoOtpRepository[F[_]](collection: MongoCollection[OTPWithExpiry])(implicit cs: ContextShift[F], s: Async[F]) extends OtpRepository[F] {
-  override def exists(otp: String, userId: String)(implicit M: Monad[F]): EitherT[F, OtpNotFoundError, OTPWithExpiry] = {
+class MongoOtpRepository[F[_]](collection: MongoCollection[OTPWithExpiry])(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends OtpRepository[F] {
+  override def exists(otp: String, userId: String): EitherT[F, OtpNotFoundError, OTPWithExpiry] = {
     EitherT.fromOptionF(
       Async.fromFuture(
         M.pure(
@@ -26,7 +26,7 @@ class MongoOtpRepository[F[_]](collection: MongoCollection[OTPWithExpiry])(impli
       OtpNotFoundError("OTP not found"))
   }
 
-  override def updateForUser(userId: String, otp: OTPWithExpiry)(implicit M: Monad[F]): F[OTPWithExpiry] = {
+  override def updateForUser(userId: String, otp: OTPWithExpiry): F[OTPWithExpiry] = {
     Async.fromFuture(
       M.pure(
         collection.updateOne(
