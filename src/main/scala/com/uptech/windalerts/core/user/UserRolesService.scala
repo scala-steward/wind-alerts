@@ -10,10 +10,11 @@ import com.uptech.windalerts.core.user.UserType.{Premium, PremiumExpired, Trial}
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
 import com.uptech.windalerts.config.secrets
+import com.uptech.windalerts.core.otp.OtpRepository
 import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 import io.circe.parser.parse
 
-class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: SubscriptionsService[F], userService: UserService[F]) {
+class UserRolesService[F[_] : Sync](otpRepository: OtpRepository[F], repos: Repos[F], subscriptionsService: SubscriptionsService[F], userService: UserService[F]) {
   def makeUserTrial(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
     repos.usersRepo().update(user.copy(
       userType = Trial.value,
@@ -145,7 +146,7 @@ class UserRolesService[F[_] : Sync](repos: Repos[F], subscriptionsService: Subsc
 
   def verifyEmail(user: UserId, request: OTP):EitherT[F, SurfsUpError, UserDTO] = {
     for {
-      _ <- repos.otp().exists(request.otp, user.id)
+      _ <- otpRepository.exists(request.otp, user.id)
       user <- userService.getUser(user.id)
       updateResult <- makeUserTrial(user).map(_.asDTO()).leftWiden[SurfsUpError]
     } yield updateResult

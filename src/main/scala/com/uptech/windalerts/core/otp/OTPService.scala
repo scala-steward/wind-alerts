@@ -6,11 +6,11 @@ import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 
 import scala.util.Random
 
-class OTPService[F[_]](repos: Repos[F]) {
+class OTPService[F[_]](otpRepository: OtpRepository[F], repos: Repos[F]) {
   def send(userId: String, email: String)(implicit M: Monad[F]):F[Unit] = {
     for {
       otp <- M.pure(createOtp(4))
-      _ <- repos.otp().updateForUser(userId, OTPWithExpiry(otp, System.currentTimeMillis() + 5 * 60 * 1000, userId))
+      _ <- otpRepository.updateForUser(userId, OTPWithExpiry(otp, System.currentTimeMillis() + 5 * 60 * 1000, userId))
       result <- repos.emailSender().sendOtp(email, otp)
     } yield result
   }
