@@ -3,12 +3,13 @@ package com.uptech.windalerts.core.credentials
 import cats.data.EitherT
 import cats.effect.Sync
 import com.github.t3hnar.bcrypt._
+import com.uptech.windalerts.core.refresh.tokens.RefreshTokenRepository
 import com.uptech.windalerts.core.{SurfsUpError, UserAlreadyExistsError, UserAuthenticationFailedError, UserNotFoundError, utils}
 import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.endpoints.dtos.{ChangePasswordRequest, RegisterRequest}
 import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 
-class UserCredentialService[F[_] : Sync](emailSender: EmailSender[F], repos: Repos[F])  {
+class UserCredentialService[F[_] : Sync](refreshTokenRepository: RefreshTokenRepository[F], emailSender: EmailSender[F], repos: Repos[F])  {
   def getByCredentials(
                         email: String, password: String, deviceType: String
                       ): EitherT[F, UserAuthenticationFailedError, Credentials] =
@@ -28,7 +29,7 @@ class UserCredentialService[F[_] : Sync](emailSender: EmailSender[F], repos: Rep
       creds <- repos.credentialsRepo().findByCredentials(email, deviceType).toRight(UserAuthenticationFailedError(email))
       newPassword <- EitherT.pure(utils.generateRandomString(10))
       _ <- EitherT.right(repos.credentialsRepo().updatePassword(creds._id.toHexString, newPassword.bcrypt))
-      _ <- EitherT.right(repos.refreshTokenRepo().deleteForUserId(creds._id.toHexString))
+      _ <- EitherT.right(refreshTokenRepository.deleteForUserId(creds._id.toHexString))
       user <- repos.usersRepo().getByUserId(creds._id.toHexString).toRight(UserNotFoundError("User not found"))
       _ <- EitherT.pure(emailSender.sendResetPassword(user.firstName(), email, newPassword))
     } yield creds

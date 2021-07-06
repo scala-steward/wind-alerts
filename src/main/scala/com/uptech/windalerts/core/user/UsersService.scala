@@ -6,14 +6,18 @@ import cats.implicits._
 import com.uptech.windalerts.core.credentials.{Credentials, UserCredentialService}
 import com.uptech.windalerts.core.feedbacks.Feedback
 import com.uptech.windalerts.core.otp.OTPService
-import com.uptech.windalerts.core.refresh.tokens.RefreshToken
+import com.uptech.windalerts.core.refresh.tokens.{RefreshToken, RefreshTokenRepository}
 import com.uptech.windalerts.core.{RefreshTokenExpiredError, RefreshTokenNotFoundError, SurfsUpError, UserAlreadyExistsError, UserNotFoundError, utils}
 import com.uptech.windalerts.config._
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
 import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 import org.mongodb.scala.bson.ObjectId
 
-class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService: UserCredentialService[F], otpService: OTPService[F], auth: AuthenticationService[F]) {
+class UserService[F[_] : Sync](repos: Repos[F],
+                               userCredentialsService: UserCredentialService[F],
+                               otpService: OTPService[F],
+                               auth: AuthenticationService[F],
+                               refreshTokenRepository: RefreshTokenRepository[F]) {
 
   def register(registerRequest: RegisterRequest): EitherT[F, UserAlreadyExistsError, TokensWithUser] = {
     for {
@@ -46,16 +50,16 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService: UserCred
   def resetUserSession(dbUser: UserT, newDeviceToken: String):EitherT[F, UserNotFoundError, TokensWithUser] = {
     for {
       _ <- updateDeviceToken(dbUser._id.toHexString, newDeviceToken)
-      _ <- EitherT.liftF(repos.refreshTokenRepo().deleteForUserId(dbUser._id.toHexString))
+      _ <- EitherT.liftF(refreshTokenRepository.deleteForUserId(dbUser._id.toHexString))
       tokens <- EitherT.right(generateNewTokens(dbUser.copy(deviceToken = newDeviceToken)))
     } yield tokens
   }
 
   def refresh(refreshToken: AccessTokenRequest): EitherT[F, SurfsUpError, TokensWithUser] = {
     for {
-      oldRefreshToken <- repos.refreshTokenRepo().getByRefreshToken(refreshToken.refreshToken).toRight(RefreshTokenNotFoundError())
+      oldRefreshToken <- refreshTokenRepository.getByRefreshToken(refreshToken.refreshToken).toRight(RefreshTokenNotFoundError())
       oldValidRefreshToken <- updateIfNotExpired(oldRefreshToken)
-      _ <- EitherT.liftF(repos.refreshTokenRepo().deleteForUserId(oldValidRefreshToken.userId))
+      _ <- EitherT.liftF(refreshTokenRepository.deleteForUserId(oldValidRefreshToken.userId))
       user <- getUser(oldRefreshToken.userId)
       tokens <- EitherT.right[SurfsUpError](generateNewTokens(user))
     } yield tokens
@@ -66,7 +70,7 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService: UserCred
       EitherT.fromEither(Left(RefreshTokenExpiredError()))
     } else {
       import cats.implicits._
-      repos.refreshTokenRepo().updateExpiry(oldRefreshToken._id.toHexString, (System.currentTimeMillis() + RefreshToken.REFRESH_TOKEN_EXPIRY)).leftWiden[SurfsUpError]
+      refreshTokenRepository.updateExpiry(oldRefreshToken._id.toHexString, (System.currentTimeMillis() + RefreshToken.REFRESH_TOKEN_EXPIRY)).leftWiden[SurfsUpError]
     }
   }
 
@@ -76,7 +80,7 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService: UserCred
     val accessTokenId = utils.generateRandomString(10)
     val token = auth.createToken(user._id.toHexString, accessTokenId)
 
-    repos.refreshTokenRepo().create(RefreshToken(user._id.toHexString, accessTokenId))
+    refreshTokenRepository.create(RefreshToken(user._id.toHexString, accessTokenId))
       .map(newRefreshToken=>auth.tokens(token.accessToken, newRefreshToken, token.expiredAt, user))
   }
 
@@ -101,7 +105,7 @@ class UserService[F[_] : Sync](repos: Repos[F], userCredentialsService: UserCred
 
   def logoutUser(userId: String): EitherT[F, UserNotFoundError, Unit] = {
     for {
-      _ <- EitherT.liftF(repos.refreshTokenRepo().deleteForUserId(userId))
+      _ <- EitherT.liftF(refreshTokenRepository.deleteForUserId(userId))
       _ <- updateDeviceToken(userId, "")
     } yield ()
   }
@@ -130,7 +134,8 @@ object UserService {
                           repos: Repos[F],
                           userCredentialService: UserCredentialService[F],
                           otpService: OTPService[F],
-                          authenticationService: AuthenticationService[F]
+                          authenticationService: AuthenticationService[F],
+                          refreshTokenRepo : RefreshTokenRepository[F]
                         ): UserService[F] =
-    new UserService(repos, userCredentialService, otpService, authenticationService)
+    new UserService(repos, userCredentialService, otpService, authenticationService, refreshTokenRepo)
 }

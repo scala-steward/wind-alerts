@@ -13,12 +13,13 @@ import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.notifications.NotificationsService
 import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry}
+import com.uptech.windalerts.core.refresh.tokens.RefreshToken
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
 import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints.NotificationEndpoints
 import com.uptech.windalerts.infrastructure.notifications.FirebaseBasedNotificationsSender
-import com.uptech.windalerts.infrastructure.repositories.mongo.{LazyRepos, MongoOtpRepository, Repos}
+import com.uptech.windalerts.infrastructure.repositories.mongo.{LazyRepos, MongoOtpRepository, MongoRefreshTokenRepository, Repos}
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AppleSubscription, SubscriptionsServiceImpl}
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
@@ -59,20 +60,20 @@ object SendNotifications extends IOApp {
   val db = Repos.acquireDb
   val emailConf = com.uptech.windalerts.config.secrets.read.surfsUp.email
   val emailSender = new EmailSender[IO](emailConf.apiKey)
-  val otpRepositoy = new MongoOtpRepository[IO](db.getCollection[OTPWithExpiry]("otp"))
+  val otpRepository = new MongoOtpRepository[IO](db.getCollection[OTPWithExpiry]("otp"))
+  val refreshTokenRepository = new MongoRefreshTokenRepository(db.getCollection[RefreshToken]("refreshTokens"))
+  val otpService = new OTPService[IO](otpRepository, emailSender)
 
-  val otpService = new OTPService[IO](otpRepositoy, emailSender)
+  val auth = new AuthenticationService(refreshTokenRepository)
 
-  val auth = new AuthenticationService(repos)
-
-  val userCredentialsService = new UserCredentialService[IO](emailSender, repos)
-  val usersService = new UserService(repos, userCredentialsService, otpService, auth)
+  val userCredentialsService = new UserCredentialService[IO](refreshTokenRepository, emailSender, repos)
+  val usersService = new UserService(repos, userCredentialsService, otpService, auth, refreshTokenRepository)
   val appleSubscription = new AppleSubscription[IO]
   val androidSubscription = new AppleSubscription[IO]
 
   val subscriptionService = new SubscriptionsServiceImpl(appleSubscription, androidSubscription, repos)
 
-  val userRolesService = new UserRolesService(otpRepositoy, repos, subscriptionService, usersService)
+  val userRolesService = new UserRolesService(otpRepository, repos, subscriptionService, usersService)
 
   val alerts = new AlertsService[IO](usersService, userRolesService, repos)
   val notificationsSender = new FirebaseBasedNotificationsSender[IO](firebaseMessaging, beachSeq, appConf )

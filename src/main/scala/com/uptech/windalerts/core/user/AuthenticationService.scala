@@ -2,7 +2,7 @@ package com.uptech.windalerts.core.user
 
 import cats.data.EitherT
 import cats.effect.Effect
-import com.uptech.windalerts.core.refresh.tokens.RefreshToken
+import com.uptech.windalerts.core.refresh.tokens.{RefreshToken, RefreshTokenRepository}
 import com.uptech.windalerts.infrastructure.endpoints.dtos
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
 import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit
 case class AccessTokenWithExpiry(accessToken: String, expiredAt: Long)
 
 
-class AuthenticationService[F[_] : Effect](repos: Repos[F]) {
+class AuthenticationService[F[_] : Effect](refreshTokenRepository: RefreshTokenRepository[F]) {
   val ACCESS_TOKEN_EXPIRY = 1L * 24L * 60L * 60L * 1000L
 
   private val key = JwtSecretKey("secretKey")
@@ -29,7 +29,7 @@ class AuthenticationService[F[_] : Effect](repos: Repos[F]) {
         accessTokenId <- parseResult.hcursor.downField("accessTokenId").as[String]
       } yield accessTokenId)
         .toOption
-        .flatMap(repos.refreshTokenRepo().getByAccessTokenId(_))
+        .flatMap(refreshTokenRepository.getByAccessTokenId(_))
         .map(refreshToken => UserId(refreshToken.userId)).value
     }
   }

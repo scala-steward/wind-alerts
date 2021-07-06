@@ -11,7 +11,7 @@ import com.uptech.windalerts.core.credentials._
 import com.uptech.windalerts.core.feedbacks.{Feedback, FeedbackRepository}
 import com.uptech.windalerts.core.notifications.{Notification, NotificationRepository}
 import com.uptech.windalerts.core.otp.{OTPWithExpiry, OtpRepository}
-import com.uptech.windalerts.core.refresh.tokens.{RefreshToken, RefreshTokenRepositoryAlgebra}
+import com.uptech.windalerts.core.refresh.tokens.{RefreshToken, RefreshTokenRepository}
 import com.uptech.windalerts.core.social.login.{AppleAccessRequest, FacebookAccessRequest, SocialLogin}
 import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AndroidTokenRepository, AppleToken, AppleTokenRepository}
 import com.uptech.windalerts.core.user.{UserRepositoryAlgebra, UserT}
@@ -24,7 +24,6 @@ import org.mongodb.scala.{MongoClient, MongoDatabase}
 import java.io.File
 
 trait Repos[F[_]] {
-  def refreshTokenRepo(): RefreshTokenRepositoryAlgebra[F]
 
   def usersRepo(): UserRepositoryAlgebra[F]
 
@@ -45,8 +44,6 @@ trait Repos[F[_]] {
   def notificationsRepo(): NotificationRepository[F]
 
   def androidPublisher(): AndroidPublisher
-
-  def emailSender() : EmailSender[F]
 
   def fbSecret() : String
 
@@ -74,9 +71,6 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
 
   var  maybeDb:MongoDatabase = _
 
-  val refreshRepo = Eval.later {
-    new MongoRefreshTokenRepositoryAlgebra(db.getCollection[RefreshToken]("refreshTokens"))
-  }
 
   val uRepo = Eval.later {
     val start = System.currentTimeMillis()
@@ -120,21 +114,12 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
   val andConf = Eval.later(AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL))
 
 
-  val email = Eval.later {
-    val emailConf = com.uptech.windalerts.config.secrets.read.surfsUp.email
-    new EmailSender[IO](emailConf.apiKey)
-  }
-
   val fbKey = Eval.later {
     secrets.read.surfsUp.facebook.key
   }
 
   val b = Eval.later {
     com.uptech.windalerts.config.beaches.read
-  }
-
-  override def refreshTokenRepo: RefreshTokenRepositoryAlgebra[IO] = {
-    refreshRepo.value
   }
 
   override def usersRepo: UserRepositoryAlgebra[IO] = {
@@ -183,8 +168,6 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
   override def androidPublisher(): AndroidPublisher = {
     andConf.value
   }
-
-  override def emailSender()  = email.value
 
   override  def fbSecret = fbKey.value
 
