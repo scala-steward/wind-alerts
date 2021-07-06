@@ -4,13 +4,12 @@ import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
 import com.uptech.windalerts.core.credentials.{AppleCredentials, FacebookCredentials, SocialCredentials, UserCredentialService}
-import com.uptech.windalerts.core.user.{TokensWithUser, UserService, UserT}
+import com.uptech.windalerts.core.user.{TokensWithUser, UserRepository, UserService, UserT}
 import com.uptech.windalerts.core.{SurfsUpError, UserAlreadyExistsError}
-import com.uptech.windalerts.infrastructure.endpoints.dtos._
 import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 import org.mongodb.scala.bson.ObjectId
 
-class SocialLoginService[F[_] : Sync](repos: Repos[F], userService: UserService[F], credentialService: UserCredentialService[F]) {
+class SocialLoginService[F[_] : Sync](userRepository: UserRepository[F], repos: Repos[F], userService: UserService[F], credentialService: UserCredentialService[F]) {
 
   def registerOrLoginAppleUser(credentials: AppleAccessRequest): EitherT[F, SurfsUpError, TokensWithUser] = {
     registerOrLoginUser[AppleAccessRequest, AppleCredentials](credentials,
@@ -69,7 +68,7 @@ class SocialLoginService[F[_] : Sync](repos: Repos[F], userService: UserService[
   : F[(UserT, SocialCredentials)] = {
     for {
       savedCreds <- credentialCreator(user)
-      savedUser <- repos.usersRepo().create(
+      savedUser <- userRepository.create(
         UserT.createSocialUser(
           new ObjectId(savedCreds._id.toHexString),
           user.email,
