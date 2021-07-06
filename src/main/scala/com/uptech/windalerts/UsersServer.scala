@@ -4,17 +4,18 @@ import cats.effect.{Blocker, ExitCode, IO, IOApp}
 import cats.implicits._
 import com.http4s.rho.swagger.ui.SwaggerUi
 import com.softwaremill.sttp.HttpURLConnectionBackend
+import com.uptech.windalerts.SendNotifications.repos
 import com.uptech.windalerts.config.{secrets, swellAdjustments}
 import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.credentials.UserCredentialService
-import com.uptech.windalerts.core.otp.OTPService
+import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry}
 import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
 import com.uptech.windalerts.infrastructure.beaches._
 import com.uptech.windalerts.infrastructure.endpoints._
 import com.uptech.windalerts.infrastructure.endpoints.logger._
-import com.uptech.windalerts.infrastructure.repositories.mongo.LazyRepos
+import com.uptech.windalerts.infrastructure.repositories.mongo.{LazyRepos, MongoOtpRepository, Repos}
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AndroidSubscription, AppleSubscription, SubscriptionsServiceImpl}
 import org.http4s.implicits._
 import org.http4s.rho.swagger.SwaggerMetadata
@@ -44,7 +45,10 @@ object UsersServer extends IOApp {
 
         repos = new LazyRepos()
         auth <- IO(new AuthenticationService(repos))
-        otpService <- IO(new OTPService[IO](repos))
+        db = Repos.acquireDb
+        otpRepositoy = new MongoOtpRepository[IO](db.getCollection[OTPWithExpiry]("otp"))
+        otpService = new OTPService[IO](otpRepositoy, repos)
+
         userCredentialsService <- IO(new UserCredentialService[IO](repos))
         usersService <- IO(new UserService(repos, userCredentialsService, otpService, auth))
         socialLoginService <- IO(new SocialLoginService(repos, usersService, userCredentialsService))
@@ -52,7 +56,7 @@ object UsersServer extends IOApp {
         appleSubscription <- IO(new AppleSubscription[IO]())
         androidSubscription <- IO(new AndroidSubscription[IO](repos))
         subscriptionsService <- IO(new SubscriptionsServiceImpl[IO](appleSubscription, androidSubscription, repos))
-        userRolesService <- IO(new UserRolesService[IO](repos, subscriptionsService, usersService))
+        userRolesService <- IO(new UserRolesService[IO](otpRepositoy, repos, subscriptionsService, usersService))
 
         apiKey <- IO(secrets.read.surfsUp.willyWeather.key)
         beaches <- IO(new BeachService[IO](new WWBackedWindsService[IO](apiKey), new WWBackedTidesService[IO](apiKey, repos), new WWBackedSwellsService[IO](apiKey, swellAdjustments.read)))

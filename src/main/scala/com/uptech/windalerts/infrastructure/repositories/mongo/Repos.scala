@@ -60,7 +60,18 @@ trait Repos[F[_]] {
 
 }
 
-
+object Repos{
+  def acquireDb() = {
+    val start = System.currentTimeMillis()
+    val value = Eval.later {
+      val client = MongoClient(com.uptech.windalerts.config.secrets.read.surfsUp.mongodb.url)
+      client.getDatabase(sys.env("projectId")).withCodecRegistry(codecs.codecRegistry)
+    }
+    val v = value.value
+    println(System.currentTimeMillis() - start)
+    v
+  }
+}
 class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
 
   var  maybeDb:MongoDatabase = _
@@ -172,21 +183,10 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
     nRepo.value
   }
 
-  private def acquireDb() = {
-    val start = System.currentTimeMillis()
-    val value = Eval.later {
-      val client = MongoClient(com.uptech.windalerts.config.secrets.read.surfsUp.mongodb.url)
-      client.getDatabase(sys.env("projectId")).withCodecRegistry(codecs.codecRegistry)
-    }
-    val v = value.value
-    println(System.currentTimeMillis() - start)
-    v
-  }
-
   private def db() = {
 
     if (maybeDb == null)
-      maybeDb = Eval.later{acquireDb}.value
+      maybeDb = Eval.later{Repos.acquireDb}.value
     maybeDb
   }
 
