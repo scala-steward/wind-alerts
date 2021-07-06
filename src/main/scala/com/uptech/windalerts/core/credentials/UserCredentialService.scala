@@ -10,12 +10,12 @@ import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.endpoints.dtos.{ChangePasswordRequest, RegisterRequest}
 import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 
-class UserCredentialService[F[_] : Sync](userRepository: UserRepository[F], refreshTokenRepository: RefreshTokenRepository[F], emailSender: EmailSender[F], repos: Repos[F])  {
+class UserCredentialService[F[_] : Sync](facebookCredentialsRepo: SocialCredentialsRepository[F, FacebookCredentials], appleCredentialsRepo: SocialCredentialsRepository[F, AppleCredentials], credentialsRepository: CredentialsRepository[F], userRepository: UserRepository[F], refreshTokenRepository: RefreshTokenRepository[F], emailSender: EmailSender[F]) {
   def getByCredentials(
                         email: String, password: String, deviceType: String
                       ): EitherT[F, UserAuthenticationFailedError, Credentials] =
     for {
-      creds <- repos.credentialsRepo().findByCredentials(email, deviceType).toRight(UserAuthenticationFailedError(email))
+      creds <- credentialsRepository.findByCredentials(email, deviceType).toRight(UserAuthenticationFailedError(email))
       passwordMatched <- isPasswordMatch(password, creds)
     } yield passwordMatched
 
@@ -27,9 +27,9 @@ class UserCredentialService[F[_] : Sync](userRepository: UserRepository[F], refr
                      email: String, deviceType: String
                    ): EitherT[F, SurfsUpError, Credentials] =
     for {
-      creds <- repos.credentialsRepo().findByCredentials(email, deviceType).toRight(UserAuthenticationFailedError(email))
+      creds <- credentialsRepository.findByCredentials(email, deviceType).toRight(UserAuthenticationFailedError(email))
       newPassword <- EitherT.pure(utils.generateRandomString(10))
-      _ <- EitherT.right(repos.credentialsRepo().updatePassword(creds._id.toHexString, newPassword.bcrypt))
+      _ <- EitherT.right(credentialsRepository.updatePassword(creds._id.toHexString, newPassword.bcrypt))
       _ <- EitherT.right(refreshTokenRepository.deleteForUserId(creds._id.toHexString))
       user <- userRepository.getByUserId(creds._id.toHexString).toRight(UserNotFoundError("User not found"))
       _ <- EitherT.pure(emailSender.sendResetPassword(user.firstName(), email, newPassword))
@@ -39,7 +39,7 @@ class UserCredentialService[F[_] : Sync](userRepository: UserRepository[F], refr
   def changePassword(request:ChangePasswordRequest): EitherT[F, UserAuthenticationFailedError, Unit] = {
     for {
       credentials <- getByCredentials(request.email, request.oldPassword, request.deviceType)
-      result <- EitherT.right(repos.credentialsRepo().updatePassword(credentials._id.toHexString, request.newPassword.bcrypt))
+      result <- EitherT.right(credentialsRepository.updatePassword(credentials._id.toHexString, request.newPassword.bcrypt))
     } yield result
   }
 
@@ -47,15 +47,15 @@ class UserCredentialService[F[_] : Sync](userRepository: UserRepository[F], refr
     val credentials = Credentials(rr.email, rr.password.bcrypt, rr.deviceType)
     for {
       _ <- doesNotExist(credentials.email, credentials.deviceType)
-      savedCredentials <- EitherT.right(repos.credentialsRepo().create(credentials))
+      savedCredentials <- EitherT.right(credentialsRepository.create(credentials))
     } yield savedCredentials
   }
 
   def doesNotExist(email: String, deviceType: String): EitherT[F, UserAlreadyExistsError, (Unit, Unit, Unit)] = {
     for {
-      emailDoesNotExist <- countToEither(repos.credentialsRepo().count(email, deviceType))
-      facebookDoesNotExist <- countToEither(repos.facebookCredentialsRepo().count(email, deviceType))
-      appleDoesNotExist <- countToEither(repos.appleCredentialsRepository().count(email, deviceType))
+      emailDoesNotExist <- countToEither(credentialsRepository.count(email, deviceType))
+      facebookDoesNotExist <- countToEither(facebookCredentialsRepo.count(email, deviceType))
+      appleDoesNotExist <- countToEither(appleCredentialsRepo.count(email, deviceType))
     } yield (emailDoesNotExist, facebookDoesNotExist, appleDoesNotExist)
   }
 
