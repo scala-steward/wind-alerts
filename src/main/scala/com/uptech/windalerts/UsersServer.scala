@@ -12,6 +12,7 @@ import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry}
 import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
+import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.beaches._
 import com.uptech.windalerts.infrastructure.endpoints._
 import com.uptech.windalerts.infrastructure.endpoints.logger._
@@ -46,10 +47,13 @@ object UsersServer extends IOApp {
         repos = new LazyRepos()
         auth <- IO(new AuthenticationService(repos))
         db = Repos.acquireDb
-        otpRepositoy = new MongoOtpRepository[IO](db.getCollection[OTPWithExpiry]("otp"))
-        otpService = new OTPService[IO](otpRepositoy, repos)
+        emailConf = com.uptech.windalerts.config.secrets.read.surfsUp.email
+        emailSender = new EmailSender[IO](emailConf.apiKey)
 
-        userCredentialsService <- IO(new UserCredentialService[IO](repos))
+        otpRepositoy = new MongoOtpRepository[IO](db.getCollection[OTPWithExpiry]("otp"))
+        otpService = new OTPService[IO](otpRepositoy, emailSender)
+
+        userCredentialsService <- IO(new UserCredentialService[IO](emailSender, repos))
         usersService <- IO(new UserService(repos, userCredentialsService, otpService, auth))
         socialLoginService <- IO(new SocialLoginService(repos, usersService, userCredentialsService))
 
