@@ -24,8 +24,6 @@ import org.mongodb.scala.{MongoClient, MongoDatabase}
 import java.io.File
 
 trait Repos[F[_]] {
-  def otp(): OtpRepository[F]
-
   def refreshTokenRepo(): RefreshTokenRepositoryAlgebra[F]
 
   def usersRepo(): UserRepositoryAlgebra[F]
@@ -75,10 +73,6 @@ object Repos{
 class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
 
   var  maybeDb:MongoDatabase = _
-
-  val otpRepo = Eval.later {
-    new MongoOtpRepository(db.getCollection[OTPWithExpiry]("otp"))
-  }
 
   val refreshRepo = Eval.later {
     new MongoRefreshTokenRepositoryAlgebra(db.getCollection[RefreshToken]("refreshTokens"))
@@ -137,10 +131,6 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
 
   val b = Eval.later {
     com.uptech.windalerts.config.beaches.read
-  }
-
-  override def otp(): OtpRepository[IO] = {
-    otpRepo.value
   }
 
   override def refreshTokenRepo: RefreshTokenRepositoryAlgebra[IO] = {

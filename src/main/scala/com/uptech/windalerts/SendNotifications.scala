@@ -14,6 +14,7 @@ import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.notifications.NotificationsService
 import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry}
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
+import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints.NotificationEndpoints
 import com.uptech.windalerts.infrastructure.notifications.FirebaseBasedNotificationsSender
@@ -56,12 +57,15 @@ object SendNotifications extends IOApp {
   lazy val adjustments = swellAdjustments.read
   val beachesService = new BeachService[IO](new WWBackedWindsService[IO](key), new WWBackedTidesService[IO](key, repos), new WWBackedSwellsService[IO](key, swellAdjustments.read))
   val db = Repos.acquireDb
+  val emailConf = com.uptech.windalerts.config.secrets.read.surfsUp.email
+  val emailSender = new EmailSender[IO](emailConf.apiKey)
   val otpRepositoy = new MongoOtpRepository[IO](db.getCollection[OTPWithExpiry]("otp"))
-  val otpService = new OTPService[IO](otpRepositoy, repos)
+
+  val otpService = new OTPService[IO](otpRepositoy, emailSender)
 
   val auth = new AuthenticationService(repos)
 
-  val userCredentialsService = new UserCredentialService[IO](repos)
+  val userCredentialsService = new UserCredentialService[IO](emailSender, repos)
   val usersService = new UserService(repos, userCredentialsService, otpService, auth)
   val appleSubscription = new AppleSubscription[IO]
   val androidSubscription = new AppleSubscription[IO]

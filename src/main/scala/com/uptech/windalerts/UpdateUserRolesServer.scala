@@ -7,6 +7,7 @@ import com.uptech.windalerts.SendNotifications.repos
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry}
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
+import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.endpoints.logger._
 import com.uptech.windalerts.infrastructure.endpoints.{UpdateUserRolesEndpoints, errors}
 import com.uptech.windalerts.infrastructure.repositories.mongo.{LazyRepos, MongoOtpRepository, Repos}
@@ -27,10 +28,12 @@ object UpdateUserRolesServer extends IOApp {
     repos = new LazyRepos()
     authService <- IO(new AuthenticationService(repos))
     db = Repos.acquireDb
+    emailConf = com.uptech.windalerts.config.secrets.read.surfsUp.email
+    emailSender = new EmailSender[IO](emailConf.apiKey)
     otpRepositoy = new MongoOtpRepository[IO](db.getCollection[OTPWithExpiry]("otp"))
-    otpService = new OTPService[IO](otpRepositoy, repos)
+    otpService = new OTPService[IO](otpRepositoy, emailSender)
 
-    userCredentialsService <- IO(new UserCredentialService[IO](repos))
+    userCredentialsService <- IO(new UserCredentialService[IO](emailSender, repos))
     userService <- IO(new UserService[IO](repos, userCredentialsService, otpService,authService))
     appleSubscription <- IO(new AppleSubscription[IO]())
     androidSubscription <- IO(new AndroidSubscription[IO](repos))
