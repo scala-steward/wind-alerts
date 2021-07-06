@@ -7,11 +7,11 @@ import com.uptech.windalerts.SendNotifications.{db, repos}
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry}
 import com.uptech.windalerts.core.refresh.tokens.RefreshToken
-import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
+import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService, UserT}
 import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.endpoints.logger._
 import com.uptech.windalerts.infrastructure.endpoints.{UpdateUserRolesEndpoints, errors}
-import com.uptech.windalerts.infrastructure.repositories.mongo.{LazyRepos, MongoOtpRepository, MongoRefreshTokenRepository, Repos}
+import com.uptech.windalerts.infrastructure.repositories.mongo.{LazyRepos, MongoOtpRepository, MongoRefreshTokenRepository, MongoUserRepository, Repos}
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AndroidSubscription, AppleSubscription, SubscriptionsServiceImpl}
 import org.http4s.implicits._
 import org.http4s.server.Router
@@ -34,14 +34,16 @@ object UpdateUserRolesServer extends IOApp {
     emailConf = com.uptech.windalerts.config.secrets.read.surfsUp.email
     emailSender = new EmailSender[IO](emailConf.apiKey)
     otpRepositoy = new MongoOtpRepository[IO](db.getCollection[OTPWithExpiry]("otp"))
+    usersRepository = new MongoUserRepository(db.getCollection[UserT]("users"))
+
     otpService = new OTPService[IO](otpRepositoy, emailSender)
 
-    userCredentialsService <- IO(new UserCredentialService[IO](refreshTokenRepository, emailSender, repos))
-    userService <- IO(new UserService[IO](repos, userCredentialsService, otpService, authService, refreshTokenRepository))
+    userCredentialsService <- IO(new UserCredentialService[IO](usersRepository, refreshTokenRepository, emailSender, repos))
+    userService <- IO(new UserService[IO](usersRepository, repos, userCredentialsService, otpService, authService, refreshTokenRepository))
     appleSubscription <- IO(new AppleSubscription[IO]())
     androidSubscription <- IO(new AndroidSubscription[IO](repos))
     subscriptionsService <- IO(new SubscriptionsServiceImpl[IO](appleSubscription, androidSubscription, repos))
-    userRolesService <- IO(new UserRolesService[IO](otpRepositoy, repos, subscriptionsService, userService))
+    userRolesService <- IO(new UserRolesService[IO](usersRepository, otpRepositoy, repos, subscriptionsService, userService))
     endpoints <- IO(new UpdateUserRolesEndpoints[IO](userRolesService))
 
 

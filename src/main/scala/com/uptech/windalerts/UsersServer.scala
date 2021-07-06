@@ -12,12 +12,12 @@ import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry}
 import com.uptech.windalerts.core.refresh.tokens.RefreshToken
 import com.uptech.windalerts.core.social.login.SocialLoginService
-import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
+import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService, UserT}
 import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.beaches._
 import com.uptech.windalerts.infrastructure.endpoints._
 import com.uptech.windalerts.infrastructure.endpoints.logger._
-import com.uptech.windalerts.infrastructure.repositories.mongo.{LazyRepos, MongoOtpRepository, MongoRefreshTokenRepository, Repos}
+import com.uptech.windalerts.infrastructure.repositories.mongo.{LazyRepos, MongoOtpRepository, MongoRefreshTokenRepository, MongoUserRepository, Repos}
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AndroidSubscription, AppleSubscription, SubscriptionsServiceImpl}
 import org.http4s.implicits._
 import org.http4s.rho.swagger.SwaggerMetadata
@@ -56,15 +56,16 @@ object UsersServer extends IOApp {
 
         otpRepositoy = new MongoOtpRepository[IO](db.getCollection[OTPWithExpiry]("otp"))
         otpService = new OTPService[IO](otpRepositoy, emailSender)
+        usersRepository = new MongoUserRepository(db.getCollection[UserT]("users"))
 
-        userCredentialsService <- IO(new UserCredentialService[IO](refreshTokenRepository, emailSender, repos))
-        usersService <- IO(new UserService(repos, userCredentialsService, otpService, auth, refreshTokenRepository))
-        socialLoginService <- IO(new SocialLoginService(repos, usersService, userCredentialsService))
+        userCredentialsService <- IO(new UserCredentialService[IO](usersRepository, refreshTokenRepository, emailSender, repos))
+        usersService <- IO(new UserService(usersRepository, repos, userCredentialsService, otpService, auth, refreshTokenRepository))
+        socialLoginService <- IO(new SocialLoginService(usersRepository, repos, usersService, userCredentialsService))
 
         appleSubscription <- IO(new AppleSubscription[IO]())
         androidSubscription <- IO(new AndroidSubscription[IO](repos))
         subscriptionsService <- IO(new SubscriptionsServiceImpl[IO](appleSubscription, androidSubscription, repos))
-        userRolesService <- IO(new UserRolesService[IO](otpRepositoy, repos, subscriptionsService, usersService))
+        userRolesService <- IO(new UserRolesService[IO](usersRepository, otpRepositoy, repos, subscriptionsService, usersService))
 
         apiKey <- IO(secrets.read.surfsUp.willyWeather.key)
         beaches <- IO(new BeachService[IO](new WWBackedWindsService[IO](apiKey), new WWBackedTidesService[IO](apiKey, repos), new WWBackedSwellsService[IO](apiKey, swellAdjustments.read)))

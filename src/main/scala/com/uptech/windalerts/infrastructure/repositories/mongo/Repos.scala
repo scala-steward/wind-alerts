@@ -14,7 +14,7 @@ import com.uptech.windalerts.core.otp.{OTPWithExpiry, OtpRepository}
 import com.uptech.windalerts.core.refresh.tokens.{RefreshToken, RefreshTokenRepository}
 import com.uptech.windalerts.core.social.login.{AppleAccessRequest, FacebookAccessRequest, SocialLogin}
 import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AndroidTokenRepository, AppleToken, AppleTokenRepository}
-import com.uptech.windalerts.core.user.{UserRepositoryAlgebra, UserT}
+import com.uptech.windalerts.core.user.{UserRepository, UserT}
 import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.endpoints.codecs
 import com.uptech.windalerts.infrastructure.social.login.{AppleLogin, FacebookLogin}
@@ -24,8 +24,6 @@ import org.mongodb.scala.{MongoClient, MongoDatabase}
 import java.io.File
 
 trait Repos[F[_]] {
-
-  def usersRepo(): UserRepositoryAlgebra[F]
 
   def credentialsRepo(): CredentialsRepository[F]
 
@@ -72,13 +70,6 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
   var  maybeDb:MongoDatabase = _
 
 
-  val uRepo = Eval.later {
-    val start = System.currentTimeMillis()
-    val x = new MongoUserRepository(db.getCollection[UserT]("users"))
-    println(System.currentTimeMillis() - start)
-    x
-  }
-
   val cRepo = Eval.later {
     new MongoCredentialsRepository(db.getCollection[Credentials]("credentials"))
   }
@@ -120,10 +111,6 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
 
   val b = Eval.later {
     com.uptech.windalerts.config.beaches.read
-  }
-
-  override def usersRepo: UserRepositoryAlgebra[IO] = {
-    uRepo.value
   }
 
   override def credentialsRepo: CredentialsRepository[IO] = {

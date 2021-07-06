@@ -3,7 +3,7 @@ package com.uptech.windalerts.core.user
 import cats.data.{EitherT, OptionT}
 import com.uptech.windalerts.core.UserNotFoundError
 
-trait UserRepositoryAlgebra[F[_]] {
+trait UserRepository[F[_]] {
 
   def getByUserIdEitherT(userId: String): EitherT[F, UserNotFoundError, UserT]
 

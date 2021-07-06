@@ -14,9 +14,9 @@ import com.uptech.windalerts.core.otp.OtpRepository
 import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 import io.circe.parser.parse
 
-class UserRolesService[F[_] : Sync](otpRepository: OtpRepository[F], repos: Repos[F], subscriptionsService: SubscriptionsService[F], userService: UserService[F]) {
+class UserRolesService[F[_] : Sync](userRepository: UserRepository[F], otpRepository: OtpRepository[F], repos: Repos[F], subscriptionsService: SubscriptionsService[F], userService: UserService[F]) {
   def makeUserTrial(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
-    repos.usersRepo().update(user.copy(
+    userRepository.update(user.copy(
       userType = Trial.value,
       startTrialAt = System.currentTimeMillis(),
       endTrialAt = System.currentTimeMillis() + (30L * 24L * 60L * 60L * 1000L),
@@ -24,12 +24,12 @@ class UserRolesService[F[_] : Sync](otpRepository: OtpRepository[F], repos: Repo
   }
 
   def makeUserPremium(user: UserT, start: Long, expiry: Long): EitherT[F, UserNotFoundError, UserT] = {
-    repos.usersRepo().update(user.copy(userType = Premium.value, lastPaymentAt = start, nextPaymentAt = expiry)).toRight(UserNotFoundError())
+    userRepository.update(user.copy(userType = Premium.value, lastPaymentAt = start, nextPaymentAt = expiry)).toRight(UserNotFoundError())
   }
 
   def makeUserPremiumExpired(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
     for {
-      operationResult <- repos.usersRepo().update(user.copy(userType = PremiumExpired.value, nextPaymentAt = -1)).toRight(UserNotFoundError())
+      operationResult <- userRepository.update(user.copy(userType = PremiumExpired.value, nextPaymentAt = -1)).toRight(UserNotFoundError())
       _ <- EitherT.liftF(repos.alertsRepository().disableAllButOneAlerts(user._id.toHexString))
     } yield operationResult
   }
@@ -55,7 +55,7 @@ class UserRolesService[F[_] : Sync](otpRepository: OtpRepository[F], repos: Repo
 
   def updateTrialUsers() = {
     for {
-      users <- EitherT.right(repos.usersRepo().findTrialExpiredUsers())
+      users <- EitherT.right(userRepository.findTrialExpiredUsers())
       _ <- makeAllTrialExpired(users)
     } yield ()
   }
@@ -66,7 +66,7 @@ class UserRolesService[F[_] : Sync](otpRepository: OtpRepository[F], repos: Repo
 
   def updateAndroidSubscribedUsers() = {
     for {
-      users <- EitherT.right(repos.usersRepo().findAndroidPremiumExpiredUsers())
+      users <- EitherT.right(userRepository.findAndroidPremiumExpiredUsers())
       _ <- users.map(user=>updateAndroidSubscribedUser(user)).toList.sequence
     } yield ()
   }
@@ -81,7 +81,7 @@ class UserRolesService[F[_] : Sync](otpRepository: OtpRepository[F], repos: Repo
 
   def updateAppleSubscribedUsers():EitherT[F, SurfsUpError, Unit] = {
     for {
-      users <- EitherT.right(repos.usersRepo().findApplePremiumExpiredUsers())
+      users <- EitherT.right(userRepository.findApplePremiumExpiredUsers())
       _ <- users.map(user=>updateAppleSubscribedUser(user)).toList.sequence
     } yield ()
   }
@@ -95,7 +95,7 @@ class UserRolesService[F[_] : Sync](otpRepository: OtpRepository[F], repos: Repo
   }
 
   def update(user: UserT): EitherT[F, UserNotFoundError, UserT] =
-    repos.usersRepo().update(user).toRight(UserNotFoundError("User not found"))
+    userRepository.update(user).toRight(UserNotFoundError("User not found"))
 
   def authorizePremiumUsers(user: UserT): EitherT[F, SurfsUpError, UserT] = {
     EitherT.fromEither(if (UserType(user.userType) == UserType.Premium || UserType(user.userType) == UserType.Trial) {

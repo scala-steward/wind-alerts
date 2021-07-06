@@ -6,16 +6,15 @@ import cats.implicits._
 import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.beaches.BeachService
-import com.uptech.windalerts.core.notifications.NotificationsSender.NotificationDetails
-import com.uptech.windalerts.core.user.{UserId, UserT}
-import org.log4s.getLogger
 import com.uptech.windalerts.core.beaches.domain._
-import com.uptech.windalerts.infrastructure.endpoints.dtos
+import com.uptech.windalerts.core.notifications.NotificationsSender.NotificationDetails
+import com.uptech.windalerts.core.user.{UserId, UserRepository, UserT}
 import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
+import org.log4s.getLogger
 
 import scala.util.Try
 
-class NotificationsService[F[_] : Sync](A: AlertsService[F], B: BeachService[F], repos: Repos[F], notificationSender: NotificationsSender[F])
+class NotificationsService[F[_] : Sync](U:UserRepository[F],  A: AlertsService[F], B: BeachService[F], repos: Repos[F], notificationSender: NotificationsSender[F])
                                        (implicit F: Async[F]){
   private val logger = getLogger
 
@@ -34,7 +33,7 @@ class NotificationsService[F[_] : Sync](A: AlertsService[F], B: BeachService[F],
       beaches <- B.getAll(alertsByBeaches.keys.toSeq)
       alertsToBeNotified = alertsByBeaches.map(kv => (beaches(kv._1), kv._2)).map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)).map(a => AlertWithBeach(a, kv._1))))
       _ <- EitherT.liftF(F.delay(logger.error(s"alertsToBeNotified ${alertsToBeNotified.map(_._2.map(_.alert._id)).mkString}")))
-      usersToBeNotified <- alertsToBeNotified.values.flatten.map(v => repos.usersRepo().getByUserIdEitherT(v.alert.owner)).toList.sequence
+      usersToBeNotified <- alertsToBeNotified.values.flatten.map(v => U.getByUserIdEitherT(v.alert.owner)).toList.sequence
       userIdToUser = usersToBeNotified.map(u => (u._id.toHexString, u)).toMap
       alertWithUserWithBeach = alertsToBeNotified.values.flatten.map(v => AlertWithUserWithBeach(v.alert, userIdToUser(v.alert.owner), v.beach))
       _ <- EitherT.liftF(F.delay(logger.error(s"alertWithUserWithBeach ${alertWithUserWithBeach.map(_.alert._id).mkString}")))

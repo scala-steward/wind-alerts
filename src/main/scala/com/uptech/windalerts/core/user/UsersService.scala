@@ -13,7 +13,8 @@ import com.uptech.windalerts.infrastructure.endpoints.dtos._
 import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 import org.mongodb.scala.bson.ObjectId
 
-class UserService[F[_] : Sync](repos: Repos[F],
+class UserService[F[_] : Sync](userRepository: UserRepository[F],
+                               repos: Repos[F],
                                userCredentialsService: UserCredentialService[F],
                                otpService: OTPService[F],
                                auth: AuthenticationService[F],
@@ -30,7 +31,7 @@ class UserService[F[_] : Sync](repos: Repos[F],
   def create(rr: RegisterRequest): EitherT[F, UserAlreadyExistsError, (UserT, Credentials)] = {
     for {
       savedCreds <- userCredentialsService.createIfDoesNotExist(rr)
-      saved <- EitherT.right(repos.usersRepo().create(
+      saved <- EitherT.right(userRepository.create(
         UserT.createEmailUser(new ObjectId(savedCreds._id.toHexString),
           rr.email,
           rr.name,
@@ -92,13 +93,13 @@ class UserService[F[_] : Sync](repos: Repos[F],
   }
 
   private def updateUser(name: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, user: UserT) = {
-    repos.usersRepo().update(user.copy(name = name, snoozeTill = snoozeTill, disableAllAlerts = disableAllAlerts, notificationsPerHour = notificationsPerHour))
+    userRepository.update(user.copy(name = name, snoozeTill = snoozeTill, disableAllAlerts = disableAllAlerts, notificationsPerHour = notificationsPerHour))
   }
 
   def updateDeviceToken(id: String, deviceToken: String): EitherT[F, UserNotFoundError, UserT] = {
     for {
       user <- getUser(id)
-      operationResult <- repos.usersRepo().update(user.copy(deviceToken = deviceToken)).toRight(UserNotFoundError())
+      operationResult <- userRepository.update(user.copy(deviceToken = deviceToken)).toRight(UserNotFoundError())
     } yield operationResult
   }
 
@@ -111,10 +112,10 @@ class UserService[F[_] : Sync](repos: Repos[F],
   }
 
   def getUser(email: String, deviceType: String): EitherT[F, UserNotFoundError, UserT] =
-    repos.usersRepo().getByEmailAndDeviceType(email, deviceType).toRight(UserNotFoundError())
+    userRepository.getByEmailAndDeviceType(email, deviceType).toRight(UserNotFoundError())
 
   def getUser(userId: String): EitherT[F, UserNotFoundError, UserT] =
-    repos.usersRepo().getByUserId(userId).toRight(UserNotFoundError())
+    userRepository.getByUserId(userId).toRight(UserNotFoundError())
 
   def createFeedback(feedback: Feedback): F[Feedback] = {
     repos.feedbackRepository.create(feedback)
@@ -131,11 +132,12 @@ class UserService[F[_] : Sync](repos: Repos[F],
 
 object UserService {
   def apply[F[_] : Sync](
+                          userRepository: UserRepository[F],
                           repos: Repos[F],
                           userCredentialService: UserCredentialService[F],
                           otpService: OTPService[F],
                           authenticationService: AuthenticationService[F],
                           refreshTokenRepo : RefreshTokenRepository[F]
                         ): UserService[F] =
-    new UserService(repos, userCredentialService, otpService, authenticationService, refreshTokenRepo)
+    new UserService(userRepository, repos, userCredentialService, otpService, authenticationService, refreshTokenRepo)
 }
