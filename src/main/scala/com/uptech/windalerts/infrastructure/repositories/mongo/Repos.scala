@@ -35,8 +35,6 @@ trait Repos[F[_]] {
 
   def fbSecret() : String
 
-  def beaches() : Map[Long, Beach]
-
   def applePlatform(): SocialLogin[F, AppleAccessRequest]
 
   def facebookPlatform(): SocialLogin[F, FacebookAccessRequest]
@@ -88,10 +86,6 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
     secrets.read.surfsUp.facebook.key
   }
 
-  val b = Eval.later {
-    com.uptech.windalerts.config.beaches.read
-  }
-
   override def androidPurchaseRepo: AndroidTokenRepository[IO] = {
     andRepo.value
   }
@@ -124,9 +118,6 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
   }
 
   override  def fbSecret = fbKey.value
-
-  override  def beaches = b.value
-
 
   override def applePlatform(): SocialLogin[IO, AppleAccessRequest] = {
     if (new File(s"/app/resources/Apple-${sys.env("projectId")}.p8").exists())

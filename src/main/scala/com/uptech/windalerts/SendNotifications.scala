@@ -56,7 +56,8 @@ object SendNotifications extends IOApp {
   val key = conf.surfsUp.willyWeather.key
   lazy val beachSeq = beaches.read
   lazy val adjustments = swellAdjustments.read
-  val beachesService = new BeachService[IO](new WWBackedWindsService[IO](key), new WWBackedTidesService[IO](key, repos), new WWBackedSwellsService[IO](key, swellAdjustments.read))
+  val beachesConfig: Map[Long, beaches.Beach] = com.uptech.windalerts.config.beaches.read
+  val beachesService = new BeachService[IO](new WWBackedWindsService[IO](key), new WWBackedTidesService[IO](key, beachesConfig), new WWBackedSwellsService[IO](key, swellAdjustments.read))
   val db = Repos.acquireDb
   val emailConf = com.uptech.windalerts.config.secrets.read.surfsUp.email
   val emailSender = new EmailSender[IO](emailConf.apiKey)

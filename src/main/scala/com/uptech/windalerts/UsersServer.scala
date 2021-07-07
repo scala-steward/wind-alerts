@@ -5,7 +5,7 @@ import cats.implicits._
 import com.http4s.rho.swagger.ui.SwaggerUi
 import com.softwaremill.sttp.HttpURLConnectionBackend
 import com.uptech.windalerts.SendNotifications.repos
-import com.uptech.windalerts.config.{secrets, swellAdjustments}
+import com.uptech.windalerts.config.{beaches, secrets, swellAdjustments}
 import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.credentials.{AppleCredentials, Credentials, FacebookCredentials, UserCredentialService}
@@ -71,7 +71,9 @@ object UsersServer extends IOApp {
         userRolesService <- IO(new UserRolesService[IO](usersRepository, otpRepositoy, repos, subscriptionsService, usersService))
 
         apiKey <- IO(secrets.read.surfsUp.willyWeather.key)
-        beaches <- IO(new BeachService[IO](new WWBackedWindsService[IO](apiKey), new WWBackedTidesService[IO](apiKey, repos), new WWBackedSwellsService[IO](apiKey, swellAdjustments.read)))
+        beachesConfig: Map[Long, beaches.Beach] = com.uptech.windalerts.config.beaches.read
+
+        beaches <- IO(new BeachService[IO](new WWBackedWindsService[IO](apiKey), new WWBackedTidesService[IO](apiKey, beachesConfig), new WWBackedSwellsService[IO](apiKey, swellAdjustments.read)))
 
         endpoints <- IO(new UsersEndpoints(userCredentialsService, usersService, socialLoginService, userRolesService, subscriptionsService))
 
