@@ -4,6 +4,7 @@ import cats.Applicative
 import cats.data.EitherT
 import cats.effect.{Async, ContextShift, Sync}
 import com.softwaremill.sttp._
+import com.uptech.windalerts.config.beaches
 import com.uptech.windalerts.core.beaches.domain.{BeachId, TideHeight}
 import com.uptech.windalerts.core.beaches.{TidesService, domain}
 import com.uptech.windalerts.core.{BeachNotFoundError, SurfsUpError, UnknownError}
@@ -23,7 +24,7 @@ import java.time.{ZoneId, ZonedDateTime}
 import scala.concurrent.Future
 
 
-class WWBackedTidesService[F[_] : Sync](apiKey: String, repos: Repos[F])(implicit backend: SttpBackend[Id, Nothing], F: Async[F], C: ContextShift[F])
+class WWBackedTidesService[F[_] : Sync](apiKey: String, beachesConfig: Map[Long, com.uptech.windalerts.config.beaches.Beach])(implicit backend: SttpBackend[Id, Nothing], F: Async[F], C: ContextShift[F])
 extends TidesService[F] {
   private val logger = getLogger
   val startDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -38,13 +39,12 @@ extends TidesService[F] {
     "NT" -> "Australia/Darwin")
 
   override def get(beachId: BeachId): cats.data.EitherT[F, SurfsUpError, domain.TideHeight] =
-    getFromWillyWeatther_(apiKey, beachId)
+    getFromWillyWeatther_(beachId)
 
 
-  def getFromWillyWeatther_(apiKey: String, beachId: BeachId): cats.data.EitherT[F, SurfsUpError, domain.TideHeight] = {
+  def getFromWillyWeatther_(beachId: BeachId): cats.data.EitherT[F, SurfsUpError, domain.TideHeight] = {
     logger.error(s"Fetching tides status for $beachId")
 
-    val beachesConfig = repos.beaches()
     if (!beachesConfig.contains(beachId.id)) {
       EitherT.left[domain.TideHeight](F.pure(BeachNotFoundError("Beach not found")))
     } else {

@@ -1,15 +1,13 @@
 package com.uptech.windalerts.config
 
-import java.io.File
-
 import com.uptech.windalerts.config.beaches.Beaches
 import io.circe._
 import io.circe.config.parser
 import io.circe.generic.auto._
 import io.circe.generic.semiauto._
 import io.circe.parser.decode
-import io.circe.syntax._
 
+import java.io.File
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
 
@@ -58,7 +56,7 @@ object beaches {
   implicit val beachDecoder: Decoder[Beach] = deriveDecoder
   implicit val beachEncoder: Encoder[Beach] = deriveEncoder
 
-  def read: Map[Long, Beach] = {
+  def read(): Map[Long, Beach] = {
     val tryProd = Try(Source.fromFile("/app/resources/beaches-v4.json").getLines.mkString)
     val jsonContents = tryProd match {
       case Failure(_) => Source.fromFile("src/main/resources/beaches-v4.json").getLines.mkString
