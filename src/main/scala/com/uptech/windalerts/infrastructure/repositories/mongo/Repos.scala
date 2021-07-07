@@ -3,15 +3,12 @@ package com.uptech.windalerts.infrastructure.repositories.mongo
 import cats.Eval
 import cats.effect.{ContextShift, IO}
 import com.google.api.services.androidpublisher.AndroidPublisher
-import com.uptech.windalerts.config.beaches.Beach
 import com.uptech.windalerts.config.secrets
 import com.uptech.windalerts.core.alerts.AlertsRepositoryT
 import com.uptech.windalerts.core.alerts.domain.Alert
-import com.uptech.windalerts.core.credentials._
 import com.uptech.windalerts.core.feedbacks.{Feedback, FeedbackRepository}
 import com.uptech.windalerts.core.notifications.{Notification, NotificationRepository}
 import com.uptech.windalerts.core.social.login.{AppleAccessRequest, FacebookAccessRequest, SocialLogin}
-import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AndroidTokenRepository, AppleToken, AppleTokenRepository}
 import com.uptech.windalerts.infrastructure.endpoints.codecs
 import com.uptech.windalerts.infrastructure.social.login.{AppleLogin, FacebookLogin}
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AndroidPublisherHelper, ApplicationConfig}
@@ -20,11 +17,6 @@ import org.mongodb.scala.{MongoClient, MongoDatabase}
 import java.io.File
 
 trait Repos[F[_]] {
-
-  def androidPurchaseRepo(): AndroidTokenRepository[F]
-
-  def applePurchaseRepo(): AppleTokenRepository[F]
-
   def feedbackRepository(): FeedbackRepository[F]
 
   def alertsRepository(): AlertsRepositoryT[F]
@@ -57,16 +49,6 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
 
   var  maybeDb:MongoDatabase = _
 
-
-  val andRepo = Eval.later {
-    new MongoAndroidPurchaseRepository(db.getCollection[AndroidToken]("androidPurchases"))
-  }
-
-  val appRepo = Eval.later {
-    new MongoApplePurchaseRepository(db.getCollection[AppleToken]("applePurchases"))
-  }
-
-
   val fdRepo = Eval.later {
     new MongoFeedbackRepository(db.getCollection[Feedback]("feedbacks"))
   }
@@ -84,14 +66,6 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
 
   val fbKey = Eval.later {
     secrets.read.surfsUp.facebook.key
-  }
-
-  override def androidPurchaseRepo: AndroidTokenRepository[IO] = {
-    andRepo.value
-  }
-
-  override def applePurchaseRepo: AppleTokenRepository[IO] = {
-    appRepo.value
   }
 
   override def feedbackRepository: FeedbackRepository[IO] = {

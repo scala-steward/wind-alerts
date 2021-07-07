@@ -7,11 +7,12 @@ import com.uptech.windalerts.SendNotifications.{db, repos}
 import com.uptech.windalerts.core.credentials.{AppleCredentials, Credentials, FacebookCredentials, UserCredentialService}
 import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry}
 import com.uptech.windalerts.core.refresh.tokens.RefreshToken
+import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken}
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService, UserT}
 import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.endpoints.logger._
 import com.uptech.windalerts.infrastructure.endpoints.{UpdateUserRolesEndpoints, errors}
-import com.uptech.windalerts.infrastructure.repositories.mongo.{LazyRepos, MongoCredentialsRepository, MongoOtpRepository, MongoRefreshTokenRepository, MongoSocialCredentialsRepository, MongoUserRepository, Repos}
+import com.uptech.windalerts.infrastructure.repositories.mongo.{LazyRepos, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoOtpRepository, MongoRefreshTokenRepository, MongoSocialCredentialsRepository, MongoUserRepository, Repos}
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AndroidSubscription, AppleSubscription, SubscriptionsServiceImpl}
 import org.http4s.implicits._
 import org.http4s.server.Router
@@ -38,6 +39,8 @@ object UpdateUserRolesServer extends IOApp {
     credentialsRepository = new MongoCredentialsRepository(db.getCollection[Credentials]("credentials"))
     facebookCredentialsRepository = new MongoSocialCredentialsRepository[IO, FacebookCredentials](db.getCollection[FacebookCredentials]("facebookCredentials"))
     appleCredentialsRepository = new MongoSocialCredentialsRepository[IO, AppleCredentials](db.getCollection[AppleCredentials]("appleCredentials"))
+    androidPurchaseRepository = new MongoAndroidPurchaseRepository(db.getCollection[AndroidToken]("androidPurchases"))
+    applePurchaseRepository = new MongoApplePurchaseRepository(db.getCollection[AppleToken]("applePurchases"))
 
     otpService = new OTPService[IO](otpRepositoy, emailSender)
 
@@ -45,8 +48,8 @@ object UpdateUserRolesServer extends IOApp {
     userService <- IO(new UserService[IO](usersRepository, repos, userCredentialsService, otpService, authService, refreshTokenRepository))
     appleSubscription <- IO(new AppleSubscription[IO]())
     androidSubscription <- IO(new AndroidSubscription[IO](repos))
-    subscriptionsService <- IO(new SubscriptionsServiceImpl[IO](appleSubscription, androidSubscription, repos))
-    userRolesService <- IO(new UserRolesService[IO](usersRepository, otpRepositoy, repos, subscriptionsService, userService))
+    subscriptionsService <- IO(new SubscriptionsServiceImpl[IO](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription, repos))
+    userRolesService <- IO(new UserRolesService[IO](applePurchaseRepository, androidPurchaseRepository, usersRepository, otpRepositoy, repos, subscriptionsService, userService))
     endpoints <- IO(new UpdateUserRolesEndpoints[IO](userRolesService))
 
 

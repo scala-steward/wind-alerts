@@ -4,17 +4,17 @@ import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
 import com.uptech.windalerts.core.SurfsUpError
-import com.uptech.windalerts.core.social.subscriptions._
+import com.uptech.windalerts.core.social.subscriptions.{AppleTokenRepository, _}
 import com.uptech.windalerts.core.user.UserId
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
 import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 
-class SubscriptionsServiceImpl[F[_] : Sync](appleSubscription: SocialSubscription[F], androidSubscription: SocialSubscription[F], repos: Repos[F]) extends SubscriptionsService[F] {
+class SubscriptionsServiceImpl[F[_] : Sync](applePurchaseRepository: AppleTokenRepository[F], androidPurchaseRepository: AndroidTokenRepository[F], appleSubscription: SocialSubscription[F], androidSubscription: SocialSubscription[F], repos: Repos[F]) extends SubscriptionsService[F] {
 
   override def updateAndroidPurchase(user: UserId, request: AndroidReceiptValidationRequest): EitherT[F, SurfsUpError, AndroidToken] = {
     for {
       _ <- getAndroidPurchase(request.productId, request.token)
-      savedToken <- repos.androidPurchaseRepo().create(AndroidToken(user.id, request.productId, request.token, System.currentTimeMillis())).leftWiden[SurfsUpError]
+      savedToken <- androidPurchaseRepository.create(AndroidToken(user.id, request.productId, request.token, System.currentTimeMillis())).leftWiden[SurfsUpError]
     } yield savedToken
   }
 
@@ -25,7 +25,7 @@ class SubscriptionsServiceImpl[F[_] : Sync](appleSubscription: SocialSubscriptio
   override def updateApplePurchase(user: UserId, req: ApplePurchaseToken): EitherT[F, SurfsUpError, AppleToken] = {
     for {
       _ <- getApplePurchase(req.token, "")
-      savedToken <- repos.applePurchaseRepo().create(AppleToken(user.id, req.token, System.currentTimeMillis()))
+      savedToken <- applePurchaseRepository.create(AppleToken(user.id, req.token, System.currentTimeMillis()))
     } yield savedToken
   }
 

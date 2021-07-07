@@ -3,18 +3,23 @@ package com.uptech.windalerts.core.user
 import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
-import com.uptech.windalerts.core.{OperationNotAllowed, SurfsUpError, UnknownError, UserNotFoundError}
+import com.uptech.windalerts.config.secrets
 import com.uptech.windalerts.core.alerts.Alerts
-import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, SubscriptionPurchase, SubscriptionsService}
+import com.uptech.windalerts.core.otp.OtpRepository
+import com.uptech.windalerts.core.social.subscriptions.{AndroidTokenRepository, AppleTokenRepository, SubscriptionsService}
 import com.uptech.windalerts.core.user.UserType.{Premium, PremiumExpired, Trial}
+import com.uptech.windalerts.core.{OperationNotAllowed, SurfsUpError, UnknownError, UserNotFoundError}
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
-import com.uptech.windalerts.config.secrets
-import com.uptech.windalerts.core.otp.OtpRepository
 import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 import io.circe.parser.parse
 
-class UserRolesService[F[_] : Sync](userRepository: UserRepository[F], otpRepository: OtpRepository[F], repos: Repos[F], subscriptionsService: SubscriptionsService[F], userService: UserService[F]) {
+class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepository[F],
+                                    androidPurchaseRepository: AndroidTokenRepository[F],
+                                    userRepository: UserRepository[F],
+                                    otpRepository: OtpRepository[F],
+                                    repos: Repos[F],
+                                    subscriptionsService: SubscriptionsService[F], userService: UserService[F]) {
   def makeUserTrial(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
     userRepository.update(user.copy(
       userType = Trial.value,
@@ -73,7 +78,7 @@ class UserRolesService[F[_] : Sync](userRepository: UserRepository[F], otpReposi
 
   private def updateAndroidSubscribedUser(user:UserT ):EitherT[F, SurfsUpError, Unit] = {
     for {
-      token <- repos.androidPurchaseRepo().getLastForUser(user._id.toHexString)
+      token <- androidPurchaseRepository.getLastForUser(user._id.toHexString)
       purchase <- subscriptionsService.getAndroidPurchase(token.subscriptionId, token.purchaseToken)
       _ <- updateSubscribedUserRole(user, purchase.startTimeMillis, purchase.expiryTimeMillis).leftWiden[SurfsUpError]
     } yield ()
@@ -88,7 +93,7 @@ class UserRolesService[F[_] : Sync](userRepository: UserRepository[F], otpReposi
 
   private def updateAppleSubscribedUser(user:UserT) = {
     for {
-      token <- repos.applePurchaseRepo().getLastForUser(user._id.toHexString)
+      token <- applePurchaseRepository.getLastForUser(user._id.toHexString)
       purchase <- subscriptionsService.getApplePurchase(token.purchaseToken, secrets.read.surfsUp.apple.appSecret)
       _ <- updateSubscribedUserRole(user, purchase.startTimeMillis, purchase.expiryTimeMillis).leftWiden[SurfsUpError]
     } yield ()
@@ -136,7 +141,7 @@ class UserRolesService[F[_] : Sync](userRepository: UserRepository[F], otpReposi
     for {
       decoded <- EitherT.fromEither[F](Either.right(new String(java.util.Base64.getDecoder.decode(update.message.data))))
       subscription <- asSubscription(decoded)
-      token <- repos.androidPurchaseRepo().getPurchaseByToken(subscription.subscriptionNotification.purchaseToken)
+      token <- androidPurchaseRepository.getPurchaseByToken(subscription.subscriptionNotification.purchaseToken)
       purchase <- subscriptionsService.getAndroidPurchase(token.subscriptionId, subscription.subscriptionNotification.purchaseToken)
       user <- userService.getUser(token.userId)
       updatedUser <- updateSubscribedUserRole(user, purchase.startTimeMillis, purchase.expiryTimeMillis).leftWiden[SurfsUpError]
@@ -154,7 +159,7 @@ class UserRolesService[F[_] : Sync](userRepository: UserRepository[F], otpReposi
 
   def getAndroidPurchase(u: UserId) = {
     for {
-      token <- repos.androidPurchaseRepo().getLastForUser(u.id)
+      token <- androidPurchaseRepository.getLastForUser(u.id)
       purchase <- subscriptionsService.getAndroidPurchase(token.subscriptionId, token.purchaseToken)
       dbUser <- userService.getUser(u.id).leftWiden[SurfsUpError]
       premiumUser <- updateSubscribedUserRole(dbUser, purchase.startTimeMillis, purchase.expiryTimeMillis).map(_.asDTO()).leftWiden[SurfsUpError]
@@ -171,7 +176,7 @@ class UserRolesService[F[_] : Sync](userRepository: UserRepository[F], otpReposi
 
   def updateAppleUser(user: UserId) = {
     for {
-      token <- repos.applePurchaseRepo().getLastForUser(user.id)
+      token <- applePurchaseRepository.getLastForUser(user.id)
       purchase <- subscriptionsService.getApplePurchase(token.purchaseToken, secrets.read.surfsUp.apple.appSecret)
       dbUser <- userService.getUser(user.id).leftWiden[SurfsUpError]
       premiumUser <- updateSubscribedUserRole(dbUser, purchase.startTimeMillis, purchase.expiryTimeMillis).map(_.asDTO()).leftWiden[SurfsUpError]
