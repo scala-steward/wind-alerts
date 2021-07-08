@@ -3,7 +3,6 @@ package com.uptech.windalerts
 import cats.effect.{IO, _}
 import cats.implicits._
 import com.softwaremill.sttp.HttpURLConnectionBackend
-import com.uptech.windalerts.SendNotifications.{db, repos}
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.credentials.{AppleCredentials, Credentials, FacebookCredentials, UserCredentialService}
 import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry}
@@ -13,8 +12,8 @@ import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService,
 import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.endpoints.logger._
 import com.uptech.windalerts.infrastructure.endpoints.{UpdateUserRolesEndpoints, errors}
-import com.uptech.windalerts.infrastructure.repositories.mongo.{LazyRepos, MongoAlertsRepository, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoOtpRepository, MongoRefreshTokenRepository, MongoSocialCredentialsRepository, MongoUserRepository, Repos}
-import com.uptech.windalerts.infrastructure.social.subscriptions.{AndroidPublisherHelper, AndroidSubscription, AppleSubscription, ApplicationConfig, SubscriptionsServiceImpl}
+import com.uptech.windalerts.infrastructure.repositories.mongo._
+import com.uptech.windalerts.infrastructure.social.subscriptions._
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
@@ -29,7 +28,6 @@ object UpdateUserRolesServer extends IOApp {
     _ <- IO(getLogger.error("Starting"))
     db = Repos.acquireDb
 
-    repos = new LazyRepos()
     refreshTokenRepository = new MongoRefreshTokenRepository(db.getCollection[RefreshToken]("refreshTokens"))
 
     authService <- IO(new AuthenticationService(refreshTokenRepository))
@@ -46,11 +44,11 @@ object UpdateUserRolesServer extends IOApp {
     otpService = new OTPService[IO](otpRepositoy, emailSender)
     androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
     userCredentialsService <- IO(new UserCredentialService[IO](facebookCredentialsRepository, appleCredentialsRepository, credentialsRepository, usersRepository, refreshTokenRepository, emailSender))
-    userService <- IO(new UserService[IO](usersRepository, repos, userCredentialsService, otpService, authService, refreshTokenRepository))
+    userService <- IO(new UserService[IO](usersRepository, userCredentialsService, otpService, authService, refreshTokenRepository))
     appleSubscription <- IO(new AppleSubscription[IO]())
     androidSubscription <- IO(new AndroidSubscription[IO](androidPublisher))
-    subscriptionsService <- IO(new SubscriptionsServiceImpl[IO](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription, repos))
-    userRolesService <- IO(new UserRolesService[IO](applePurchaseRepository, androidPurchaseRepository, alertsRepository, usersRepository, otpRepositoy, repos, subscriptionsService, userService))
+    subscriptionsService <- IO(new SubscriptionsServiceImpl[IO](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription))
+    userRolesService <- IO(new UserRolesService[IO](applePurchaseRepository, androidPurchaseRepository, alertsRepository, usersRepository, otpRepositoy, subscriptionsService, userService))
     endpoints <- IO(new UpdateUserRolesEndpoints[IO](userRolesService))
 
 

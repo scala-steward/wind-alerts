@@ -13,7 +13,6 @@ import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 import org.mongodb.scala.bson.ObjectId
 
 class UserService[F[_] : Sync](userRepository: UserRepository[F],
-                               repos: Repos[F],
                                userCredentialsService: UserCredentialService[F],
                                otpService: OTPService[F],
                                auth: AuthenticationService[F],
@@ -128,11 +127,10 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
 object UserService {
   def apply[F[_] : Sync](
                           userRepository: UserRepository[F],
-                          repos: Repos[F],
                           userCredentialService: UserCredentialService[F],
                           otpService: OTPService[F],
                           authenticationService: AuthenticationService[F],
                           refreshTokenRepo : RefreshTokenRepository[F]
                         ): UserService[F] =
-    new UserService(userRepository, repos, userCredentialService, otpService, authenticationService, refreshTokenRepo)
+    new UserService(userRepository, userCredentialService, otpService, authenticationService, refreshTokenRepo)
 }

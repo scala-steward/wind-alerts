@@ -1,33 +1,30 @@
 package com.uptech.windalerts.infrastructure.social.login
 
-import cats.data.EitherT
-import cats.effect.{ContextShift, IO}
+import cats.Monad
+import cats.effect.{Async, ContextShift}
 import cats.implicits._
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.turo.pushy.apns.auth.ApnsSigningKey
 import com.uptech.windalerts.core.social.login.{AppleAccessRequest, SocialLogin, SocialUser}
-import com.uptech.windalerts.core.social.subscriptions.SubscriptionPurchase
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
-import com.uptech.windalerts.infrastructure.endpoints.dtos.{ApplePurchaseVerificationRequest, AppleSubscriptionPurchase, AppleUser, TokenResponse}
-import io.circe.optics.JsonPath.root
+import com.uptech.windalerts.infrastructure.endpoints.dtos.{AppleUser, TokenResponse}
 import io.circe.parser
-import io.circe.syntax._
 import org.log4s.getLogger
 import pdi.jwt._
 
-import java.io.{DataInputStream, File}
+import java.io.File
 import java.security.PrivateKey
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class AppleLogin(filename: String)(implicit cs: ContextShift[IO]) extends SocialLogin[IO, AppleAccessRequest] {
+class AppleLogin[F[_]](filename: String)(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends SocialLogin[F, AppleAccessRequest] {
   val privateKey = getPrivateKey(filename)
-  override def fetchUserFromPlatform(credentials: AppleAccessRequest): IO[SocialUser] = {
+  override def fetchUserFromPlatform(credentials: AppleAccessRequest): F[SocialUser] = {
     fetchUserFromPlatform_(credentials)
   }
 
   private def fetchUserFromPlatform_(credentials: AppleAccessRequest) = {
-    IO.fromFuture(IO(Future(getUser(credentials.authorizationCode))))
+    Async.fromFuture(M.pure(Future(getUser(credentials.authorizationCode))))
       .map(appleUser => SocialUser(appleUser.sub, appleUser.email, credentials.deviceType, credentials.deviceToken, credentials.name))
   }
 
@@ -67,8 +64,6 @@ class AppleLogin(filename: String)(implicit cs: ContextShift[IO]) extends Social
     val header = JwtHeader(JwtAlgorithm.ES256).withType(null).withKeyId("A423X8QGF3")
     Jwt.encode(header.toJson, claims.toJson, privateKey, JwtAlgorithm.ES256)
   }
-
-  import java.io.FileInputStream
 
 
   private def getPrivateKey(filename: String) = {

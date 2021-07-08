@@ -4,7 +4,6 @@ import cats.effect.{Blocker, ExitCode, IO, IOApp}
 import cats.implicits._
 import com.http4s.rho.swagger.ui.SwaggerUi
 import com.softwaremill.sttp.HttpURLConnectionBackend
-import com.uptech.windalerts.SendNotifications.repos
 import com.uptech.windalerts.config.{beaches, secrets, swellAdjustments}
 import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.alerts.domain.Alert
@@ -19,7 +18,7 @@ import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.beaches._
 import com.uptech.windalerts.infrastructure.endpoints._
 import com.uptech.windalerts.infrastructure.endpoints.logger._
-import com.uptech.windalerts.infrastructure.repositories.mongo.{LazyRepos, MongoAlertsRepository, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoOtpRepository, MongoRefreshTokenRepository, MongoSocialCredentialsRepository, MongoUserRepository, Repos}
+import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoAlertsRepository, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoOtpRepository, MongoRefreshTokenRepository, MongoSocialCredentialsRepository, MongoUserRepository, Repos}
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AndroidPublisherHelper, AndroidSubscription, AppleSubscription, ApplicationConfig, SubscriptionsServiceImpl}
 import org.http4s.implicits._
 import org.http4s.rho.swagger.SwaggerMetadata
@@ -47,7 +46,6 @@ object UsersServer extends IOApp {
         swaggerUiRhoMiddleware =
         SwaggerUi[IO].createRhoMiddleware(blocker, swaggerMetadata = metadata)
 
-        repos = new LazyRepos()
         db = Repos.acquireDb
         refreshTokenRepository = new MongoRefreshTokenRepository(db.getCollection[RefreshToken]("refreshTokens"))
 
@@ -68,13 +66,13 @@ object UsersServer extends IOApp {
         androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
 
         userCredentialsService <- IO(new UserCredentialService[IO](facebookCredentialsRepository, appleCredentialsRepository, credentialsRepository, usersRepository, refreshTokenRepository, emailSender))
-        usersService <- IO(new UserService(usersRepository, repos, userCredentialsService, otpService, auth, refreshTokenRepository))
-        socialLoginService <- IO(new SocialLoginService(facebookCredentialsRepository, appleCredentialsRepository, usersRepository, repos, usersService, userCredentialsService))
+        usersService <- IO(new UserService(usersRepository, userCredentialsService, otpService, auth, refreshTokenRepository))
+        socialLoginService <- IO(new SocialLoginService(Repos.applePlatform(), Repos.facebookPlatform(),  facebookCredentialsRepository, appleCredentialsRepository, usersRepository, usersService, userCredentialsService))
 
         appleSubscription <- IO(new AppleSubscription[IO]())
         androidSubscription <- IO(new AndroidSubscription[IO](androidPublisher))
-        subscriptionsService <- IO(new SubscriptionsServiceImpl[IO](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription, repos))
-        userRolesService <- IO(new UserRolesService[IO](applePurchaseRepository, androidPurchaseRepository, alertsRepository, usersRepository, otpRepositoy, repos, subscriptionsService, usersService))
+        subscriptionsService <- IO(new SubscriptionsServiceImpl[IO](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription))
+        userRolesService <- IO(new UserRolesService[IO](applePurchaseRepository, androidPurchaseRepository, alertsRepository, usersRepository, otpRepositoy, subscriptionsService, usersService))
 
         apiKey <- IO(secrets.read.surfsUp.willyWeather.key)
         beachesConfig: Map[Long, beaches.Beach] = com.uptech.windalerts.config.beaches.read
