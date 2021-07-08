@@ -14,7 +14,7 @@ import org.log4s.getLogger
 
 import scala.util.Try
 
-class NotificationsService[F[_] : Sync](U:UserRepository[F],  A: AlertsService[F], B: BeachService[F], repos: Repos[F], notificationSender: NotificationsSender[F])
+class NotificationsService[F[_] : Sync](N:NotificationRepository[F], U:UserRepository[F],  A: AlertsService[F], B: BeachService[F], repos: Repos[F], notificationSender: NotificationsSender[F])
                                        (implicit F: Async[F]){
   private val logger = getLogger
 
@@ -47,7 +47,7 @@ class NotificationsService[F[_] : Sync](U:UserRepository[F],  A: AlertsService[F
       loggedOutUserFiltered = usersToBeNotifiedSnoozeFiltered.filterNot(f => f.user.deviceToken == null || f.user.deviceToken.isEmpty())
       _ <- EitherT.liftF(F.delay(logger.error(s"loggedOutUserFiltered ${loggedOutUserFiltered.map(_.user.email).mkString}")))
 
-      usersWithCounts <- loggedOutUserFiltered.map(u => repos.notificationsRepo().countNotificationInLastHour(u.user._id.toHexString)).toList.sequence
+      usersWithCounts <- loggedOutUserFiltered.map(u => N.countNotificationInLastHour(u.user._id.toHexString)).toList.sequence
       usersWithCountsMap = usersWithCounts.map(u => (u.userId, u.count)).toMap
       usersToBeFilteredWithCount = loggedOutUserFiltered.filter(u => usersWithCountsMap(u.user._id.toHexString) < u.user.notificationsPerHour)
       _ = EitherT.liftF(F.delay(logger.error(s"usersToBeFilteredWithCount ${usersToBeFilteredWithCount.map(_.alert._id).mkString}")))
