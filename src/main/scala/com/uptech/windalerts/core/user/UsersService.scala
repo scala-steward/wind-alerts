@@ -4,7 +4,6 @@ import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
 import com.uptech.windalerts.core.credentials.{Credentials, UserCredentialService}
-import com.uptech.windalerts.core.feedbacks.Feedback
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.refresh.tokens.{RefreshToken, RefreshTokenRepository}
 import com.uptech.windalerts.core.{RefreshTokenExpiredError, RefreshTokenNotFoundError, SurfsUpError, UserAlreadyExistsError, UserNotFoundError, utils}
@@ -116,10 +115,6 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
 
   def getUser(userId: String): EitherT[F, UserNotFoundError, UserT] =
     userRepository.getByUserId(userId).toRight(UserNotFoundError())
-
-  def createFeedback(feedback: Feedback): F[Feedback] = {
-    repos.feedbackRepository.create(feedback)
-  }
 
   def sendOtp(userId: String): EitherT[F, UserNotFoundError, Unit] = {
     for {

@@ -6,7 +6,6 @@ import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.alerts.{Alerts, TimeRange}
 import com.uptech.windalerts.core.beaches.domain._
 import com.uptech.windalerts.core.credentials.{AppleCredentials, Credentials, FacebookCredentials}
-import com.uptech.windalerts.core.feedbacks.Feedback
 import com.uptech.windalerts.core.notifications.Notification
 import com.uptech.windalerts.core.otp.OTPWithExpiry
 import com.uptech.windalerts.core.refresh.tokens.RefreshToken
@@ -35,7 +34,6 @@ object codecs {
     fromProviders(classOf[FacebookCredentials]),
     fromProviders(classOf[AppleToken]),
     fromProviders(classOf[AppleCredentials]),
-    fromProviders(classOf[Feedback]),
     DEFAULT_CODEC_REGISTRY)
 
 
@@ -304,13 +302,5 @@ object codecs {
   lazy implicit val appleUserEncoder: Encoder[AppleUser] = deriveEncoder[AppleUser]
 
   implicit def appleUserEntityEncoder[F[_] : Applicative]: EntityEncoder[F, AppleUser] = jsonEncoderOf
-
-  lazy implicit val feedbackRequestDecoder: Decoder[FeedbackRequest] = deriveDecoder[FeedbackRequest]
-
-  implicit def feedbackRequestEntityDecoder[F[_] : Sync]: EntityDecoder[F, FeedbackRequest] = jsonOf
-
-  lazy implicit val feedbackRequestEncoder: Encoder[FeedbackRequest] = deriveEncoder[FeedbackRequest]
-
-  implicit def feedbackRequestEntityEncoder[F[_] : Applicative]: EntityEncoder[F, FeedbackRequest] = jsonEncoderOf
 
 }
