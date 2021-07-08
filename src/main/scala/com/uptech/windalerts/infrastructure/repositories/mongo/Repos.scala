@@ -6,7 +6,6 @@ import com.google.api.services.androidpublisher.AndroidPublisher
 import com.uptech.windalerts.config.secrets
 import com.uptech.windalerts.core.alerts.AlertsRepositoryT
 import com.uptech.windalerts.core.alerts.domain.Alert
-import com.uptech.windalerts.core.feedbacks.{Feedback, FeedbackRepository}
 import com.uptech.windalerts.core.notifications.{Notification, NotificationRepository}
 import com.uptech.windalerts.core.social.login.{AppleAccessRequest, FacebookAccessRequest, SocialLogin}
 import com.uptech.windalerts.infrastructure.endpoints.codecs
@@ -17,8 +16,6 @@ import org.mongodb.scala.{MongoClient, MongoDatabase}
 import java.io.File
 
 trait Repos[F[_]] {
-  def feedbackRepository(): FeedbackRepository[F]
-
   def alertsRepository(): AlertsRepositoryT[F]
 
   def notificationsRepo(): NotificationRepository[F]
@@ -49,10 +46,6 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
 
   var  maybeDb:MongoDatabase = _
 
-  val fdRepo = Eval.later {
-    new MongoFeedbackRepository(db.getCollection[Feedback]("feedbacks"))
-  }
-
   val alRepo = Eval.later {
     new MongoAlertsRepositoryAlgebra(db.getCollection[Alert]("alerts"))
   }
@@ -66,10 +59,6 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
 
   val fbKey = Eval.later {
     secrets.read.surfsUp.facebook.key
-  }
-
-  override def feedbackRepository: FeedbackRepository[IO] = {
-    fdRepo.value
   }
 
   override def alertsRepository = {

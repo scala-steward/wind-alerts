@@ -5,7 +5,6 @@ import cats.effect.Effect
 import cats.implicits._
 import com.uptech.windalerts.core.{OtpNotFoundError, RefreshTokenExpiredError, RefreshTokenNotFoundError, TokenNotFoundError, UserAlreadyExistsError, UserAuthenticationFailedError, UserNotFoundError}
 import com.uptech.windalerts.core.credentials.UserCredentialService
-import com.uptech.windalerts.core.feedbacks.Feedback
 import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.social.subscriptions.SubscriptionsService
 import com.uptech.windalerts.core.user.{UserId, UserRolesService, UserService}
@@ -163,20 +162,6 @@ class UsersEndpoints[F[_] : Effect]
             case Right(response) => Ok()
             case Left(UserNotFoundError(_)) => NotFound("User not found")
           }
-        })
-      }
-
-
-      case authReq@POST -> Root / "feedbacks" as user => {
-        OptionT.liftF(authReq.req.decode[FeedbackRequest] {
-          request =>
-            (for {
-              response <- OptionT.liftF(userService.createFeedback(Feedback(request.topic, request.message, user.id)))
-            } yield response)
-              .value
-              .flatMap {
-                case _ => Ok()
-              }
         })
       }
 

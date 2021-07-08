@@ -112,7 +112,4 @@ object dtos {
   case class TokenResponse(access_token: String, id_token: String)
 
   case class AppleUser(sub: String, email: String)
-
-  case class FeedbackRequest(topic: String, message: String)
-
 }
