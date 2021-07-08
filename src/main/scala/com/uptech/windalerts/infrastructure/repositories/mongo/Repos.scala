@@ -16,10 +16,6 @@ import org.mongodb.scala.{MongoClient, MongoDatabase}
 import java.io.File
 
 trait Repos[F[_]] {
-  def alertsRepository(): AlertsRepository[F]
-
-  def notificationsRepo(): NotificationRepository[F]
-
   def androidPublisher(): AndroidPublisher
 
   def fbSecret() : String
@@ -46,13 +42,6 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
 
   var  maybeDb:MongoDatabase = _
 
-  val alRepo = Eval.later {
-    new MongoAlertsRepository(db.getCollection[Alert]("alerts"))
-  }
-
-  val nRepo = Eval.later {
-    new MongoNotificationsRepository(db.getCollection[Notification]("notifications"))
-  }
 
   val andConf = Eval.later(AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL))
 
@@ -61,20 +50,6 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
     secrets.read.surfsUp.facebook.key
   }
 
-  override def alertsRepository = {
-    alRepo.value
-  }
-
-  override def notificationsRepo = {
-    nRepo.value
-  }
-
-  private def db() = {
-
-    if (maybeDb == null)
-      maybeDb = Eval.later{Repos.acquireDb}.value
-    maybeDb
-  }
 
   override def androidPublisher(): AndroidPublisher = {
     andConf.value
