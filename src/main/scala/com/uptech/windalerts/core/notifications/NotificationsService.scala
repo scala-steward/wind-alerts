@@ -14,7 +14,7 @@ import org.log4s.getLogger
 
 import scala.util.Try
 
-class NotificationsService[F[_] : Sync](N:NotificationRepository[F], U:UserRepository[F],  A: AlertsService[F], B: BeachService[F], repos: Repos[F], notificationSender: NotificationsSender[F])
+class NotificationsService[F[_] : Sync](N:NotificationRepository[F], U:UserRepository[F],  A: AlertsService[F], B: BeachService[F], notificationSender: NotificationsSender[F])
                                        (implicit F: Async[F]){
   private val logger = getLogger
 

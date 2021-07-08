@@ -7,17 +7,20 @@ import com.uptech.windalerts.core.credentials.{AppleCredentials, FacebookCredent
 import com.uptech.windalerts.core.user.{TokensWithUser, UserRepository, UserService, UserT}
 import com.uptech.windalerts.core.{SurfsUpError, UserAlreadyExistsError}
 import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
+import com.uptech.windalerts.infrastructure.social.login.{AppleLogin, FacebookLogin}
 import org.mongodb.scala.bson.ObjectId
 
-class SocialLoginService[F[_] : Sync](facebookCredentialsRepo: SocialCredentialsRepository[F, FacebookCredentials],
+class SocialLoginService[F[_] : Sync](appleLogin: AppleLogin[F],
+                                      facebookLogin: FacebookLogin[F],
+                                      facebookCredentialsRepo: SocialCredentialsRepository[F, FacebookCredentials],
                                       appleCredentialsRepo: SocialCredentialsRepository[F, AppleCredentials],
                                       userRepository: UserRepository[F],
-                                      repos: Repos[F], userService: UserService[F],
+                                      userService: UserService[F],
                                       credentialService: UserCredentialService[F]) {
 
   def registerOrLoginAppleUser(credentials: AppleAccessRequest): EitherT[F, SurfsUpError, TokensWithUser] = {
     registerOrLoginUser[AppleAccessRequest, AppleCredentials](credentials,
-      repos.applePlatform(),
+      appleLogin,
       socialUser => appleCredentialsRepo.find(socialUser.email, socialUser.deviceType),
       socialUser => appleCredentialsRepo.create(AppleCredentials(socialUser.email, socialUser.socialId, socialUser.deviceType)))
   }
@@ -25,7 +28,7 @@ class SocialLoginService[F[_] : Sync](facebookCredentialsRepo: SocialCredentials
 
   def registerOrLoginFacebookUser(credentials: FacebookAccessRequest): EitherT[F, SurfsUpError, TokensWithUser] = {
     registerOrLoginUser[FacebookAccessRequest, FacebookCredentials](credentials,
-      repos.facebookPlatform(),
+      facebookLogin,
       socialUser => facebookCredentialsRepo.find(socialUser.email, socialUser.deviceType),
       socialUser => facebookCredentialsRepo.create(FacebookCredentials(socialUser.email, socialUser.socialId, socialUser.deviceType)))
   }

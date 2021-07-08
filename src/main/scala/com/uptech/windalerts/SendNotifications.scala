@@ -21,7 +21,7 @@ import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints.NotificationEndpoints
 import com.uptech.windalerts.infrastructure.notifications.FirebaseBasedNotificationsSender
-import com.uptech.windalerts.infrastructure.repositories.mongo.{LazyRepos, MongoAlertsRepository, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoNotificationsRepository, MongoOtpRepository, MongoRefreshTokenRepository, MongoSocialCredentialsRepository, MongoUserRepository, Repos}
+import com.uptech.windalerts.infrastructure.repositories.mongo.{ MongoAlertsRepository, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoNotificationsRepository, MongoOtpRepository, MongoRefreshTokenRepository, MongoSocialCredentialsRepository, MongoUserRepository, Repos}
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AppleSubscription, SubscriptionsServiceImpl}
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
@@ -37,7 +37,6 @@ object SendNotifications extends IOApp {
   logger.error("Starting")
   val started = System.currentTimeMillis()
   sys.addShutdownHook(getLogger.error(s"Shutting down after ${(System.currentTimeMillis() - started)} ms"))
-  val repos = new LazyRepos()
 
   val firebaseMessaging = (for {
     projectId <- IO(sys.env("projectId"))
@@ -77,17 +76,17 @@ object SendNotifications extends IOApp {
   val alertsRepository = new MongoAlertsRepository(db.getCollection[Alert]("alerts"))
   val notificationsRepository = new MongoNotificationsRepository(db.getCollection[Notification]("notifications"))
   val userCredentialsService = new UserCredentialService[IO](facebookCredentialsRepository, appleCredentialsRepository, credentialsRepository, usersRepository, refreshTokenRepository, emailSender)
-  val usersService = new UserService(usersRepository, repos, userCredentialsService, otpService, auth, refreshTokenRepository)
+  val usersService = new UserService(usersRepository, userCredentialsService, otpService, auth, refreshTokenRepository)
   val appleSubscription = new AppleSubscription[IO]
   val androidSubscription = new AppleSubscription[IO]
 
-  val subscriptionService = new SubscriptionsServiceImpl(applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription, repos)
+  val subscriptionService = new SubscriptionsServiceImpl(applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
 
-  val userRolesService = new UserRolesService(applePurchaseRepository, androidPurchaseRepository, alertsRepository, usersRepository, otpRepository, repos, subscriptionService, usersService)
+  val userRolesService = new UserRolesService(applePurchaseRepository, androidPurchaseRepository, alertsRepository, usersRepository, otpRepository, subscriptionService, usersService)
 
   val alerts = new AlertsService[IO](alertsRepository, usersService, userRolesService)
   val notificationsSender = new FirebaseBasedNotificationsSender[IO](firebaseMessaging, beachSeq, appConf )
-  val notifications = new NotificationsService(notificationsRepository, usersRepository, alerts, beachesService, repos, notificationsSender)
+  val notifications = new NotificationsService(notificationsRepository, usersRepository, alerts, beachesService, notificationsSender)
   val notificationsEndPoints = new NotificationEndpoints[IO](notifications)
 
 

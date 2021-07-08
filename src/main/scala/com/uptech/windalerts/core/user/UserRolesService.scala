@@ -19,8 +19,8 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
                                     alertsRepository: AlertsRepository[F],
                                     userRepository: UserRepository[F],
                                     otpRepository: OtpRepository[F],
-                                    repos: Repos[F],
-                                    subscriptionsService: SubscriptionsService[F], userService: UserService[F]) {
+                                    subscriptionsService: SubscriptionsService[F],
+                                    userService: UserService[F]) {
   def makeUserTrial(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
     userRepository.update(user.copy(
       userType = Trial.value,
