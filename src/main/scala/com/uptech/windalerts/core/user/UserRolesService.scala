@@ -4,7 +4,7 @@ import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
 import com.uptech.windalerts.config.secrets
-import com.uptech.windalerts.core.alerts.Alerts
+import com.uptech.windalerts.core.alerts.{Alerts, AlertsRepository}
 import com.uptech.windalerts.core.otp.OtpRepository
 import com.uptech.windalerts.core.social.subscriptions.{AndroidTokenRepository, AppleTokenRepository, SubscriptionsService}
 import com.uptech.windalerts.core.user.UserType.{Premium, PremiumExpired, Trial}
@@ -16,6 +16,7 @@ import io.circe.parser.parse
 
 class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepository[F],
                                     androidPurchaseRepository: AndroidTokenRepository[F],
+                                    alertsRepository: AlertsRepository[F],
                                     userRepository: UserRepository[F],
                                     otpRepository: OtpRepository[F],
                                     repos: Repos[F],
@@ -35,14 +36,14 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
   def makeUserPremiumExpired(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
     for {
       operationResult <- userRepository.update(user.copy(userType = PremiumExpired.value, nextPaymentAt = -1)).toRight(UserNotFoundError())
-      _ <- EitherT.liftF(repos.alertsRepository().disableAllButOneAlerts(user._id.toHexString))
+      _ <- EitherT.liftF(alertsRepository.disableAllButOneAlerts(user._id.toHexString))
     } yield operationResult
   }
 
   private def makeUserTrialExpired(eitherUser: UserT): EitherT[F, UserNotFoundError, UserT] = {
     for {
       updated <- update(eitherUser.copy(userType = UserType.TrialExpired.value, lastPaymentAt = -1, nextPaymentAt = -1))
-      _ <- EitherT.liftF(repos.alertsRepository().disableAllButOneAlerts(updated._id.toHexString))
+      _ <- EitherT.liftF(alertsRepository.disableAllButOneAlerts(updated._id.toHexString))
     } yield updated
   }
 
@@ -111,7 +112,7 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
   }
   
   def authorizeAlertEditRequest(user: UserT, alertId: String, alertRequest: AlertRequest): EitherT[F, OperationNotAllowed, UserT] = {
-    EitherT.liftF(repos.alertsRepository().getAllForUser(user._id.toHexString))
+    EitherT.liftF(alertsRepository.getAllForUser(user._id.toHexString))
       .flatMap(alerts => EitherT.fromEither(authorizeAlertEditRequest(user, alertId, alerts, alertRequest)))
   }
 

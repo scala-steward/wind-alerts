@@ -4,7 +4,7 @@ import cats.Eval
 import cats.effect.{ContextShift, IO}
 import com.google.api.services.androidpublisher.AndroidPublisher
 import com.uptech.windalerts.config.secrets
-import com.uptech.windalerts.core.alerts.AlertsRepositoryT
+import com.uptech.windalerts.core.alerts.AlertsRepository
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.notifications.{Notification, NotificationRepository}
 import com.uptech.windalerts.core.social.login.{AppleAccessRequest, FacebookAccessRequest, SocialLogin}
@@ -16,7 +16,7 @@ import org.mongodb.scala.{MongoClient, MongoDatabase}
 import java.io.File
 
 trait Repos[F[_]] {
-  def alertsRepository(): AlertsRepositoryT[F]
+  def alertsRepository(): AlertsRepository[F]
 
   def notificationsRepo(): NotificationRepository[F]
 
@@ -47,7 +47,7 @@ class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
   var  maybeDb:MongoDatabase = _
 
   val alRepo = Eval.later {
-    new MongoAlertsRepositoryAlgebra(db.getCollection[Alert]("alerts"))
+    new MongoAlertsRepository(db.getCollection[Alert]("alerts"))
   }
 
   val nRepo = Eval.later {
