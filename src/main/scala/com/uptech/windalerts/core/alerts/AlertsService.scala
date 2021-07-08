@@ -10,7 +10,7 @@ import com.uptech.windalerts.core.user.{AuthenticationService, UserId, UserRoles
 import com.uptech.windalerts.infrastructure.endpoints.dtos.{AlertDTO, AlertRequest}
 import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 
-class AlertsService[F[_] : Sync](usersService: UserService[F], userRolesService: UserRolesService[F], repo: Repos[F]) {
+class AlertsService[F[_] : Sync](alertsRepository: AlertsRepository[F], usersService: UserService[F], userRolesService: UserRolesService[F]) {
   def createAlert(u: UserId, r: AlertRequest) = {
     for {
       dbUser <- usersService.getUser(u.id)
@@ -20,7 +20,7 @@ class AlertsService[F[_] : Sync](usersService: UserService[F], userRolesService:
   }
 
   private def save(u: UserId, r: AlertRequest):cats.data.EitherT[F, SurfsUpError, AlertDTO] = {
-    EitherT.liftF(repo.alertsRepository().save(r, u.id)).map(_.asDTO())
+    EitherT.liftF(alertsRepository.save(r, u.id)).map(_.asDTO())
   }
 
   def update(alertId: String, u: UserId, r: AlertRequest):EitherT[F, SurfsUpError, AlertDTO] = {
@@ -31,18 +31,18 @@ class AlertsService[F[_] : Sync](usersService: UserService[F], userRolesService:
     } yield saved
   }
 
-  def update(requester: String, alertId: String, updateAlertRequest: AlertRequest): EitherT[F, AlertNotFoundError, Alert] = repo.alertsRepository().update(requester, alertId, updateAlertRequest)
+  def update(requester: String, alertId: String, updateAlertRequest: AlertRequest): EitherT[F, AlertNotFoundError, Alert] = alertsRepository.update(requester, alertId, updateAlertRequest)
 
-  def getAllForUser(user: String): F[Alerts] = repo.alertsRepository().getAllForUser(user)
+  def getAllForUser(user: String): F[Alerts] = alertsRepository.getAllForUser(user)
 
 
   def getAllForDayAndTimeRange()(implicit F: Functor[F]): EitherT[F, Exception, Seq[Alert]] = {
-    EitherT.liftF(repo.alertsRepository().getAllEnabled())
+    EitherT.liftF(alertsRepository.getAllEnabled())
       .map(_.filter(_.isToBeAlertedNow()))
   }
 
   def delete(requester: String, alertId: String) = {
-    repo.alertsRepository().delete(requester, alertId)
+    alertsRepository.delete(requester, alertId)
   }
 }
 

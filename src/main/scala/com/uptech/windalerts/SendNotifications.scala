@@ -9,6 +9,7 @@ import com.softwaremill.sttp.HttpURLConnectionBackend
 import com.uptech.windalerts.SendNotifications.firebaseMessaging
 import com.uptech.windalerts.config._
 import com.uptech.windalerts.core.alerts.AlertsService
+import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.credentials.{AppleCredentials, Credentials, FacebookCredentials, UserCredentialService}
 import com.uptech.windalerts.core.notifications.NotificationsService
@@ -20,7 +21,7 @@ import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints.NotificationEndpoints
 import com.uptech.windalerts.infrastructure.notifications.FirebaseBasedNotificationsSender
-import com.uptech.windalerts.infrastructure.repositories.mongo.{LazyRepos, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoOtpRepository, MongoRefreshTokenRepository, MongoSocialCredentialsRepository, MongoUserRepository, Repos}
+import com.uptech.windalerts.infrastructure.repositories.mongo.{LazyRepos, MongoAlertsRepository, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoOtpRepository, MongoRefreshTokenRepository, MongoSocialCredentialsRepository, MongoUserRepository, Repos}
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AppleSubscription, SubscriptionsServiceImpl}
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
@@ -73,7 +74,7 @@ object SendNotifications extends IOApp {
   val appleCredentialsRepository = new MongoSocialCredentialsRepository[IO, AppleCredentials](db.getCollection[AppleCredentials]("appleCredentials"))
   val androidPurchaseRepository = new MongoAndroidPurchaseRepository(db.getCollection[AndroidToken]("androidPurchases"))
   val applePurchaseRepository = new MongoApplePurchaseRepository(db.getCollection[AppleToken]("applePurchases"))
-
+  val alertsRepository = new MongoAlertsRepository(db.getCollection[Alert]("alerts"))
   val userCredentialsService = new UserCredentialService[IO](facebookCredentialsRepository, appleCredentialsRepository, credentialsRepository, usersRepository, refreshTokenRepository, emailSender)
   val usersService = new UserService(usersRepository, repos, userCredentialsService, otpService, auth, refreshTokenRepository)
   val appleSubscription = new AppleSubscription[IO]
@@ -81,9 +82,9 @@ object SendNotifications extends IOApp {
 
   val subscriptionService = new SubscriptionsServiceImpl(applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription, repos)
 
-  val userRolesService = new UserRolesService(applePurchaseRepository, androidPurchaseRepository, usersRepository, otpRepository, repos, subscriptionService, usersService)
+  val userRolesService = new UserRolesService(applePurchaseRepository, androidPurchaseRepository, alertsRepository, usersRepository, otpRepository, repos, subscriptionService, usersService)
 
-  val alerts = new AlertsService[IO](usersService, userRolesService, repos)
+  val alerts = new AlertsService[IO](alertsRepository, usersService, userRolesService)
   val notificationsSender = new FirebaseBasedNotificationsSender[IO](firebaseMessaging, beachSeq, appConf )
   val notifications = new NotificationsService(usersRepository, alerts, beachesService, repos, notificationsSender)
   val notificationsEndPoints = new NotificationEndpoints[IO](notifications)

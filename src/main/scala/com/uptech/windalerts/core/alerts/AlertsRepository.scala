@@ -5,7 +5,7 @@ import com.uptech.windalerts.core.AlertNotFoundError
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
 
-trait AlertsRepositoryT[F[_]] {
+trait AlertsRepository[F[_]] {
   def disableAllButOneAlerts(userId: String): F[Seq[Alert]]
 
   def getAllEnabled(): F[Seq[Alert]]

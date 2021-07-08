@@ -7,6 +7,7 @@ import com.softwaremill.sttp.HttpURLConnectionBackend
 import com.uptech.windalerts.SendNotifications.repos
 import com.uptech.windalerts.config.{beaches, secrets, swellAdjustments}
 import com.uptech.windalerts.core.alerts.AlertsService
+import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.credentials.{AppleCredentials, Credentials, FacebookCredentials, UserCredentialService}
 import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry}
@@ -18,7 +19,7 @@ import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.beaches._
 import com.uptech.windalerts.infrastructure.endpoints._
 import com.uptech.windalerts.infrastructure.endpoints.logger._
-import com.uptech.windalerts.infrastructure.repositories.mongo.{LazyRepos, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoOtpRepository, MongoRefreshTokenRepository, MongoSocialCredentialsRepository, MongoUserRepository, Repos}
+import com.uptech.windalerts.infrastructure.repositories.mongo.{LazyRepos, MongoAlertsRepository, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoOtpRepository, MongoRefreshTokenRepository, MongoSocialCredentialsRepository, MongoUserRepository, Repos}
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AndroidSubscription, AppleSubscription, SubscriptionsServiceImpl}
 import org.http4s.implicits._
 import org.http4s.rho.swagger.SwaggerMetadata
@@ -63,7 +64,7 @@ object UsersServer extends IOApp {
         appleCredentialsRepository = new MongoSocialCredentialsRepository[IO, AppleCredentials](db.getCollection[AppleCredentials]("appleCredentials"))
         androidPurchaseRepository = new MongoAndroidPurchaseRepository(db.getCollection[AndroidToken]("androidPurchases"))
         applePurchaseRepository = new MongoApplePurchaseRepository(db.getCollection[AppleToken]("applePurchases"))
-
+        alertsRepository = new MongoAlertsRepository(db.getCollection[Alert]("alerts"))
         userCredentialsService <- IO(new UserCredentialService[IO](facebookCredentialsRepository, appleCredentialsRepository, credentialsRepository, usersRepository, refreshTokenRepository, emailSender))
         usersService <- IO(new UserService(usersRepository, repos, userCredentialsService, otpService, auth, refreshTokenRepository))
         socialLoginService <- IO(new SocialLoginService(facebookCredentialsRepository, appleCredentialsRepository, usersRepository, repos, usersService, userCredentialsService))
@@ -71,7 +72,7 @@ object UsersServer extends IOApp {
         appleSubscription <- IO(new AppleSubscription[IO]())
         androidSubscription <- IO(new AndroidSubscription[IO](repos))
         subscriptionsService <- IO(new SubscriptionsServiceImpl[IO](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription, repos))
-        userRolesService <- IO(new UserRolesService[IO](applePurchaseRepository, androidPurchaseRepository, usersRepository, otpRepositoy, repos, subscriptionsService, usersService))
+        userRolesService <- IO(new UserRolesService[IO](applePurchaseRepository, androidPurchaseRepository, alertsRepository, usersRepository, otpRepositoy, repos, subscriptionsService, usersService))
 
         apiKey <- IO(secrets.read.surfsUp.willyWeather.key)
         beachesConfig: Map[Long, beaches.Beach] = com.uptech.windalerts.config.beaches.read
@@ -80,7 +81,7 @@ object UsersServer extends IOApp {
 
         endpoints <- IO(new UsersEndpoints(userCredentialsService, usersService, socialLoginService, userRolesService, subscriptionsService))
 
-        alertService <- IO(new AlertsService[IO](usersService, userRolesService, repos))
+        alertService <- IO(new AlertsService[IO](alertsRepository, usersService, userRolesService))
         alertsEndPoints <- IO(new AlertsEndpoints(alertService))
         beachesEndpointsRho = new BeachesEndpointsRho[IO](beaches).toRoutes(swaggerUiRhoMiddleware)
 
