@@ -16,8 +16,6 @@ import org.mongodb.scala.{MongoClient, MongoDatabase}
 import java.io.File
 
 trait Repos[F[_]] {
-  def androidPublisher(): AndroidPublisher
-
   def fbSecret() : String
 
   def applePlatform(): SocialLogin[F, AppleAccessRequest]
@@ -40,20 +38,13 @@ object Repos{
 }
 class LazyRepos(implicit cs: ContextShift[IO]) extends Repos[IO] {
 
-  var  maybeDb:MongoDatabase = _
 
-
-  val andConf = Eval.later(AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL))
 
 
   val fbKey = Eval.later {
     secrets.read.surfsUp.facebook.key
   }
 
-
-  override def androidPublisher(): AndroidPublisher = {
-    andConf.value
-  }
 
   override  def fbSecret = fbKey.value
 
