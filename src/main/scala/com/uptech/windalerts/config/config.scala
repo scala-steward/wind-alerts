@@ -1,5 +1,6 @@
 package com.uptech.windalerts.config
 
+import com.google.common.io.Files
 import com.uptech.windalerts.config.beaches.Beaches
 import com.uptech.windalerts.config.secrets.SurfsUp
 import io.circe._
@@ -145,10 +146,13 @@ object secrets {
     import org.log4s.getLogger
     getLogger.error(projectId)
     getLogger.error("File exists " + new File(s"/app/resources/$projectId.secrets").exists())
-    getLogger.error("File exists " + new File(s"src/main/resources/$projectId.secrets").exists())
+    getLogger.error("File exists " + new File(s"src/main/resources/secrets.conf").exists())
 
     val prodFile = new File(s"/app/resources/$projectId.secrets")
-    if (prodFile.exists()) prodFile
+    if (prodFile.exists()) {
+      getLogger.error(scala.io.Source.fromFile(s"/app/resources/$projectId.secrets").mkString)
+      prodFile
+    }
     else {
       new File("src/main/resources/secrets.conf")
     }
