@@ -131,4 +131,13 @@ object secrets {
     Option(parser.decodeFile[SecretsSettings](new File(s"/app/resources/$projectId.secrets")).toOption
       .getOrElse(parser.decodeFile[SecretsSettings](new File(s"src/main/resources/secrets.conf")).toOption.get)).get
   }
+
+  def getConfigFile():File = {
+    val projectId = sys.env("projectId")
+    val prodFile = new File(s"/app/resources/$projectId.secrets")
+    if (prodFile.exists()) prodFile
+    else {
+      new File("src/main/resources/secrets.conf")
+    }
+  }
 }
