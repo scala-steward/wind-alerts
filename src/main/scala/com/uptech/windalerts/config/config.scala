@@ -145,12 +145,11 @@ object secrets {
     val projectId = sys.env("projectId")
     import org.log4s.getLogger
     getLogger.error(projectId)
-    getLogger.error("File exists " + new File(s"/app/resources/$projectId.secrets").exists())
+    getLogger.error("File exists " + new File(s"/app/resources/secrets-$projectId.conf").exists())
     getLogger.error("File exists " + new File(s"src/main/resources/secrets.conf").exists())
 
     val prodFile = new File(s"/app/resources/$projectId.secrets")
     if (prodFile.exists()) {
-      getLogger.error(scala.io.Source.fromFile(s"/app/resources/$projectId.secrets").mkString)
       prodFile
     }
     else {
