@@ -134,6 +134,11 @@ object secrets {
 
   def getConfigFile():File = {
     val projectId = sys.env("projectId")
+    import org.log4s.getLogger
+    getLogger.error(projectId)
+    getLogger.error("File exists " + new File(s"/app/resources/$projectId.secrets").exists())
+    getLogger.error("File exists " + new File(s"src/main/resources/$projectId.secrets").exists())
+
     val prodFile = new File(s"/app/resources/$projectId.secrets")
     if (prodFile.exists()) prodFile
     else {
