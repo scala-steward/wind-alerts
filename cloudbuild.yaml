@@ -41,4 +41,7 @@ steps:
   - name: 'gcr.io/cloud-builders/gcloud'
     args: ['beta', 'run', 'deploy', 'wind-alerts-subscriptions', '--image', 'gcr.io/$PROJECT_ID/wind-alerts-subscriptions:1.0-SNAPSHOT', '--region', 'asia-northeast1','--platform', 'managed', '--quiet', '--memory', '1024Mi', '--concurrency', '1',  '--allow-unauthenticated', '--set-env-vars', 'projectId=$PROJECT_ID']
     timeout: 10m
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: ['beta', 'run', 'deploy', 'wind-alerts-beaches', '--image', 'gcr.io/$PROJECT_ID/wind-alerts-beaches:1.0-SNAPSHOT', '--region', 'asia-northeast1','--platform', 'managed', '--quiet', '--memory', '1024Mi', '--concurrency', '80',  '--allow-unauthenticated', '--set-env-vars', 'projectId=$PROJECT_ID']
+    timeout: 10m
 

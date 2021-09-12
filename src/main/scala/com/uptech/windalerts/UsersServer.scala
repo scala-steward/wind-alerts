@@ -2,7 +2,6 @@ package com.uptech.windalerts
 
 import cats.effect.{Blocker, ExitCode, IO, IOApp}
 import cats.implicits._
-import com.http4s.rho.swagger.ui.SwaggerUi
 import com.softwaremill.sttp.HttpURLConnectionBackend
 import com.uptech.windalerts.config.{beaches, secrets, swellAdjustments}
 import com.uptech.windalerts.core.alerts.AlertsService
@@ -21,10 +20,9 @@ import com.uptech.windalerts.infrastructure.endpoints.logger._
 import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoAlertsRepository, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoOtpRepository, MongoRefreshTokenRepository, MongoSocialCredentialsRepository, MongoUserRepository, Repos}
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AndroidPublisherHelper, AndroidSubscription, AppleSubscription, ApplicationConfig, SubscriptionsServiceImpl}
 import org.http4s.implicits._
-import org.http4s.rho.swagger.SwaggerMetadata
-import org.http4s.rho.swagger.models.{Info, Tag}
-import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
+
+import org.http4s.server.Router
 import org.http4s.server.middleware.Logger
 import org.log4s.getLogger
 
@@ -37,14 +35,6 @@ object UsersServer extends IOApp {
     Blocker[IO].use { blocker =>
       for {
         _ <- IO(getLogger.error("Starting"))
-        metadata = SwaggerMetadata(
-          apiInfo = Info(title = "Beaches Swagger", version = "v2"),
-          basePath = Some("/v2/beaches"),
-          tags = List(Tag(name = "Beaches", description = Some("These are the beaches status routes.")))
-        )
-
-        swaggerUiRhoMiddleware =
-        SwaggerUi[IO].createRhoMiddleware(blocker, swaggerMetadata = metadata)
 
         db = Repos.acquireDb
         refreshTokenRepository = new MongoRefreshTokenRepository(db.getCollection[RefreshToken]("refreshTokens"))
@@ -83,7 +73,6 @@ object UsersServer extends IOApp {
 
         alertService <- IO(new AlertsService[IO](alertsRepository, usersService, userRolesService))
         alertsEndPoints <- IO(new AlertsEndpoints(alertService))
-        beachesEndpointsRho = new BeachesEndpointsRho[IO](beaches).toRoutes(swaggerUiRhoMiddleware)
 
       httpApp <- IO(errors.errorMapper(Logger.httpApp(true, true, logAction = requestLogger)(
         Router(
@@ -92,7 +81,6 @@ object UsersServer extends IOApp {
           "/v1/users/social/facebook" -> endpoints.facebookEndpoints(),
           "/v1/users/social/apple" -> endpoints.appleEndpoints(),
           "/v1/users/alerts" -> auth.middleware(alertsEndPoints.allUsersService()),
-          "/v2/beaches" -> beachesEndpointsRho,
           "/v1/beaches" -> new BeachesEndpoints[IO](beaches).allRoutes(),
           "" -> new SwaggerEndpoints[IO]().endpoints(blocker),
 

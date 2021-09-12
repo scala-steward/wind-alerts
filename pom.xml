@@ -13,12 +13,79 @@
         <scala.compat.version>2.13</scala.compat.version>
         <spec2.version>4.2.0</spec2.version>
         <envProjectId>wind-alerts-staging</envProjectId>
+        <http4s.version>0.21.28</http4s.version>
+        <cats.version>2.6.1</cats.version>
+        <circe.version>0.14.1</circe.version>
+        <circeGeneric.version>0.14.1</circeGeneric.version>
+        <circeGenericExtras.version>0.14.1</circeGenericExtras.version>
+        <circeConfig.version>0.8.0</circeConfig.version>
+
     </properties>
     <dependencies>
         <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>${scala.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.http4s</groupId>
-            <artifactId>rho-swagger_2.13</artifactId>
-            <version>0.21.0</version>
+            <artifactId>http4s-blaze-server_2.13</artifactId>
+            <version>${http4s.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.http4s</groupId>
+            <artifactId>http4s-blaze-client_2.13</artifactId>
+            <version>${http4s.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.http4s</groupId>
+            <artifactId>http4s-dsl_2.13</artifactId>
+            <version>${http4s.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.circe</groupId>
+            <artifactId>circe-config_2.13</artifactId>
+            <version>${circeConfig.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.circe</groupId>
+            <artifactId>circe-core_2.13</artifactId>
+            <version>${circe.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.circe</groupId>
+            <artifactId>circe-parser_2.13</artifactId>
+            <version>${circe.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.circe</groupId>
+            <artifactId>circe-generic_2.13</artifactId>
+            <version>${circe.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.circe</groupId>
+            <artifactId>circe-optics_2.13</artifactId>
+            <version>${circe.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.circe</groupId>
+            <artifactId>circe-generic-extras_2.13</artifactId>
+            <version>${circeGenericExtras.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.http4s</groupId>
+            <artifactId>http4s-circe_2.13</artifactId>
+            <version>${http4s.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.typelevel</groupId>
+            <artifactId>cats-core_2.13</artifactId>
+            <version>${cats.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.softwaremill.sttp</groupId>
+            <artifactId>core_2.13</artifactId>
+            <version>1.6.4</version>
         </dependency>
         <dependency>
             <groupId>org.webjars</groupId>
@@ -31,11 +98,6 @@
             <version>3.48.0</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.http4s</groupId>
-            <artifactId>rho-swagger-ui_2.13</artifactId>
-            <version>0.21.0</version>
-        </dependency>
         <dependency>
             <groupId>io.scalaland</groupId>
             <artifactId>chimney_2.13</artifactId>
@@ -56,67 +118,7 @@
             <artifactId>google-api-services-androidpublisher</artifactId>
             <version>v3-rev20191113-1.30.3</version>
         </dependency>
-        <dependency>
-            <groupId>org.typelevel</groupId>
-            <artifactId>cats-core_2.13</artifactId>
-            <version>2.1.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.typelevel</groupId>
-            <artifactId>cats-effect_2.13</artifactId>
-            <version>2.1.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-library</artifactId>
-            <version>${scala.version}</version>
-        </dependency>
 
-        <dependency>
-            <groupId>org.http4s</groupId>
-            <artifactId>http4s-blaze-server_2.13</artifactId>
-            <version>0.21.7</version>
-        </dependency>
-        <dependency>
-            <groupId>org.http4s</groupId>
-            <artifactId>http4s-blaze-client_2.13</artifactId>
-            <version>0.21.7</version>
-        </dependency>
-        <dependency>
-            <groupId>org.http4s</groupId>
-            <artifactId>http4s-circe_2.13</artifactId>
-            <version>0.21.7</version>                           
-        </dependency>
-        <dependency>
-            <groupId>org.http4s</groupId>
-            <artifactId>http4s-dsl_2.13</artifactId>
-            <version>0.21.7</version>
-        </dependency>
-        <dependency>
-            <groupId>io.circe</groupId>
-            <artifactId>circe-core_2.13</artifactId>
-            <version>0.12.1</version>
-        </dependency>
-        <dependency>
-            <groupId>io.circe</groupId>
-            <artifactId>circe-parser_2.13</artifactId>
-            <version>0.12.1</version>
-        </dependency>
-        <dependency>
-            <groupId>io.circe</groupId>
-            <artifactId>circe-generic_2.13</artifactId>
-            <version>0.12.1</version>
-        </dependency>
-        <dependency>
-            <groupId>io.circe</groupId>
-            <artifactId>circe-optics_2.13</artifactId>
-            <version>0.12.0</version>
-        </dependency>
-        <dependency>
-            <groupId>io.circe</groupId>
-            <artifactId>circe-generic-extras_2.13</artifactId>
-            <version>0.13.0</version>
-        </dependency>
         <dependency>
             <groupId>org.mongodb.scala</groupId>
             <artifactId>mongo-scala-driver_2.13</artifactId>
@@ -137,11 +139,7 @@
             <artifactId>firebase-admin</artifactId>
             <version>6.9.0</version>
         </dependency>
-        <dependency>
-            <groupId>com.softwaremill.sttp</groupId>
-            <artifactId>core_2.13</artifactId>
-            <version>1.6.4</version>
-        </dependency>
+
         <dependency>
             <groupId>javax.mail</groupId>
             <artifactId>mail</artifactId>
@@ -197,11 +195,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-            <groupId>io.circe</groupId>
-            <artifactId>circe-config_2.13</artifactId>
-            <version>0.7.0</version>
-        </dependency>
+
         <dependency>
             <groupId>com.restfb</groupId>
             <artifactId>restfb</artifactId>
@@ -269,7 +263,7 @@
                 <configuration>
                     <container>
                         <jvmFlags>
-                            <jvmFlag>-Duser.timezone=Australia/Sydeny</jvmFlag>
+                            <jvmFlag>-Duser.timezone=Australia/Sydney</jvmFlag>
                         </jvmFlags>
                         <mainClass>${profile.mainClass}</mainClass>
                     </container>
@@ -301,6 +295,13 @@
             <properties>
                 <profile.mainClass>com.uptech.windalerts.UpdateUserRolesServer</profile.mainClass>
                 <image>gcr.io/${envProjectId}/wind-alerts-subscriptions:${project.version}</image>
+            </properties>
+        </profile>
+        <profile>
+            <id>beaches</id>
+            <properties>
+                <profile.mainClass>com.uptech.windalerts.BeachesServer</profile.mainClass>
+                <image>gcr.io/${envProjectId}/wind-alerts-beaches:${project.version}</image>
             </properties>
         </profile>
     </profiles>
