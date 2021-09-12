@@ -1,6 +1,7 @@
 package com.uptech.windalerts.config
 
 import com.uptech.windalerts.config.beaches.Beaches
+import com.uptech.windalerts.config.secrets.SurfsUp
 import io.circe._
 import io.circe.config.parser
 import io.circe.generic.auto._
@@ -11,14 +12,36 @@ import java.io.File
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
 
+object config {
+  implicit val decoder: Decoder[SurfsUp] = deriveDecoder
+
+  def getConfigFile(name:String):File = {
+    val prodFile = new File(s"/app/resources/$name")
+    if (prodFile.exists()) prodFile
+    else {
+      new File(s"src/main/resources/$name")
+    }
+  }
+  case class AppConfig(surfsUp: SurfsUp)
+
+  case class SurfsUp(notifications: Notifications)
+
+  case class Notifications(title: String, body: String)
+
+  def read: AppConfig = {
+    Option(parser.decodeFile[AppConfig](new File(s"/app/resources/application.conf")).toOption
+      .getOrElse(parser.decodeFile[AppConfig](new File(s"src/main/resources/application.conf")).toOption.get)).get
+  }
+}
+
 object swellAdjustments {
 
   case class Adjustments(adjustments: Seq[Adjustment]) {
     def adjust(height: Double): Double = {
       height *
         adjustments
-        .filter(adjustment => adjustment.from <= height && adjustment.to >= height)
-        .headOption.map(_.factor).getOrElse(1.0)
+          .filter(adjustment => adjustment.from <= height && adjustment.to >= height)
+          .headOption.map(_.factor).getOrElse(1.0)
     }
 
   }
@@ -46,8 +69,11 @@ object statics {
 }
 
 object beaches {
-
-  case class Beaches(beaches: Seq[Beach])
+  case class Beaches(beaches: Seq[Beach]) {
+    def toMap() = {
+      beaches.groupBy(_.id).toMap.mapValues(x => x.head).toMap
+    }
+  }
 
   case class Beach(id: Long, location: String, postCode: Long, region: String)
 
@@ -62,8 +88,10 @@ object beaches {
       case Failure(_) => Source.fromFile("src/main/resources/beaches-v4.json").getLines.mkString
       case Success(_) => tryProd.get
     }
-    decode[Beaches](jsonContents).toOption.get.beaches.groupBy(_.id).toMap.mapValues(x=>x.head).toMap
+    val beaches1 = decode[Beaches](jsonContents).toOption.get.beaches
+    beaches1.groupBy(_.id).toMap.mapValues(x => x.head).toMap
   }
+
 }
 
 object A extends App {
@@ -75,21 +103,9 @@ object A extends App {
   val all = decode[Beaches](jsonContents).toOption.get.beaches
 }
 
-object config {
-
-  case class AppConfig(surfsUp: SurfsUp)
-
-  case class SurfsUp(notifications: Notifications)
-
-  case class Notifications(title: String, body: String)
-
-  def read: AppConfig = {
-    Option(parser.decodeFile[AppConfig](new File(s"/app/resources/application.conf")).toOption
-      .getOrElse(parser.decodeFile[AppConfig](new File(s"src/main/resources/application.conf")).toOption.get)).get
-  }
-}
 
 object secrets {
+  implicit val decoder: Decoder[SurfsUp] = deriveDecoder
 
   case class SecretsSettings(surfsUp: SurfsUp)
 

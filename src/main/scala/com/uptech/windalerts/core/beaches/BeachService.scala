@@ -1,16 +1,17 @@
 package com.uptech.windalerts.core.beaches
 
+import cats.Monad
 import cats.effect.Sync
 import cats.implicits._
 import com.uptech.windalerts.core.SurfsUpError
 import com.uptech.windalerts.core.beaches.domain._
 
 
-class BeachService[F[_] : Sync](windService: WindsService[F],
-                                tidesService: TidesService[F],
-                                swellsService: SwellsService[F]) {
+class BeachService[F[_]](windService: WindsService[F],
+                         tidesService: TidesService[F],
+                         swellsService: SwellsService[F]) {
 
-  def get(beachId: BeachId): cats.data.EitherT[F, SurfsUpError, Beach] = {
+  def get(beachId: BeachId)(implicit M: Monad[F]): cats.data.EitherT[F, SurfsUpError, Beach] = {
     for {
       wind <- windService.get(beachId)
       tide <- tidesService.get(beachId)
@@ -18,7 +19,7 @@ class BeachService[F[_] : Sync](windService: WindsService[F],
     } yield Beach(beachId, wind, Tide(tide, SwellOutput(swell.height, swell.direction, swell.directionText)))
   }
 
-  def getAll(beachIds: Seq[BeachId]): cats.data.EitherT[F, SurfsUpError, Map[BeachId, Beach]] = {
+  def getAll(beachIds: Seq[BeachId])(implicit M: Monad[F]): cats.data.EitherT[F, SurfsUpError, Map[BeachId, Beach]] = {
     beachIds
       .toList
       .map(get(_))
@@ -28,4 +29,13 @@ class BeachService[F[_] : Sync](windService: WindsService[F],
         .map(s => (s.beachId, s))
         .toMap)
   }
+}
+
+object BeachService {
+  def apply[F[_]](
+                   windService: WindsService[F],
+                   tidesService: TidesService[F],
+                   swellsService: SwellsService[F]
+                 ): BeachService[F] =
+    new BeachService[F](windService, tidesService, swellsService)
 }
