@@ -26,7 +26,7 @@ object BeachesServer extends IOApp {
 
   def createServer[F[_] : ContextShift : ConcurrentEffect : Timer](): Resource[F, H4Server[F]] =
     for {
-      surfsUp <- eval(decodePathF[F, SurfsUp](parseFileAnySyntax(config.getConfigFile("secrets.conf")), "surfsUp"))
+      surfsUp <- eval(decodePathF[F, SurfsUp](parseFileAnySyntax(secrets.getConfigFile()), "surfsUp"))
       beaches <- eval(decodePathF[F, Beaches](parseFileAnySyntax(config.getConfigFile("beaches.json")), "surfsUp"))
       swellAdjustments <- eval(decodePathF[F, Adjustments](parseFileAnySyntax(config.getConfigFile("swellAdjustments.json")), "surfsUp"))
       willyWeatherAPIKey = surfsUp.willyWeather.key
