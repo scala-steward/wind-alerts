@@ -148,7 +148,7 @@ object secrets {
     getLogger.error("File exists " + new File(s"/app/resources/secrets-$projectId.conf").exists())
     getLogger.error("File exists " + new File(s"src/main/resources/secrets.conf").exists())
 
-    val prodFile = new File(s"/app/resources/$projectId.secrets")
+    val prodFile = new File(s"/app/resources/secrets-$projectId.conf")
     if (prodFile.exists()) {
       prodFile
     }
