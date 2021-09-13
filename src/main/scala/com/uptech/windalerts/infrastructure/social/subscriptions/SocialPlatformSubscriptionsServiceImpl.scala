@@ -9,7 +9,7 @@ import com.uptech.windalerts.core.user.UserId
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
 import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 
-class SubscriptionsServiceImpl[F[_] : Sync](applePurchaseRepository: AppleTokenRepository[F], androidPurchaseRepository: AndroidTokenRepository[F], appleSubscription: SocialSubscription[F], androidSubscription: SocialSubscription[F]) extends SubscriptionsService[F] {
+class SocialPlatformSubscriptionsServiceImpl[F[_] : Sync](applePurchaseRepository: AppleTokenRepository[F], androidPurchaseRepository: AndroidTokenRepository[F], appleSubscription: SocialSubscription[F], androidSubscription: SocialSubscription[F]) extends SocialPlatformSubscriptionsService[F] {
 
   override def updateAndroidPurchase(user: UserId, request: AndroidReceiptValidationRequest): EitherT[F, SurfsUpError, AndroidToken] = {
     for {

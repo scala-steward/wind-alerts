@@ -6,7 +6,7 @@ import com.uptech.windalerts.core.user.{UserId, UserT}
 import com.uptech.windalerts.infrastructure.endpoints.dtos
 import com.uptech.windalerts.infrastructure.endpoints.dtos.{AndroidReceiptValidationRequest, AppleSubscriptionPurchase}
 
-trait SubscriptionsService[F[_]] {
+trait SocialPlatformSubscriptionsService[F[_]] {
   def getAndroidPurchase(productId: String, token: String): EitherT[F, SurfsUpError, SubscriptionPurchase]
 
   def updateAndroidPurchase(user: UserId, request: AndroidReceiptValidationRequest): EitherT[F, SurfsUpError, AndroidToken]

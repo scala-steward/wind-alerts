@@ -22,7 +22,7 @@ import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBa
 import com.uptech.windalerts.infrastructure.endpoints.NotificationEndpoints
 import com.uptech.windalerts.infrastructure.notifications.FirebaseBasedNotificationsSender
 import com.uptech.windalerts.infrastructure.repositories.mongo.{ MongoAlertsRepository, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoNotificationsRepository, MongoOtpRepository, MongoRefreshTokenRepository, MongoSocialCredentialsRepository, MongoUserRepository, Repos}
-import com.uptech.windalerts.infrastructure.social.subscriptions.{AppleSubscription, SubscriptionsServiceImpl}
+import com.uptech.windalerts.infrastructure.social.subscriptions.{AppleSubscription, SocialPlatformSubscriptionsServiceImpl}
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
 
@@ -80,7 +80,7 @@ object SendNotifications extends IOApp {
   val appleSubscription = new AppleSubscription[IO]
   val androidSubscription = new AppleSubscription[IO]
 
-  val subscriptionService = new SubscriptionsServiceImpl(applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
+  val subscriptionService = new SocialPlatformSubscriptionsServiceImpl(applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
 
   val userRolesService = new UserRolesService(applePurchaseRepository, androidPurchaseRepository, alertsRepository, usersRepository, otpRepository, subscriptionService, usersService)
 

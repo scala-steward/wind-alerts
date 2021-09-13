@@ -6,7 +6,7 @@ import cats.implicits._
 import com.uptech.windalerts.core.{OtpNotFoundError, RefreshTokenExpiredError, RefreshTokenNotFoundError, TokenNotFoundError, UserAlreadyExistsError, UserAuthenticationFailedError, UserNotFoundError}
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.social.login.SocialLoginService
-import com.uptech.windalerts.core.social.subscriptions.SubscriptionsService
+import com.uptech.windalerts.core.social.subscriptions.SocialPlatformSubscriptionsService
 import com.uptech.windalerts.core.user.{UserId, UserRolesService, UserService}
 import com.uptech.windalerts.config._
 import codecs._
@@ -15,7 +15,7 @@ import org.http4s.dsl.Http4sDsl
 import org.http4s.{AuthedRoutes, HttpRoutes}
 
 class UsersEndpoints[F[_] : Effect]
-(userCredentialsService: UserCredentialService[F], userService: UserService[F], socialLoginService: SocialLoginService[F], userRolesService: UserRolesService[F], subscriptionsService: SubscriptionsService[F])
+(userCredentialsService: UserCredentialService[F], userService: UserService[F], socialLoginService: SocialLoginService[F], userRolesService: UserRolesService[F], subscriptionsService: SocialPlatformSubscriptionsService[F])
   extends Http4sDsl[F] {
 
   def openEndpoints(): HttpRoutes[F] =
