@@ -26,16 +26,16 @@ object domain {
                      enabled: Boolean,
                      timeZone: String = "Australia/Sydney",
                      createdAt: Long) {
-    def isToBeNotified(beach: Beach): Boolean = {
-      logger.error(s"beach to check $beach")
+    def isToBeNotified(beachStatus: Beach): Boolean = {
+      logger.error(s"beach to check $beachStatus")
       logger.error(s"self $swellDirections $waveHeightFrom $waveHeightTo $windDirections")
 
-      swellDirections.contains(beach.tide.swell.directionText) &&
-        waveHeightFrom <= beach.tide.swell.height && waveHeightTo >= beach.tide.swell.height &&
-        windDirections.contains(beach.wind.directionText) &&
-        (tideHeightStatuses.contains(beach.tide.height.status) || tideHeightStatuses.contains(
+      swellDirections.contains(beachStatus.tide.swell.directionText) &&
+        waveHeightFrom <= beachStatus.tide.swell.height && waveHeightTo >= beachStatus.tide.swell.height &&
+        windDirections.contains(beachStatus.wind.directionText) &&
+        (tideHeightStatuses.contains(beachStatus.tide.height.status) || tideHeightStatuses.contains(
           {
-            if (beach.tide.height.status.equals("Increasing")) "Rising" else "Falling"
+            if (beachStatus.tide.height.status.equals("Increasing")) "Rising" else "Falling"
           }))
 
     }

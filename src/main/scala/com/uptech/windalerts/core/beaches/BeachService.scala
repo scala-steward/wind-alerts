@@ -11,7 +11,7 @@ class BeachService[F[_]](windService: WindsService[F],
                          tidesService: TidesService[F],
                          swellsService: SwellsService[F]) {
 
-  def get(beachId: BeachId)(implicit M: Monad[F]): cats.data.EitherT[F, SurfsUpError, Beach] = {
+  def getStatus(beachId: BeachId)(implicit M: Monad[F]): cats.data.EitherT[F, SurfsUpError, Beach] = {
     for {
       wind <- windService.get(beachId)
       tide <- tidesService.get(beachId)
@@ -22,20 +22,11 @@ class BeachService[F[_]](windService: WindsService[F],
   def getAll(beachIds: Seq[BeachId])(implicit M: Monad[F]): cats.data.EitherT[F, SurfsUpError, Map[BeachId, Beach]] = {
     beachIds
       .toList
-      .map(get(_))
+      .map(getStatus(_))
       .sequence
       .map(_.seq)
       .map(elem => elem
         .map(s => (s.beachId, s))
         .toMap)
   }
-}
-
-object BeachService {
-  def apply[F[_]](
-                   windService: WindsService[F],
-                   tidesService: TidesService[F],
-                   swellsService: SwellsService[F]
-                 ): BeachService[F] =
-    new BeachService[F](windService, tidesService, swellsService)
 }
