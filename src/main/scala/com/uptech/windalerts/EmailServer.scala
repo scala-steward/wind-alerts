@@ -9,29 +9,28 @@ import com.uptech.windalerts.config.beaches.{Beaches, _}
 import com.uptech.windalerts.config.secrets.SurfsUp
 import com.uptech.windalerts.config.swellAdjustments.Adjustments
 import com.uptech.windalerts.core.beaches.BeachService
+import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry, OtpRepository}
 import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
-import com.uptech.windalerts.infrastructure.endpoints.BeachesEndpoints
+import com.uptech.windalerts.infrastructure.endpoints.{BeachesEndpoints, EmailEndpoints}
+import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoOtpRepository, Repos}
 import io.circe.config.parser.decodePathF
 import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.{Router, Server => H4Server}
 
-object BeachesServer extends IOApp {
+object EmailServer extends IOApp {
+
   def createServer[F[_] : ContextShift : ConcurrentEffect : Timer](): Resource[F, H4Server[F]] =
     for {
       surfsUp <- eval(decodePathF[F, SurfsUp](parseFileAnySyntax(secrets.getConfigFile()), "surfsUp"))
-      beaches <- eval(decodePathF[F, Beaches](parseFileAnySyntax(config.getConfigFile("beaches.json")), "surfsUp"))
-      swellAdjustments <- eval(decodePathF[F, Adjustments](parseFileAnySyntax(config.getConfigFile("swellAdjustments.json")), "surfsUp"))
-      willyWeatherAPIKey = surfsUp.willyWeather.key
-
-      beachService = BeachService[F](
-        new WWBackedWindsService[F](willyWeatherAPIKey),
-        new WWBackedTidesService[F](willyWeatherAPIKey, beaches.toMap()),
-        new WWBackedSwellsService[F](willyWeatherAPIKey, swellAdjustments))
+      db = Repos.acquireDb(surfsUp.mongodb.url)
+      otpRepositoy = new MongoOtpRepository[F](db.getCollection[OTPWithExpiry]("otp"))
+      emailSender = new EmailSender[F](surfsUp.email.apiKey)
+      otpService = new OTPService[F](otpRepositoy, emailSender)
 
       httpApp = Router(
-        "/v1/beaches" -> new BeachesEndpoints[F](beachService).allRoutes(),
+        "/v1/beaches" -> new EmailEndpoints[F](otpService).allRoutes(),
       ).orNotFound
       server <- BlazeServerBuilder[F]
         .bindHttp(sys.env("PORT").toInt, "0.0.0.0")

@@ -1,8 +1,9 @@
 package com.uptech.windalerts.infrastructure.endpoints
 
+import com.uptech.windalerts.core.EventPublisher.Event
 import com.uptech.windalerts.core.alerts.TimeRange
 import com.uptech.windalerts.core.social.login.{AppleAccessRequest, FacebookAccessRequest}
-import com.uptech.windalerts.core.user.TokensWithUser
+import com.uptech.windalerts.core.user.{TokensWithUser}
 import io.scalaland.chimney.dsl._
 
 
@@ -112,4 +113,14 @@ object dtos {
   case class TokenResponse(access_token: String, id_token: String)
 
   case class AppleUser(sub: String, email: String)
+
+
+  case class UserIdDTO(userId: String) extends AnyVal
+  case class EmailId(email: String) extends AnyVal
+
+  case class UserRegisteredUpdate(message:Message)
+
+  case class UserRegisteredWrapper(userRegistered: UserRegistered)
+  case class UserRegistered(userId: UserIdDTO, emailId: EmailId)
+
 }

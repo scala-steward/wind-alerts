@@ -13,7 +13,7 @@ import com.uptech.windalerts.infrastructure.endpoints.codecs._
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
 import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 import io.circe.parser.parse
-
+import com.uptech.windalerts.core.user.UserId
 class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepository[F],
                                     androidPurchaseRepository: AndroidTokenRepository[F],
                                     alertsRepository: AlertsRepository[F],
@@ -84,8 +84,6 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
       Left(OperationNotAllowed(s"Please subscribe to perform this action"))
     })
   }
-  
-
 
 
   def handleAndroidUpdate(update: AndroidUpdate):EitherT[F, SurfsUpError, UserT] = {

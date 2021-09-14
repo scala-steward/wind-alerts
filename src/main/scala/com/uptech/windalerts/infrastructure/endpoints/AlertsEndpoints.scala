@@ -6,7 +6,6 @@ import cats.implicits._
 import com.uptech.windalerts.core.{AlertNotFoundError, OperationNotAllowed, UserNotFoundError}
 import com.uptech.windalerts.core.alerts.AlertsService
 import codecs._
-import com.uptech.windalerts.core.user.UserId
 import dtos._
 import com.uptech.windalerts.config._
 import org.http4s.AuthedRoutes
@@ -14,7 +13,7 @@ import org.http4s.dsl.Http4sDsl
 
 
 class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F]) extends Http4sDsl[F]  {
-  def allUsersService(): AuthedRoutes[UserId, F] =
+  def allUsersService(): AuthedRoutes[com.uptech.windalerts.core.user.UserId, F] =
     AuthedRoutes {
 
       case _@GET -> Root as user => {

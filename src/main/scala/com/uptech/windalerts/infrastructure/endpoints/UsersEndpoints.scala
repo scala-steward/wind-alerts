@@ -7,10 +7,10 @@ import com.uptech.windalerts.core.{OtpNotFoundError, RefreshTokenExpiredError, R
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.social.subscriptions.SocialPlatformSubscriptionsService
-import com.uptech.windalerts.core.user.{UserId, UserRolesService, UserService}
+import com.uptech.windalerts.core.user.{UserRolesService, UserService}
 import com.uptech.windalerts.config._
 import codecs._
-import dtos.{AppleRegisterRequest, ChangePasswordRequest, FacebookRegisterRequest, ResetPasswordRequest, _}
+import dtos.{AppleRegisterRequest, ChangePasswordRequest, FacebookRegisterRequest, ResetPasswordRequest, UserIdDTO, _}
 import org.http4s.dsl.Http4sDsl
 import org.http4s.{AuthedRoutes, HttpRoutes}
 
@@ -92,7 +92,7 @@ class UsersEndpoints[F[_] : Effect]
     }
 
 
-  def authedService(): AuthedRoutes[UserId, F] =
+  def authedService(): AuthedRoutes[com.uptech.windalerts.core.user.UserId, F] =
     AuthedRoutes {
 
       case authReq@PUT -> Root / "profile" as u => {

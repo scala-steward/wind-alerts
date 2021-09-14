@@ -9,7 +9,7 @@ import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry}
 import com.uptech.windalerts.core.refresh.tokens.RefreshToken
 import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken}
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService, UserT}
-import com.uptech.windalerts.infrastructure.EmailSender
+import com.uptech.windalerts.infrastructure.{EmailSender, GooglePubSubEventpublisher}
 import com.uptech.windalerts.infrastructure.endpoints.logger._
 import com.uptech.windalerts.infrastructure.endpoints.{UpdateUserRolesEndpoints, errors}
 import com.uptech.windalerts.infrastructure.repositories.mongo._
@@ -27,7 +27,8 @@ object UpdateUserRolesServer extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = for {
     _ <- IO(getLogger.error("Starting"))
     db = Repos.acquireDb
-
+    projectId = sys.env("projectId")
+    googlePublisher = new GooglePubSubEventpublisher[IO](projectId)
     refreshTokenRepository = new MongoRefreshTokenRepository(db.getCollection[RefreshToken]("refreshTokens"))
 
     authService <- IO(new AuthenticationService(refreshTokenRepository))
@@ -44,7 +45,7 @@ object UpdateUserRolesServer extends IOApp {
     otpService = new OTPService[IO](otpRepositoy, emailSender)
     androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
     userCredentialsService <- IO(new UserCredentialService[IO](facebookCredentialsRepository, appleCredentialsRepository, credentialsRepository, usersRepository, refreshTokenRepository, emailSender))
-    userService <- IO(new UserService[IO](usersRepository, userCredentialsService, otpService, authService, refreshTokenRepository))
+    userService <- IO(new UserService[IO](usersRepository, userCredentialsService, otpService, authService, refreshTokenRepository, googlePublisher))
     appleSubscription <- IO(new AppleSubscription[IO]())
     androidSubscription <- IO(new AndroidSubscription[IO](androidPublisher))
     subscriptionsService <- IO(new SocialPlatformSubscriptionsServiceImpl[IO](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription))
