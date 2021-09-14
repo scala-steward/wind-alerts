@@ -3,7 +3,7 @@ package com.uptech.windalerts.core.notifications
 import cats.data.EitherT
 import cats.effect.{Async, Sync}
 import cats.implicits._
-import com.uptech.windalerts.core.alerts.AlertsService
+import com.uptech.windalerts.core.alerts.{AlertsRepository, AlertsService}
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.beaches.domain._
@@ -14,14 +14,11 @@ import org.log4s.getLogger
 
 import scala.util.Try
 
-class NotificationsService[F[_] : Sync](
-                                         N:NotificationRepository[F],
-                                         U:UserRepository[F],
-                                         A: AlertsService[F],
-                                         B: BeachService[F],
-                                         notificationSender: NotificationsSender[F]
-                                       )
-                                       (implicit F: Async[F]){
+class NotificationsService[F[_] : Sync](N: NotificationRepository[F],
+                                        U: UserRepository[F],
+                                        B: BeachService[F],
+                                        alertsRepository: AlertsRepository[F],
+                                        notificationSender: NotificationsSender[F])(implicit F: Async[F]) {
   private val logger = getLogger
 
   final case class AlertWithBeach(alert: Alert, beach: Beach)
@@ -31,8 +28,7 @@ class NotificationsService[F[_] : Sync](
   def sendNotification() = {
 
     val usersToBeNotifiedEitherT: EitherT[F, Exception, List[Try[String]]] = for {
-      alerts <- A.getAllForDayAndTimeRange
-
+      alerts <-  EitherT.liftF(alertsRepository.getAllEnabled()).map(_.filter(_.isToBeAlertedNow()))
       alertsByBeaches = alerts.groupBy(_.beachId).map(kv => (BeachId(kv._1), kv._2))
       _ <- EitherT.liftF(F.delay(logger.error(s"alertsByBeaches ${alertsByBeaches.mapValues(v => v.map(_.beachId)).mkString}")))
 
