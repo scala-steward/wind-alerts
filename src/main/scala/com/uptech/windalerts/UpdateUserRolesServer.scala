@@ -39,10 +39,10 @@ object UpdateUserRolesServer extends IOApp {
     userRolesService <- IO(new UserRolesService[IO](applePurchaseRepository, androidPurchaseRepository, alertsRepository, usersRepository, otpRepositoy, subscriptionsService))
     endpoints <- IO(new UpdateUserRolesEndpoints[IO](userRolesService))
 
-    httpApp <- IO(errors.errorMapper(Logger.httpApp(true, true, logAction = requestLogger)(
+    httpApp <- IO(errors.errorMapper(
       Router(
         "/v1/users/roles" -> endpoints.endpoints(),
-      ).orNotFound)))
+      ).orNotFound))
     server <- BlazeServerBuilder[IO]
       .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
       .withHttpApp(httpApp)
