@@ -44,11 +44,11 @@ class AppleLogin[F[_]](filename: String)(implicit cs: ContextShift[F], s: Async[
     implicit val backend = HttpURLConnectionBackend()
 
     val responseBody = req.send().body
-    getLogger.error(responseBody.toString)
+    getLogger.info(responseBody.toString)
     val tokenResponse = responseBody.flatMap(parser.parse(_)).flatMap(x => x.as[TokenResponse]).right.get
     val claims = Jwt.decode(tokenResponse.id_token, JwtOptions(signature = false))
     val parsedEither = parser.parse(claims.toOption.get.content)
-    getLogger.error(claims.toOption.get.content)
+    getLogger.info(claims.toOption.get.content)
     parsedEither.flatMap(x => x.as[AppleUser]).right.get
   }
 

@@ -33,7 +33,7 @@ class WWBackedSwellsService[F[_] : Sync](apiKey: String, adjustments: Adjustment
   def getFromWillyWeatther_(apiKey: String, beachId: BeachId) = {
     val future: Future[Id[Response[String]]] =
       resilience.willyWeatherRequestsDecorator(() => {
-        logger.error(s"Fetching swell status for $beachId")
+        logger.info(s"Fetching swell status for $beachId")
         sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecasts=swell&days=1")
           .send()
       })

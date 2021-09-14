@@ -21,8 +21,8 @@ object config {
     val localFile = new File(s"src/main/resources/$name")
     import org.log4s.getLogger
 
-    getLogger.error(s"File exists ${prodFile.getName} ${prodFile.exists()}")
-    getLogger.error(s"File exists ${localFile.getName} ${localFile.exists()}")
+    getLogger.info(s"File exists ${prodFile.getName} ${prodFile.exists()}")
+    getLogger.info(s"File exists ${localFile.getName} ${localFile.exists()}")
 
     if (prodFile.exists()) prodFile
     else {
@@ -131,11 +131,11 @@ object secrets {
   def read: SecretsSettings = {
     val projectId = sys.env("projectId")
     import org.log4s.getLogger
-    getLogger.error(projectId)
+    getLogger.info(projectId)
     val prod = new File(s"/app/resources/$projectId.secrets")
-    getLogger.error(s"File exists ${prod.exists()}")
+    getLogger.info(s"File exists ${prod.exists()}")
     val local = new File(s"src/main/resources/secrets.conf")
-    getLogger.error(s"File exists ${local.exists()}")
+    getLogger.info(s"File exists ${local.exists()}")
 
     Option(parser.decodeFile[SecretsSettings](prod).toOption
       .getOrElse(parser.decodeFile[SecretsSettings](new File(s"src/main/resources/secrets.conf")).toOption.get)).get
@@ -144,9 +144,9 @@ object secrets {
   def getConfigFile():File = {
     val projectId = sys.env("projectId")
     import org.log4s.getLogger
-    getLogger.error(projectId)
-    getLogger.error("File exists " + new File(s"/app/resources/secrets-$projectId.conf").exists())
-    getLogger.error("File exists " + new File(s"src/main/resources/secrets.conf").exists())
+    getLogger.info(projectId)
+    getLogger.info("File exists " + new File(s"/app/resources/secrets-$projectId.conf").exists())
+    getLogger.info("File exists " + new File(s"src/main/resources/secrets.conf").exists())
 
     val prodFile = new File(s"/app/resources/secrets-$projectId.conf")
     if (prodFile.exists()) {

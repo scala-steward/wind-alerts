@@ -25,9 +25,9 @@ import scala.util.Try
 object SendNotifications extends IOApp {
 
   private val logger = getLogger
-  logger.error("Starting")
+  logger.info("Starting")
   val started = System.currentTimeMillis()
-  sys.addShutdownHook(getLogger.error(s"Shutting down after ${(System.currentTimeMillis() - started)} ms"))
+  sys.addShutdownHook(logger.info(s"Shutting down after ${(System.currentTimeMillis() - started)} ms"))
 
   val projectId = sys.env("projectId")
 
@@ -35,7 +35,7 @@ object SendNotifications extends IOApp {
     credentials <- IO(
       Try(GoogleCredentials.fromStream(new FileInputStream(s"/app/resources/$projectId.json"))).onError(e => Try(logger.error(e)("Could not load creds from app file")))
         .orElse(Try(GoogleCredentials.getApplicationDefault)).onError(e => Try(logger.error(e)("Could not load default creds")))
-        .orElse(Try(GoogleCredentials.fromStream(new FileInputStream(s"src/main/resources/$projectId.json")))).onError(e => Try(logger.error(e)("Could not load creds from src file")))
+        .orElse(Try(GoogleCredentials.fromStream(new FileInputStream(s"src/main/resources/$projectId.json")))).onError(e => Try(logger.info(e)("Could not load creds from src file")))
         .getOrElse(GoogleCredentials.getApplicationDefault))
     options <- IO(new FirebaseOptions.Builder().setCredentials(credentials).setProjectId(projectId).build)
     _ <- IO(FirebaseApp.initializeApp(options))

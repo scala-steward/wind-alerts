@@ -32,7 +32,7 @@ object UsersServer extends IOApp {
   override def run(args: List[String]): IO[ExitCode] =
     Blocker[IO].use { blocker =>
       for {
-        _ <- IO(getLogger.error("Starting"))
+        _ <- IO(getLogger.info("Starting"))
         projectId = sys.env("projectId")
         googlePublisher = new GooglePubSubEventpublisher[IO](projectId)
         db = Repos.acquireDb
