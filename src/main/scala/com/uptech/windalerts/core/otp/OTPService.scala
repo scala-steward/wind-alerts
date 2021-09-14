@@ -4,7 +4,8 @@ import cats.Monad
 import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
-import com.uptech.windalerts.core.{SurfsUpError, UnknownError}
+import com.uptech.windalerts.core.user.UserRepository
+import com.uptech.windalerts.core.{SurfsUpError, UnknownError, UserNotFoundError}
 import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
@@ -12,7 +13,7 @@ import io.circe.parser.parse
 
 import scala.util.Random
 
-class OTPService[F[_] : Sync](otpRepository: OtpRepository[F], emailSender: EmailSender[F]) {
+class OTPService[F[_] : Sync](otpRepository: OtpRepository[F], emailSender: EmailSender[F], userRepository: UserRepository[F]) {
 
   def handleUserRegistered(userRegistered: UserRegisteredUpdate):EitherT[F, SurfsUpError, Unit] = {
     for {
@@ -27,6 +28,14 @@ class OTPService[F[_] : Sync](otpRepository: OtpRepository[F], emailSender: Emai
       parsed <- parse(response)
       decoded <- parsed.as[UserRegistered].leftWiden[io.circe.Error]
     } yield decoded).leftMap(error => UnknownError(error.getMessage)).leftWiden[SurfsUpError])
+  }
+
+
+  def sendOtp(userId: String): EitherT[F, UserNotFoundError, Unit] = {
+    for {
+      userFromDb <- userRepository.getByUserId(userId).toRight(UserNotFoundError())
+      sent <- EitherT.right(send(userFromDb._id.toHexString, userFromDb.email))
+    } yield sent
   }
 
   def send(userId: String, email: String)(implicit M: Monad[F]):F[Unit] = {

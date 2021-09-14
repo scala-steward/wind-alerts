@@ -44,7 +44,6 @@ object UsersServer extends IOApp {
         emailSender = new EmailSender[IO](emailConf.apiKey)
 
         otpRepositoy = new MongoOtpRepository[IO](db.getCollection[OTPWithExpiry]("otp"))
-        otpService = new OTPService[IO](otpRepositoy, emailSender)
         usersRepository = new MongoUserRepository(db.getCollection[UserT]("users"))
         credentialsRepository = new MongoCredentialsRepository(db.getCollection[Credentials]("credentials"))
         facebookCredentialsRepository = new MongoSocialCredentialsRepository[IO, FacebookCredentials](db.getCollection[FacebookCredentials]("facebookCredentials"))
@@ -54,8 +53,9 @@ object UsersServer extends IOApp {
         alertsRepository = new MongoAlertsRepository(db.getCollection[Alert]("alerts"))
         androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
 
+        otpService = new OTPService[IO](otpRepositoy, emailSender, usersRepository)
         userCredentialsService <- IO(new UserCredentialService[IO](facebookCredentialsRepository, appleCredentialsRepository, credentialsRepository, usersRepository, refreshTokenRepository, emailSender))
-        usersService <- IO(new UserService(usersRepository, userCredentialsService, otpService, auth, refreshTokenRepository, googlePublisher))
+        usersService <- IO(new UserService(usersRepository, userCredentialsService, auth, refreshTokenRepository, googlePublisher))
         socialLoginService <- IO(new SocialLoginService(Repos.applePlatform(), Repos.facebookPlatform(),  facebookCredentialsRepository, appleCredentialsRepository, usersRepository, usersService, userCredentialsService))
 
         appleSubscription <- IO(new AppleSubscription[IO]())
@@ -68,9 +68,9 @@ object UsersServer extends IOApp {
 
         beaches <- IO(new BeachService[IO](new WWBackedWindsService[IO](apiKey), new WWBackedTidesService[IO](apiKey, beachesConfig), new WWBackedSwellsService[IO](apiKey, swellAdjustments.read)))
 
-        endpoints <- IO(new UsersEndpoints(userCredentialsService, usersService, socialLoginService, userRolesService, subscriptionsService))
+        endpoints <- IO(new UsersEndpoints(userCredentialsService, usersService, socialLoginService, userRolesService, subscriptionsService, otpService))
 
-        alertService <- IO(new AlertsService[IO](alertsRepository, usersService, userRolesService))
+        alertService <- IO(new AlertsService[IO](alertsRepository, usersRepository, userRolesService))
         alertsEndPoints <- IO(new AlertsEndpoints(alertService))
 
       httpApp <- IO(errors.errorMapper(Logger.httpApp(true, true, logAction = requestLogger)(

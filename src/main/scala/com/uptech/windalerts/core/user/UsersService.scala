@@ -14,18 +14,12 @@ import io.circe.syntax._
 import org.mongodb.scala.bson.ObjectId
 
 
-class UserService[F[_] : Sync](userRepository: UserRepository[F],
-                               userCredentialsService: UserCredentialService[F],
-                               otpService: OTPService[F],
-                               auth: AuthenticationService[F],
-                               refreshTokenRepository: RefreshTokenRepository[F],
-                               eventPublisher: EventPublisher[F]) {
+class UserService[F[_] : Sync](userRepository: UserRepository[F], userCredentialsService: UserCredentialService[F], auth: AuthenticationService[F], refreshTokenRepository: RefreshTokenRepository[F], eventPublisher: EventPublisher[F]) {
   def register(registerRequest: RegisterRequest): EitherT[F, UserAlreadyExistsError, TokensWithUser] = {
     for {
       createUserResponse <- create(registerRequest)
       tokens <- EitherT.right(generateNewTokens(createUserResponse._1))
       _ <- EitherT.right(eventPublisher.publish("userRegistered", UserRegistered(UserIdDTO(createUserResponse._1._id.toHexString), EmailId(createUserResponse._1.email)).asJson))
-      _ <- EitherT.right(otpService.send(createUserResponse._1._id.toHexString, createUserResponse._1.email))
     } yield tokens
   }
 
@@ -118,24 +112,10 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
   def getUser(userId: String): EitherT[F, UserNotFoundError, UserT] =
     userRepository.getByUserId(userId).toRight(UserNotFoundError())
 
-  def sendOtp(userId: String): EitherT[F, UserNotFoundError, Unit] = {
-    for {
-      userFromDb <- getUser(userId)
-      sent <- EitherT.right(otpService.send(userFromDb._id.toHexString, userFromDb.email))
-    } yield sent
-  }
-
 }
 
 object UserService {
 
-  def apply[F[_] : Sync](
-                          userRepository: UserRepository[F],
-                          userCredentialService: UserCredentialService[F],
-                          otpService: OTPService[F],
-                          authenticationService: AuthenticationService[F],
-                          refreshTokenRepo : RefreshTokenRepository[F],
-                          eventPublisher: EventPublisher[F]
-                        ): UserService[F] =
-    new UserService(userRepository, userCredentialService, otpService, authenticationService, refreshTokenRepo, eventPublisher)
+  def apply[F[_] : Sync](userRepository: UserRepository[F], userCredentialService: UserCredentialService[F], authenticationService: AuthenticationService[F], refreshTokenRepo: RefreshTokenRepository[F], eventPublisher: EventPublisher[F]): UserService[F] =
+    new UserService[F](userRepository, userCredentialService, authenticationService, refreshTokenRepo, eventPublisher)
 }

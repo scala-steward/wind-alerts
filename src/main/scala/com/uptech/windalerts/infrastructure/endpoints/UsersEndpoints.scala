@@ -10,12 +10,18 @@ import com.uptech.windalerts.core.social.subscriptions.SocialPlatformSubscriptio
 import com.uptech.windalerts.core.user.{UserRolesService, UserService}
 import com.uptech.windalerts.config._
 import codecs._
+import com.uptech.windalerts.core.otp.OTPService
 import dtos.{AppleRegisterRequest, ChangePasswordRequest, FacebookRegisterRequest, ResetPasswordRequest, UserIdDTO, _}
 import org.http4s.dsl.Http4sDsl
 import org.http4s.{AuthedRoutes, HttpRoutes}
 
 class UsersEndpoints[F[_] : Effect]
-(userCredentialsService: UserCredentialService[F], userService: UserService[F], socialLoginService: SocialLoginService[F], userRolesService: UserRolesService[F], subscriptionsService: SocialPlatformSubscriptionsService[F])
+(userCredentialsService: UserCredentialService[F],
+ userService: UserService[F],
+ socialLoginService: SocialLoginService[F],
+ userRolesService: UserRolesService[F],
+ subscriptionsService: SocialPlatformSubscriptionsService[F],
+ otpService: OTPService[F])
   extends Http4sDsl[F] {
 
   def openEndpoints(): HttpRoutes[F] =
@@ -134,7 +140,7 @@ class UsersEndpoints[F[_] : Effect]
 
       case _@POST -> Root / "sendOTP" as user => {
         OptionT.liftF((for {
-          response <- userService.sendOtp(user.id)
+          response <- otpService.sendOtp(user.id)
         } yield response).value.flatMap {
           case Right(_) => Ok()
           case Left(UserNotFoundError(_)) => NotFound("User not found")

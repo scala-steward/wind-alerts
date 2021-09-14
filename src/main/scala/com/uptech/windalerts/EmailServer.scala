@@ -10,10 +10,11 @@ import com.uptech.windalerts.config.secrets.SurfsUp
 import com.uptech.windalerts.config.swellAdjustments.Adjustments
 import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry, OtpRepository}
+import com.uptech.windalerts.core.user.UserT
 import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints.{BeachesEndpoints, EmailEndpoints, logger}
-import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoOtpRepository, Repos}
+import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoOtpRepository, MongoUserRepository, Repos}
 import io.circe.config.parser.decodePathF
 import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
@@ -26,9 +27,10 @@ object EmailServer extends IOApp {
     for {
       surfsUp <- eval(decodePathF[F, SurfsUp](parseFileAnySyntax(secrets.getConfigFile()), "surfsUp"))
       db = Repos.acquireDb(surfsUp.mongodb.url)
-      otpRepositoy = new MongoOtpRepository[F](db.getCollection[OTPWithExpiry]("otp"))
       emailSender = new EmailSender[F](surfsUp.email.apiKey)
-      otpService = new OTPService[F](otpRepositoy, emailSender)
+      otpRepositoy = new MongoOtpRepository[F](db.getCollection[OTPWithExpiry]("otp"))
+      userRepositoy = new MongoUserRepository[F](db.getCollection[UserT]("users"))
+      otpService = new OTPService[F](otpRepositoy, emailSender, userRepositoy)
 
       httpApp = Router(
         "/v1/email" -> new EmailEndpoints[F](otpService).allRoutes(),
