@@ -19,11 +19,18 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class MongoAlertsRepository[F[_]](collection: MongoCollection[Alert])(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends AlertsRepository[F] {
 
-  override def disableAllButOneAlerts(userId: String): F[Seq[Alert]] = {
+  override def disableAllButFirstAlerts(userId: String): F[Seq[Alert]] = {
     for {
       all <- getAllForUser(userId)
-      updatedIOs <- all.alerts.sortBy(_.createdAt).drop(1).map(alert => update(alert._id.toHexString, alert.copy(enabled = false))).toList.sequence
+      updatedIOs <- all.alerts.sortBy(_.createdAt).tail.map(alert => update(alert._id.toHexString, alert.copy(enabled = false))).toList.sequence
     } yield updatedIOs
+  }
+
+  override def getFirstAlert(userId: String): OptionT[F, Alert] = {
+    OptionT(for {
+      all <- getAllForUser(userId)
+      head = all.alerts.sortBy(_.createdAt).headOption
+    } yield head)
   }
 
   private def update(alertId: String, alert: Alert): F[Alert] = {

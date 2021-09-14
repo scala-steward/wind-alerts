@@ -4,23 +4,17 @@ import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
 import com.uptech.windalerts.config.secrets
-import com.uptech.windalerts.core.alerts.{Alerts, AlertsRepository}
+import com.uptech.windalerts.core.alerts.AlertsRepository
 import com.uptech.windalerts.core.otp.OtpRepository
 import com.uptech.windalerts.core.social.subscriptions.{AndroidTokenRepository, AppleTokenRepository, SocialPlatformSubscriptionsService}
 import com.uptech.windalerts.core.user.UserType.{Premium, PremiumExpired, Trial}
 import com.uptech.windalerts.core.{OperationNotAllowed, SurfsUpError, UnknownError, UserNotFoundError}
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
-import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 import io.circe.parser.parse
-import com.uptech.windalerts.core.user.UserId
-class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepository[F],
-                                    androidPurchaseRepository: AndroidTokenRepository[F],
-                                    alertsRepository: AlertsRepository[F],
-                                    userRepository: UserRepository[F],
-                                    otpRepository: OtpRepository[F],
-                                    socialPlatformSubscriptionsService: SocialPlatformSubscriptionsService[F],
-                                    userService: UserService[F]) {
+
+class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepository[F], androidPurchaseRepository: AndroidTokenRepository[F], alertsRepository: AlertsRepository[F], userRepository: UserRepository[F],
+                                    otpRepository: OtpRepository[F], socialPlatformSubscriptionsService: SocialPlatformSubscriptionsService[F]) {
   def updateTrialUsers() = {
     for {
       users <- EitherT.right(userRepository.findTrialExpiredUsers())
@@ -92,7 +86,7 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
       subscription <- asSubscription(decoded)
       token <- androidPurchaseRepository.getPurchaseByToken(subscription.subscriptionNotification.purchaseToken)
       purchase <- socialPlatformSubscriptionsService.getAndroidPurchase(token.subscriptionId, subscription.subscriptionNotification.purchaseToken)
-      user <- userService.getUser(token.userId)
+      user <- userRepository.getByUserId(token.userId).toRight(UserNotFoundError())
       updatedUser <- updateSubscribedUserRole(user, purchase.startTimeMillis, purchase.expiryTimeMillis).leftWiden[SurfsUpError]
     } yield updatedUser
   }
@@ -101,7 +95,7 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
   def verifyEmail(user: UserId, request: OTP):EitherT[F, SurfsUpError, UserDTO] = {
     for {
       _ <- otpRepository.exists(request.otp, user.id)
-      user <- userService.getUser(user.id)
+      user <- userRepository.getByUserId(user.id).toRight(UserNotFoundError())
       updateResult <- makeUserTrial(user).map(_.asDTO()).leftWiden[SurfsUpError]
     } yield updateResult
   }
@@ -110,7 +104,7 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
     for {
       token <- androidPurchaseRepository.getLastForUser(u.id)
       purchase <- socialPlatformSubscriptionsService.getAndroidPurchase(token.subscriptionId, token.purchaseToken)
-      dbUser <- userService.getUser(u.id).leftWiden[SurfsUpError]
+      dbUser <- userRepository.getByUserId(u.id).toRight(UserNotFoundError()).leftWiden[SurfsUpError]
       premiumUser <- updateSubscribedUserRole(dbUser, purchase.startTimeMillis, purchase.expiryTimeMillis).map(_.asDTO()).leftWiden[SurfsUpError]
     } yield premiumUser
   }
@@ -127,7 +121,7 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
     for {
       token <- applePurchaseRepository.getLastForUser(user.id)
       purchase <- socialPlatformSubscriptionsService.getApplePurchase(token.purchaseToken, secrets.read.surfsUp.apple.appSecret)
-      dbUser <- userService.getUser(user.id).leftWiden[SurfsUpError]
+      dbUser <- userRepository.getByUserId(user.id).toRight(UserNotFoundError()).leftWiden[SurfsUpError]
       premiumUser <- updateSubscribedUserRole(dbUser, purchase.startTimeMillis, purchase.expiryTimeMillis).map(_.asDTO()).leftWiden[SurfsUpError]
     } yield premiumUser
   }
@@ -147,38 +141,15 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
   def makeUserPremiumExpired(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
     for {
       operationResult <- userRepository.update(user.copy(userType = PremiumExpired.value, nextPaymentAt = -1)).toRight(UserNotFoundError())
-      _ <- EitherT.liftF(alertsRepository.disableAllButOneAlerts(user._id.toHexString))
+      _ <- EitherT.liftF(alertsRepository.disableAllButFirstAlerts(user._id.toHexString))
     } yield operationResult
   }
 
   private def makeUserTrialExpired(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
     for {
       updated <- update(user.copy(userType = UserType.TrialExpired.value, lastPaymentAt = -1, nextPaymentAt = -1))
-      _ <- EitherT.liftF(alertsRepository.disableAllButOneAlerts(updated._id.toHexString))
+      _ <- EitherT.liftF(alertsRepository.disableAllButFirstAlerts(updated._id.toHexString))
     } yield updated
   }
 
-  def authorizeAlertEditRequest(user: UserT, alertId: String, alertRequest: AlertRequest): EitherT[F, OperationNotAllowed, UserT] = {
-    if (UserType(user.userType) == UserType.Premium || UserType(user.userType) == UserType.Trial)
-      EitherT.pure(user)
-    else EitherT.liftF(alertsRepository.getAllForUser(user._id.toHexString))
-      .flatMap(alerts => EitherT.fromEither(authorizeAlertEditRequest(user, alertId, alerts, alertRequest)))
-  }
-
-  private def authorizeAlertEditRequest(user: UserT, alertId: String, alerts: Alerts, alertRequest: AlertRequest): Either[OperationNotAllowed, UserT] = {
-    Either.cond(checkForNonPremiumUser(alertId, alerts, alertRequest), user, OperationNotAllowed(s"Please subscribe to perform this action"))
-  }
-
-  def checkForNonPremiumUser(alertId: String, alerts: Alerts, alertRequest: AlertRequest) = {
-    val alertOption = alerts.alerts.sortBy(_.createdAt).headOption
-
-
-    alertOption.map(alert => {
-      if (alert._id.toHexString != alertId) {
-        false
-      } else {
-        alert.allFieldExceptStatusAreSame(alertRequest)
-      }
-    }).getOrElse(false)
-  }
 }

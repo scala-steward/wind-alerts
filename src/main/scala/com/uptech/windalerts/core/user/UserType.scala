@@ -1,7 +1,11 @@
 package com.uptech.windalerts.core.user
 
 
-sealed case class UserType(value: String)
+sealed case class UserType(value: String) {
+  def isPremiumUser(): Boolean = {
+    this == UserType.Premium || this == UserType.Trial
+  }
+}
 
 object UserType {
 
@@ -24,4 +28,6 @@ object UserType {
     case TrialExpired.value => TrialExpired
     case Premium.value => Premium
   }
+
+
 }
