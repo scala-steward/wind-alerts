@@ -73,7 +73,7 @@ object UsersServer extends IOApp {
         alertService <- IO(new AlertsService[IO](alertsRepository, usersRepository))
         alertsEndPoints <- IO(new AlertsEndpoints(alertService))
 
-      httpApp <- IO(errors.errorMapper(Logger.httpApp(true, true, logAction = requestLogger)(
+      httpApp <- IO(errors.errorMapper(
         Router(
           "/v1/users" -> auth.middleware(endpoints.authedService()),
           "/v1/users" -> endpoints.openEndpoints(),
@@ -83,7 +83,7 @@ object UsersServer extends IOApp {
           "/v1/beaches" -> new BeachesEndpoints[IO](beaches).allRoutes(),
           "" -> new SwaggerEndpoints[IO]().endpoints(blocker),
 
-        ).orNotFound)))
+        ).orNotFound))
       server <- BlazeServerBuilder[IO]
         .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
         .withHttpApp(httpApp)

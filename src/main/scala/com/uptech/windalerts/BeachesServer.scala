@@ -38,7 +38,7 @@ object BeachesServer extends IOApp {
       ).orNotFound
       server <- BlazeServerBuilder[F]
         .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
-        .withHttpApp(RequestLogger.httpApp( logBody = true, logHeaders = true, logAction = new logger[F]().requestLogger)(httpApp))
+        .withHttpApp(httpApp)
         .resource
     } yield server
 
