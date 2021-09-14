@@ -11,10 +11,13 @@ import com.uptech.windalerts.config.swellAdjustments.Adjustments
 import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
-import com.uptech.windalerts.infrastructure.endpoints.BeachesEndpoints
+import com.uptech.windalerts.infrastructure.endpoints.{BeachesEndpoints, logger}
+import com.uptech.windalerts.infrastructure.endpoints.logger.requestLogger
 import io.circe.config.parser.decodePathF
+import org.http4s.client.middleware.ResponseLogger
 import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
+import org.http4s.server.middleware.RequestLogger
 import org.http4s.server.{Router, Server => H4Server}
 
 object BeachesServer extends IOApp {
@@ -35,7 +38,7 @@ object BeachesServer extends IOApp {
       ).orNotFound
       server <- BlazeServerBuilder[F]
         .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
-        .withHttpApp(httpApp)
+        .withHttpApp(RequestLogger.httpApp( logBody = true, logHeaders = true, logAction = new logger[F]().requestLogger)(httpApp))
         .resource
     } yield server
 

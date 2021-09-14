@@ -12,6 +12,7 @@ import com.uptech.windalerts.core.refresh.tokens.RefreshToken
 import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken}
 import com.uptech.windalerts.core.user.{TokensWithUser, UserT}
 import dtos._
+import io.circe.generic.extras.semiauto.{deriveUnwrappedDecoder, deriveUnwrappedEncoder}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}
 import org.bson.codecs.configuration.CodecRegistries.{fromProviders, fromRegistries}
@@ -303,14 +304,14 @@ object codecs {
 
   implicit def appleUserEntityEncoder[F[_] : Applicative]: EntityEncoder[F, AppleUser] = jsonEncoderOf
 
-  lazy implicit val userIdDTODecoder: Decoder[UserIdDTO] = deriveDecoder[UserIdDTO]
+  lazy implicit val userIdDTODecoder: Decoder[UserIdDTO] = deriveUnwrappedDecoder[UserIdDTO]
   implicit def  userIdDTOEntityDecoder[F[_] : Sync]: EntityDecoder[F, UserIdDTO] = jsonOf
-  lazy implicit val  userIdDTOEncoder: Encoder[UserIdDTO] = deriveEncoder[UserIdDTO]
+  lazy implicit val  userIdDTOEncoder: Encoder[UserIdDTO] = deriveUnwrappedEncoder[UserIdDTO]
   implicit def  userIdDTOEntityEncoder[F[_] : Applicative]: EntityEncoder[F, UserIdDTO] = jsonEncoderOf
 
-  lazy implicit val emailIddDecoder: Decoder[EmailId] = deriveDecoder[EmailId]
+  lazy implicit val emailIddDecoder: Decoder[EmailId] = deriveUnwrappedDecoder[EmailId]
   implicit def emailIdEntityDecoder[F[_] : Sync]: EntityDecoder[F, EmailId] = jsonOf
-  lazy implicit val emailIdEncoder: Encoder[EmailId] = deriveEncoder[EmailId]
+  lazy implicit val emailIdEncoder: Encoder[EmailId] = deriveUnwrappedEncoder[EmailId]
   implicit def emailIdEntityEncoder[F[_] : Applicative]: EntityEncoder[F, EmailId] = jsonEncoderOf
 
   lazy implicit val userRegisteredDecoder: Decoder[UserRegistered] = deriveDecoder[UserRegistered]
