@@ -14,8 +14,10 @@ import scala.util.Random
 
 class OTPService[F[_] : Sync](otpRepository: OtpRepository[F], emailSender: EmailSender[F]) {
 
-  def handleUserRegistered(userRegistered: UserRegistered):EitherT[F, SurfsUpError, Unit] = {
+  def handleUserRegistered(userRegistered: UserRegisteredUpdate):EitherT[F, SurfsUpError, Unit] = {
     for {
+      decoded <- EitherT.fromEither[F](Either.right(new String(java.util.Base64.getDecoder.decode(userRegistered.message.data))))
+      userRegistered <- asUserRegistered(decoded)
       update <- EitherT.liftF(send(userRegistered.userId.userId, userRegistered.emailId.email))
     } yield update
   }
@@ -23,8 +25,8 @@ class OTPService[F[_] : Sync](otpRepository: OtpRepository[F], emailSender: Emai
   private def asUserRegistered(response: String): EitherT[F, SurfsUpError, UserRegistered] = {
     EitherT.fromEither((for {
       parsed <- parse(response)
-      decoded <- parsed.as[UserRegisteredWrapper].leftWiden[io.circe.Error]
-    } yield decoded.userRegistered).leftMap(error => UnknownError(error.getMessage)).leftWiden[SurfsUpError])
+      decoded <- parsed.as[UserRegistered].leftWiden[io.circe.Error]
+    } yield decoded).leftMap(error => UnknownError(error.getMessage)).leftWiden[SurfsUpError])
   }
 
   def send(userId: String, email: String)(implicit M: Monad[F]):F[Unit] = {
