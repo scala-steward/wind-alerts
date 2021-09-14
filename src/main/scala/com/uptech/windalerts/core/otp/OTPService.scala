@@ -14,10 +14,8 @@ import scala.util.Random
 
 class OTPService[F[_] : Sync](otpRepository: OtpRepository[F], emailSender: EmailSender[F]) {
 
-  def handleUserRegistered(userRegistered: UserRegisteredUpdate):EitherT[F, SurfsUpError, Unit] = {
+  def handleUserRegistered(userRegistered: UserRegistered):EitherT[F, SurfsUpError, Unit] = {
     for {
-      decoded <- EitherT.fromEither[F](Either.right(new String(java.util.Base64.getDecoder.decode(userRegistered.message.data))))
-      userRegistered <- asUserRegistered(decoded)
       update <- EitherT.liftF(send(userRegistered.userId.userId, userRegistered.emailId.email))
     } yield update
   }
