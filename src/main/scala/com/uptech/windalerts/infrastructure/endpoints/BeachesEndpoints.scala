@@ -18,7 +18,7 @@ class BeachesEndpoints[F[_] : Effect](B: BeachService[F]) extends Http4sDsl[F] {
 
   private def getStatus(B: BeachService[F], id: Int) = {
     val eitherStatus = for {
-      status <- B.get(BeachId(id))
+      status <- B.getStatus(BeachId(id))
     } yield status
     eitherStatus.value.flatMap {
       case Right(value) => Ok(value)

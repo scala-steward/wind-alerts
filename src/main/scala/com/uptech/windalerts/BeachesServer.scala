@@ -28,7 +28,7 @@ object BeachesServer extends IOApp {
       swellAdjustments <- eval(decodePathF[F, Adjustments](parseFileAnySyntax(config.getConfigFile("swellAdjustments.json")), "surfsUp"))
       willyWeatherAPIKey = surfsUp.willyWeather.key
 
-      beachService = BeachService[F](
+      beachService = new BeachService[F](
         new WWBackedWindsService[F](willyWeatherAPIKey),
         new WWBackedTidesService[F](willyWeatherAPIKey, beaches.toMap()),
         new WWBackedSwellsService[F](willyWeatherAPIKey, swellAdjustments))
