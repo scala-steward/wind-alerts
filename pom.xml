@@ -82,11 +82,6 @@
             <artifactId>cats-core_2.13</artifactId>
             <version>${cats.version}</version>
         </dependency>
-        <!--        <dependency>-->
-        <!--            <groupId>org.typelevel</groupId>-->
-        <!--            <artifactId>cats-effect_2.13</artifactId>-->
-        <!--            <version>${cats.version}</version>-->
-        <!--        </dependency>-->
         <dependency>
             <groupId>com.softwaremill.sttp</groupId>
             <artifactId>core_2.13</artifactId>

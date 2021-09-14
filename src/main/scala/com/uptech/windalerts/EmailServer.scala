@@ -30,7 +30,7 @@ object EmailServer extends IOApp {
       otpService = new OTPService[F](otpRepositoy, emailSender)
 
       httpApp = Router(
-        "/v1/beaches" -> new EmailEndpoints[F](otpService).allRoutes(),
+        "/v1/email" -> new EmailEndpoints[F](otpService).allRoutes(),
       ).orNotFound
       server <- BlazeServerBuilder[F]
         .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
