@@ -17,11 +17,11 @@ import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry}
 import com.uptech.windalerts.core.refresh.tokens.RefreshToken
 import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken}
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService, UserT}
-import com.uptech.windalerts.infrastructure.EmailSender
+import com.uptech.windalerts.infrastructure.{EmailSender, GooglePubSubEventpublisher}
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints.NotificationEndpoints
 import com.uptech.windalerts.infrastructure.notifications.FirebaseBasedNotificationsSender
-import com.uptech.windalerts.infrastructure.repositories.mongo.{ MongoAlertsRepository, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoNotificationsRepository, MongoOtpRepository, MongoRefreshTokenRepository, MongoSocialCredentialsRepository, MongoUserRepository, Repos}
+import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoAlertsRepository, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoNotificationsRepository, MongoOtpRepository, MongoRefreshTokenRepository, MongoSocialCredentialsRepository, MongoUserRepository, Repos}
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AppleSubscription, SocialPlatformSubscriptionsServiceImpl}
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.log4s.getLogger
@@ -33,13 +33,13 @@ import scala.util.Try
 object SendNotifications extends IOApp {
 
   private val logger = getLogger
-
   logger.error("Starting")
   val started = System.currentTimeMillis()
   sys.addShutdownHook(getLogger.error(s"Shutting down after ${(System.currentTimeMillis() - started)} ms"))
 
+  val projectId = sys.env("projectId")
+
   val firebaseMessaging = (for {
-    projectId <- IO(sys.env("projectId"))
     credentials <- IO(
       Try(GoogleCredentials.fromStream(new FileInputStream(s"/app/resources/$projectId.json"))).onError(e => Try(logger.error(e)("Could not load creds from app file")))
         .orElse(Try(GoogleCredentials.getApplicationDefault)).onError(e => Try(logger.error(e)("Could not load default creds")))
@@ -51,6 +51,7 @@ object SendNotifications extends IOApp {
   } yield (notifications)).unsafeRunSync()
 
   implicit val backend = HttpURLConnectionBackend()
+  val googlePublisher = new GooglePubSubEventpublisher[IO](projectId)
 
   val conf = secrets.read
   val appConf = config.read
@@ -76,7 +77,7 @@ object SendNotifications extends IOApp {
   val alertsRepository = new MongoAlertsRepository(db.getCollection[Alert]("alerts"))
   val notificationsRepository = new MongoNotificationsRepository(db.getCollection[Notification]("notifications"))
   val userCredentialsService = new UserCredentialService[IO](facebookCredentialsRepository, appleCredentialsRepository, credentialsRepository, usersRepository, refreshTokenRepository, emailSender)
-  val usersService = new UserService(usersRepository, userCredentialsService, otpService, auth, refreshTokenRepository)
+  val usersService = new UserService(usersRepository, userCredentialsService, otpService, auth, refreshTokenRepository, googlePublisher)
   val appleSubscription = new AppleSubscription[IO]
   val androidSubscription = new AppleSubscription[IO]
 

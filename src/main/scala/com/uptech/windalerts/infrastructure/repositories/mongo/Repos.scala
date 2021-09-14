@@ -4,14 +4,18 @@ import cats.effect.{ContextShift, IO}
 import com.uptech.windalerts.config.secrets
 import com.uptech.windalerts.infrastructure.endpoints.codecs
 import com.uptech.windalerts.infrastructure.social.login.{AppleLogin, FacebookLogin}
-import org.mongodb.scala.MongoClient
+import org.mongodb.scala.{MongoClient, MongoDatabase}
 
 import java.io.File
 
 
 object Repos{
-  def acquireDb() = {
-    val client = MongoClient(com.uptech.windalerts.config.secrets.read.surfsUp.mongodb.url)
+  def acquireDb():MongoDatabase  = {
+    acquireDb(com.uptech.windalerts.config.secrets.read.surfsUp.mongodb.url)
+  }
+
+  def acquireDb(url:String):MongoDatabase = {
+    val client = MongoClient(url)
     client.getDatabase(sys.env("projectId")).withCodecRegistry(codecs.codecRegistry)
   }
 

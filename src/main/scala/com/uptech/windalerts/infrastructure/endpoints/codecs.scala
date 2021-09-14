@@ -303,4 +303,27 @@ object codecs {
 
   implicit def appleUserEntityEncoder[F[_] : Applicative]: EntityEncoder[F, AppleUser] = jsonEncoderOf
 
+  lazy implicit val userIdDTODecoder: Decoder[UserIdDTO] = deriveDecoder[UserIdDTO]
+  implicit def  userIdDTOEntityDecoder[F[_] : Sync]: EntityDecoder[F, UserIdDTO] = jsonOf
+  lazy implicit val  userIdDTOEncoder: Encoder[UserIdDTO] = deriveEncoder[UserIdDTO]
+  implicit def  userIdDTOEntityEncoder[F[_] : Applicative]: EntityEncoder[F, UserIdDTO] = jsonEncoderOf
+
+  lazy implicit val emailIddDecoder: Decoder[EmailId] = deriveDecoder[EmailId]
+  implicit def emailIdEntityDecoder[F[_] : Sync]: EntityDecoder[F, EmailId] = jsonOf
+  lazy implicit val emailIdEncoder: Encoder[EmailId] = deriveEncoder[EmailId]
+  implicit def emailIdEntityEncoder[F[_] : Applicative]: EntityEncoder[F, EmailId] = jsonEncoderOf
+
+  lazy implicit val userRegisteredDecoder: Decoder[UserRegistered] = deriveDecoder[UserRegistered]
+  implicit def userRegisteredEntityDecoder[F[_] : Sync]: EntityDecoder[F, UserRegistered] = jsonOf
+  lazy implicit val userRegisteredEncoder: Encoder[UserRegistered] = deriveEncoder[UserRegistered]
+  implicit def userRegisteredEntityEncoder[F[_] : Applicative]: EntityEncoder[F, UserRegistered] = jsonEncoderOf
+
+
+  lazy implicit val userRegisteredUpdateDecoder: Decoder[UserRegisteredUpdate] = deriveDecoder[UserRegisteredUpdate]
+  implicit def userRegisteredEntityUpdateDecoder[F[_] : Sync]: EntityDecoder[F, UserRegisteredUpdate] = jsonOf
+
+
+  lazy implicit val userRegisteredWrapperDecoder: Decoder[UserRegisteredWrapper] = deriveDecoder[UserRegisteredWrapper]
+  implicit def userRegisteredWrapperEntityDecoder[F[_] : Sync]: EntityDecoder[F, UserRegisteredWrapper] = jsonOf
+
 }

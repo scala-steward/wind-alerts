@@ -13,7 +13,7 @@ import com.uptech.windalerts.core.refresh.tokens.RefreshToken
 import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken}
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService, UserT}
-import com.uptech.windalerts.infrastructure.EmailSender
+import com.uptech.windalerts.infrastructure.{EmailSender, GooglePubSubEventpublisher}
 import com.uptech.windalerts.infrastructure.beaches._
 import com.uptech.windalerts.infrastructure.endpoints._
 import com.uptech.windalerts.infrastructure.endpoints.logger._
@@ -21,11 +21,9 @@ import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoAlertsRepos
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AndroidPublisherHelper, AndroidSubscription, AppleSubscription, ApplicationConfig, SocialPlatformSubscriptionsServiceImpl}
 import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
-
 import org.http4s.server.Router
 import org.http4s.server.middleware.Logger
 import org.log4s.getLogger
-
 object UsersServer extends IOApp {
 
 
@@ -35,7 +33,8 @@ object UsersServer extends IOApp {
     Blocker[IO].use { blocker =>
       for {
         _ <- IO(getLogger.error("Starting"))
-
+        projectId = sys.env("projectId")
+        googlePublisher = new GooglePubSubEventpublisher[IO](projectId)
         db = Repos.acquireDb
         refreshTokenRepository = new MongoRefreshTokenRepository(db.getCollection[RefreshToken]("refreshTokens"))
 
@@ -56,7 +55,7 @@ object UsersServer extends IOApp {
         androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
 
         userCredentialsService <- IO(new UserCredentialService[IO](facebookCredentialsRepository, appleCredentialsRepository, credentialsRepository, usersRepository, refreshTokenRepository, emailSender))
-        usersService <- IO(new UserService(usersRepository, userCredentialsService, otpService, auth, refreshTokenRepository))
+        usersService <- IO(new UserService(usersRepository, userCredentialsService, otpService, auth, refreshTokenRepository, googlePublisher))
         socialLoginService <- IO(new SocialLoginService(Repos.applePlatform(), Repos.facebookPlatform(),  facebookCredentialsRepository, appleCredentialsRepository, usersRepository, usersService, userCredentialsService))
 
         appleSubscription <- IO(new AppleSubscription[IO]())

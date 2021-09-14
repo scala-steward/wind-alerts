@@ -206,7 +206,23 @@
             <artifactId>resilience4j-all</artifactId>
             <version>1.7.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-pubsub</artifactId>
+        </dependency>
     </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.google.cloud</groupId>
+                <artifactId>libraries-bom</artifactId>
+                <version>22.0.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <sourceDirectory>src/main/scala</sourceDirectory>
@@ -302,6 +318,13 @@
             <properties>
                 <profile.mainClass>com.uptech.windalerts.BeachesServer</profile.mainClass>
                 <image>gcr.io/${envProjectId}/wind-alerts-beaches:${project.version}</image>
+            </properties>
+        </profile>
+        <profile>
+            <id>email</id>
+            <properties>
+                <profile.mainClass>com.uptech.windalerts.EmailServer</profile.mainClass>
+                <image>gcr.io/${envProjectId}/wind-alerts-email:${project.version}</image>
             </properties>
         </profile>
     </profiles>

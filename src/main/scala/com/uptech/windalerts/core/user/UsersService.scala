@@ -6,22 +6,25 @@ import cats.implicits._
 import com.uptech.windalerts.core.credentials.{Credentials, UserCredentialService}
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.refresh.tokens.{RefreshToken, RefreshTokenRepository}
-import com.uptech.windalerts.core.{RefreshTokenExpiredError, RefreshTokenNotFoundError, SurfsUpError, UserAlreadyExistsError, UserNotFoundError, utils}
-import com.uptech.windalerts.config._
+import com.uptech.windalerts.core._
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
-import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
+import com.uptech.windalerts.infrastructure.endpoints.codecs._
+
+import io.circe.syntax._
 import org.mongodb.scala.bson.ObjectId
+
 
 class UserService[F[_] : Sync](userRepository: UserRepository[F],
                                userCredentialsService: UserCredentialService[F],
                                otpService: OTPService[F],
                                auth: AuthenticationService[F],
-                               refreshTokenRepository: RefreshTokenRepository[F]) {
-
+                               refreshTokenRepository: RefreshTokenRepository[F],
+                               eventPublisher: EventPublisher[F]) {
   def register(registerRequest: RegisterRequest): EitherT[F, UserAlreadyExistsError, TokensWithUser] = {
     for {
       createUserResponse <- create(registerRequest)
       tokens <- EitherT.right(generateNewTokens(createUserResponse._1))
+      _ <- EitherT.right(eventPublisher.publish("userRegistered", UserRegistered(UserIdDTO(createUserResponse._1._id.toHexString), EmailId(createUserResponse._1.email)).asJson))
       _ <- EitherT.right(otpService.send(createUserResponse._1._id.toHexString, createUserResponse._1.email))
     } yield tokens
   }
@@ -125,12 +128,14 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
 }
 
 object UserService {
+
   def apply[F[_] : Sync](
                           userRepository: UserRepository[F],
                           userCredentialService: UserCredentialService[F],
                           otpService: OTPService[F],
                           authenticationService: AuthenticationService[F],
-                          refreshTokenRepo : RefreshTokenRepository[F]
+                          refreshTokenRepo : RefreshTokenRepository[F],
+                          eventPublisher: EventPublisher[F]
                         ): UserService[F] =
-    new UserService(userRepository, userCredentialService, otpService, authenticationService, refreshTokenRepo)
+    new UserService(userRepository, userCredentialService, otpService, authenticationService, refreshTokenRepo, eventPublisher)
 }

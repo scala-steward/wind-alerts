@@ -9,7 +9,13 @@ import com.uptech.windalerts.core._
 import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.endpoints.dtos.{ChangePasswordRequest, RegisterRequest}
 
-class UserCredentialService[F[_] : Sync](facebookCredentialsRepo: SocialCredentialsRepository[F, FacebookCredentials], appleCredentialsRepo: SocialCredentialsRepository[F, AppleCredentials], credentialsRepository: CredentialsRepository[F], userRepository: UserRepository[F], refreshTokenRepository: RefreshTokenRepository[F], emailSender: EmailSender[F]) {
+class UserCredentialService[F[_] : Sync](
+                                          facebookCredentialsRepo: SocialCredentialsRepository[F, FacebookCredentials],
+                                          appleCredentialsRepo: SocialCredentialsRepository[F, AppleCredentials],
+                                          credentialsRepository: CredentialsRepository[F],
+                                          userRepository: UserRepository[F],
+                                          refreshTokenRepository: RefreshTokenRepository[F],
+                                          emailSender: EmailSender[F]) {
   def getByCredentials(
                         email: String, password: String, deviceType: String
                       ): EitherT[F, UserAuthenticationFailedError, Credentials] =
