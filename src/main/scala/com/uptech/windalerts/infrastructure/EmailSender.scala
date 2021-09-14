@@ -49,10 +49,10 @@ class EmailSender[F[_]](apiKey: String) {
       implicit val backend = HttpURLConnectionBackend()
 
       val body = req.send().body
-      getLogger.error(body.toString)
+      logger.info(body.toString)
 
     } catch {
-      case e: Throwable => logger.error(s"Exception sending email $e , ${e.printStackTrace()}")
+      case e: Throwable => logger.info(s"Exception sending email $e , ${e.printStackTrace()}")
     })
 
   }

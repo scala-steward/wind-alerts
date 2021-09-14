@@ -32,7 +32,7 @@ class AppleSubscription[F[_] : Async](implicit F: Async[F]) extends SocialSubscr
         .send().body
         .left.map(UnknownError(_))
         .flatMap(json => {
-          getLogger.error(s"Json from apple $json")
+          getLogger.info(s"Json from apple $json")
           parser.parse(json)
         })
         .map(root.receipt.in_app.each.json.getAll(_))

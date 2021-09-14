@@ -43,7 +43,7 @@ extends TidesService[F] {
 
 
   def getFromWillyWeatther_(beachId: BeachId): cats.data.EitherT[F, SurfsUpError, domain.TideHeight] = {
-    logger.error(s"Fetching tides status for $beachId")
+    logger.info(s"Fetching tides status for $beachId")
 
     if (!beachesConfig.contains(beachId.id)) {
       EitherT.left[domain.TideHeight](F.pure(BeachNotFoundError("Beach not found")))
@@ -102,7 +102,7 @@ extends TidesService[F] {
       TideHeight(interpolated.y, status, nextLow.x, nextHigh.x)
     } catch {
       case e: Exception => {
-        logger.error(e)(s"error while interpolating tide")
+        logger.info(e)(s"error while interpolating tide")
         TideHeight(Double.NaN, "NA", Long.MinValue, Long.MinValue)
       }
     }

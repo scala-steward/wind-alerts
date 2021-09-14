@@ -27,8 +27,8 @@ object domain {
                      timeZone: String = "Australia/Sydney",
                      createdAt: Long) {
     def isToBeNotified(beachStatus: Beach): Boolean = {
-      logger.error(s"beach to check $beachStatus")
-      logger.error(s"self $swellDirections $waveHeightFrom $waveHeightTo $windDirections")
+      logger.info(s"beach to check $beachStatus")
+      logger.info(s"self $swellDirections $waveHeightFrom $waveHeightTo $windDirections")
 
       swellDirections.contains(beachStatus.tide.swell.directionText) &&
         waveHeightFrom <= beachStatus.tide.swell.height && waveHeightTo >= beachStatus.tide.swell.height &&

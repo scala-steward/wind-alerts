@@ -25,7 +25,7 @@ object UpdateUserRolesServer extends IOApp {
   implicit val backend = HttpURLConnectionBackend()
 
   override def run(args: List[String]): IO[ExitCode] = for {
-    _ <- IO(getLogger.error("Starting"))
+    _ <- IO(getLogger.info("Starting"))
     db = Repos.acquireDb
     otpRepositoy = new MongoOtpRepository[IO](db.getCollection[OTPWithExpiry]("otp"))
     usersRepository = new MongoUserRepository(db.getCollection[UserT]("users"))
