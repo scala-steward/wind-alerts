@@ -27,29 +27,16 @@ object UpdateUserRolesServer extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = for {
     _ <- IO(getLogger.error("Starting"))
     db = Repos.acquireDb
-    projectId = sys.env("projectId")
-    googlePublisher = new GooglePubSubEventpublisher[IO](projectId)
-    refreshTokenRepository = new MongoRefreshTokenRepository(db.getCollection[RefreshToken]("refreshTokens"))
-
-    authService <- IO(new AuthenticationService(refreshTokenRepository))
-    emailConf = com.uptech.windalerts.config.secrets.read.surfsUp.email
-    emailSender = new EmailSender[IO](emailConf.apiKey)
     otpRepositoy = new MongoOtpRepository[IO](db.getCollection[OTPWithExpiry]("otp"))
     usersRepository = new MongoUserRepository(db.getCollection[UserT]("users"))
-    credentialsRepository = new MongoCredentialsRepository(db.getCollection[Credentials]("credentials"))
-    facebookCredentialsRepository = new MongoSocialCredentialsRepository[IO, FacebookCredentials](db.getCollection[FacebookCredentials]("facebookCredentials"))
-    appleCredentialsRepository = new MongoSocialCredentialsRepository[IO, AppleCredentials](db.getCollection[AppleCredentials]("appleCredentials"))
     androidPurchaseRepository = new MongoAndroidPurchaseRepository(db.getCollection[AndroidToken]("androidPurchases"))
     applePurchaseRepository = new MongoApplePurchaseRepository(db.getCollection[AppleToken]("applePurchases"))
     alertsRepository = new MongoAlertsRepository(db.getCollection[Alert]("alerts"))
-    otpService = new OTPService[IO](otpRepositoy, emailSender, usersRepository)
     androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
-    userCredentialsService <- IO(new UserCredentialService[IO](facebookCredentialsRepository, appleCredentialsRepository, credentialsRepository, usersRepository, refreshTokenRepository, emailSender))
-    userService <- IO(new UserService[IO](usersRepository, userCredentialsService, authService, refreshTokenRepository, googlePublisher))
     appleSubscription <- IO(new AppleSubscription[IO]())
     androidSubscription <- IO(new AndroidSubscription[IO](androidPublisher))
     subscriptionsService <- IO(new SocialPlatformSubscriptionsServiceImpl[IO](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription))
-    userRolesService <- IO(new UserRolesService[IO](applePurchaseRepository, androidPurchaseRepository, alertsRepository, usersRepository, otpRepositoy, subscriptionsService, userService))
+    userRolesService <- IO(new UserRolesService[IO](applePurchaseRepository, androidPurchaseRepository, alertsRepository, usersRepository, otpRepositoy, subscriptionsService))
     endpoints <- IO(new UpdateUserRolesEndpoints[IO](userRolesService))
 
 

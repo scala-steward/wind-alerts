@@ -1,12 +1,14 @@
 package com.uptech.windalerts.core.alerts
 
-import cats.data.EitherT
+import cats.data.{EitherT, OptionT}
 import com.uptech.windalerts.core.AlertNotFoundError
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
 
 trait AlertsRepository[F[_]] {
-  def disableAllButOneAlerts(userId: String): F[Seq[Alert]]
+  def disableAllButFirstAlerts(userId: String): F[Seq[Alert]]
+
+  def getFirstAlert(userId: String): OptionT[F, Alert]
 
   def getAllEnabled(): F[Seq[Alert]]
 
