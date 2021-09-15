@@ -45,7 +45,7 @@ class AuthenticationService[F[_] : Effect](refreshTokenRepository: RefreshTokenR
       issuedAt = Some(current / 1000),
       issuer = Some("wind-alerts.com"),
       subject = Some(userId.id)
-    ) + ("accessTokenId", accessTokenId) + ("emailId", emailId) + ("firstName", firstName) + ("userType", userType.value)
+    ) + ("accessTokenId", accessTokenId) + ("emailId", emailId.email) + ("firstName", firstName) + ("userType", userType.value)
 
     AccessTokenWithExpiry(Jwt.encode(claims, key.value, JwtAlgorithm.HS256), expiry)
   }

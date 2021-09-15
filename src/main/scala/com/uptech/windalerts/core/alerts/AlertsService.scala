@@ -9,11 +9,10 @@ import com.uptech.windalerts.core.user.{UserId, UserRepository, UserRolesService
 import com.uptech.windalerts.core.{AlertNotFoundError, OperationNotAllowed, SurfsUpError, UserNotFoundError}
 import com.uptech.windalerts.infrastructure.endpoints.dtos.{AlertDTO, AlertRequest}
 
-class AlertsService[F[_] : Sync](alertsRepository: AlertsRepository[F], userRepository: UserRepository[F]) {
-  def createAlert(u: UserId, r: AlertRequest) = {
+class AlertsService[F[_] : Sync](alertsRepository: AlertsRepository[F]) {
+  def createAlert(u: UserId, userType: UserType, r: AlertRequest) = {
     for {
-      dbUser <- userRepository.getByUserId(u.id).toRight(UserNotFoundError())
-      _ <- EitherT.fromEither(Either.cond(UserType(dbUser.userType).isPremiumUser(), (), OperationNotAllowed(s"Please subscribe to perform this action")))
+      _ <- EitherT.fromEither(Either.cond(userType.isPremiumUser(), (), OperationNotAllowed(s"Please subscribe to perform this action")))
       saved <- save(u, r)
     } yield saved
   }
@@ -22,22 +21,21 @@ class AlertsService[F[_] : Sync](alertsRepository: AlertsRepository[F], userRepo
     EitherT.liftF(alertsRepository.save(r, u.id)).map(_.asDTO())
   }
 
-  def update(alertId: String, u: UserId, r: AlertRequest): EitherT[F, SurfsUpError, AlertDTO] = {
+  def update(alertId: String, u: UserId, userType: UserType, r: AlertRequest): EitherT[F, SurfsUpError, AlertDTO] = {
     for {
-      dbUser <- userRepository.getByUserId(u.id).toRight(UserNotFoundError())
-      _ <- authorizeAlertEditRequest(dbUser, alertId, r).leftWiden[SurfsUpError]
+      _ <- authorizeAlertEditRequest(u, userType, alertId, r).leftWiden[SurfsUpError]
       saved <- update(u.id, alertId, r).map(_.asDTO()).leftWiden[SurfsUpError]
     } yield saved
   }
 
 
-  def authorizeAlertEditRequest(user: UserT, alertId: String, alertRequest: AlertRequest): EitherT[F, OperationNotAllowed, UserT] = {
-    if (UserType(user.userType).isPremiumUser())
-      EitherT.pure(user)
+  def authorizeAlertEditRequest(userId: UserId, userType: UserType, alertId: String, alertRequest: AlertRequest): EitherT[F, OperationNotAllowed, Unit] = {
+    if (userType.isPremiumUser())
+      EitherT.pure(())
     else {
       for {
-        first <- alertsRepository.getFirstAlert(user._id.toHexString).toRight(OperationNotAllowed(s"Please subscribe to perform this action"))
-        canEdit <- EitherT.fromEither(Either.cond(checkForNonPremiumUser(alertId, first, alertRequest), user, OperationNotAllowed(s"Please subscribe to perform this action")))
+        first <- alertsRepository.getFirstAlert(userId.id).toRight(OperationNotAllowed(s"Please subscribe to perform this action"))
+        canEdit <- EitherT.fromEither(Either.cond(checkForNonPremiumUser(alertId, first, alertRequest), (), OperationNotAllowed(s"Please subscribe to perform this action")))
       } yield canEdit
     }
   }

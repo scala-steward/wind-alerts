@@ -53,7 +53,7 @@ object UsersServer extends IOApp {
         alertsRepository = new MongoAlertsRepository(db.getCollection[Alert]("alerts"))
         androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
 
-        otpService = new OTPService[IO](otpRepositoy, emailSender, usersRepository)
+        otpService = new OTPService[IO](otpRepositoy, emailSender)
         userCredentialsService <- IO(new UserCredentialService[IO](facebookCredentialsRepository, appleCredentialsRepository, credentialsRepository, usersRepository, refreshTokenRepository, emailSender))
         usersService <- IO(new UserService(usersRepository, userCredentialsService, auth, refreshTokenRepository, googlePublisher))
         socialLoginService <- IO(new SocialLoginService(Repos.applePlatform(), Repos.facebookPlatform(),  facebookCredentialsRepository, appleCredentialsRepository, usersRepository, usersService, userCredentialsService))
@@ -70,7 +70,7 @@ object UsersServer extends IOApp {
 
         endpoints <- IO(new UsersEndpoints(userCredentialsService, usersService, socialLoginService, userRolesService, subscriptionsService, otpService))
 
-        alertService <- IO(new AlertsService[IO](alertsRepository, usersRepository))
+        alertService <- IO(new AlertsService[IO](alertsRepository))
         alertsEndPoints <- IO(new AlertsEndpoints(alertService))
 
       httpApp <- IO(errors.errorMapper(
