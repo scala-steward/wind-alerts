@@ -74,7 +74,7 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F], userCredential
     import cats.syntax.functor._
 
     val accessTokenId = utils.generateRandomString(10)
-    val token = auth.createToken(user._id.toHexString, accessTokenId)
+    val token = auth.createToken(UserId(user._id.toHexString), EmailId(user.email), user.firstName(), accessTokenId, UserType(user.userType))
 
     refreshTokenRepository.create(RefreshToken(user._id.toHexString, accessTokenId))
       .map(newRefreshToken=>auth.tokens(token.accessToken, newRefreshToken, token.expiredAt, user))

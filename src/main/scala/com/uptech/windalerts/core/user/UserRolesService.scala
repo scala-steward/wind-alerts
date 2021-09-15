@@ -6,6 +6,7 @@ import cats.implicits._
 import com.uptech.windalerts.config.secrets
 import com.uptech.windalerts.core.alerts.AlertsRepository
 import com.uptech.windalerts.core.otp.OtpRepository
+import com.uptech.windalerts.core.refresh.tokens.RefreshTokenRepository
 import com.uptech.windalerts.core.social.subscriptions.{AndroidTokenRepository, AppleTokenRepository, SocialPlatformSubscriptionsService}
 import com.uptech.windalerts.core.user.UserType.{Premium, PremiumExpired, Trial}
 import com.uptech.windalerts.core.{OperationNotAllowed, SurfsUpError, UnknownError, UserNotFoundError}
@@ -13,8 +14,13 @@ import com.uptech.windalerts.infrastructure.endpoints.codecs._
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
 import io.circe.parser.parse
 
-class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepository[F], androidPurchaseRepository: AndroidTokenRepository[F], alertsRepository: AlertsRepository[F], userRepository: UserRepository[F],
-                                    otpRepository: OtpRepository[F], socialPlatformSubscriptionsService: SocialPlatformSubscriptionsService[F]) {
+class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepository[F],
+                                    androidPurchaseRepository: AndroidTokenRepository[F],
+                                    alertsRepository: AlertsRepository[F],
+                                    userRepository: UserRepository[F],
+                                    otpRepository: OtpRepository[F],
+                                    socialPlatformSubscriptionsService: SocialPlatformSubscriptionsService[F],
+                                    refreshTokenRepository: RefreshTokenRepository[F]) {
   def updateTrialUsers() = {
     for {
       users <- EitherT.right(userRepository.findTrialExpiredUsers())
@@ -67,9 +73,6 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
       }
     } yield userWithUpdatedRole
   }
-
-  def update(user: UserT): EitherT[F, UserNotFoundError, UserT] =
-    userRepository.update(user).toRight(UserNotFoundError("User not found"))
 
   def authorizePremiumUsers(user: UserT): EitherT[F, SurfsUpError, UserT] = {
     EitherT.fromEither(if (UserType(user.userType) == UserType.Premium || UserType(user.userType) == UserType.Trial) {
@@ -127,20 +130,20 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
   }
 
   def makeUserTrial(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
-    userRepository.update(user.copy(
+    update(user.copy(
       userType = Trial.value,
       startTrialAt = System.currentTimeMillis(),
       endTrialAt = System.currentTimeMillis() + (30L * 24L * 60L * 60L * 1000L),
-    )).toRight(UserNotFoundError("User not found"))
+    ))
   }
 
   def makeUserPremium(user: UserT, start: Long, expiry: Long): EitherT[F, UserNotFoundError, UserT] = {
-    userRepository.update(user.copy(userType = Premium.value, lastPaymentAt = start, nextPaymentAt = expiry)).toRight(UserNotFoundError())
+    update(user.copy(userType = Premium.value, lastPaymentAt = start, nextPaymentAt = expiry))
   }
 
   def makeUserPremiumExpired(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
     for {
-      operationResult <- userRepository.update(user.copy(userType = PremiumExpired.value, nextPaymentAt = -1)).toRight(UserNotFoundError())
+      operationResult <- update(user.copy(userType = PremiumExpired.value, nextPaymentAt = -1))
       _ <- EitherT.liftF(alertsRepository.disableAllButFirstAlerts(user._id.toHexString))
     } yield operationResult
   }
@@ -150,6 +153,15 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
       updated <- update(user.copy(userType = UserType.TrialExpired.value, lastPaymentAt = -1, nextPaymentAt = -1))
       _ <- EitherT.liftF(alertsRepository.disableAllButFirstAlerts(updated._id.toHexString))
     } yield updated
+  }
+
+
+  private def update(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
+    for {
+      u <- userRepository.update(user).toRight(UserNotFoundError("User not found"))
+      _ <- EitherT.liftF(refreshTokenRepository.updateAccessTokenId(UserId(user._id.toHexString), null))
+     } yield u
+
   }
 
 }
