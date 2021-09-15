@@ -11,7 +11,10 @@
             </fieldNames>
         </encoder>
     </appender>
-    <logger name="com.uptech" level="info">
-        <appender-ref ref="jsonConsoleAppender"/>
-    </logger>
+<!--    <logger name="com.uptech" level="info">-->
+<!--        <appender-ref ref="jsonConsoleAppender"/>-->
+<!--    </logger>-->
+    <root level="WARN">
+        <appender-ref ref="jsonConsoleAppender" />
+    </root>
 </configuration>

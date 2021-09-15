@@ -61,7 +61,7 @@ object UsersServer extends IOApp {
         appleSubscription <- IO(new AppleSubscription[IO]())
         androidSubscription <- IO(new AndroidSubscription[IO](androidPublisher))
         subscriptionsService <- IO(new SocialPlatformSubscriptionsServiceImpl[IO](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription))
-        userRolesService <- IO(new UserRolesService[IO](applePurchaseRepository, androidPurchaseRepository, alertsRepository, usersRepository, otpRepositoy, subscriptionsService))
+        userRolesService <- IO(new UserRolesService[IO](applePurchaseRepository, androidPurchaseRepository, alertsRepository, usersRepository, otpRepositoy, subscriptionsService, refreshTokenRepository))
 
         apiKey <- IO(secrets.read.surfsUp.willyWeather.key)
         beachesConfig: Map[Long, beaches.Beach] = com.uptech.windalerts.config.beaches.read

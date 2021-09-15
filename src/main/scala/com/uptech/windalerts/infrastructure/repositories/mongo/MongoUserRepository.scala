@@ -25,7 +25,6 @@ class MongoUserRepository[F[_]](collection: MongoCollection[UserT])(implicit cs:
     findByCriteria(equal("_id", new ObjectId(userId)))
   }
 
-
   override def getByEmailAndDeviceType(email: String, deviceType: String) = {
     findByCriteria(and(equal("email", email), equal("deviceType", deviceType)))
   }
@@ -39,10 +38,6 @@ class MongoUserRepository[F[_]](collection: MongoCollection[UserT])(implicit cs:
       _ <- OptionT.liftF(Async.fromFuture(M.pure(collection.replaceOne(equal("_id", user._id), user).toFuture())))
       updatedUser <- getByUserId(user._id.toHexString)
     } yield updatedUser
-  }
-
-  override def updateDeviceToken(userId: String, deviceToken: String): OptionT[F, Unit] = {
-    OptionT.liftF(Async.fromFuture(M.pure(collection.updateOne(equal("_id", new ObjectId(userId)), set("deviceToken", deviceToken)).toFuture().map(_ => ()))))
   }
 
   private def findByCriteria(criteria: Bson) = {

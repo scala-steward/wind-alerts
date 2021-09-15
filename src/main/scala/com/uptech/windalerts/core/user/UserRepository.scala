@@ -15,8 +15,6 @@ trait UserRepository[F[_]] {
 
   def update(user: UserT): OptionT[F, UserT]
 
-  def updateDeviceToken(userId: String, deviceToken: String): OptionT[F, Unit]
-
   def findTrialExpiredUsers(): F[Seq[UserT]]
 
   def findAndroidPremiumExpiredUsers(): F[Seq[UserT]]

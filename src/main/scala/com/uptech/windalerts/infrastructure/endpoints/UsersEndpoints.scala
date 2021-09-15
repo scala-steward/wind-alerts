@@ -7,7 +7,7 @@ import com.uptech.windalerts.core.{OtpNotFoundError, RefreshTokenExpiredError, R
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.social.subscriptions.SocialPlatformSubscriptionsService
-import com.uptech.windalerts.core.user.{UserRolesService, UserService}
+import com.uptech.windalerts.core.user.{UserIdMetadata, UserRolesService, UserService}
 import com.uptech.windalerts.config._
 import codecs._
 import com.uptech.windalerts.core.otp.OTPService
@@ -98,14 +98,14 @@ class UsersEndpoints[F[_] : Effect]
     }
 
 
-  def authedService(): AuthedRoutes[com.uptech.windalerts.core.user.UserId, F] =
+  def authedService(): AuthedRoutes[UserIdMetadata, F] =
     AuthedRoutes {
 
       case authReq@PUT -> Root / "profile" as u => {
         OptionT.liftF(authReq.req.decode[UpdateUserRequest] {
           request =>
             (for {
-              response <- userService.updateUserProfile(u.id, request.name, request.snoozeTill, request.disableAllAlerts, request.notificationsPerHour)
+              response <- userService.updateUserProfile(u.userId.id, request.name, request.snoozeTill, request.disableAllAlerts, request.notificationsPerHour)
                 .map(_.asDTO)
             } yield response).value.flatMap {
               case Right(response) => Ok(response)
@@ -117,7 +117,7 @@ class UsersEndpoints[F[_] : Effect]
       case _@GET -> Root / "profile" as user => {
         OptionT.liftF(
           (for {
-            response <- userService.getUser(user.id).map(_.asDTO())
+            response <- userService.getUser(user.userId.id).map(_.asDTO())
           } yield response).value.flatMap {
             case Right(response) => Ok(response)
             case Left(UserNotFoundError(_)) => NotFound("User not found")
@@ -129,7 +129,7 @@ class UsersEndpoints[F[_] : Effect]
         OptionT.liftF(authReq.req.decode[UpdateUserDeviceTokenRequest] {
           req =>
             (for {
-              response <- userService.updateDeviceToken(user.id, req.deviceToken)
+              response <- userService.updateDeviceToken(user.userId.id, req.deviceToken)
                 .map(_.asDTO)
             } yield response).value.flatMap {
               case Right(response) => Ok(response)
@@ -140,7 +140,7 @@ class UsersEndpoints[F[_] : Effect]
 
       case _@POST -> Root / "sendOTP" as user => {
         OptionT.liftF((for {
-          response <- otpService.sendOtp(user.id)
+          response <- otpService.sendOtp(user.userId.id)
         } yield response).value.flatMap {
           case Right(_) => Ok()
           case Left(UserNotFoundError(_)) => NotFound("User not found")
@@ -151,7 +151,7 @@ class UsersEndpoints[F[_] : Effect]
         OptionT.liftF(authReq.req.decode[OTP] {
           req =>
             (for {
-              response <- userRolesService.verifyEmail(user, req)
+              response <- userRolesService.verifyEmail(user.userId, req)
             } yield response).value.flatMap {
               case Right(response) => Ok(response)
               case Left(OtpNotFoundError(_)) => NotFound("Invalid or expired OTP")
@@ -163,7 +163,7 @@ class UsersEndpoints[F[_] : Effect]
       case _@POST -> Root / "logout" as user => {
         OptionT.liftF({
           (for {
-            response <- userService.logoutUser(user.id)
+            response <- userService.logoutUser(user.userId.id)
           } yield response).value.flatMap {
             case Right(response) => Ok()
             case Left(UserNotFoundError(_)) => NotFound("User not found")
@@ -174,7 +174,7 @@ class UsersEndpoints[F[_] : Effect]
       case _@GET -> Root / "purchase" / "android" as user => {
         OptionT.liftF(
           (for {
-            response <- userRolesService.getAndroidPurchase(user)
+            response <- userRolesService.getAndroidPurchase(user.userId)
           } yield response).value.flatMap {
             case Right(response) => Ok(response)
             case Left(TokenNotFoundError(_)) => NotFound("Token not found")
@@ -187,7 +187,7 @@ class UsersEndpoints[F[_] : Effect]
         OptionT.liftF(authReq.req.decode[AndroidReceiptValidationRequest] {
           req =>
             (for {
-              response <- subscriptionsService.updateAndroidPurchase(user, req)
+              response <- subscriptionsService.updateAndroidPurchase(user.userId, req)
             } yield response).value.flatMap {
               case Right(_) => Ok()
               case Left(TokenNotFoundError(_)) => NotFound("Token not found")
@@ -199,7 +199,7 @@ class UsersEndpoints[F[_] : Effect]
       case _@GET -> Root / "purchase" / "apple" as user => {
         OptionT.liftF(
           (for {
-            response <- userRolesService.updateAppleUser(user)
+            response <- userRolesService.updateAppleUser(user.userId)
           } yield response).value.flatMap {
             case Right(response) => Ok(response)
             case Left(TokenNotFoundError(_)) => NotFound("Token not found")
@@ -212,9 +212,9 @@ class UsersEndpoints[F[_] : Effect]
         OptionT.liftF(authReq.req.decode[ApplePurchaseToken] {
           req =>
             (for {
-              response <- subscriptionsService.updateApplePurchase(user, req)
+              response <- subscriptionsService.updateApplePurchase(user.userId, req)
             } yield response).value.flatMap {
-              case Right(response) => Ok()
+              case Right(_) => Ok()
               case Left(TokenNotFoundError(_)) => NotFound("Token not found")
               case Left(UserNotFoundError(_)) => NotFound("User not found")
             }

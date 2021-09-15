@@ -4,6 +4,7 @@ import cats.data.{EitherT, OptionT}
 import cats.effect.{Async, ContextShift}
 import com.uptech.windalerts.core.TokenNotFoundError
 import com.uptech.windalerts.core.refresh.tokens.{RefreshToken, RefreshTokenRepository}
+import com.uptech.windalerts.core.user.UserId
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId
 import org.mongodb.scala.bson.conversions.Bson
@@ -53,4 +54,8 @@ class MongoRefreshTokenRepository[F[_]](collection: MongoCollection[RefreshToken
     findByCriteria(equal("_id", new ObjectId(id)))
   }
 
+  override def updateAccessTokenId(userId: UserId, newAccessTokenId: String): F[Unit] = {
+    (Async.fromFuture(M.pure(collection.updateOne(equal("userId", userId.id), set("accessTokenId", newAccessTokenId)).toFuture().map(_=>()))))
+
+  }
 }
