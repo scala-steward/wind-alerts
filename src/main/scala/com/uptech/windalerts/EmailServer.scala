@@ -29,8 +29,7 @@ object EmailServer extends IOApp {
       db = Repos.acquireDb(surfsUp.mongodb.url)
       emailSender = new EmailSender[F](surfsUp.email.apiKey)
       otpRepositoy = new MongoOtpRepository[F](db.getCollection[OTPWithExpiry]("otp"))
-      userRepositoy = new MongoUserRepository[F](db.getCollection[UserT]("users"))
-      otpService = new OTPService[F](otpRepositoy, emailSender, userRepositoy)
+      otpService = new OTPService[F](otpRepositoy, emailSender)
 
       httpApp = Router(
         "/v1/email" -> new EmailEndpoints[F](otpService).allRoutes(),

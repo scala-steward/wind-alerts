@@ -13,7 +13,7 @@ import io.circe.parser.parse
 
 import scala.util.Random
 
-class OTPService[F[_] : Sync](otpRepository: OtpRepository[F], emailSender: EmailSender[F], userRepository: UserRepository[F]) {
+class OTPService[F[_] : Sync](otpRepository: OtpRepository[F], emailSender: EmailSender[F]) {
 
   def handleUserRegistered(userRegistered: UserRegisteredUpdate):EitherT[F, SurfsUpError, Unit] = {
     for {
@@ -28,14 +28,6 @@ class OTPService[F[_] : Sync](otpRepository: OtpRepository[F], emailSender: Emai
       parsed <- parse(response)
       decoded <- parsed.as[UserRegistered].leftWiden[io.circe.Error]
     } yield decoded).leftMap(error => UnknownError(error.getMessage)).leftWiden[SurfsUpError])
-  }
-
-
-  def sendOtp(userId: String): EitherT[F, UserNotFoundError, Unit] = {
-    for {
-      userFromDb <- userRepository.getByUserId(userId).toRight(UserNotFoundError())
-      sent <- EitherT.right(send(userFromDb._id.toHexString, userFromDb.email))
-    } yield sent
   }
 
   def send(userId: String, email: String)(implicit M: Monad[F]):F[Unit] = {

@@ -138,14 +138,11 @@ class UsersEndpoints[F[_] : Effect]
         })
       }
 
-      case _@POST -> Root / "sendOTP" as user => {
-        OptionT.liftF((for {
-          response <- otpService.sendOtp(user.userId.id)
-        } yield response).value.flatMap {
-          case Right(_) => Ok()
-          case Left(UserNotFoundError(_)) => NotFound("User not found")
-        })
-      }
+      case _@POST -> Root / "sendOTP" as user =>
+        OptionT.liftF(for {
+          _ <- otpService.send(user.userId.id, user.emailId.email)
+          resp <- Ok()
+        } yield resp)
 
       case authReq@POST -> Root / "verifyEmail" as user => {
         OptionT.liftF(authReq.req.decode[OTP] {

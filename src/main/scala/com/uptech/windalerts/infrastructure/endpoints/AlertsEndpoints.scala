@@ -39,7 +39,7 @@ class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F]) extends Htt
         OptionT.liftF(authReq.req.decode[AlertRequest] {
           request =>
             (for {
-              response <- alertService.update(alertId, user.userId, request)
+              response <- alertService.update(alertId, user.userId, user.userType, request)
             } yield response).value.flatMap {
               case Right(response) => Ok(response)
               case Left(OperationNotAllowed(message)) => Forbidden(message)
@@ -53,7 +53,7 @@ class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F]) extends Htt
         OptionT.liftF(authReq.req.decode[AlertRequest] {
           request =>
             (for {
-              response <- alertService.createAlert(user.userId, request)
+              response <- alertService.createAlert(user.userId, user.userType, request)
             } yield response).value.flatMap {
               case Right(response) => Created(response)
               case Left(UserNotFoundError(_)) => NotFound("User not found")
