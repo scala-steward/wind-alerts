@@ -1,7 +1,7 @@
 package com.uptech.windalerts.infrastructure.repositories.mongo
 
 
-import cats.Monad
+import cats.{Applicative, Monad}
 import cats.data.{EitherT, OptionT}
 import cats.effect.{Async, ContextShift, IO}
 import cats.implicits._
@@ -53,7 +53,8 @@ class MongoAlertsRepository[F[_]](collection: MongoCollection[Alert])(implicit c
 
   override def delete(requester: String, alertId: String): EitherT[F, AlertNotFoundError, Unit] = {
     for {
-      _ <- getById(alertId).toRight(AlertNotFoundError())
+      dbAlert <- getById(alertId).toRight(AlertNotFoundError())
+      _ <- EitherT.cond[F](dbAlert.owner == requester, (), AlertNotFoundError())
       deleted <- EitherT.right(Async.fromFuture(M.pure(collection.deleteOne(equal("_id", new ObjectId(alertId))).toFuture().map(_ => ()))))
     } yield deleted
   }
