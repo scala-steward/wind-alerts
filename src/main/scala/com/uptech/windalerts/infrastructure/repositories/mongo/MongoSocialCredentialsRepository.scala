@@ -13,9 +13,6 @@ class MongoSocialCredentialsRepository[F[_], T : scala.reflect.ClassTag](collect
   override def create(credentials: T): F[T] =
     Async.fromFuture(M.pure(collection.insertOne(credentials).toFuture().map(_ => credentials)))
 
-  override def count(email: String, deviceType: String): F[Int] =
-    Async.fromFuture(M.pure(collection.find(and(equal("email", email), equal("deviceType", deviceType))).toFuture().map(_.size)))
-
   override def find(email: String, deviceType: String): F[Option[T]] =
     Async.fromFuture(M.pure(collection.find(and(equal("email", email), equal("deviceType", deviceType))).toFuture().map(_.headOption)))
 }

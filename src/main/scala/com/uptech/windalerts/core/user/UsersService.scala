@@ -14,7 +14,11 @@ import io.circe.syntax._
 import org.mongodb.scala.bson.ObjectId
 
 
-class UserService[F[_] : Sync](userRepository: UserRepository[F], userCredentialsService: UserCredentialService[F], auth: AuthenticationService[F], refreshTokenRepository: RefreshTokenRepository[F], eventPublisher: EventPublisher[F]) {
+class UserService[F[_] : Sync](userRepository: UserRepository[F],
+                               userCredentialsService: UserCredentialService[F],
+                               auth: AuthenticationService[F],
+                               refreshTokenRepository: RefreshTokenRepository[F],
+                               eventPublisher: EventPublisher[F]) {
   def register(registerRequest: RegisterRequest): EitherT[F, UserAlreadyExistsError, TokensWithUser] = {
     for {
       createUserResponse <- create(registerRequest)

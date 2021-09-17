@@ -4,9 +4,6 @@ import cats.data.{EitherT, OptionT}
 import com.uptech.windalerts.core.UserNotFoundError
 
 trait UserRepository[F[_]] {
-
-  def getByUserIdEitherT(userId: String): EitherT[F, UserNotFoundError, UserT]
-
   def getByUserId(userId: String): OptionT[F, UserT]
 
   def getByEmailAndDeviceType(email: String, deviceType: String): OptionT[F, UserT]
