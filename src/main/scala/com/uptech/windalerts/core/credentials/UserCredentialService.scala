@@ -37,7 +37,7 @@ class UserCredentialService[F[_] : Sync](
       _ <- EitherT.right(credentialsRepository.updatePassword(creds._id.toHexString, newPassword.bcrypt))
       _ <- EitherT.right(refreshTokenRepository.deleteForUserId(creds._id.toHexString))
       user <- userRepository.getByUserId(creds._id.toHexString).toRight(UserNotFoundError("User not found"))
-      _ <- EitherT.pure(emailSender.sendResetPassword(user.firstName(), email, newPassword))
+      _ <- EitherT.liftF(emailSender.sendResetPassword(user.firstName(), email, newPassword))
     } yield creds
 
 

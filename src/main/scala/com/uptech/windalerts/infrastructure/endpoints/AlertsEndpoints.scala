@@ -56,7 +56,6 @@ class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F]) extends Htt
               response <- alertService.createAlert(user.userId, user.userType, request)
             } yield response).value.flatMap {
               case Right(response) => Created(response)
-              case Left(UserNotFoundError(_)) => NotFound("User not found")
               case Left(OperationNotAllowed(message)) => Forbidden(message)
             }
         })

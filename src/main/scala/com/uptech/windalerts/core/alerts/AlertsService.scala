@@ -1,24 +1,20 @@
 package com.uptech.windalerts.core.alerts
 
 import cats.Bifunctor.ops.toAllBifunctorOps
-import cats.Functor
 import cats.data.EitherT
 import cats.effect.Sync
+import cats.{Functor, Monad}
 import com.uptech.windalerts.core.alerts.domain.Alert
-import com.uptech.windalerts.core.user.{UserId, UserRepository, UserRolesService, UserT, UserType}
-import com.uptech.windalerts.core.{AlertNotFoundError, OperationNotAllowed, SurfsUpError, UserNotFoundError}
+import com.uptech.windalerts.core.user.{UserId, UserType}
+import com.uptech.windalerts.core.{AlertNotFoundError, OperationNotAllowed, SurfsUpError}
 import com.uptech.windalerts.infrastructure.endpoints.dtos.{AlertDTO, AlertRequest}
 
 class AlertsService[F[_] : Sync](alertsRepository: AlertsRepository[F]) {
-  def createAlert(u: UserId, userType: UserType, r: AlertRequest) = {
+  def createAlert(u: UserId, userType: UserType, r: AlertRequest)(implicit M: Monad[F]):EitherT[F, OperationNotAllowed, AlertDTO] = {
     for {
-      _ <- EitherT.fromEither(Either.cond(userType.isPremiumUser(), (), OperationNotAllowed(s"Please subscribe to perform this action")))
-      saved <- save(u, r)
+      _ <- EitherT.cond[F](userType.isPremiumUser(), (), OperationNotAllowed(s"Please subscribe to perform this action"))
+      saved <- EitherT.liftF(alertsRepository.save(r, u.id)).map(_.asDTO())
     } yield saved
-  }
-
-  private def save(u: UserId, r: AlertRequest): cats.data.EitherT[F, SurfsUpError, AlertDTO] = {
-    EitherT.liftF(alertsRepository.save(r, u.id)).map(_.asDTO())
   }
 
   def update(alertId: String, u: UserId, userType: UserType, r: AlertRequest): EitherT[F, SurfsUpError, AlertDTO] = {
@@ -33,11 +29,15 @@ class AlertsService[F[_] : Sync](alertsRepository: AlertsRepository[F]) {
     if (userType.isPremiumUser())
       EitherT.pure(())
     else {
-      for {
-        first <- alertsRepository.getFirstAlert(userId.id).toRight(OperationNotAllowed(s"Please subscribe to perform this action"))
-        canEdit <- EitherT.fromEither(Either.cond(checkForNonPremiumUser(alertId, first, alertRequest), (), OperationNotAllowed(s"Please subscribe to perform this action")))
-      } yield canEdit
+      authorizeAlertEditNonPremiumUser(userId, alertId, alertRequest)
     }
+  }
+
+  private def authorizeAlertEditNonPremiumUser(userId: UserId, alertId: String, alertRequest: AlertRequest) = {
+    for {
+      firstAlert <- alertsRepository.getFirstAlert(userId.id).toRight(OperationNotAllowed(s"Please subscribe to perform this action"))
+      canEdit <- EitherT.fromEither(Either.cond(checkForNonPremiumUser(alertId, firstAlert, alertRequest), (), OperationNotAllowed(s"Please subscribe to perform this action")))
+    } yield canEdit
   }
 
   def checkForNonPremiumUser(alertId: String, alert: Alert, alertRequest: AlertRequest) = {
