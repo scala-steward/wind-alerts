@@ -13,9 +13,6 @@ import org.mongodb.scala.model.Updates.set
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class MongoCredentialsRepository[F[_]](collection: MongoCollection[Credentials])(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends CredentialsRepository[F] {
-  override def count(email: String, deviceType: String): F[Int] =
-    Async.fromFuture(M.pure(collection.find(and(equal("email", email), equal("deviceType", deviceType))).toFuture().map(_.size)))
-
   override def create(credentials: Credentials): F[Credentials] =
     Async.fromFuture(M.pure(collection.insertOne(credentials).toFuture().map(_ => credentials)))
 

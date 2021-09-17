@@ -17,9 +17,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 
 class MongoUserRepository[F[_]](collection: MongoCollection[UserT])(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends UserRepository[F] {
-  override def getByUserIdEitherT(userId: String): EitherT[F, UserNotFoundError, UserT] = {
-    getByUserId(userId).toRight(UserNotFoundError())
-  }
 
   override def getByUserId(userId: String): OptionT[F, UserT] = {
     findByCriteria(equal("_id", new ObjectId(userId)))

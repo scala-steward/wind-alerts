@@ -3,6 +3,7 @@ package com.uptech.windalerts.core.notifications
 import cats.data.EitherT
 import cats.effect.{Async, Sync}
 import cats.implicits._
+import com.uptech.windalerts.core.UserNotFoundError
 import com.uptech.windalerts.core.alerts.{AlertsRepository, AlertsService}
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.beaches.BeachService
@@ -35,7 +36,7 @@ class NotificationsService[F[_] : Sync](N: NotificationRepository[F],
       beaches <- B.getAll(alertsByBeaches.keys.toSeq)
       alertsToBeNotified = alertsByBeaches.map(kv => (beaches(kv._1), kv._2)).map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)).map(a => AlertWithBeach(a, kv._1))))
       _ <- EitherT.liftF(F.delay(logger.info(s"alertsToBeNotified ${alertsToBeNotified.map(_._2.map(_.alert._id)).mkString}")))
-      usersToBeNotified <- alertsToBeNotified.values.flatten.map(v => U.getByUserIdEitherT(v.alert.owner)).toList.sequence
+      usersToBeNotified <- alertsToBeNotified.values.flatten.map(v => U.getByUserId(v.alert.owner).toRight(UserNotFoundError())).toList.sequence
       userIdToUser = usersToBeNotified.map(u => (u._id.toHexString, u)).toMap
       alertWithUserWithBeach = alertsToBeNotified.values.flatten.map(v => AlertWithUserWithBeach(v.alert, userIdToUser(v.alert.owner), v.beach))
       _ <- EitherT.liftF(F.delay(logger.info(s"alertWithUserWithBeach ${alertWithUserWithBeach.map(_.alert._id).mkString}")))
