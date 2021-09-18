@@ -99,7 +99,7 @@ extends TidesService[F] {
       TideHeight(interpolated.y, status, nextLow.x, nextHigh.x)
     } catch {
       case e: Exception => {
-        logger.info(e)(s"error while interpolating tide")
+        logger.error(s"error while interpolating tide", e)
         TideHeight(Double.NaN, "NA", Long.MinValue, Long.MinValue)
       }
     }
