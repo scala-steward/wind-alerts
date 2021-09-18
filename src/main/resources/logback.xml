@@ -11,7 +11,7 @@
             </fieldNames>
         </encoder>
     </appender>
-    <logger name="com.uptech" level="info">
+    <logger name="com.uptech" level="INFO">
         <appender-ref ref="jsonConsoleAppender"/>
     </logger>
 </configuration>
