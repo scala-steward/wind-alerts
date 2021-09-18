@@ -8,8 +8,8 @@ import com.turo.pushy.apns.auth.ApnsSigningKey
 import com.uptech.windalerts.core.social.login.{AppleAccessRequest, SocialLogin, SocialUser}
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
 import com.uptech.windalerts.infrastructure.endpoints.dtos.{AppleUser, TokenResponse}
+import com.uptech.windalerts.logger
 import io.circe.parser
-import org.log4s.getLogger
 import pdi.jwt._
 
 import java.io.File
@@ -44,11 +44,10 @@ class AppleLogin[F[_]](filename: String)(implicit cs: ContextShift[F], s: Async[
     implicit val backend = HttpURLConnectionBackend()
 
     val responseBody = req.send().body
-    getLogger.info(responseBody.toString)
+    logger.info(s"Login response from apple ${responseBody.toString}")
     val tokenResponse = responseBody.flatMap(parser.parse(_)).flatMap(x => x.as[TokenResponse]).right.get
     val claims = Jwt.decode(tokenResponse.id_token, JwtOptions(signature = false))
     val parsedEither = parser.parse(claims.toOption.get.content)
-    getLogger.info(claims.toOption.get.content)
     parsedEither.flatMap(x => x.as[AppleUser]).right.get
   }
 

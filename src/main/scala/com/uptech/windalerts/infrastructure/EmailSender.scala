@@ -2,12 +2,10 @@ package com.uptech.windalerts.infrastructure
 
 import cats.Monad
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
-import org.log4s.getLogger
+import com.uptech.windalerts.logger
 
 
 class EmailSender[F[_]](apiKey: String) {
-  private val logger = getLogger
-
   def sendOtp(to: String, otp: String)(implicit F: Monad[F]) = {
     send(to, 1l,
       s"""
@@ -39,7 +37,6 @@ class EmailSender[F[_]](apiKey: String) {
                $params
            }
        }"""
-      println(requestBody)
 
       val req = sttp.body(
         requestBody.stripMargin).header("api-key", apiKey)
@@ -52,7 +49,7 @@ class EmailSender[F[_]](apiKey: String) {
       logger.info(body.toString)
 
     } catch {
-      case e: Throwable => logger.info(s"Exception sending email $e , ${e.printStackTrace()}")
+      case e: Throwable => logger.error(s"Exception sending email ${e.getMessage}" , e)
     })
 
   }

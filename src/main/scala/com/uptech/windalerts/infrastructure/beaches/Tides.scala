@@ -4,20 +4,18 @@ import cats.Applicative
 import cats.data.EitherT
 import cats.effect.{Async, ContextShift, Sync}
 import com.softwaremill.sttp._
-import com.uptech.windalerts.config.beaches
 import com.uptech.windalerts.core.beaches.domain.{BeachId, TideHeight}
 import com.uptech.windalerts.core.beaches.{TidesService, domain}
 import com.uptech.windalerts.core.{BeachNotFoundError, SurfsUpError, UnknownError}
 import com.uptech.windalerts.infrastructure.beaches.Tides.Datum
 import com.uptech.windalerts.infrastructure.beaches.Tides.TideDecoders.tideDecoder
-import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
 import com.uptech.windalerts.infrastructure.resilience
+import com.uptech.windalerts.logger
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.optics.JsonPath._
 import io.circe.{Decoder, Encoder, parser}
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
-import org.log4s.getLogger
 
 import java.time.format.DateTimeFormatter
 import java.time.{ZoneId, ZonedDateTime}
@@ -26,7 +24,6 @@ import scala.concurrent.Future
 
 class WWBackedTidesService[F[_] : Sync](apiKey: String, beachesConfig: Map[Long, com.uptech.windalerts.config.beaches.Beach])(implicit backend: SttpBackend[Id, Nothing], F: Async[F], C: ContextShift[F])
 extends TidesService[F] {
-  private val logger = getLogger
   val startDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
   val timeZoneForRegion = Map("TAS" -> "Australia/Tasmania",

@@ -16,7 +16,6 @@ import com.uptech.windalerts.infrastructure.endpoints.NotificationEndpoints
 import com.uptech.windalerts.infrastructure.notifications.FirebaseBasedNotificationsSender
 import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoAlertsRepository, MongoNotificationsRepository, MongoUserRepository, Repos}
 import org.http4s.server.blaze.BlazeServerBuilder
-import org.log4s.getLogger
 
 import java.io.FileInputStream
 import scala.concurrent.duration.Duration
@@ -24,7 +23,6 @@ import scala.util.Try
 
 object SendNotifications extends IOApp {
 
-  private val logger = getLogger
   logger.info("Starting")
   val started = System.currentTimeMillis()
   sys.addShutdownHook(logger.info(s"Shutting down after ${(System.currentTimeMillis() - started)} ms"))
@@ -33,9 +31,9 @@ object SendNotifications extends IOApp {
 
   val firebaseMessaging = (for {
     credentials <- IO(
-      Try(GoogleCredentials.fromStream(new FileInputStream(s"/app/resources/$projectId.json"))).onError(e => Try(logger.error(e)("Could not load creds from app file")))
-        .orElse(Try(GoogleCredentials.getApplicationDefault)).onError(e => Try(logger.error(e)("Could not load default creds")))
-        .orElse(Try(GoogleCredentials.fromStream(new FileInputStream(s"src/main/resources/$projectId.json")))).onError(e => Try(logger.info(e)("Could not load creds from src file")))
+      Try(GoogleCredentials.fromStream(new FileInputStream(s"/app/resources/$projectId.json"))).onError(e => Try(logger.error("Could not load creds from app file", e)))
+        .orElse(Try(GoogleCredentials.getApplicationDefault)).onError(e => Try(logger.error("Could not load default creds", e)))
+        .orElse(Try(GoogleCredentials.fromStream(new FileInputStream(s"src/main/resources/$projectId.json")))).onError(e => Try(logger.error("Could not load creds from src file", e)))
         .getOrElse(GoogleCredentials.getApplicationDefault))
     options <- IO(new FirebaseOptions.Builder().setCredentials(credentials).setProjectId(projectId).build)
     _ <- IO(FirebaseApp.initializeApp(options))

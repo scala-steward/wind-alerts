@@ -4,16 +4,15 @@ import cats.FlatMap
 import cats.data.EitherT
 import cats.effect.{Async, ContextShift, Sync}
 import com.softwaremill.sttp._
-import com.uptech.windalerts.core.beaches.WindsService
+import com.uptech.windalerts.core.beaches.{WindsService, domain}
 import com.uptech.windalerts.core.beaches.domain.BeachId
 import com.uptech.windalerts.core.{SurfsUpError, UnknownError}
 import com.uptech.windalerts.infrastructure.resilience
+import com.uptech.windalerts.logger
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.{Decoder, parser}
 import org.http4s.EntityDecoder
 import org.http4s.circe.jsonOf
-import org.log4s.getLogger
-import com.uptech.windalerts.core.beaches.domain
 
 import scala.concurrent.Future
 
@@ -35,7 +34,6 @@ object Wind {
 }
 
 class WWBackedWindsService[F[_] : FlatMap : Sync](apiKey: String)(implicit backend: SttpBackend[Id, Nothing], F: Async[F], C: ContextShift[F]) extends WindsService[F] {
-  private val logger = getLogger
 
   override def get(beachId: BeachId): cats.data.EitherT[F, SurfsUpError, domain.Wind] = {
 

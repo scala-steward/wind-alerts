@@ -4,20 +4,18 @@ import cats.Applicative
 import cats.data.EitherT
 import cats.effect.{Async, ContextShift, Sync}
 import com.softwaremill.sttp._
-import com.uptech.windalerts.core.beaches.SwellsService
-import com.uptech.windalerts.core.{SurfsUpError, UnknownError}
-import com.uptech.windalerts.core.beaches.domain
-import com.uptech.windalerts.core.beaches.domain.BeachId
-import com.uptech.windalerts.core.beaches.domain
 import com.uptech.windalerts.config.swellAdjustments.Adjustments
+import com.uptech.windalerts.core.beaches.{SwellsService, domain}
+import com.uptech.windalerts.core.beaches.domain.BeachId
+import com.uptech.windalerts.core.{SurfsUpError, UnknownError}
 import com.uptech.windalerts.infrastructure.beaches.Swells.Swell
 import com.uptech.windalerts.infrastructure.resilience
+import com.uptech.windalerts.logger
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.optics.JsonPath._
 import io.circe.{Decoder, Encoder, parser}
 import org.http4s.circe.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder}
-import org.log4s.getLogger
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -25,7 +23,6 @@ import java.util.TimeZone
 import scala.concurrent.Future
 
 class WWBackedSwellsService[F[_] : Sync](apiKey: String, adjustments: Adjustments)(implicit backend: SttpBackend[Id, Nothing], F: Async[F], C: ContextShift[F]) extends SwellsService[F] {
-  private val logger = getLogger
 
   override def get(beachId: BeachId): cats.data.EitherT[F, SurfsUpError, domain.Swell] =
     getFromWillyWeatther_(apiKey, beachId)
