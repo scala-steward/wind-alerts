@@ -13,7 +13,7 @@ object errors {
       }
       case resp => {
         resp.withEntity(resp.bodyAsText.map(s=>{
-          getLogger.info(s)
+          getLogger.warn(s)
           if (s.equals("not found")) "Invalid access token" else s
         }))
       }
