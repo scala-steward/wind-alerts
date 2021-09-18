@@ -1,6 +1,10 @@
 <configuration>
-    <appender name="jsonConsoleAppender"
-              class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="classicConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="jsonConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
             <fieldNames>
                 <timestamp>[ignore]</timestamp>
@@ -11,7 +15,8 @@
             </fieldNames>
         </encoder>
     </appender>
-    <logger name="com.uptech" level="INFO">
+    <logger name="com.uptech" level="info">
+<!--        <appender-ref ref="classicConsoleAppender"/>-->
         <appender-ref ref="jsonConsoleAppender"/>
     </logger>
 </configuration>

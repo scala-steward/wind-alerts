@@ -1,7 +1,6 @@
 package com.uptech.windalerts
 
 import cats.effect.{Blocker, ExitCode, IO, IOApp}
-import cats.implicits._
 import com.softwaremill.sttp.HttpURLConnectionBackend
 import com.uptech.windalerts.config.{beaches, secrets, swellAdjustments}
 import com.uptech.windalerts.core.alerts.AlertsService
@@ -13,17 +12,15 @@ import com.uptech.windalerts.core.refresh.tokens.RefreshToken
 import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken}
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService, UserT}
-import com.uptech.windalerts.infrastructure.{EmailSender, GooglePubSubEventpublisher}
 import com.uptech.windalerts.infrastructure.beaches._
 import com.uptech.windalerts.infrastructure.endpoints._
-import com.uptech.windalerts.infrastructure.endpoints.logger._
-import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoAlertsRepository, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoOtpRepository, MongoRefreshTokenRepository, MongoSocialCredentialsRepository, MongoUserRepository, Repos}
-import com.uptech.windalerts.infrastructure.social.subscriptions.{AndroidPublisherHelper, AndroidSubscription, AppleSubscription, ApplicationConfig, SocialPlatformSubscriptionsServiceImpl}
+import com.uptech.windalerts.infrastructure.repositories.mongo._
+import com.uptech.windalerts.infrastructure.social.subscriptions._
+import com.uptech.windalerts.infrastructure.{EmailSender, GooglePubSubEventpublisher}
 import org.http4s.implicits._
-import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.Router
-import org.http4s.server.middleware.Logger
-import org.log4s.getLogger
+import org.http4s.server.blaze.BlazeServerBuilder
+import com.uptech.windalerts.logger
 object UsersServer extends IOApp {
 
 
@@ -32,7 +29,7 @@ object UsersServer extends IOApp {
   override def run(args: List[String]): IO[ExitCode] =
     Blocker[IO].use { blocker =>
       for {
-        _ <- IO(getLogger.info("Starting"))
+        _ <- IO(logger.info("Starting UsersServer"))
         projectId = sys.env("projectId")
         googlePublisher = new GooglePubSubEventpublisher[IO](projectId)
         db = Repos.acquireDb

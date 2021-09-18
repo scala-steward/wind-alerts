@@ -3,6 +3,7 @@ package com.uptech.windalerts.config
 import com.google.common.io.Files
 import com.uptech.windalerts.config.beaches.Beaches
 import com.uptech.windalerts.config.secrets.SurfsUp
+import com.uptech.windalerts.logger
 import io.circe._
 import io.circe.config.parser
 import io.circe.generic.auto._
@@ -19,10 +20,6 @@ object config {
   def getConfigFile(name:String):File = {
     val prodFile = new File(s"/app/resources/$name")
     val localFile = new File(s"src/main/resources/$name")
-    import org.log4s.getLogger
-
-    getLogger.info(s"File exists ${prodFile.getName} ${prodFile.exists()}")
-    getLogger.info(s"File exists ${localFile.getName} ${localFile.exists()}")
 
     if (prodFile.exists()) prodFile
     else {
@@ -130,24 +127,16 @@ object secrets {
 
   def read: SecretsSettings = {
     val projectId = sys.env("projectId")
-    import org.log4s.getLogger
-    getLogger.info(projectId)
+
     val prod = new File(s"/app/resources/$projectId.secrets")
-    getLogger.info(s"File exists ${prod.exists()}")
     val local = new File(s"src/main/resources/secrets.conf")
-    getLogger.info(s"File exists ${local.exists()}")
 
     Option(parser.decodeFile[SecretsSettings](prod).toOption
-      .getOrElse(parser.decodeFile[SecretsSettings](new File(s"src/main/resources/secrets.conf")).toOption.get)).get
+      .getOrElse(parser.decodeFile[SecretsSettings](local).toOption.get)).get
   }
 
   def getConfigFile():File = {
     val projectId = sys.env("projectId")
-    import org.log4s.getLogger
-    getLogger.info(projectId)
-    getLogger.info("File exists " + new File(s"/app/resources/secrets-$projectId.conf").exists())
-    getLogger.info("File exists " + new File(s"src/main/resources/secrets.conf").exists())
-
     val prodFile = new File(s"/app/resources/secrets-$projectId.conf")
     if (prodFile.exists()) {
       prodFile

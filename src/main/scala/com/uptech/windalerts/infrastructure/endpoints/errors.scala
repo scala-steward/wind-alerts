@@ -1,9 +1,9 @@
 package com.uptech.windalerts.infrastructure.endpoints
 
 import cats.effect.IO
+import net.logstash.logback.argument.StructuredArguments.kv
 import org.http4s.{HttpApp, Service, Status}
-import org.log4s.getLogger
-
+import com.uptech.windalerts.logger
 object errors {
 
   def errorMapper(service: HttpApp[IO]): HttpApp[IO] = Service.lift { req =>
@@ -13,7 +13,7 @@ object errors {
       }
       case resp => {
         resp.withEntity(resp.bodyAsText.map(s=>{
-          getLogger.warn(s)
+          logger.warn(s)
           if (s.equals("not found")) "Invalid access token" else s
         }))
       }

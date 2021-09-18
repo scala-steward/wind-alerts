@@ -4,14 +4,13 @@ import cats.data.EitherT
 import cats.effect.{Async, Sync}
 import cats.implicits._
 import com.uptech.windalerts.core.UserNotFoundError
-import com.uptech.windalerts.core.alerts.{AlertsRepository, AlertsService}
+import com.uptech.windalerts.core.alerts.AlertsRepository
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.beaches.domain._
 import com.uptech.windalerts.core.notifications.NotificationsSender.NotificationDetails
 import com.uptech.windalerts.core.user.{UserId, UserRepository, UserT}
-import com.uptech.windalerts.infrastructure.repositories.mongo.Repos
-import org.log4s.getLogger
+import com.uptech.windalerts.logger
 
 import scala.util.Try
 
@@ -20,7 +19,6 @@ class NotificationsService[F[_] : Sync](N: NotificationRepository[F],
                                         B: BeachService[F],
                                         alertsRepository: AlertsRepository[F],
                                         notificationSender: NotificationsSender[F])(implicit F: Async[F]) {
-  private val logger = getLogger
 
   final case class AlertWithBeach(alert: Alert, beach: Beach)
 
