@@ -15,8 +15,8 @@ class MongoNotificationsRepository[F[_]](notifications: MongoCollection[Notifica
     Async.fromFuture(M.pure(notifications.insertOne(notification).toFuture().map(_=>notification)))
   }
 
-  def countNotificationInLastHour(userId: String): EitherT[F, Exception, UserWithNotificationsCount] = {
-    EitherT.liftF(for {
+  def countNotificationInLastHour(userId: String): F[UserWithNotificationsCount] = {
+    (for {
       all <- Async.fromFuture(M.pure(notifications.find(and(equal("userId", userId), gte("sentAt", System.currentTimeMillis() - (60 * 60 * 1000)))).collect().toFuture()))
     } yield UserWithNotificationsCount(userId, all.size))
   }

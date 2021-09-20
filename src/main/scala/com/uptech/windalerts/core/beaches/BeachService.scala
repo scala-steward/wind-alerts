@@ -5,6 +5,7 @@ import cats.effect.Sync
 import cats.implicits._
 import com.uptech.windalerts.core.SurfsUpError
 import com.uptech.windalerts.core.beaches.domain._
+import com.uptech.windalerts.logger
 
 
 class BeachService[F[_]](windService: WindsService[F],
@@ -12,11 +13,16 @@ class BeachService[F[_]](windService: WindsService[F],
                          swellsService: SwellsService[F]) {
 
   def getStatus(beachId: BeachId)(implicit M: Monad[F]): cats.data.EitherT[F, SurfsUpError, Beach] = {
-    for {
+    (for {
       wind <- windService.get(beachId)
       tide <- tidesService.get(beachId)
       swell <- swellsService.get(beachId)
-    } yield Beach(beachId, wind, Tide(tide, SwellOutput(swell.height, swell.direction, swell.directionText)))
+    } yield Beach(beachId, wind, Tide(tide, SwellOutput(swell.height, swell.direction, swell.directionText))))
+      .map(status => {
+        logger.info(s"Status of beach $beachId is $status")
+        status
+      })
+
   }
 
   def getAll(beachIds: Seq[BeachId])(implicit M: Monad[F]): cats.data.EitherT[F, SurfsUpError, Map[BeachId, Beach]] = {

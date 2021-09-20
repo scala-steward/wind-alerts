@@ -3,7 +3,6 @@ package com.uptech.windalerts.core.notifications
 import cats.data.EitherT
 import cats.effect.{Async, Sync}
 import cats.implicits._
-import com.uptech.windalerts.core.UserNotFoundError
 import com.uptech.windalerts.core.alerts.AlertsRepository
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.beaches.BeachService
@@ -11,8 +10,6 @@ import com.uptech.windalerts.core.beaches.domain._
 import com.uptech.windalerts.core.notifications.NotificationsSender.NotificationDetails
 import com.uptech.windalerts.core.user.{UserId, UserRepository, UserT}
 import com.uptech.windalerts.logger
-
-import scala.util.Try
 
 class NotificationsService[F[_] : Sync](N: NotificationRepository[F],
                                         U: UserRepository[F],
@@ -25,43 +22,51 @@ class NotificationsService[F[_] : Sync](N: NotificationRepository[F],
   final case class AlertWithUserWithBeach(alert: Alert, user: UserT, beach: Beach)
 
   def sendNotification() = {
-
-    val usersToBeNotifiedEitherT: EitherT[F, Exception, List[Try[String]]] = for {
-      alerts <-  EitherT.liftF(alertsRepository.getAllEnabled()).map(_.filter(_.isToBeAlertedNow()))
-      alertsByBeaches = alerts.groupBy(_.beachId).map(kv => (BeachId(kv._1), kv._2))
-      _ <- EitherT.liftF(F.delay(logger.info(s"alertsByBeaches ${alertsByBeaches.mapValues(v => v.map(_.beachId)).mkString}")))
-
-      beaches <- B.getAll(alertsByBeaches.keys.toSeq)
-      alertsToBeNotified = alertsByBeaches.map(kv => (beaches(kv._1), kv._2)).map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)).map(a => AlertWithBeach(a, kv._1))))
-      _ <- EitherT.liftF(F.delay(logger.info(s"alertsToBeNotified ${alertsToBeNotified.map(_._2.map(_.alert._id)).mkString}")))
-      usersToBeNotified <- alertsToBeNotified.values.flatten.map(v => U.getByUserId(v.alert.owner).toRight(UserNotFoundError())).toList.sequence
-      userIdToUser = usersToBeNotified.map(u => (u._id.toHexString, u)).toMap
+    EitherT.liftF(for {
+      usersReadyToRecieveNotifications <- allLoggedInUsersReadyToRecieveNotifications()
+      alertsByBeaches <- alertsForUsers(usersReadyToRecieveNotifications)
+      beaches <- beachStatuses(alertsByBeaches.keys.toSeq)
+      userIdToUser = usersReadyToRecieveNotifications.map(u => (u._id.toHexString, u)).toMap
+      alertsToBeNotified = alertsByBeaches
+        .map(kv => (beaches(kv._1), kv._2))
+        .map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)).map(AlertWithBeach(_, kv._1))))
+      _ <- F.delay(logger.info(s"alertsToBeNotified : ${alertsToBeNotified.values.map(_.flatMap(_.alert._id.toHexString)).mkString(", ")}"))
       alertWithUserWithBeach = alertsToBeNotified.values.flatten.map(v => AlertWithUserWithBeach(v.alert, userIdToUser(v.alert.owner), v.beach))
-      _ <- EitherT.liftF(F.delay(logger.info(s"alertWithUserWithBeach ${alertWithUserWithBeach.map(_.alert._id).mkString}")))
-
-      usersToBeDisabledAlertsFiltered = alertWithUserWithBeach.filterNot(f => f.user.disableAllAlerts)
-      _ <- EitherT.liftF(F.delay(logger.info(s"usersToBeDisabledAlertsFiltered ${usersToBeDisabledAlertsFiltered.map(_.alert._id).mkString}")))
-
-      usersToBeNotifiedSnoozeFiltered = usersToBeDisabledAlertsFiltered.filterNot(f => f.user.snoozeTill > System.currentTimeMillis())
-      _ <- EitherT.liftF(F.delay(logger.info(s"usersToBeNotifiedSnoozeFiltered ${usersToBeNotifiedSnoozeFiltered.map(_.alert._id).mkString}")))
-
-      loggedOutUserFiltered = usersToBeNotifiedSnoozeFiltered.filterNot(f => f.user.deviceToken == null || f.user.deviceToken.isEmpty())
-      _ <- EitherT.liftF(F.delay(logger.info(s"loggedOutUserFiltered ${loggedOutUserFiltered.map(_.user.email).mkString}")))
-
-      usersWithCounts <- loggedOutUserFiltered.map(u => N.countNotificationInLastHour(u.user._id.toHexString)).toList.sequence
-      usersWithCountsMap = usersWithCounts.map(u => (u.userId, u.count)).toMap
-      usersToBeFilteredWithCount = loggedOutUserFiltered.filter(u => usersWithCountsMap(u.user._id.toHexString) < u.user.notificationsPerHour)
-      _ = EitherT.liftF(F.delay(logger.info(s"usersToBeFilteredWithCount ${usersToBeFilteredWithCount.map(_.alert._id).mkString}")))
-
-      submitted <- EitherT.liftF(usersToBeFilteredWithCount.map(u => submit(u)).toList.sequence)
-    } yield submitted
-    usersToBeNotifiedEitherT
-
+      submitted <- alertWithUserWithBeach.map(submit(_)).toList.sequence.getOrElse(())
+    } yield submitted)
   }
 
-  private def submit(u: AlertWithUserWithBeach) = {
-    notificationSender.send(NotificationDetails(BeachId(u.alert.beachId), u.user.deviceToken, UserId(u.user._id.toHexString)))
+
+  private def allLoggedInUsersReadyToRecieveNotifications() = {
+    for {
+      users <- U.loggedInUsersWithNotificationsNotDisabledAndNotSnoozed()
+      _ <- F.delay(logger.info(s"loggedInUsersWithNotificationsNotDisabledAndNotSnoozed : ${users.map(_._id.toHexString).mkString(", ")}"))
+      usersWithLastHourNotificationCounts <- users.map(u => N.countNotificationInLastHour(u._id.toHexString)).toList.sequence
+      zipped = users.zip(usersWithLastHourNotificationCounts)
+      usersReadyToReceiveNotifications = zipped.filter(u => u._2.count < u._1.notificationsPerHour).map(_._1)
+      _ <- F.delay(logger.info(s"usersReadyToReceiveNotifications : ${usersReadyToRecieveNotifications.map(_._id.toHexString).mkString(", ")}"))
+    } yield usersReadyToRecieveNotifications
   }
 
+  private def alertsForUsers(users: Seq[UserT]) = {
+    for {
+      alertsForUsers <- users.map(u => alertsRepository.getAllEnabledForUser(u._id.toHexString)).sequence.map(_.flatten)
+      alertsByBeaches = alertsForUsers.groupBy(_.beachId).map(kv => (BeachId(kv._1), kv._2))
+      _ <- F.delay(logger.info(s"alertsByBeaches : ${alertsForUsers.map(_._id.toHexString).mkString(", ")}"))
+    } yield alertsByBeaches
+  }
+
+  private def beachStatuses(beachIds: Seq[BeachId]) = {
+    B.getAll(beachIds).value.map(_.leftMap(e => {
+      logger.warn(s"Error while fetching beach status $e")
+    }).getOrElse(Map()))
+  }
+
+  private def submit(u: AlertWithUserWithBeach):EitherT[F, Throwable, Unit] = {
+    for {
+      _ <- notificationSender.send(NotificationDetails(BeachId(u.alert.beachId), u.user.deviceToken, UserId(u.user._id.toHexString)))
+      _ <- EitherT.liftF(N.create(Notification(u.alert._id.toHexString, u.user._id.toHexString, u.user.deviceToken,  System.currentTimeMillis())))
+    } yield ()
+  }
 
 }

@@ -1,5 +1,6 @@
 package com.uptech.windalerts.core.notifications
 
+import cats.data.EitherT
 import com.uptech.windalerts.core.notifications.NotificationsSender.NotificationDetails
 import com.uptech.windalerts.core.user.UserId
 import com.uptech.windalerts.core.beaches.domain._
@@ -12,5 +13,5 @@ object NotificationsSender {
 }
 
 trait NotificationsSender[F[_]] {
-  def send(nd: NotificationDetails): F[Try[String]]
+  def send(nd: NotificationDetails): EitherT[F, Throwable, String]
 }
