@@ -10,7 +10,7 @@ import com.uptech.windalerts.core.user.{UserRepository, UserT}
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.model.Filters.{and, equal, lt}
+import org.mongodb.scala.model.Filters.{and, equal, lt, notEqual}
 import org.mongodb.scala.model.Updates.set
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -64,6 +64,15 @@ class MongoUserRepository[F[_]](collection: MongoCollection[UserT])(implicit cs:
         equal("userType", Premium.value),
         equal("deviceType", "IOS"),
         lt("nextPaymentAt", System.currentTimeMillis())
+      ))
+  }
+
+  override def loggedInUsersWithNotificationsNotDisabledAndNotSnoozed(): F[Seq[UserT]] = {
+    findAllByCriteria(
+      and(
+        equal("disableAllAlerts", false),
+        notEqual("deviceToken", ""),
+        lt("snoozeTill", System.currentTimeMillis())
       ))
   }
 }

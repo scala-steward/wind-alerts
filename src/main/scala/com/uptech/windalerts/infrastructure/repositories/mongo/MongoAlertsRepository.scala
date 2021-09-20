@@ -8,12 +8,13 @@ import cats.implicits._
 import com.uptech.windalerts.core.AlertNotFoundError
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.alerts.{Alerts, AlertsRepository}
+import com.uptech.windalerts.core.user.UserType.Premium
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
 import io.scalaland.chimney.dsl._
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.model.Filters.equal
+import org.mongodb.scala.model.Filters.{and, equal, lt}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -74,6 +75,14 @@ class MongoAlertsRepository[F[_]](collection: MongoCollection[Alert])(implicit c
   override def getAllForUser(user: String): F[Alerts] = {
     findByCriteria(equal("owner", user)).map(Alerts(_))
   }
+
+  override def getAllEnabledForUser(user: String): F[Seq[Alert]] = {
+    findByCriteria(
+      and(equal("owner", user),
+        equal("enabled", true),
+      ))
+  }
+
 
   private def findByCriteria(criteria: Bson) =
     Async.fromFuture(M.pure(collection.find(criteria).toFuture()))
