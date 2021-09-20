@@ -44,8 +44,8 @@ class NotificationsService[F[_] : Sync](N: NotificationRepository[F],
       usersWithLastHourNotificationCounts <- users.map(u => N.countNotificationInLastHour(u._id.toHexString)).toList.sequence
       zipped = users.zip(usersWithLastHourNotificationCounts)
       usersReadyToReceiveNotifications = zipped.filter(u => u._2.count < u._1.notificationsPerHour).map(_._1)
-      _ <- F.delay(logger.info(s"usersReadyToReceiveNotifications : ${usersReadyToRecieveNotifications.map(_._id.toHexString).mkString(", ")}"))
-    } yield usersReadyToRecieveNotifications
+      _ <- F.delay(logger.info(s"usersReadyToReceiveNotifications : ${usersReadyToReceiveNotifications.map(_._id.toHexString).mkString(", ")}"))
+    } yield usersReadyToReceiveNotifications
   }
 
   private def alertsForUsers(users: Seq[UserT]) = {
