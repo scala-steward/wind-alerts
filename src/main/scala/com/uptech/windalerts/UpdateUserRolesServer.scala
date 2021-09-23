@@ -1,7 +1,9 @@
 package com.uptech.windalerts
-
-import cats.effect.{IO, _}
-import com.softwaremill.sttp.HttpURLConnectionBackend
+import cats.effect.Resource.eval
+import cats.effect._
+import com.typesafe.config.ConfigFactory.parseFileAnySyntax
+import com.uptech.windalerts.config._
+import com.uptech.windalerts.config.secrets.SurfsUp
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.otp.OTPWithExpiry
 import com.uptech.windalerts.core.refresh.tokens.RefreshToken
@@ -10,43 +12,38 @@ import com.uptech.windalerts.core.user.{UserRolesService, UserT}
 import com.uptech.windalerts.infrastructure.endpoints.{UpdateUserRolesEndpoints, errors}
 import com.uptech.windalerts.infrastructure.repositories.mongo._
 import com.uptech.windalerts.infrastructure.social.subscriptions._
+import io.circe.config.parser.decodePathF
 import org.http4s.implicits._
-import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
+import org.http4s.server.{Router, Server => H4Server}
 
 object UpdateUserRolesServer extends IOApp {
+  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer](): Resource[F, H4Server[F]] =
+    for {
+      surfsUp <- eval(decodePathF[F, SurfsUp](parseFileAnySyntax(secrets.getConfigFile()), "surfsUp"))
+      db = Repos.acquireDb(surfsUp.mongodb.url)
+      otpRepositoy = new MongoOtpRepository[F](db.getCollection[OTPWithExpiry]("otp"))
+      usersRepository = new MongoUserRepository[F](db.getCollection[UserT]("users"))
+      androidPurchaseRepository = new MongoAndroidPurchaseRepository[F](db.getCollection[AndroidToken]("androidPurchases"))
+      applePurchaseRepository = new MongoApplePurchaseRepository[F](db.getCollection[AppleToken]("applePurchases"))
+      alertsRepository = new MongoAlertsRepository[F](db.getCollection[Alert]("alerts"))
+      refreshTokenRepository = new MongoRefreshTokenRepository[F](db.getCollection[RefreshToken]("refreshTokens"))
 
-  implicit val backend = HttpURLConnectionBackend()
+      androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
+      appleSubscription = new AppleSubscription[F](surfsUp.apple.appSecret)
+      androidSubscription = new AndroidSubscription[F](androidPublisher)
+      subscriptionsService = new SocialPlatformSubscriptionsServiceImpl[F](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
+      userRolesService = new UserRolesService[F](applePurchaseRepository, androidPurchaseRepository, alertsRepository, usersRepository, otpRepositoy, subscriptionsService, refreshTokenRepository, surfsUp.apple.appSecret)
+      endpoints = new UpdateUserRolesEndpoints[F](userRolesService)
 
-  override def run(args: List[String]): IO[ExitCode] = for {
-    _ <- IO(logger.info("Starting UpdateUserRolesServer"))
-    db = Repos.acquireDb
-    otpRepositoy = new MongoOtpRepository[IO](db.getCollection[OTPWithExpiry]("otp"))
-    usersRepository = new MongoUserRepository(db.getCollection[UserT]("users"))
-    androidPurchaseRepository = new MongoAndroidPurchaseRepository(db.getCollection[AndroidToken]("androidPurchases"))
-    applePurchaseRepository = new MongoApplePurchaseRepository(db.getCollection[AppleToken]("applePurchases"))
-    alertsRepository = new MongoAlertsRepository(db.getCollection[Alert]("alerts"))
-    refreshTokenRepository = new MongoRefreshTokenRepository(db.getCollection[RefreshToken]("refreshTokens"))
-
-    androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
-    appleSubscription <- IO(new AppleSubscription[IO]())
-    androidSubscription <- IO(new AndroidSubscription[IO](androidPublisher))
-    subscriptionsService <- IO(new SocialPlatformSubscriptionsServiceImpl[IO](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription))
-    userRolesService <- IO(new UserRolesService[IO](applePurchaseRepository, androidPurchaseRepository, alertsRepository, usersRepository, otpRepositoy, subscriptionsService, refreshTokenRepository))
-    endpoints <- IO(new UpdateUserRolesEndpoints[IO](userRolesService))
-
-    httpApp <- IO(errors.errorMapper(
-      Router(
+      httpApp = Router(
         "/v1/users/roles" -> endpoints.endpoints(),
-      ).orNotFound))
-    server <- BlazeServerBuilder[IO]
-      .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
-      .withHttpApp(httpApp)
-      .serve
-      .compile
-      .drain
-      .as(ExitCode.Success)
+      ).orNotFound
+      server <- BlazeServerBuilder[F]
+        .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
+        .withHttpApp(new errors[F].errorMapper(httpApp))
+        .resource
+    } yield server
 
-  } yield server
-
+  def run(args: List[String]): IO[ExitCode] = createServer.use(_ => IO.never).as(ExitCode.Success)
 }

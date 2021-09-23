@@ -1,12 +1,16 @@
 package com.uptech.windalerts
 
-import cats.effect.{ExitCode, IO, IOApp}
-import cats.implicits._
+import cats.effect.Resource.eval
+import cats.effect._
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
-import com.softwaremill.sttp.HttpURLConnectionBackend
+import com.softwaremill.sttp.quick.backend
+import com.typesafe.config.ConfigFactory.parseFileAnySyntax
 import com.uptech.windalerts.config._
+import com.uptech.windalerts.config.beaches.{Beaches, _}
+import com.uptech.windalerts.config.secrets.SurfsUp
+import com.uptech.windalerts.config.swellAdjustments.Adjustments
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.notifications.{Notification, NotificationsService}
@@ -15,62 +19,59 @@ import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBa
 import com.uptech.windalerts.infrastructure.endpoints.NotificationEndpoints
 import com.uptech.windalerts.infrastructure.notifications.FirebaseBasedNotificationsSender
 import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoAlertsRepository, MongoNotificationsRepository, MongoUserRepository, Repos}
+import io.circe.config.parser.decodePathF
 import org.http4s.server.blaze.BlazeServerBuilder
+import org.http4s.server.{Server => H4Server}
 
 import java.io.FileInputStream
-import scala.concurrent.duration.Duration
 import scala.util.Try
 
 object SendNotifications extends IOApp {
+  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer](): Resource[F, H4Server[F]] =
+    for {
+      surfsUp <- eval(decodePathF[F, SurfsUp](parseFileAnySyntax(secrets.getConfigFile()), "surfsUp"))
+      appConfig <- eval(decodePathF[F, com.uptech.windalerts.config.config.SurfsUp](parseFileAnySyntax(config.getConfigFile("application.conf")), "surfsUp"))
+      projectId = sys.env("projectId")
 
-  logger.info("Starting")
-  val started = System.currentTimeMillis()
-  sys.addShutdownHook(logger.info(s"Shutting down after ${(System.currentTimeMillis() - started)} ms"))
+      googleCredentials = firebaseCredentials(projectId)
+      firebaseOptions = new FirebaseOptions.Builder().setCredentials(googleCredentials).setProjectId(projectId).build
+      app =  FirebaseApp.initializeApp(firebaseOptions)
+      notifications = FirebaseMessaging.getInstance
 
-  val projectId = sys.env("projectId")
+      beaches <- eval(decodePathF[F, Beaches](parseFileAnySyntax(config.getConfigFile("beaches.json")), "surfsUp"))
+      swellAdjustments <- eval(decodePathF[F, Adjustments](parseFileAnySyntax(config.getConfigFile("swellAdjustments.json")), "surfsUp"))
+      willyWeatherAPIKey = surfsUp.willyWeather.key
 
-  val firebaseMessaging = (for {
-    credentials <- IO(
-      Try(GoogleCredentials.fromStream(new FileInputStream(s"/app/resources/$projectId.json"))).onError(e => Try(logger.error("Could not load creds from app file", e)))
-        .orElse(Try(GoogleCredentials.getApplicationDefault)).onError(e => Try(logger.error("Could not load default creds", e)))
-        .orElse(Try(GoogleCredentials.fromStream(new FileInputStream(s"src/main/resources/$projectId.json")))).onError(e => Try(logger.error("Could not load creds from src file", e)))
-        .getOrElse(GoogleCredentials.getApplicationDefault))
-    options <- IO(new FirebaseOptions.Builder().setCredentials(credentials).setProjectId(projectId).build)
-    _ <- IO(FirebaseApp.initializeApp(options))
-    notifications <- IO(FirebaseMessaging.getInstance)
-  } yield (notifications)).unsafeRunSync()
+      beachService = new BeachService[F](
+        new WWBackedWindsService[F](willyWeatherAPIKey),
+        new WWBackedTidesService[F](willyWeatherAPIKey, beaches.toMap()),
+        new WWBackedSwellsService[F](willyWeatherAPIKey, swellAdjustments))
 
-  implicit val backend = HttpURLConnectionBackend()
+      db = Repos.acquireDb(surfsUp.mongodb.url)
+      usersRepository = new MongoUserRepository[F](db.getCollection[UserT]("users"))
+      alertsRepository = new MongoAlertsRepository[F](db.getCollection[Alert]("alerts"))
+      notificationsRepository = new MongoNotificationsRepository[F](db.getCollection[Notification]("notifications"))
 
-  val conf = secrets.read
-  val appConf = config.read
-  val key = conf.surfsUp.willyWeather.key
-  lazy val beachSeq = beaches.read
-  lazy val adjustments = swellAdjustments.read
-  val beachesConfig: Map[Long, beaches.Beach] = com.uptech.windalerts.config.beaches.read
-  val beachesService = new BeachService[IO](new WWBackedWindsService[IO](key), new WWBackedTidesService[IO](key, beachesConfig), new WWBackedSwellsService[IO](key, swellAdjustments.read))
-  val db = Repos.acquireDb
+      notificationsSender = new FirebaseBasedNotificationsSender[F](notifications, beaches.toMap(), appConfig.notifications )
+      notificationService = new NotificationsService[F](notificationsRepository, usersRepository, beachService, alertsRepository, notificationsSender)
+      notificationsEndPoints = new NotificationEndpoints[F](notificationService)
+      httpApp = notificationsEndPoints.allRoutes()
+      server <- BlazeServerBuilder[F]
+        .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
+        .withHttpApp(httpApp)
+        .resource
+    } yield server
 
-  val usersRepository = new MongoUserRepository(db.getCollection[UserT]("users"))
-  val alertsRepository = new MongoAlertsRepository(db.getCollection[Alert]("alerts"))
-  val notificationsRepository = new MongoNotificationsRepository(db.getCollection[Notification]("notifications"))
+  private def firebaseCredentials(projectId:String) = {
+    import cats.implicits._
 
-  val notificationsSender = new FirebaseBasedNotificationsSender[IO](firebaseMessaging, beachSeq, appConf )
-  val notifications = new NotificationsService[IO](notificationsRepository, usersRepository, beachesService, alertsRepository, notificationsSender)
-  val notificationsEndPoints = new NotificationEndpoints[IO](notifications)
-
-
-  def run(args: List[String]): IO[ExitCode] = {
-
-    BlazeServerBuilder[IO]
-      .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
-      .withResponseHeaderTimeout(Duration(5, "min"))
-      .withIdleTimeout(Duration(8, "min"))
-      .withHttpApp(notificationsEndPoints.allRoutes())
-      .serve
-      .compile
-      .drain
-      .as(ExitCode.Success)
+    Try(GoogleCredentials.fromStream(new FileInputStream(s"/app/resources/$projectId.json"))).onError(e => Try(logger.error("Could not load creds from app file", e)))
+      .orElse(Try(GoogleCredentials.getApplicationDefault)).onError(e => Try(logger.error("Could not load default creds", e)))
+      .orElse(Try(GoogleCredentials.fromStream(new FileInputStream(s"src/main/resources/$projectId.json")))).onError(e => Try(logger.error("Could not load creds from src file", e)))
+      .getOrElse(GoogleCredentials.getApplicationDefault)
   }
+
+  def run(args: List[String]): IO[ExitCode] = createServer.use(_ => IO.never).as(ExitCode.Success)
+
 
 }

@@ -21,6 +21,6 @@ object logger {
   }
 
   def error(error: String, e: Throwable): Unit = {
-    log.warn(error, e, kv("severity", "ERROR"))
+    log.error(error, e, kv("severity", "ERROR"))
   }
 }
