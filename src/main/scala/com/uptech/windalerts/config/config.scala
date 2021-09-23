@@ -1,18 +1,11 @@
 package com.uptech.windalerts.config
 
-import com.google.common.io.Files
-import com.uptech.windalerts.config.beaches.Beaches
-import com.uptech.windalerts.config.secrets.SurfsUp
-import com.uptech.windalerts.logger
 import io.circe._
-import io.circe.config.parser
-import io.circe.generic.auto._
 import io.circe.generic.semiauto._
-import io.circe.parser.decode
 
 import java.io.File
 import scala.io.Source
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 object config {
   implicit val decoder: Decoder[SurfsUp] = deriveDecoder
@@ -22,20 +15,24 @@ object config {
     val localFile = new File(s"src/main/resources/$name")
 
     if (prodFile.exists()) prodFile
-    else {
-      new File(s"src/main/resources/$name")
-    }
+    else localFile
   }
+
+  def getConfigFile(name:String, defaultFileName:String):File = {
+    val prodFile = new File(s"/app/resources/$name")
+    val localFile = new File(s"src/main/resources/$name")
+
+    if (prodFile.exists()) prodFile
+    else if (localFile.exists()) localFile
+    else new File(s"src/main/resources/$defaultFileName")
+  }
+
   case class AppConfig(surfsUp: SurfsUp)
 
   case class SurfsUp(notifications: Notifications)
 
   case class Notifications(title: String, body: String)
 
-  def read: AppConfig = {
-    Option(parser.decodeFile[AppConfig](new File(s"/app/resources/application.conf")).toOption
-      .getOrElse(parser.decodeFile[AppConfig](new File(s"src/main/resources/application.conf")).toOption.get)).get
-  }
 }
 
 object swellAdjustments {
@@ -55,12 +52,6 @@ object swellAdjustments {
   implicit val adjustmentDecoder: Decoder[Adjustment] = deriveDecoder
   implicit val adjustmentsDecoder: Decoder[Adjustments] = deriveDecoder
 
-  def read = {
-    val tryProd = Try(Source.fromFile("/app/resources/swell-adjustments.json").getLines.mkString)
-    val json = tryProd.getOrElse(Source.fromFile("src/main/resources/swell-adjustments.json").getLines.mkString)
-
-    Adjustments(decode[Adjustments](json).toOption.get.adjustments.sortBy(_.from))
-  }
 }
 object statics {
   def read(name:String) = {
@@ -85,28 +76,7 @@ object beaches {
   implicit val beachesEncoder: Encoder[Beaches] = deriveEncoder
   implicit val beachDecoder: Decoder[Beach] = deriveDecoder
   implicit val beachEncoder: Encoder[Beach] = deriveEncoder
-
-  def read(): Map[Long, Beach] = {
-    val tryProd = Try(Source.fromFile("/app/resources/beaches-v4.json").getLines.mkString)
-    val jsonContents = tryProd match {
-      case Failure(_) => Source.fromFile("src/main/resources/beaches-v4.json").getLines.mkString
-      case Success(_) => tryProd.get
-    }
-    val beaches1 = decode[Beaches](jsonContents).toOption.get.beaches
-    beaches1.groupBy(_.id).toMap.mapValues(x => x.head).toMap
-  }
-
 }
-
-object A extends App {
-  val tryProd = Try(Source.fromFile("/app/resources/beaches-v4.json").getLines.mkString)
-  val jsonContents = tryProd match {
-    case Failure(_) => Source.fromFile("src/main/resources/beaches-v4.json").getLines.mkString
-    case Success(_) => tryProd.get
-  }
-  val all = decode[Beaches](jsonContents).toOption.get.beaches
-}
-
 
 object secrets {
   implicit val decoder: Decoder[SurfsUp] = deriveDecoder
@@ -124,16 +94,6 @@ object secrets {
   case class Email(apiKey: String)
 
   case class Mongodb(url: String)
-
-  def read: SecretsSettings = {
-    val projectId = sys.env("projectId")
-
-    val prod = new File(s"/app/resources/$projectId.secrets")
-    val local = new File(s"src/main/resources/secrets.conf")
-
-    Option(parser.decodeFile[SecretsSettings](prod).toOption
-      .getOrElse(parser.decodeFile[SecretsSettings](local).toOption.get)).get
-  }
 
   def getConfigFile():File = {
     val projectId = sys.env("projectId")

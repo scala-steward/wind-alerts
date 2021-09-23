@@ -17,8 +17,8 @@ import java.security.PrivateKey
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class AppleLogin[F[_]](filename: String)(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends SocialLogin[F, AppleAccessRequest] {
-  val privateKey = getPrivateKey(filename)
+class AppleLogin[F[_]](file: File)(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends SocialLogin[F, AppleAccessRequest] {
+  val privateKey = getPrivateKey(file)
   override def fetchUserFromPlatform(credentials: AppleAccessRequest): F[SocialUser] = {
     fetchUserFromPlatform_(credentials)
   }
@@ -65,8 +65,8 @@ class AppleLogin[F[_]](filename: String)(implicit cs: ContextShift[F], s: Async[
   }
 
 
-  private def getPrivateKey(filename: String) = {
-    ApnsSigningKey.loadFromPkcs8File(new File(filename), "W9WH7WV85S", "A423X8QGF3")
+  private def getPrivateKey(file: File) = {
+    ApnsSigningKey.loadFromPkcs8File(file, "W9WH7WV85S", "A423X8QGF3")
   }
 
 }

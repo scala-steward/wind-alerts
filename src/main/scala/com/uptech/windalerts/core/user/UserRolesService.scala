@@ -20,7 +20,8 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
                                     userRepository: UserRepository[F],
                                     otpRepository: OtpRepository[F],
                                     socialPlatformSubscriptionsService: SocialPlatformSubscriptionsService[F],
-                                    refreshTokenRepository: RefreshTokenRepository[F]) {
+                                    refreshTokenRepository: RefreshTokenRepository[F],
+                                    appleAppSecret:String) {
   def updateTrialUsers() = {
     for {
       users <- EitherT.right(userRepository.findTrialExpiredUsers())
@@ -57,7 +58,7 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
   private def updateAppleSubscribedUser(user:UserT) = {
     for {
       token <- applePurchaseRepository.getLastForUser(user._id.toHexString)
-      purchase <- socialPlatformSubscriptionsService.getApplePurchase(token.purchaseToken, secrets.read.surfsUp.apple.appSecret)
+      purchase <- socialPlatformSubscriptionsService.getApplePurchase(token.purchaseToken, appleAppSecret)
       _ <- updateSubscribedUserRole(user, purchase.startTimeMillis, purchase.expiryTimeMillis).leftWiden[SurfsUpError]
     } yield ()
   }
@@ -123,7 +124,7 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
   def updateAppleUser(user: UserId) = {
     for {
       token <- applePurchaseRepository.getLastForUser(user.id)
-      purchase <- socialPlatformSubscriptionsService.getApplePurchase(token.purchaseToken, secrets.read.surfsUp.apple.appSecret)
+      purchase <- socialPlatformSubscriptionsService.getApplePurchase(token.purchaseToken, appleAppSecret)
       dbUser <- userRepository.getByUserId(user.id).toRight(UserNotFoundError()).leftWiden[SurfsUpError]
       premiumUser <- updateSubscribedUserRole(dbUser, purchase.startTimeMillis, purchase.expiryTimeMillis).map(_.asDTO()).leftWiden[SurfsUpError]
     } yield premiumUser

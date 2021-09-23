@@ -4,6 +4,7 @@ import cats.data.EitherT
 import cats.effect.Effect
 import com.uptech.windalerts.core.refresh.tokens.{RefreshToken, RefreshTokenRepository}
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
+import com.uptech.windalerts.logger
 import dev.profunktor.auth.JwtAuthMiddleware
 import dev.profunktor.auth.jwt.{JwtAuth, JwtSecretKey}
 import io.circe.parser._
@@ -29,6 +30,10 @@ class AuthenticationService[F[_] : Effect](refreshTokenRepository: RefreshTokenR
         firstName <- parseResult.hcursor.downField("firstName").as[String]
         userType <- parseResult.hcursor.downField("userType").as[String]
       } yield (accessTokenId, EmailId(emailId), UserType(userType), firstName))
+        .leftMap(e=>{
+          logger.error("Error while authenticating request", e)
+          e
+        })
         .toOption
         .flatMap(claims => refreshTokenRepository.getByAccessTokenId(claims._1)
           .map(refreshToken => UserIdMetadata(UserId(refreshToken.userId), claims._2, claims._3, claims._4))).value

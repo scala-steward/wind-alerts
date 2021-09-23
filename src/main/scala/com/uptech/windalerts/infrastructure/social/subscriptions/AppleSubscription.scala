@@ -13,12 +13,12 @@ import io.circe.optics.JsonPath.root
 import io.circe.parser
 import io.circe.syntax._
 
-class AppleSubscription[F[_] : Async](implicit F: Async[F]) extends SocialSubscription[F] {
+class AppleSubscription[F[_] : Async](appSecret:String)(implicit F: Async[F]) extends SocialSubscription[F] {
 
   override def getPurchase(receiptData: String, productId: String): F[SubscriptionPurchase] = {
     implicit val backend = HttpURLConnectionBackend()
 
-    val json = ApplePurchaseVerificationRequest(receiptData, secrets.read.surfsUp.apple.appSecret, true).asJson.toString()
+    val json = ApplePurchaseVerificationRequest(receiptData, appSecret, true).asJson.toString()
     val req = sttp.body(json).contentType("application/json")
       .post(uri"https://sandbox.itunes.apple.com/verifyReceipt")
 
