@@ -6,7 +6,7 @@ import com.softwaremill.sttp.quick.backend
 import com.typesafe.config.ConfigFactory.parseFileAnySyntax
 import com.uptech.windalerts.config._
 import com.uptech.windalerts.config.beaches.{Beaches, _}
-import com.uptech.windalerts.config.secrets.SurfsUp
+import com.uptech.windalerts.config.secrets.SurfsUpSecret
 import com.uptech.windalerts.config.swellAdjustments.Adjustments
 import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry, OtpRepository}
@@ -24,7 +24,7 @@ object EmailServer extends IOApp {
 
   def createServer[F[_] : ContextShift : ConcurrentEffect : Timer](): Resource[F, H4Server[F]] =
     for {
-      surfsUp <- eval(decodePathF[F, SurfsUp](parseFileAnySyntax(secrets.getConfigFile()), "surfsUp"))
+      surfsUp <- eval(decodePathF[F, SurfsUpSecret](parseFileAnySyntax(secrets.getConfigFile()), "surfsUp"))
       db = Repos.acquireDb(surfsUp.mongodb.url)
       emailSender = new EmailSender[F](surfsUp.email.apiKey)
       otpRepositoy = new MongoOtpRepository[F](db.getCollection[OTPWithExpiry]("otp"))

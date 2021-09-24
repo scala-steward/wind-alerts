@@ -3,7 +3,7 @@ import cats.effect.Resource.eval
 import cats.effect._
 import com.typesafe.config.ConfigFactory.parseFileAnySyntax
 import com.uptech.windalerts.config._
-import com.uptech.windalerts.config.secrets.SurfsUp
+import com.uptech.windalerts.config.secrets.SurfsUpSecret
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.otp.OTPWithExpiry
 import com.uptech.windalerts.core.refresh.tokens.RefreshToken
@@ -20,7 +20,7 @@ import org.http4s.server.{Router, Server => H4Server}
 object UpdateUserRolesServer extends IOApp {
   def createServer[F[_] : ContextShift : ConcurrentEffect : Timer](): Resource[F, H4Server[F]] =
     for {
-      surfsUp <- eval(decodePathF[F, SurfsUp](parseFileAnySyntax(secrets.getConfigFile()), "surfsUp"))
+      surfsUp <- eval(decodePathF[F, SurfsUpSecret](parseFileAnySyntax(secrets.getConfigFile()), "surfsUp"))
       db = Repos.acquireDb(surfsUp.mongodb.url)
       otpRepositoy = new MongoOtpRepository[F](db.getCollection[OTPWithExpiry]("otp"))
       usersRepository = new MongoUserRepository[F](db.getCollection[UserT]("users"))
