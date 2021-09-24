@@ -1,14 +1,21 @@
 package com.uptech.windalerts.config
 
-import io.circe._
-import io.circe.generic.semiauto._
+import cats.effect.Sync
+import io.circe.Decoder
+import io.circe.generic.semiauto.deriveDecoder
+import org.http4s.EntityDecoder
+import org.http4s.circe.jsonOf
 
 import java.io.File
 import scala.io.Source
 import scala.util.Try
+import io.circe.generic.semiauto.deriveDecoder
 
 object config {
-  implicit val decoder: Decoder[SurfsUp] = deriveDecoder
+  implicit val surfsUpDecoder: Decoder[SurfsUp] = deriveDecoder
+  implicit def surfsUpDntityDecoder[F[_] : Sync]: EntityDecoder[F, SurfsUp] = jsonOf
+  implicit val notificationsDecoder: Decoder[Notifications] = deriveDecoder
+  implicit def notificationsEntityDecoder[F[_] : Sync]: EntityDecoder[F, Notifications] = jsonOf
 
   def getConfigFile(name:String):File = {
     val prodFile = new File(s"/app/resources/$name")
@@ -66,24 +73,37 @@ object statics {
 object beaches {
   case class Beaches(beaches: Seq[Beach]) {
     def toMap() = {
-      beaches.groupBy(_.id).toMap.mapValues(x => x.head).toMap
+      beaches.groupBy(_.id).toMap.mapValues(_.head).toMap
     }
   }
 
   case class Beach(id: Long, location: String, postCode: Long, region: String)
 
   implicit val beachesDecoder: Decoder[Beaches] = deriveDecoder
-  implicit val beachesEncoder: Encoder[Beaches] = deriveEncoder
+  implicit def beachesEntityDecoder[F[_] : Sync]: EntityDecoder[F, Beaches] = jsonOf
+
   implicit val beachDecoder: Decoder[Beach] = deriveDecoder
-  implicit val beachEncoder: Encoder[Beach] = deriveEncoder
+  implicit def beachEntityDecoder[F[_] : Sync]: EntityDecoder[F, Beach] = jsonOf
+
 }
 
 object secrets {
-  implicit val decoder: Decoder[SurfsUp] = deriveDecoder
+  implicit val willyWeatherDecoder: Decoder[WillyWeather] = deriveDecoder
+  implicit def willyWeatherEntityDecoder[F[_] : Sync]: EntityDecoder[F, WillyWeather] = jsonOf
+  implicit val facebookDecoder: Decoder[Facebook] = deriveDecoder
+  implicit def facebookEntityDecoder[F[_] : Sync]: EntityDecoder[F, Facebook] = jsonOf
+  implicit val appleDecoder: Decoder[Apple] = deriveDecoder
+  implicit def appleEntityDecoder[F[_] : Sync]: EntityDecoder[F, Apple] = jsonOf
+  implicit val emailDecoder: Decoder[Email] = deriveDecoder
+  implicit def emailEntityDecoder[F[_] : Sync]: EntityDecoder[F, Email] = jsonOf
+  implicit val mongodbDecoder: Decoder[Mongodb] = deriveDecoder
+  implicit def mongodbEntityDecoder[F[_] : Sync]: EntityDecoder[F, Mongodb] = jsonOf
+  implicit val surfsUpSecretDecoder: Decoder[SurfsUpSecret] = deriveDecoder
+  implicit def surfsUpSecretDntityDecoder[F[_] : Sync]: EntityDecoder[F, SurfsUpSecret] = jsonOf
 
-  case class SecretsSettings(surfsUp: SurfsUp)
+  case class SecretsSettings(surfsUp: SurfsUpSecret)
 
-  case class SurfsUp(willyWeather: WillyWeather, facebook: Facebook, apple:Apple, email: Email, mongodb: Mongodb)
+  case class SurfsUpSecret(willyWeather: WillyWeather, facebook: Facebook, apple:Apple, email: Email, mongodb: Mongodb)
 
   case class WillyWeather(key: String)
 

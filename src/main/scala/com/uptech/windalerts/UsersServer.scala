@@ -6,7 +6,7 @@ import com.softwaremill.sttp.quick.backend
 import com.typesafe.config.ConfigFactory.parseFileAnySyntax
 import com.uptech.windalerts.config._
 import com.uptech.windalerts.config.beaches.{Beaches, _}
-import com.uptech.windalerts.config.secrets.SurfsUp
+import com.uptech.windalerts.config.secrets.SurfsUpSecret
 import com.uptech.windalerts.config.swellAdjustments.Adjustments
 import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.alerts.domain.Alert
@@ -31,7 +31,7 @@ import org.http4s.server.{Router, Server => H4Server}
 object UsersServer extends IOApp {
   def createServer[F[_] : ContextShift : ConcurrentEffect : Timer](): Resource[F, H4Server[F]] =
     for {
-      surfsUp <- eval(decodePathF[F, SurfsUp](parseFileAnySyntax(secrets.getConfigFile()), "surfsUp"))
+      surfsUp <- eval(decodePathF[F, SurfsUpSecret](parseFileAnySyntax(secrets.getConfigFile()), "surfsUp"))
       beaches <- eval(decodePathF[F, Beaches](parseFileAnySyntax(config.getConfigFile("beaches.json")), "surfsUp"))
       swellAdjustments <- eval(decodePathF[F, Adjustments](parseFileAnySyntax(config.getConfigFile("swellAdjustments.json")), "surfsUp"))
       willyWeatherAPIKey = surfsUp.willyWeather.key
