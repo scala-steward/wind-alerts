@@ -46,6 +46,9 @@ object codecs {
 
   implicit def beachIdEntityEncoder[F[_] : Applicative]: EntityEncoder[F, BeachId] = jsonEncoderOf
 
+  lazy implicit val beachDecoder: Decoder[Beach] = deriveDecoder[Beach]
+  implicit def beachEntityDecoder[F[_] : Sync]: EntityDecoder[F, Beach] = jsonOf
+
 
   lazy implicit val beachEncoder: Encoder[Beach] = deriveEncoder[Beach]
   implicit def beachEntityEncoder[F[_] : Applicative]: EntityEncoder[F, Beach] = jsonEncoderOf
