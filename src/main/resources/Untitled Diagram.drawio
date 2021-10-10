@@ -1,4 +1,4 @@
-<mxfile modified="2021-10-10T13:40:43.695Z" host="app.diagrams.net" agent="5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36" etag="3xgGNdw0uGMOWtWLFGlL" version="15.5.0" type="github">
+<mxfile modified="2021-10-10T13:42:25.423Z" host="app.diagrams.net" agent="5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36" etag="EVLPJH6NZpO-UxKsCYUf" version="15.5.0" type="github">
   <diagram id="f106602c-feb2-e66a-4537-3a34d633f6aa" name="Page-1">
     <mxGraphModel dx="946" dy="533" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="none" math="0" shadow="0">
       <root>
@@ -27,6 +27,14 @@
         <mxCell id="3ALMYetGtqeIsVi_zzgf-33" value="Subscriptions Service" style="sketch=0;html=1;fillColor=#5184F3;strokeColor=none;verticalAlign=top;labelPosition=center;verticalLabelPosition=bottom;align=center;spacingTop=-6;fontSize=11;fontStyle=1;fontColor=#999999;shape=mxgraph.gcp2.hexIcon;prIcon=cloud_run" vertex="1" parent="14">
           <mxGeometry x="37.33333333333337" y="260.38" width="61.6" height="59.25" as="geometry" />
         </mxCell>
+        <mxCell id="3ALMYetGtqeIsVi_zzgf-39" value="" style="strokeColor=#dddddd;shadow=1;strokeWidth=1;rounded=1;absoluteArcSize=1;arcSize=2;" vertex="1" parent="14">
+          <mxGeometry x="190" y="220" width="110" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="3ALMYetGtqeIsVi_zzgf-40" value="Cloud&#xa;Pub/Sub" style="sketch=0;dashed=0;connectable=0;html=1;fillColor=#5184F3;strokeColor=none;shape=mxgraph.gcp2.hexIcon;prIcon=cloud_pubsub;part=1;labelPosition=right;verticalLabelPosition=middle;align=left;verticalAlign=middle;spacingLeft=5;fontColor=#999999;fontSize=12;" vertex="1" parent="3ALMYetGtqeIsVi_zzgf-39">
+          <mxGeometry y="0.5" width="44" height="39" relative="1" as="geometry">
+            <mxPoint x="5" y="-19.5" as="offset" />
+          </mxGeometry>
+        </mxCell>
         <mxCell id="2" value="SurfsUp" style="fillColor=#4DA1F5;strokeColor=none;shadow=1;gradientColor=none;fontSize=14;align=left;spacingLeft=50;fontColor=#ffffff;html=1;" parent="1" vertex="1">
           <mxGeometry x="85" y="40" width="765" height="40" as="geometry" />
         </mxCell>
@@ -36,13 +44,13 @@
         <mxCell id="3ALMYetGtqeIsVi_zzgf-28" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="3" target="14">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="3ALMYetGtqeIsVi_zzgf-38" value="https" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="3ALMYetGtqeIsVi_zzgf-28">
+        <mxCell id="3ALMYetGtqeIsVi_zzgf-38" value="REST/Https" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="3ALMYetGtqeIsVi_zzgf-28">
           <mxGeometry x="-0.4" y="2" relative="1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
         <mxCell id="3" value="SurfsUp" style="strokeColor=#dddddd;fillColor=#ffffff;shadow=1;strokeWidth=1;rounded=1;absoluteArcSize=1;arcSize=2;labelPosition=center;verticalLabelPosition=middle;align=center;verticalAlign=bottom;spacingLeft=0;fontColor=#999999;fontSize=12;whiteSpace=wrap;spacingBottom=2;html=1;" parent="1" vertex="1">
-          <mxGeometry x="200" y="357.5" width="70" height="85" as="geometry" />
+          <mxGeometry x="160" y="357.5" width="70" height="85" as="geometry" />
         </mxCell>
         <mxCell id="4" value="" style="dashed=0;html=1;fillColor=#757575;strokeColor=none;shape=mxgraph.gcp2.phone;part=1;" parent="3" vertex="1">
           <mxGeometry x="0.5" width="32" height="50" relative="1" as="geometry">
