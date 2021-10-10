@@ -1,11 +1,11 @@
-<mxfile modified="2021-10-10T13:50:48.083Z" host="app.diagrams.net" agent="5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36" etag="ZLFjoG3NBe9iRcOWQ5CF" version="15.5.0" type="github">
+<mxfile modified="2021-10-10T13:56:58.914Z" host="app.diagrams.net" agent="5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.71 Safari/537.36" etag="7f2NdfX4G_2hfQJ_9nH8" version="15.5.0" type="github">
   <diagram id="f106602c-feb2-e66a-4537-3a34d633f6aa" name="Page-1">
     <mxGraphModel dx="946" dy="533" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="none" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="14" value="&lt;b&gt;Google &lt;/b&gt;Cloud Platform" style="fillColor=#F6F6F6;strokeColor=none;shadow=0;gradientColor=none;fontSize=14;align=left;spacing=10;fontColor=#717171;9E9E9E;verticalAlign=top;spacingTop=-4;fontStyle=0;spacingLeft=40;html=1;" parent="1" vertex="1">
-          <mxGeometry x="362" y="110" width="445" height="680" as="geometry" />
+          <mxGeometry x="350" y="110" width="445" height="680" as="geometry" />
         </mxCell>
         <mxCell id="15" value="" style="shape=mxgraph.gcp2.google_cloud_platform;fillColor=#F6F6F6;strokeColor=none;shadow=0;gradientColor=none;" parent="14" vertex="1">
           <mxGeometry width="23" height="20" relative="1" as="geometry">
@@ -41,6 +41,18 @@
         <mxCell id="3ALMYetGtqeIsVi_zzgf-44" value="Cloud Scheduler" style="html=1;fillColor=#5184F3;strokeColor=none;verticalAlign=top;labelPosition=center;verticalLabelPosition=bottom;align=center;fontSize=11;fontStyle=1;fontColor=#999999;shape=mxgraph.gcp2.cloud_scheduler" vertex="1" parent="14">
           <mxGeometry x="111.25" y="620.0034482758621" width="31.785714285714285" height="40.44827586206897" as="geometry" />
         </mxCell>
+        <mxCell id="3ALMYetGtqeIsVi_zzgf-36" value="" style="sketch=0;html=1;aspect=fixed;strokeColor=none;shadow=0;align=center;verticalAlign=top;fillColor=#2D9C5E;shape=mxgraph.gcp2.external_data_center" vertex="1" parent="14">
+          <mxGeometry x="105.60999999999999" y="213.56" width="31.54" height="40.96" as="geometry" />
+        </mxCell>
+        <mxCell id="3ALMYetGtqeIsVi_zzgf-46" value="" style="sketch=0;html=1;aspect=fixed;strokeColor=none;shadow=0;align=center;verticalAlign=top;fillColor=#2D9C5E;shape=mxgraph.gcp2.external_data_center" vertex="1" parent="14">
+          <mxGeometry x="104.82" y="342.01" width="32.33" height="41.99" as="geometry" />
+        </mxCell>
+        <mxCell id="3ALMYetGtqeIsVi_zzgf-48" value="" style="sketch=0;html=1;aspect=fixed;strokeColor=none;shadow=0;align=center;verticalAlign=top;fillColor=#2D9C5E;shape=mxgraph.gcp2.external_data_center" vertex="1" parent="14">
+          <mxGeometry x="104.82" y="541.3199999999999" width="32.33" height="41.99" as="geometry" />
+        </mxCell>
+        <mxCell id="3ALMYetGtqeIsVi_zzgf-49" value="" style="sketch=0;html=1;aspect=fixed;strokeColor=none;shadow=0;align=center;verticalAlign=top;fillColor=#2D9C5E;shape=mxgraph.gcp2.external_data_center" vertex="1" parent="14">
+          <mxGeometry x="247.51" y="541.3199999999999" width="32.33" height="41.99" as="geometry" />
+        </mxCell>
         <mxCell id="3" value="SurfsUp" style="strokeColor=#dddddd;fillColor=#ffffff;shadow=1;strokeWidth=1;rounded=1;absoluteArcSize=1;arcSize=2;labelPosition=center;verticalLabelPosition=middle;align=center;verticalAlign=bottom;spacingLeft=0;fontColor=#999999;fontSize=12;whiteSpace=wrap;spacingBottom=2;html=1;" parent="1" vertex="1">
           <mxGeometry x="180" y="272.5" width="70" height="85" as="geometry" />
         </mxCell>
@@ -49,8 +61,8 @@
             <mxPoint x="-16" y="10" as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="3ALMYetGtqeIsVi_zzgf-36" value="" style="sketch=0;html=1;aspect=fixed;strokeColor=none;shadow=0;align=center;verticalAlign=top;fillColor=#2D9C5E;shape=mxgraph.gcp2.external_data_center" vertex="1" parent="1">
-          <mxGeometry x="820" y="290" width="38.5" height="50" as="geometry" />
+        <mxCell id="3ALMYetGtqeIsVi_zzgf-47" value="WW Service" style="shape=image;html=1;verticalAlign=top;verticalLabelPosition=bottom;labelBackgroundColor=#ffffff;imageAspect=0;aspect=fixed;image=https://cdn2.iconfinder.com/data/icons/weather-color-2/500/weather-04-128.png" vertex="1" parent="1">
+          <mxGeometry x="830" y="212.5" width="60" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
