@@ -13,12 +13,16 @@ class BeachService[F[_]](windService: WindsService[F],
                          swellsService: SwellsService[F]) {
 
   def getStatus(beachId: BeachId)(implicit M: Monad[F]
-                                  , P:Parallel[F]
+                                  , P: Parallel[F]
   ): cats.data.EitherT[F, SurfsUpError, Beach] = {
-    (windService.get(beachId), tidesService.get(beachId), swellsService.get(beachId)).parMapN((wind, tide, swell) => Beach(beachId, wind, Tide(tide, SwellOutput(swell.height, swell.direction, swell.directionText))))
+    (windService.get(beachId),
+      tidesService.get(beachId),
+      swellsService.get(beachId))
+      .parMapN((wind, tide, swell) =>
+        Beach(beachId, wind, Tide(tide, SwellOutput(swell.height, swell.direction, swell.directionText))))
   }
 
-  def getAll(beachIds: Seq[BeachId])(implicit M: Monad[F], P:Parallel[F]): cats.data.EitherT[F, SurfsUpError, Map[BeachId, Beach]] = {
+  def getAll(beachIds: Seq[BeachId])(implicit M: Monad[F], P: Parallel[F]): cats.data.EitherT[F, SurfsUpError, Map[BeachId, Beach]] = {
     beachIds
       .toList
       .map(getStatus(_))
