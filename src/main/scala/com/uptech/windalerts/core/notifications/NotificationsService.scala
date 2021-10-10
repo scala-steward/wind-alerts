@@ -1,5 +1,6 @@
 package com.uptech.windalerts.core.notifications
 
+import cats.Parallel
 import cats.data.EitherT
 import cats.effect.{Async, Sync}
 import cats.implicits._
@@ -11,7 +12,7 @@ import com.uptech.windalerts.core.notifications.NotificationsSender.Notification
 import com.uptech.windalerts.core.user.{UserId, UserRepository, UserT}
 import com.uptech.windalerts.logger
 
-class NotificationsService[F[_] : Sync](N: NotificationRepository[F],
+class NotificationsService[F[_] : Sync: Parallel](N: NotificationRepository[F],
                                         U: UserRepository[F],
                                         B: BeachService[F],
                                         alertsRepository: AlertsRepository[F],

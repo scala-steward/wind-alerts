@@ -1,5 +1,6 @@
 package com.uptech.windalerts
 
+import cats.Parallel
 import cats.effect.Resource.eval
 import cats.effect._
 import com.google.auth.oauth2.GoogleCredentials
@@ -27,7 +28,7 @@ import java.io.FileInputStream
 import scala.util.Try
 
 object SendNotifications extends IOApp {
-  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer](): Resource[F, H4Server[F]] =
+  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer: Parallel](): Resource[F, H4Server[F]] =
     for {
       surfsUp <- eval(decodePathF[F, SurfsUpSecret](parseFileAnySyntax(secrets.getConfigFile()), "surfsUp"))
       appConfig <- eval(decodePathF[F, com.uptech.windalerts.config.config.SurfsUp](parseFileAnySyntax(config.getConfigFile("application.conf")), "surfsUp"))

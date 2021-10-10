@@ -1,7 +1,7 @@
 package com.uptech.windalerts
 
 import cats.data.EitherT
-import cats.effect.IO
+import cats.effect.{ContextShift, IO}
 import com.uptech.windalerts.core.SurfsUpError
 import com.uptech.windalerts.core.beaches.domain._
 import com.uptech.windalerts.core.beaches._
@@ -14,12 +14,15 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
+import scala.concurrent.ExecutionContext
+
 class BeachesEndpointsSpec extends AnyFunSuite
   with Matchers
   with ScalaCheckPropertyChecks
   with Arbitraries
   with Http4sDsl[IO]
   with Http4sClientDsl[IO] {
+  implicit val contextShift: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
 
   test("fetch wind swell and tide status") {
     forAll { (w: Wind, t: TideHeight, s: Swell) =>
