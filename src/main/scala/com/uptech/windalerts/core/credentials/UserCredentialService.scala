@@ -6,7 +6,7 @@ import cats.effect.Sync
 import cats.implicits._
 import com.github.t3hnar.bcrypt._
 import com.uptech.windalerts.core._
-import com.uptech.windalerts.core.refresh.tokens.RefreshTokenRepository
+import com.uptech.windalerts.core.refresh.tokens.UserSessionRepository
 import com.uptech.windalerts.core.user.UserRepository
 import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.endpoints.dtos.{ChangePasswordRequest, RegisterRequest}
@@ -16,7 +16,7 @@ class UserCredentialService[F[_] : Sync](
                                           appleCredentialsRepo: SocialCredentialsRepository[F, AppleCredentials],
                                           credentialsRepository: CredentialsRepository[F],
                                           userRepository: UserRepository[F],
-                                          refreshTokenRepository: RefreshTokenRepository[F],
+                                          refreshTokenRepository: UserSessionRepository[F],
                                           emailSender: EmailSender[F]) {
   def getByCredentials(
                         email: String, password: String, deviceType: String

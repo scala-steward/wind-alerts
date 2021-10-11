@@ -14,14 +14,14 @@ import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.credentials.{AppleCredentials, Credentials, FacebookCredentials, UserCredentialService}
 import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry}
-import com.uptech.windalerts.core.refresh.tokens.RefreshToken
+import com.uptech.windalerts.core.refresh.tokens.UserSession
 import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken}
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService, UserT}
 import com.uptech.windalerts.infrastructure.{EmailSender, GooglePubSubEventpublisher}
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints.{AlertsEndpoints, BeachesEndpoints, SwaggerEndpoints, UsersEndpoints, errors}
-import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoAlertsRepository, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoOtpRepository, MongoRefreshTokenRepository, MongoSocialCredentialsRepository, MongoUserRepository, Repos}
+import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoAlertsRepository, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoOtpRepository, MongoUserSessionRepository, MongoSocialCredentialsRepository, MongoUserRepository, Repos}
 import com.uptech.windalerts.infrastructure.social.login.{AppleLogin, FacebookLogin}
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AndroidPublisherHelper, AndroidSubscription, AppleSubscription, ApplicationConfig, SocialPlatformSubscriptionsServiceImpl}
 import io.circe.config.parser.decodePathF
@@ -43,7 +43,7 @@ object UsersServer extends IOApp {
       androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
 
       db = Repos.acquireDb(surfsUp.mongodb.url)
-      refreshTokenRepository = new MongoRefreshTokenRepository[F](db.getCollection[RefreshToken]("refreshTokens"))
+      refreshTokenRepository = new MongoUserSessionRepository[F](db.getCollection[UserSession]("refreshTokens"))
       otpRepositoy = new MongoOtpRepository[F](db.getCollection[OTPWithExpiry]("otp"))
       usersRepository = new MongoUserRepository[F](db.getCollection[UserT]("users"))
       credentialsRepository = new MongoCredentialsRepository[F](db.getCollection[Credentials]("credentials"))
@@ -58,7 +58,7 @@ object UsersServer extends IOApp {
         new WWBackedWindsService[F](willyWeatherAPIKey),
         new WWBackedTidesService[F](willyWeatherAPIKey, beaches.toMap()),
         new WWBackedSwellsService[F](willyWeatherAPIKey, swellAdjustments))
-      auth = new AuthenticationService[F](refreshTokenRepository)
+      auth = new AuthenticationService[F]()
       emailSender = new EmailSender[F](surfsUp.email.apiKey)
       otpService = new OTPService(otpRepositoy, emailSender)
       userCredentialsService = new UserCredentialService[F](facebookCredentialsRepository, appleCredentialsRepository, credentialsRepository, usersRepository, refreshTokenRepository, emailSender)

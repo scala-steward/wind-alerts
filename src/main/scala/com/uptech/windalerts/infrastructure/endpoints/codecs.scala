@@ -8,7 +8,7 @@ import com.uptech.windalerts.core.beaches.domain._
 import com.uptech.windalerts.core.credentials.{AppleCredentials, Credentials, FacebookCredentials}
 import com.uptech.windalerts.core.notifications.Notification
 import com.uptech.windalerts.core.otp.OTPWithExpiry
-import com.uptech.windalerts.core.refresh.tokens.RefreshToken
+import com.uptech.windalerts.core.refresh.tokens.UserSession
 import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken}
 import com.uptech.windalerts.core.user.{TokensWithUser, UserT}
 import dtos._
@@ -26,7 +26,7 @@ object codecs {
     fromProviders(classOf[Notification]),
     fromProviders(classOf[OTPWithExpiry]),
     fromProviders(classOf[AndroidToken]),
-    fromProviders(classOf[RefreshToken]),
+    fromProviders(classOf[UserSession]),
     fromProviders(classOf[UserT]),
     fromProviders(classOf[Credentials]),
     fromProviders(classOf[Alert]),

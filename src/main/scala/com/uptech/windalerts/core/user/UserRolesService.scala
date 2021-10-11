@@ -6,7 +6,7 @@ import cats.implicits._
 import com.uptech.windalerts.config.secrets
 import com.uptech.windalerts.core.alerts.AlertsRepository
 import com.uptech.windalerts.core.otp.OtpRepository
-import com.uptech.windalerts.core.refresh.tokens.RefreshTokenRepository
+import com.uptech.windalerts.core.refresh.tokens.UserSessionRepository
 import com.uptech.windalerts.core.social.subscriptions.{AndroidTokenRepository, AppleTokenRepository, SocialPlatformSubscriptionsService}
 import com.uptech.windalerts.core.user.UserType.{Premium, PremiumExpired, Trial}
 import com.uptech.windalerts.core.{OperationNotAllowed, SurfsUpError, UnknownError, UserNotFoundError}
@@ -20,8 +20,8 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
                                     userRepository: UserRepository[F],
                                     otpRepository: OtpRepository[F],
                                     socialPlatformSubscriptionsService: SocialPlatformSubscriptionsService[F],
-                                    refreshTokenRepository: RefreshTokenRepository[F],
-                                    appleAppSecret:String) {
+                                    refreshTokenRepository: UserSessionRepository[F],
+                                    appleAppSecret: String) {
   def updateTrialUsers() = {
     for {
       users <- EitherT.right(userRepository.findTrialExpiredUsers())
@@ -29,18 +29,18 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
     } yield ()
   }
 
-  private def makeAllTrialExpired(users: Seq[UserT]):EitherT[F, UserNotFoundError, List[UserT]] = {
+  private def makeAllTrialExpired(users: Seq[UserT]): EitherT[F, UserNotFoundError, List[UserT]] = {
     users.map(user => makeUserTrialExpired(user)).toList.sequence
   }
 
   def updateAndroidSubscribedUsers() = {
     for {
       users <- EitherT.right(userRepository.findAndroidPremiumExpiredUsers())
-      _ <- users.map(user=>updateAndroidSubscribedUser(user)).toList.sequence
+      _ <- users.map(user => updateAndroidSubscribedUser(user)).toList.sequence
     } yield ()
   }
 
-  private def updateAndroidSubscribedUser(user:UserT ):EitherT[F, SurfsUpError, Unit] = {
+  private def updateAndroidSubscribedUser(user: UserT): EitherT[F, SurfsUpError, Unit] = {
     for {
       token <- androidPurchaseRepository.getLastForUser(user._id.toHexString)
       purchase <- socialPlatformSubscriptionsService.getAndroidPurchase(token.subscriptionId, token.purchaseToken)
@@ -48,14 +48,14 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
     } yield ()
   }
 
-  def updateAppleSubscribedUsers():EitherT[F, SurfsUpError, Unit] = {
+  def updateAppleSubscribedUsers(): EitherT[F, SurfsUpError, Unit] = {
     for {
       users <- EitherT.right(userRepository.findApplePremiumExpiredUsers())
-      _ <- users.map(user=>updateAppleSubscribedUser(user)).toList.sequence
+      _ <- users.map(user => updateAppleSubscribedUser(user)).toList.sequence
     } yield ()
   }
 
-  private def updateAppleSubscribedUser(user:UserT) = {
+  private def updateAppleSubscribedUser(user: UserT) = {
     for {
       token <- applePurchaseRepository.getLastForUser(user._id.toHexString)
       purchase <- socialPlatformSubscriptionsService.getApplePurchase(token.purchaseToken, appleAppSecret)
@@ -84,7 +84,7 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
   }
 
 
-  def handleAndroidUpdate(update: AndroidUpdate):EitherT[F, SurfsUpError, UserT] = {
+  def handleAndroidUpdate(update: AndroidUpdate): EitherT[F, SurfsUpError, UserT] = {
     for {
       decoded <- EitherT.fromEither[F](Either.right(new String(java.util.Base64.getDecoder.decode(update.message.data))))
       subscription <- asSubscription(decoded)
@@ -96,7 +96,7 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
   }
 
 
-  def verifyEmail(user: UserId, request: OTP):EitherT[F, SurfsUpError, UserDTO] = {
+  def verifyEmail(user: UserId, request: OTP): EitherT[F, SurfsUpError, UserDTO] = {
     for {
       _ <- otpRepository.exists(request.otp, user.id)
       user <- userRepository.getByUserId(user.id).toRight(UserNotFoundError())
@@ -158,11 +158,7 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
 
 
   private def update(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
-    for {
-      u <- userRepository.update(user).toRight(UserNotFoundError("User not found"))
-      _ <- EitherT.liftF(refreshTokenRepository.updateAccessTokenId(UserId(user._id.toHexString), null))
-     } yield u
-
+    userRepository.update(user).toRight(UserNotFoundError("User not found"))
   }
 
 }
