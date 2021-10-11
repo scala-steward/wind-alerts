@@ -5,7 +5,7 @@ import cats.effect.Sync
 import cats.implicits._
 import com.uptech.windalerts.core.credentials.{Credentials, UserCredentialService}
 import com.uptech.windalerts.core.otp.OTPService
-import com.uptech.windalerts.core.refresh.tokens.{RefreshToken, RefreshTokenRepository}
+import com.uptech.windalerts.core.refresh.tokens.{UserSession, UserSessionRepository}
 import com.uptech.windalerts.core._
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
@@ -17,7 +17,7 @@ import org.mongodb.scala.bson.ObjectId
 class UserService[F[_] : Sync](userRepository: UserRepository[F],
                                userCredentialsService: UserCredentialService[F],
                                auth: AuthenticationService[F],
-                               refreshTokenRepository: RefreshTokenRepository[F],
+                               refreshTokenRepository: UserSessionRepository[F],
                                eventPublisher: EventPublisher[F]) {
   def register(registerRequest: RegisterRequest): EitherT[F, UserAlreadyExistsError, TokensWithUser] = {
     for {
@@ -65,22 +65,21 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
     } yield tokens
   }
 
-  private def updateIfNotExpired(oldRefreshToken: RefreshToken): cats.data.EitherT[F, SurfsUpError, RefreshToken] = {
+  private def updateIfNotExpired(oldRefreshToken: UserSession): cats.data.EitherT[F, SurfsUpError, UserSession] = {
     if (oldRefreshToken.isExpired()) {
       EitherT.fromEither(Left(RefreshTokenExpiredError()))
     } else {
       import cats.implicits._
-      refreshTokenRepository.updateExpiry(oldRefreshToken._id.toHexString, (System.currentTimeMillis() + RefreshToken.REFRESH_TOKEN_EXPIRY)).leftWiden[SurfsUpError]
+      refreshTokenRepository.updateExpiry(oldRefreshToken._id.toHexString, (System.currentTimeMillis() + UserSession.REFRESH_TOKEN_EXPIRY)).leftWiden[SurfsUpError]
     }
   }
 
   def generateNewTokens(user: UserT): F[TokensWithUser] = {
     import cats.syntax.functor._
 
-    val accessTokenId = utils.generateRandomString(10)
-    val token = auth.createToken(UserId(user._id.toHexString), EmailId(user.email), user.firstName(), accessTokenId, UserType(user.userType))
+    val token = auth.createToken(UserId(user._id.toHexString), EmailId(user.email), user.firstName(), UserType(user.userType))
 
-    refreshTokenRepository.create(RefreshToken(user._id.toHexString, accessTokenId))
+    refreshTokenRepository.create(UserSession(user._id.toHexString))
       .map(newRefreshToken=>auth.tokens(token.accessToken, newRefreshToken, token.expiredAt, user))
   }
 
@@ -120,6 +119,6 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
 
 object UserService {
 
-  def apply[F[_] : Sync](userRepository: UserRepository[F], userCredentialService: UserCredentialService[F], authenticationService: AuthenticationService[F], refreshTokenRepo: RefreshTokenRepository[F], eventPublisher: EventPublisher[F]): UserService[F] =
+  def apply[F[_] : Sync](userRepository: UserRepository[F], userCredentialService: UserCredentialService[F], authenticationService: AuthenticationService[F], refreshTokenRepo: UserSessionRepository[F], eventPublisher: EventPublisher[F]): UserService[F] =
     new UserService[F](userRepository, userCredentialService, authenticationService, refreshTokenRepo, eventPublisher)
 }

@@ -3,7 +3,7 @@ import cats.Monad
 import cats.data.{EitherT, OptionT}
 import cats.effect.{Async, ContextShift}
 import com.uptech.windalerts.core.TokenNotFoundError
-import com.uptech.windalerts.core.refresh.tokens.{RefreshToken, RefreshTokenRepository}
+import com.uptech.windalerts.core.refresh.tokens.{UserSession, UserSessionRepository}
 import com.uptech.windalerts.core.user.UserId
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId
@@ -14,16 +14,12 @@ import org.mongodb.scala.model.Updates.set
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
-class MongoRefreshTokenRepository[F[_]](collection: MongoCollection[RefreshToken])(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends RefreshTokenRepository[F] {
-  override def getByAccessTokenId(accessTokenId: String): OptionT[F, RefreshToken] = {
-    findByCriteria(equal("accessTokenId", accessTokenId))
-  }
-
-  override def create(refreshToken: RefreshToken): F[RefreshToken] = {
+class MongoUserSessionRepository[F[_]](collection: MongoCollection[UserSession])(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends UserSessionRepository[F] {
+  override def create(refreshToken: UserSession): F[UserSession] = {
     Async.fromFuture(M.pure(collection.insertOne(refreshToken).toFuture().map(_ => refreshToken)))
   }
 
-  override def getByRefreshToken(refreshToken: String): OptionT[F, RefreshToken] = {
+  override def getByRefreshToken(refreshToken: String): OptionT[F, UserSession] = {
     findByCriteria(equal("refreshToken", refreshToken))
   }
 
@@ -43,7 +39,7 @@ class MongoRefreshTokenRepository[F[_]](collection: MongoCollection[RefreshToken
   }
 
 
-  override def updateExpiry(id: String, expiry: Long): EitherT[F, TokenNotFoundError, RefreshToken] = {
+  override def updateExpiry(id: String, expiry: Long): EitherT[F, TokenNotFoundError, UserSession] = {
     for {
       _ <- EitherT.liftF(Async.fromFuture(M.pure(collection.updateOne(equal("_id", new ObjectId(id)), set("expiry", expiry)).toFuture())))
       updated <- getById(id).toRight(TokenNotFoundError("Token not found"))
@@ -54,8 +50,4 @@ class MongoRefreshTokenRepository[F[_]](collection: MongoCollection[RefreshToken
     findByCriteria(equal("_id", new ObjectId(id)))
   }
 
-  override def updateAccessTokenId(userId: UserId, newAccessTokenId: String): F[Unit] = {
-    (Async.fromFuture(M.pure(collection.updateOne(equal("userId", userId.id), set("accessTokenId", newAccessTokenId)).toFuture().map(_=>()))))
-
-  }
 }

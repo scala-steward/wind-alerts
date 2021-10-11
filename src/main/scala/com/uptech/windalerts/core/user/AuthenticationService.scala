@@ -1,8 +1,8 @@
 package com.uptech.windalerts.core.user
 
-import cats.data.EitherT
+import cats.data.{EitherT, OptionT}
 import cats.effect.Effect
-import com.uptech.windalerts.core.refresh.tokens.{RefreshToken, RefreshTokenRepository}
+import com.uptech.windalerts.core.refresh.tokens.{UserSessionRepository, UserSession}
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
 import com.uptech.windalerts.logger
 import dev.profunktor.auth.JwtAuthMiddleware
@@ -15,8 +15,8 @@ import java.util.concurrent.TimeUnit
 case class AccessTokenWithExpiry(accessToken: String, expiredAt: Long)
 
 
-class AuthenticationService[F[_] : Effect](refreshTokenRepository: RefreshTokenRepository[F]) {
-  val ACCESS_TOKEN_EXPIRY = 1L * 24L * 60L * 60L * 1000L
+class AuthenticationService[F[_] : Effect]() {
+  val ACCESS_TOKEN_EXPIRY = 6L * 60L * 60L * 1000L
 
   private val key = JwtSecretKey("secretKey")
   val jwtAuth = JwtAuth.hmac("secretKey", JwtAlgorithm.HS256)
@@ -25,24 +25,23 @@ class AuthenticationService[F[_] : Effect](refreshTokenRepository: RefreshTokenR
     claim => {
       EitherT.fromEither[F](for {
         parseResult <- parse(claim.content)
-        accessTokenId <- parseResult.hcursor.downField("accessTokenId").as[String]
         emailId <- parseResult.hcursor.downField("emailId").as[String]
         firstName <- parseResult.hcursor.downField("firstName").as[String]
         userType <- parseResult.hcursor.downField("userType").as[String]
-      } yield (accessTokenId, EmailId(emailId), UserType(userType), firstName))
+      } yield (claim.subject, EmailId(emailId), UserType(userType), firstName))
         .leftMap(e=>{
           logger.error("Error while authenticating request", e)
           e
         })
         .toOption
-        .flatMap(claims => refreshTokenRepository.getByAccessTokenId(claims._1)
-          .map(refreshToken => UserIdMetadata(UserId(refreshToken.userId), claims._2, claims._3, claims._4))).value
+        .flatMap(claims => OptionT.fromOption(claim.subject)
+          .map(userId => UserIdMetadata(UserId(userId), claims._2, claims._3, claims._4))).value
     }
   }
 
   val middleware = JwtAuthMiddleware[F, UserIdMetadata](jwtAuth, _ => authenticate)
 
-  def createToken(userId: UserId, emailId: EmailId, firstName: String, accessTokenId: String, userType: UserType): AccessTokenWithExpiry = {
+  def createToken(userId: UserId, emailId: EmailId, firstName: String, userType: UserType): AccessTokenWithExpiry = {
     val current = System.currentTimeMillis()
     val expiry = current / 1000 + TimeUnit.MILLISECONDS.toSeconds(ACCESS_TOKEN_EXPIRY)
     val claims = JwtClaim(
@@ -50,12 +49,12 @@ class AuthenticationService[F[_] : Effect](refreshTokenRepository: RefreshTokenR
       issuedAt = Some(current / 1000),
       issuer = Some("wind-alerts.com"),
       subject = Some(userId.id)
-    ) + ("accessTokenId", accessTokenId) + ("emailId", emailId.email) + ("firstName", firstName) + ("userType", userType.value)
+    ) +  ("emailId", emailId.email) + ("firstName", firstName) + ("userType", userType.value)
 
     AccessTokenWithExpiry(Jwt.encode(claims, key.value, JwtAlgorithm.HS256), expiry)
   }
 
-  def tokens(accessToken: String, refreshToken: RefreshToken, expiredAt: Long, user: UserT): TokensWithUser =
+  def tokens(accessToken: String, refreshToken: UserSession, expiredAt: Long, user: UserT): TokensWithUser =
     TokensWithUser(accessToken, refreshToken.refreshToken, expiredAt, user)
 
 }

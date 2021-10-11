@@ -6,7 +6,7 @@ import com.uptech.windalerts.config._
 import com.uptech.windalerts.config.secrets.SurfsUpSecret
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.otp.OTPWithExpiry
-import com.uptech.windalerts.core.refresh.tokens.RefreshToken
+import com.uptech.windalerts.core.refresh.tokens.UserSession
 import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken}
 import com.uptech.windalerts.core.user.{UserRolesService, UserT}
 import com.uptech.windalerts.infrastructure.endpoints.{UpdateUserRolesEndpoints, errors}
@@ -27,7 +27,7 @@ object UpdateUserRolesServer extends IOApp {
       androidPurchaseRepository = new MongoAndroidPurchaseRepository[F](db.getCollection[AndroidToken]("androidPurchases"))
       applePurchaseRepository = new MongoApplePurchaseRepository[F](db.getCollection[AppleToken]("applePurchases"))
       alertsRepository = new MongoAlertsRepository[F](db.getCollection[Alert]("alerts"))
-      refreshTokenRepository = new MongoRefreshTokenRepository[F](db.getCollection[RefreshToken]("refreshTokens"))
+      refreshTokenRepository = new MongoUserSessionRepository[F](db.getCollection[UserSession]("refreshTokens"))
 
       androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
       appleSubscription = new AppleSubscription[F](surfsUp.apple.appSecret)
