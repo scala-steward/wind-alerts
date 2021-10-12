@@ -16,7 +16,7 @@ class UserCredentialService[F[_] : Sync](
                                           appleCredentialsRepo: SocialCredentialsRepository[F, AppleCredentials],
                                           credentialsRepository: CredentialsRepository[F],
                                           userRepository: UserRepository[F],
-                                          refreshTokenRepository: UserSessionRepository[F],
+                                          userSessionsRepository: UserSessionRepository[F],
                                           emailSender: EmailSender[F]) {
   def getByCredentials(
                         email: String, password: String, deviceType: String
@@ -37,7 +37,7 @@ class UserCredentialService[F[_] : Sync](
       creds <- credentialsRepository.findByCredentials(email, deviceType).toRight(UserAuthenticationFailedError(email))
       newPassword <- EitherT.pure(utils.generateRandomString(10))(A)
       _ <- EitherT.right(credentialsRepository.updatePassword(creds._id.toHexString, newPassword.bcrypt))
-      _ <- EitherT.right(refreshTokenRepository.deleteForUserId(creds._id.toHexString))
+      _ <- EitherT.right(userSessionsRepository.deleteForUserId(creds._id.toHexString))
       user <- userRepository.getByUserId(creds._id.toHexString).toRight(UserNotFoundError("User not found"))
       _ <- EitherT.pure(emailSender.sendResetPassword(user.firstName(), email, newPassword))(A)
     } yield creds

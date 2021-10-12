@@ -23,6 +23,10 @@ class MongoUserSessionRepository[F[_]](collection: MongoCollection[UserSession])
     findByCriteria(equal("refreshToken", refreshToken))
   }
 
+  override def getByUserId(userId: String): OptionT[F, UserSession] = {
+    findByCriteria(equal("userId", userId))
+  }
+
   private def findByCriteria(criteria: Bson) = {
     OptionT(
       Async.fromFuture(
@@ -50,4 +54,7 @@ class MongoUserSessionRepository[F[_]](collection: MongoCollection[UserSession])
     findByCriteria(equal("_id", new ObjectId(id)))
   }
 
+  override def updateDeviceToken(userId: String, deviceToken: String): F[Unit] = {
+    Async.fromFuture(M.pure(collection.updateOne(equal("userId", userId), set("deviceToken", deviceToken)).toFuture().map(_=>())))
+  }
 }

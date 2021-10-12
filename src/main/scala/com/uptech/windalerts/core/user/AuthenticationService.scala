@@ -28,14 +28,14 @@ class AuthenticationService[F[_] : Effect]() {
         emailId <- parseResult.hcursor.downField("emailId").as[String]
         firstName <- parseResult.hcursor.downField("firstName").as[String]
         userType <- parseResult.hcursor.downField("userType").as[String]
-      } yield (claim.subject, EmailId(emailId), UserType(userType), firstName))
+      } yield (EmailId(emailId), UserType(userType), firstName))
         .leftMap(e=>{
           logger.error("Error while authenticating request", e)
           e
         })
         .toOption
         .flatMap(claims => OptionT.fromOption(claim.subject)
-          .map(userId => UserIdMetadata(UserId(userId), claims._2, claims._3, claims._4))).value
+          .map(userId => UserIdMetadata(UserId(userId), claims._1, claims._2, claims._3))).value
     }
   }
 

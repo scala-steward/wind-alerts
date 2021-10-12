@@ -20,7 +20,7 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
                                     userRepository: UserRepository[F],
                                     otpRepository: OtpRepository[F],
                                     socialPlatformSubscriptionsService: SocialPlatformSubscriptionsService[F],
-                                    refreshTokenRepository: UserSessionRepository[F],
+                                    userSessionsRepository: UserSessionRepository[F],
                                     appleAppSecret: String) {
   def updateTrialUsers() = {
     for {
@@ -131,11 +131,7 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
   }
 
   def makeUserTrial(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
-    update(user.copy(
-      userType = Trial.value,
-      startTrialAt = System.currentTimeMillis(),
-      endTrialAt = System.currentTimeMillis() + (30L * 24L * 60L * 60L * 1000L),
-    ))
+    update(user.copy(startTrialAt = System.currentTimeMillis(), endTrialAt = System.currentTimeMillis() + (30L * 24L * 60L * 60L * 1000L), userType = Trial.value))
   }
 
   def makeUserPremium(user: UserT, start: Long, expiry: Long): EitherT[F, UserNotFoundError, UserT] = {

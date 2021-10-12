@@ -43,7 +43,7 @@ object UsersServer extends IOApp {
       androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
 
       db = Repos.acquireDb(surfsUp.mongodb.url)
-      refreshTokenRepository = new MongoUserSessionRepository[F](db.getCollection[UserSession]("refreshTokens"))
+      userSessionsRepository = new MongoUserSessionRepository[F](db.getCollection[UserSession]("userSessions"))
       otpRepositoy = new MongoOtpRepository[F](db.getCollection[OTPWithExpiry]("otp"))
       usersRepository = new MongoUserRepository[F](db.getCollection[UserT]("users"))
       credentialsRepository = new MongoCredentialsRepository[F](db.getCollection[Credentials]("credentials"))
@@ -61,14 +61,14 @@ object UsersServer extends IOApp {
       auth = new AuthenticationService[F]()
       emailSender = new EmailSender[F](surfsUp.email.apiKey)
       otpService = new OTPService(otpRepositoy, emailSender)
-      userCredentialsService = new UserCredentialService[F](facebookCredentialsRepository, appleCredentialsRepository, credentialsRepository, usersRepository, refreshTokenRepository, emailSender)
-      usersService = new UserService[F](usersRepository, userCredentialsService, auth, refreshTokenRepository, googlePublisher)
+      userCredentialsService = new UserCredentialService[F](facebookCredentialsRepository, appleCredentialsRepository, credentialsRepository, usersRepository, userSessionsRepository, emailSender)
+      usersService = new UserService[F](usersRepository, userCredentialsService, auth, userSessionsRepository, googlePublisher)
       socialLoginService = new SocialLoginService[F](applePlatform, facebookPlatform,  facebookCredentialsRepository, appleCredentialsRepository, usersRepository, usersService, userCredentialsService)
 
       appleSubscription = new AppleSubscription[F](surfsUp.apple.appSecret)
       androidSubscription = new AndroidSubscription[F](androidPublisher)
       subscriptionsService = new SocialPlatformSubscriptionsServiceImpl[F](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
-      userRolesService = new UserRolesService[F](applePurchaseRepository, androidPurchaseRepository, alertsRepository, usersRepository, otpRepositoy, subscriptionsService, refreshTokenRepository, surfsUp.apple.appSecret)
+      userRolesService = new UserRolesService[F](applePurchaseRepository, androidPurchaseRepository, alertsRepository, usersRepository, otpRepositoy, subscriptionsService, userSessionsRepository, surfsUp.apple.appSecret)
 
       endpoints = new UsersEndpoints[F](userCredentialsService, usersService, socialLoginService, userRolesService, subscriptionsService, otpService)
       alertService = new AlertsService[F](alertsRepository)
