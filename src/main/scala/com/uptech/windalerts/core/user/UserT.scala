@@ -6,7 +6,7 @@ import org.bson.types.ObjectId
 import io.scalaland.chimney.dsl._
 
 
-case class UserT(_id: ObjectId, email: String, name: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long) {
+case class UserT(_id: ObjectId, email: String, name: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long) {
     def firstName() = {
       val firstName = name.split(" ")(0)
       firstName.substring(0, 1).toUpperCase + firstName.substring(1)
@@ -22,15 +22,15 @@ case class UserT(_id: ObjectId, email: String, name: String, deviceToken: String
   }
 
   object UserT {
-    def createSocialUser(_id: ObjectId, email: String, name: String, deviceToken: String, deviceType: String) =
-      create(_id, email, name, deviceToken, deviceType, System.currentTimeMillis(), Trial.value)
+    def createSocialUser(_id: ObjectId, email: String, name: String, deviceType: String): UserT =
+      create(_id, email, name, deviceType, System.currentTimeMillis(), Trial.value)
 
-    def createEmailUser(_id: ObjectId, email: String, name: String, deviceToken: String, deviceType: String) =
-      create(_id, email, name, deviceToken, deviceType, -1, Registered.value)
+    def createEmailUser(_id: ObjectId, email: String, name: String, deviceType: String): UserT =
+      create(_id, email, name, deviceType, -1, Registered.value)
 
-    def create(_id: ObjectId, email: String, name: String, deviceToken: String, deviceType: String, startTrialAt: Long, userType: String) =
-      UserT(_id, email, name, deviceToken, deviceType, startTrialAt, if (startTrialAt == -1) -1L else (startTrialAt + (30L * 24L * 60L * 60L * 1000L)), userType, -1, false, 4, -1, -1)
+    def create(_id: ObjectId, email: String, name: String, deviceType: String, startTrialAt: Long, userType: String): UserT =
+      UserT(_id, email, name, deviceType, startTrialAt, if (startTrialAt == -1) -1L else (startTrialAt + (30L * 24L * 60L * 60L * 1000L)), userType, -1, false, 4, -1, -1)
 
-    def apply(email: String, name: String, deviceToken: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long): UserT
-    = new UserT(new ObjectId(), email, name, deviceToken, deviceType, startTrialAt, endTrialAt, userType, snoozeTill, disableAllAlerts, notificationsPerHour, lastPaymentAt, nextPaymentAt)
+    def apply(email: String, name: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long)
+    = new UserT(new ObjectId(), email, name, deviceType, startTrialAt, endTrialAt, userType, snoozeTill, disableAllAlerts, notificationsPerHour, lastPaymentAt, nextPaymentAt)
   }

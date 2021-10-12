@@ -27,13 +27,13 @@ object UpdateUserRolesServer extends IOApp {
       androidPurchaseRepository = new MongoAndroidPurchaseRepository[F](db.getCollection[AndroidToken]("androidPurchases"))
       applePurchaseRepository = new MongoApplePurchaseRepository[F](db.getCollection[AppleToken]("applePurchases"))
       alertsRepository = new MongoAlertsRepository[F](db.getCollection[Alert]("alerts"))
-      refreshTokenRepository = new MongoUserSessionRepository[F](db.getCollection[UserSession]("refreshTokens"))
+      userSessionsRepository = new MongoUserSessionRepository[F](db.getCollection[UserSession]("userSessions"))
 
       androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
       appleSubscription = new AppleSubscription[F](surfsUp.apple.appSecret)
       androidSubscription = new AndroidSubscription[F](androidPublisher)
       subscriptionsService = new SocialPlatformSubscriptionsServiceImpl[F](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
-      userRolesService = new UserRolesService[F](applePurchaseRepository, androidPurchaseRepository, alertsRepository, usersRepository, otpRepositoy, subscriptionsService, refreshTokenRepository, surfsUp.apple.appSecret)
+      userRolesService = new UserRolesService[F](applePurchaseRepository, androidPurchaseRepository, alertsRepository, usersRepository, otpRepositoy, subscriptionsService, userSessionsRepository, surfsUp.apple.appSecret)
       endpoints = new UpdateUserRolesEndpoints[F](userRolesService)
 
       httpApp = Router(

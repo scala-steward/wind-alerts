@@ -15,11 +15,12 @@ import com.uptech.windalerts.config.swellAdjustments.Adjustments
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.notifications.{Notification, NotificationsService}
+import com.uptech.windalerts.core.refresh.tokens.UserSession
 import com.uptech.windalerts.core.user.UserT
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints.NotificationEndpoints
 import com.uptech.windalerts.infrastructure.notifications.FirebaseBasedNotificationsSender
-import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoAlertsRepository, MongoNotificationsRepository, MongoUserRepository, Repos}
+import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoAlertsRepository, MongoNotificationsRepository, MongoUserRepository, MongoUserSessionRepository, Repos}
 import io.circe.config.parser.decodePathF
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.{Server => H4Server}
@@ -51,10 +52,12 @@ object SendNotifications extends IOApp {
       db = Repos.acquireDb(surfsUp.mongodb.url)
       usersRepository = new MongoUserRepository[F](db.getCollection[UserT]("users"))
       alertsRepository = new MongoAlertsRepository[F](db.getCollection[Alert]("alerts"))
+      userSessionsRepository = new MongoUserSessionRepository[F](db.getCollection[UserSession]("userSessions"))
+
       notificationsRepository = new MongoNotificationsRepository[F](db.getCollection[Notification]("notifications"))
 
       notificationsSender = new FirebaseBasedNotificationsSender[F](notifications, beaches.toMap(), appConfig.notifications )
-      notificationService = new NotificationsService[F](notificationsRepository, usersRepository, beachService, alertsRepository, notificationsSender)
+      notificationService = new NotificationsService[F](notificationsRepository, usersRepository, beachService, alertsRepository, notificationsSender, userSessionsRepository)
       notificationsEndPoints = new NotificationEndpoints[F](notificationService)
       httpApp = notificationsEndPoints.allRoutes()
       server <- BlazeServerBuilder[F]

@@ -34,7 +34,7 @@ class UsersEndpoints[F[_] : Effect]
       case _@GET -> Root / "about-surfs-up" =>
         Ok(statics.aboutSurfsUp)
 
-      case req@POST -> Root => {
+      case req@POST -> Root =>
         (for {
           rr <- EitherT.liftF(req.as[RegisterRequest])
           user <- userService.register(rr)
@@ -42,9 +42,8 @@ class UsersEndpoints[F[_] : Effect]
           case Right(tokensWithUser) => Ok(TokensWithUserDTO.fromDomain(tokensWithUser))
           case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")
         }
-      }
 
-      case req@POST -> Root / "login" => {
+      case req@POST -> Root / "login" =>
         (for {
           credentials <- EitherT.liftF(req.as[LoginRequest])
           user <- userService.login(credentials)
@@ -53,7 +52,6 @@ class UsersEndpoints[F[_] : Effect]
           case Left(UserNotFoundError(_)) => NotFound("User not found")
           case Left(UserAuthenticationFailedError(name)) => BadRequest(s"Authentication failed for user $name")
         }
-      }
 
       case req@POST -> Root / "refresh" =>
         (for {
@@ -86,7 +84,7 @@ class UsersEndpoints[F[_] : Effect]
           case Left(UserNotFoundError(_)) => NotFound("User not found")
         }
 
-      case req@POST -> Root / "purchase" / "android" / "update" => {
+      case req@POST -> Root / "purchase" / "android" / "update" =>
         (for {
           update <- EitherT.liftF(req.as[AndroidUpdate])
           user <- userRolesService.handleAndroidUpdate(update)
@@ -94,7 +92,6 @@ class UsersEndpoints[F[_] : Effect]
           case Right(_) => Ok()
           case Left(error) => InternalServerError(error.getMessage)
         }
-      }
     }
 
 
@@ -144,7 +141,7 @@ class UsersEndpoints[F[_] : Effect]
           resp <- Ok()
         } yield resp)
 
-      case authReq@POST -> Root / "verifyEmail" as user => {
+      case authReq@POST -> Root / "verifyEmail" as user =>
         OptionT.liftF(authReq.req.decode[OTP] {
           req =>
             (for {
@@ -155,7 +152,6 @@ class UsersEndpoints[F[_] : Effect]
               case Left(UserNotFoundError(_)) => NotFound("User not found")
             }
         })
-      }
 
       case _@POST -> Root / "logout" as user => {
         OptionT.liftF({
@@ -168,7 +164,7 @@ class UsersEndpoints[F[_] : Effect]
         })
       }
 
-      case _@GET -> Root / "purchase" / "android" as user => {
+      case _@GET -> Root / "purchase" / "android" as user =>
         OptionT.liftF(
           (for {
             response <- userRolesService.getAndroidPurchase(user.userId)
@@ -178,9 +174,8 @@ class UsersEndpoints[F[_] : Effect]
             case Left(UserNotFoundError(_)) => NotFound("User not found")
           }
         )
-      }
 
-      case authReq@POST -> Root / "purchase" / "android" as user => {
+      case authReq@POST -> Root / "purchase" / "android" as user =>
         OptionT.liftF(authReq.req.decode[AndroidReceiptValidationRequest] {
           req =>
             (for {
@@ -191,7 +186,6 @@ class UsersEndpoints[F[_] : Effect]
               case Left(UserNotFoundError(_)) => NotFound("User not found")
             }
         })
-      }
 
       case _@GET -> Root / "purchase" / "apple" as user => {
         OptionT.liftF(
@@ -205,7 +199,7 @@ class UsersEndpoints[F[_] : Effect]
         )
       }
 
-      case authReq@POST -> Root / "purchase" / "apple" as user => {
+      case authReq@POST -> Root / "purchase" / "apple" as user =>
         OptionT.liftF(authReq.req.decode[ApplePurchaseToken] {
           req =>
             (for {
@@ -216,7 +210,6 @@ class UsersEndpoints[F[_] : Effect]
               case Left(UserNotFoundError(_)) => NotFound("User not found")
             }
         })
-      }
     }
 
 
@@ -271,8 +264,5 @@ class UsersEndpoints[F[_] : Effect]
         }
 
     }
-
   }
-
-
 }

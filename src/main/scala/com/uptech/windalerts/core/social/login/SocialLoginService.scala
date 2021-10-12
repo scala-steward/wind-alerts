@@ -59,7 +59,7 @@ class SocialLoginService[F[_] : Sync](appleLogin: AppleLogin[F],
     for {
       _ <- credentialService.doesNotExist(socialUser.email, socialUser.deviceType)
       result <- EitherT.right(createUser[T](socialUser, credentialCreator))
-      tokens <- EitherT.right(userService.generateNewTokens(result._1))
+      tokens <- EitherT.right(userService.generateNewTokens(result._1, socialUser.deviceToken))
     } yield tokens
   }
 
@@ -76,12 +76,7 @@ class SocialLoginService[F[_] : Sync](appleLogin: AppleLogin[F],
     for {
       savedCreds <- credentialCreator(user)
       savedUser <- userRepository.create(
-        UserT.createSocialUser(
-          new ObjectId(savedCreds._id.toHexString),
-          user.email,
-          user.name,
-          user.deviceToken,
-          user.deviceType))
+        UserT.createSocialUser(new ObjectId(savedCreds._id.toHexString), user.email, user.name, user.deviceType))
     } yield (savedUser, savedCreds)
   }
 
