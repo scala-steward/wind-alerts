@@ -1,7 +1,7 @@
 package com.uptech.windalerts.core.credentials
 
-trait SocialCredentialsRepository[F[_], T] {
-  def create(credentials: T): F[T]
+trait SocialCredentialsRepository[F[_]] {
+  def create(credentials: SocialCredentials): F[SocialCredentials]
 
-  def find(email: String, deviceType: String): F[Option[T]]
+  def find(email: String, deviceType: String): F[Option[SocialCredentials]]
 }

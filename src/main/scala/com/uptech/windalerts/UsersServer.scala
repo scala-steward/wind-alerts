@@ -12,17 +12,19 @@ import com.uptech.windalerts.config.swellAdjustments.Adjustments
 import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.beaches.BeachService
-import com.uptech.windalerts.core.credentials.{AppleCredentials, Credentials, FacebookCredentials, UserCredentialService}
+import com.uptech.windalerts.core.credentials.{Credentials, SocialCredentials, UserCredentialService}
 import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry}
 import com.uptech.windalerts.core.refresh.tokens.UserSession
-import com.uptech.windalerts.core.social.login.SocialLoginService
+import com.uptech.windalerts.core.social.SocialPlatformType
+import com.uptech.windalerts.core.social.login.{AccessRequest, SocialLoginProvider, SocialLoginProviders, SocialLoginService}
 import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken}
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService, UserT}
 import com.uptech.windalerts.infrastructure.{EmailSender, GooglePubSubEventpublisher}
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints.{AlertsEndpoints, BeachesEndpoints, SwaggerEndpoints, UsersEndpoints, errors}
-import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoAlertsRepository, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoOtpRepository, MongoUserSessionRepository, MongoSocialCredentialsRepository, MongoUserRepository, Repos}
-import com.uptech.windalerts.infrastructure.social.login.{AppleLogin, FacebookLogin}
+import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoAlertsRepository, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoOtpRepository, MongoSocialCredentialsRepository, MongoUserRepository, MongoUserSessionRepository, Repos}
+import com.uptech.windalerts.infrastructure.social.SocialPlatformType.{Apple, Facebook}
+import com.uptech.windalerts.infrastructure.social.login.{AppleLoginProvider, FacebookLoginProvider, FixedSocialLoginProviders}
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AndroidPublisherHelper, AndroidSubscription, AppleSubscription, ApplicationConfig, SocialPlatformSubscriptionsServiceImpl}
 import io.circe.config.parser.decodePathF
 import org.http4s.implicits._
@@ -30,15 +32,18 @@ import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.{Router, Server => H4Server}
 
 object UsersServer extends IOApp {
-  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer: Parallel](): Resource[F, H4Server[F]] =
+  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer : Parallel](): Resource[F, H4Server[F]] =
+
     for {
       surfsUp <- eval(decodePathF[F, SurfsUpSecret](parseFileAnySyntax(secrets.getConfigFile()), "surfsUp"))
+
       beaches <- eval(decodePathF[F, Beaches](parseFileAnySyntax(config.getConfigFile("beaches.json")), "surfsUp"))
       swellAdjustments <- eval(decodePathF[F, Adjustments](parseFileAnySyntax(config.getConfigFile("swellAdjustments.json")), "surfsUp"))
       willyWeatherAPIKey = surfsUp.willyWeather.key
 
 
       projectId = sys.env("projectId")
+
       googlePublisher = new GooglePubSubEventpublisher[F](projectId)
       androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
 
@@ -47,13 +52,13 @@ object UsersServer extends IOApp {
       otpRepositoy = new MongoOtpRepository[F](db.getCollection[OTPWithExpiry]("otp"))
       usersRepository = new MongoUserRepository[F](db.getCollection[UserT]("users"))
       credentialsRepository = new MongoCredentialsRepository[F](db.getCollection[Credentials]("credentials"))
-      facebookCredentialsRepository = new MongoSocialCredentialsRepository[F, FacebookCredentials](db.getCollection[FacebookCredentials]("facebookCredentials"))
-      appleCredentialsRepository = new MongoSocialCredentialsRepository[F, AppleCredentials](db.getCollection[AppleCredentials]("appleCredentials"))
+      facebookCredentialsRepository = new MongoSocialCredentialsRepository[F](db.getCollection[SocialCredentials]("facebookCredentials"))
+      appleCredentialsRepository = new MongoSocialCredentialsRepository[F](db.getCollection[SocialCredentials]("appleCredentials"))
       androidPurchaseRepository = new MongoAndroidPurchaseRepository[F](db.getCollection[AndroidToken]("androidPurchases"))
       applePurchaseRepository = new MongoApplePurchaseRepository[F](db.getCollection[AppleToken]("applePurchases"))
       alertsRepository = new MongoAlertsRepository[F](db.getCollection[Alert]("alerts"))
-      applePlatform = new AppleLogin[F](config.getConfigFile(s"Apple-$projectId.p8", "Apple.p8"))
-      facebookPlatform = new FacebookLogin[F](surfsUp.facebook.key)
+      applePlatform = new AppleLoginProvider[F](config.getConfigFile(s"Apple-$projectId.p8", "Apple.p8"))
+      facebookPlatform = new FacebookLoginProvider[F](surfsUp.facebook.key)
       beachService = new BeachService[F](
         new WWBackedWindsService[F](willyWeatherAPIKey),
         new WWBackedTidesService[F](willyWeatherAPIKey, beaches.toMap()),
@@ -61,9 +66,12 @@ object UsersServer extends IOApp {
       auth = new AuthenticationService[F]()
       emailSender = new EmailSender[F](surfsUp.email.apiKey)
       otpService = new OTPService(otpRepositoy, emailSender)
-      userCredentialsService = new UserCredentialService[F](facebookCredentialsRepository, appleCredentialsRepository, credentialsRepository, usersRepository, userSessionsRepository, emailSender)
+      socialCredentialsRepositories = Map(Facebook -> facebookCredentialsRepository, Apple -> appleCredentialsRepository)
+
+      userCredentialsService = new UserCredentialService[F](socialCredentialsRepositories, credentialsRepository, usersRepository, userSessionsRepository, emailSender)
       usersService = new UserService[F](usersRepository, userCredentialsService, auth, userSessionsRepository, googlePublisher)
-      socialLoginService = new SocialLoginService[F](applePlatform, facebookPlatform,  facebookCredentialsRepository, appleCredentialsRepository, usersRepository, usersService, userCredentialsService)
+      socialLoginPlatforms = new FixedSocialLoginProviders[F](applePlatform, facebookPlatform)
+      socialLoginService = new SocialLoginService[F](usersRepository, usersService, userCredentialsService, socialCredentialsRepositories, socialLoginPlatforms)
 
       appleSubscription = new AppleSubscription[F](surfsUp.apple.appSecret)
       androidSubscription = new AndroidSubscription[F](androidPublisher)

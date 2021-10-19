@@ -5,7 +5,7 @@ import cats.effect.Sync
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.alerts.{Alerts, TimeRange}
 import com.uptech.windalerts.core.beaches.domain._
-import com.uptech.windalerts.core.credentials.{AppleCredentials, Credentials, FacebookCredentials}
+import com.uptech.windalerts.core.credentials.{Credentials, SocialCredentials}
 import com.uptech.windalerts.core.notifications.Notification
 import com.uptech.windalerts.core.otp.OTPWithExpiry
 import com.uptech.windalerts.core.refresh.tokens.UserSession
@@ -32,9 +32,8 @@ object codecs {
     fromProviders(classOf[Alert]),
     fromProviders(classOf[Alerts]),
     fromProviders(classOf[TimeRange]),
-    fromProviders(classOf[FacebookCredentials]),
+    fromProviders(classOf[SocialCredentials]),
     fromProviders(classOf[AppleToken]),
-    fromProviders(classOf[AppleCredentials]),
     DEFAULT_CODEC_REGISTRY)
 
 

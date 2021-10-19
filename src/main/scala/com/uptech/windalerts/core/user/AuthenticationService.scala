@@ -54,7 +54,4 @@ class AuthenticationService[F[_] : Effect]() {
     AccessTokenWithExpiry(Jwt.encode(claims, key.value, JwtAlgorithm.HS256), expiry)
   }
 
-  def tokens(accessToken: String, refreshToken: UserSession, expiredAt: Long, user: UserT): TokensWithUser =
-    TokensWithUser(accessToken, refreshToken.refreshToken, expiredAt, user)
-
 }

@@ -4,13 +4,14 @@ import cats.Monad
 import cats.effect.{Async, ContextShift}
 import com.restfb.types.User
 import com.restfb.{DefaultFacebookClient, Parameter, Version}
-import com.uptech.windalerts.core.social.login.{FacebookAccessRequest, SocialLogin, SocialUser}
+import com.uptech.windalerts.core.social.login.{SocialLoginProvider, SocialUser}
+import com.uptech.windalerts.infrastructure.social.login.AccessRequests.FacebookAccessRequest
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
-class FacebookLogin[F[_]](fbSecret: String)(implicit cs: ContextShift[F], s: Async[F], M: Monad[F])  extends SocialLogin[F, FacebookAccessRequest] {
+class FacebookLoginProvider[F[_]](fbSecret: String)(implicit cs: ContextShift[F], s: Async[F], M: Monad[F])  extends SocialLoginProvider[F, FacebookAccessRequest] {
   override def fetchUserFromPlatform(credentials: FacebookAccessRequest): F[SocialUser] = {
     fetchUserFromPlatform_(credentials)
   }
