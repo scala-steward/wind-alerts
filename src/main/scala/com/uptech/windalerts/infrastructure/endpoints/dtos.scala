@@ -2,8 +2,8 @@ package com.uptech.windalerts.infrastructure.endpoints
 
 import com.uptech.windalerts.core.EventPublisher.Event
 import com.uptech.windalerts.core.alerts.TimeRange
-import com.uptech.windalerts.core.social.login.{AppleAccessRequest, FacebookAccessRequest}
-import com.uptech.windalerts.core.user.{TokensWithUser}
+import com.uptech.windalerts.core.user.TokensWithUser
+import com.uptech.windalerts.infrastructure.social.login.AccessRequests.{AppleAccessRequest, FacebookAccessRequest}
 import io.scalaland.chimney.dsl._
 
 

@@ -7,20 +7,20 @@ import cats.implicits._
 import com.github.t3hnar.bcrypt._
 import com.uptech.windalerts.core._
 import com.uptech.windalerts.core.refresh.tokens.UserSessionRepository
+import com.uptech.windalerts.core.social.SocialPlatformType
 import com.uptech.windalerts.core.user.UserRepository
 import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.endpoints.dtos.{ChangePasswordRequest, RegisterRequest}
 
 class UserCredentialService[F[_] : Sync](
-                                          facebookCredentialsRepo: SocialCredentialsRepository[F, FacebookCredentials],
-                                          appleCredentialsRepo: SocialCredentialsRepository[F, AppleCredentials],
+                                          socialCredentialsRepositories:Map[SocialPlatformType, SocialCredentialsRepository[F]],
                                           credentialsRepository: CredentialsRepository[F],
                                           userRepository: UserRepository[F],
                                           userSessionsRepository: UserSessionRepository[F],
                                           emailSender: EmailSender[F]) {
-  def getByCredentials(
-                        email: String, password: String, deviceType: String
-                      ): EitherT[F, UserAuthenticationFailedError, Credentials] =
+  def findByCredentials(
+                         email: String, password: String, deviceType: String
+                       ): EitherT[F, UserAuthenticationFailedError, Credentials] =
     for {
       creds <- credentialsRepository.findByCredentials(email, deviceType).toRight(UserAuthenticationFailedError(email))
       passwordMatched <- isPasswordMatch(password, creds)
@@ -32,7 +32,7 @@ class UserCredentialService[F[_] : Sync](
 
   def resetPassword(
                      email: String, deviceType: String
-                   )(implicit A:Applicative[F]): EitherT[F, SurfsUpError, Credentials] =
+                   )(implicit A: Applicative[F]): EitherT[F, SurfsUpError, Credentials] =
     for {
       creds <- credentialsRepository.findByCredentials(email, deviceType).toRight(UserAuthenticationFailedError(email))
       newPassword <- EitherT.pure(utils.generateRandomString(10))(A)
@@ -45,7 +45,7 @@ class UserCredentialService[F[_] : Sync](
 
   def changePassword(request: ChangePasswordRequest): EitherT[F, UserAuthenticationFailedError, Unit] = {
     for {
-      credentials <- getByCredentials(request.email, request.oldPassword, request.deviceType)
+      credentials <- findByCredentials(request.email, request.oldPassword, request.deviceType)
       result <- EitherT.right(credentialsRepository.updatePassword(credentials._id.toHexString, request.newPassword.bcrypt))
     } yield result
   }
@@ -61,10 +61,17 @@ class UserCredentialService[F[_] : Sync](
   def doesNotExist(email: String, deviceType: String): EitherT[F, UserAlreadyExistsError, Unit] = {
     EitherT((for {
       doesNotExistAsEmailUser <- credentialsRepository.findByCredentials(email, deviceType).isEmpty
-      doesNotExistAsFacebookUser <- OptionT(facebookCredentialsRepo.find(email, deviceType)).isEmpty
-      doesNotExistAsAppleUser <- OptionT(appleCredentialsRepo.find(email, deviceType)).isEmpty
-    } yield (doesNotExistAsEmailUser && doesNotExistAsFacebookUser && doesNotExistAsAppleUser))
+      doesNotExistAsSocialUser <- doesNotExistAsSocialUser(email, deviceType)
+    } yield (doesNotExistAsEmailUser && doesNotExistAsSocialUser))
       .map(doesNotExist => Either.cond(doesNotExist, (), UserAlreadyExistsError(email, deviceType))))
   }
 
+  private def doesNotExistAsSocialUser(email: String, deviceType: String) = {
+    socialCredentialsRepositories
+      .values
+      .map(_.find(email, deviceType).map(_.isDefined))
+      .toList
+      .sequence
+      .map(!_.exists(_ == true))
+  }
 }

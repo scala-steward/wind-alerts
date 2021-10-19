@@ -5,9 +5,10 @@ import cats.effect.{Async, ContextShift}
 import cats.implicits._
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.turo.pushy.apns.auth.ApnsSigningKey
-import com.uptech.windalerts.core.social.login.{AppleAccessRequest, SocialLogin, SocialUser}
+import com.uptech.windalerts.core.social.login.{SocialLoginProvider, SocialUser}
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
 import com.uptech.windalerts.infrastructure.endpoints.dtos.{AppleUser, TokenResponse}
+import com.uptech.windalerts.infrastructure.social.login.AccessRequests.AppleAccessRequest
 import com.uptech.windalerts.logger
 import io.circe.parser
 import pdi.jwt._
@@ -17,7 +18,7 @@ import java.security.PrivateKey
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class AppleLogin[F[_]](file: File)(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends SocialLogin[F, AppleAccessRequest] {
+class AppleLoginProvider[F[_]](file: File)(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends SocialLoginProvider[F, AppleAccessRequest] {
   val privateKey = getPrivateKey(file)
   override def fetchUserFromPlatform(credentials: AppleAccessRequest): F[SocialUser] = {
     fetchUserFromPlatform_(credentials)

@@ -3,13 +3,11 @@ package com.uptech.windalerts.core.user
 import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
-import com.uptech.windalerts.core.credentials.{Credentials, UserCredentialService}
-import com.uptech.windalerts.core.otp.OTPService
-import com.uptech.windalerts.core.refresh.tokens.{UserSession, UserSessionRepository}
 import com.uptech.windalerts.core._
-import com.uptech.windalerts.infrastructure.endpoints.dtos._
+import com.uptech.windalerts.core.credentials.{Credentials, UserCredentialService}
+import com.uptech.windalerts.core.refresh.tokens.{UserSession, UserSessionRepository}
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
-
+import com.uptech.windalerts.infrastructure.endpoints.dtos._
 import io.circe.syntax._
 import org.mongodb.scala.bson.ObjectId
 
@@ -21,25 +19,31 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
                                eventPublisher: EventPublisher[F]) {
   def register(registerRequest: RegisterRequest): EitherT[F, UserAlreadyExistsError, TokensWithUser] = {
     for {
-      createUserResponse <- create(registerRequest)
+      createUserResponse <- persistUserAndCredentials(registerRequest)
       tokens <- EitherT.right(generateNewTokens(createUserResponse._1, registerRequest.deviceToken))
       _ <- EitherT.right(eventPublisher.publish("userRegistered", UserRegistered(UserIdDTO(createUserResponse._1._id.toHexString), EmailId(createUserResponse._1.email)).asJson))
     } yield tokens
   }
 
-  def create(rr: RegisterRequest): EitherT[F, UserAlreadyExistsError, (UserT, Credentials)] = {
+  def persistUserAndCredentials(rr: RegisterRequest): EitherT[F, UserAlreadyExistsError, (UserT, Credentials)] = {
     for {
       savedCreds <- userCredentialsService.createIfDoesNotExist(rr)
-      saved <- EitherT.right(userRepository.create(
-        UserT.createEmailUser(new ObjectId(savedCreds._id.toHexString), rr.email, rr.name, rr.deviceType)))
+      saved <- EitherT.right(userRepository.create(UserT.createEmailUser(new ObjectId(savedCreds._id.toHexString), rr.email, rr.name, rr.deviceType)))
     } yield (saved, savedCreds)
   }
 
   def login(credentials: LoginRequest): EitherT[F, SurfsUpError, TokensWithUser] = {
     for {
-      dbCredentials <- userCredentialsService.getByCredentials(credentials.email, credentials.password, credentials.deviceType)
-      dbUser <- getUser(dbCredentials.email, dbCredentials.deviceType)
-      tokens <- resetUserSession(dbUser, credentials.deviceToken).leftWiden[SurfsUpError]
+      persistedCredentials <- userCredentialsService.findByCredentials(credentials.email, credentials.password, credentials.deviceType)
+      tokens <- resetUserSession(persistedCredentials.email, persistedCredentials.deviceType, credentials.deviceToken).leftWiden[SurfsUpError]
+    } yield tokens
+  }
+
+  def resetUserSession(emailId: String, deviceType:String, newDeviceToken: String):EitherT[F, UserNotFoundError, TokensWithUser] = {
+    for {
+      persistedUser <- getUser(emailId, deviceType)
+      _ <- EitherT.liftF(userSessionsRepository.deleteForUserId(persistedUser._id.toHexString))
+      tokens <- EitherT.right(generateNewTokens(persistedUser, newDeviceToken))
     } yield tokens
   }
 
@@ -48,6 +52,16 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
       _ <- EitherT.liftF(userSessionsRepository.deleteForUserId(dbUser._id.toHexString))
       tokens <- EitherT.right(generateNewTokens(dbUser, newDeviceToken))
     } yield tokens
+  }
+
+  def generateNewTokens(user:UserT, deviceToken:String): F[TokensWithUser] = {
+    import cats.syntax.functor._
+
+    val token = auth.createToken(UserId(user._id.toHexString), EmailId(user.email), user.firstName(), UserType(user.userType))
+
+    userSessionsRepository.create(UserSession(user._id.toHexString, deviceToken))
+      .map(newRefreshToken=>TokensWithUser(token.accessToken, newRefreshToken.refreshToken, token.expiredAt, user))
+
   }
 
   def refresh(accessTokenRequest: AccessTokenRequest): EitherT[F, SurfsUpError, TokensWithUser] = {
@@ -60,19 +74,8 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
     } yield tokens
   }
 
-  private def checkNotExpired(oldRefreshToken: UserSession): cats.data.EitherT[F, SurfsUpError, Unit] = {
-    if (oldRefreshToken.isExpired()) EitherT.fromEither(Left(RefreshTokenExpiredError()))
-    else EitherT.pure(())
-  }
-
-  def generateNewTokens(user:UserT, deviceToken:String): F[TokensWithUser] = {
-    import cats.syntax.functor._
-
-    val token = auth.createToken(UserId(user._id.toHexString), EmailId(user.email), user.firstName(), UserType(user.userType))
-
-    userSessionsRepository.create(UserSession(user._id.toHexString, deviceToken))
-      .map(newRefreshToken=>auth.tokens(token.accessToken, newRefreshToken, token.expiredAt, user))
-  }
+  private def checkNotExpired(oldRefreshToken: UserSession): cats.data.EitherT[F, SurfsUpError, Unit] =
+    EitherT.cond(!oldRefreshToken.isExpired(), (), RefreshTokenExpiredError())
 
   def updateUserProfile(id: String, name: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long): EitherT[F, UserNotFoundError, UserT] = {
     for {
