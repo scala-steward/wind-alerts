@@ -3,7 +3,6 @@
 ~~~~ Create trigger
 ~~~~ Connect github project
 ~~~~ Create firebase project
-~~~~ Create firestore DB, use production mode. Choose location carefully.
 ~~~~ Download firebase config file config file for your project. https://firebase.google.com/docs/admin/setup
 ~~~~ Create KMS keyring and key
 ~~~~ Encrypt secrets.conf.
