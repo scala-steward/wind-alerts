@@ -14,9 +14,7 @@ trait UserRepository[F[_]] {
 
   def findTrialExpiredUsers(): F[Seq[UserT]]
 
-  def findAndroidPremiumExpiredUsers(): F[Seq[UserT]]
-
-  def findApplePremiumExpiredUsers(): F[Seq[UserT]]
+  def findPremiumExpiredUsers(): F[Seq[UserT]]
 
   def usersWithNotificationsEnabledAndNotSnoozed(): F[Seq[UserT]]
 }

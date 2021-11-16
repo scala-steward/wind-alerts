@@ -16,3 +16,5 @@ case class RefreshTokenExpiredError(message: String = "Refresh token expired") e
 case class OperationNotAllowed(message:String) extends SurfsUpError(message)
 case class UnknownError(message:String) extends SurfsUpError(message)
 case class WWError(message: String = "Error from WillyWeather") extends SurfsUpError(message)
+
+case class PlatformNotSupported(message:String = "Platform not supported") extends SurfsUpError(message)

@@ -21,7 +21,7 @@ class UpdateUserRolesEndpoints[F[_]: Effect](userRoles: UserRolesService[F]) ext
 
       case _@GET -> Root / "update" / "subscribed" / "android" =>
         val action = for {
-          response <- userRoles.updateAndroidSubscribedUsers()
+          response <- userRoles.updateSubscribedUsers()
         } yield response
         action.value.flatMap {
           case Right(_) => Ok()
@@ -31,7 +31,7 @@ class UpdateUserRolesEndpoints[F[_]: Effect](userRoles: UserRolesService[F]) ext
 
       case _@GET -> Root / "update" / "subscribed" / "apple" =>
         val action = for {
-          response <- userRoles.updateAppleSubscribedUsers()
+          response <- userRoles.updateSubscribedUsers()
         } yield response
         action.value.flatMap {
           case Right(_) => Ok()

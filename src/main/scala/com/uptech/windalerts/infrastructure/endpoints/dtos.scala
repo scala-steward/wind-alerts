@@ -94,9 +94,8 @@ object dtos {
                        timeZone: String = "Australia/Sydney") {
   }
 
-  case class AndroidReceiptValidationRequest(productId: String, token: String)
+  case class PurchaseReceiptValidationRequest(token: String)
 
-  case class ApplePurchaseToken(token: String)
 
   case class Message(data: String)
 
@@ -113,7 +112,6 @@ object dtos {
   case class TokenResponse(access_token: String, id_token: String)
 
   case class AppleUser(sub: String, email: String)
-
 
   case class UserIdDTO(userId: String) extends AnyVal
   case class EmailId(email: String) extends AnyVal

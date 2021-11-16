@@ -3,65 +3,47 @@ package com.uptech.windalerts.core.user
 import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
-import com.uptech.windalerts.config.secrets
 import com.uptech.windalerts.core.alerts.AlertsRepository
 import com.uptech.windalerts.core.otp.OtpRepository
 import com.uptech.windalerts.core.refresh.tokens.UserSessionRepository
-import com.uptech.windalerts.core.social.subscriptions.{AndroidTokenRepository, AppleTokenRepository, SocialPlatformSubscriptionsService}
+import com.uptech.windalerts.core.social.SocialPlatformType
+import com.uptech.windalerts.core.social.subscriptions.SocialPlatformSubscriptionsService
 import com.uptech.windalerts.core.user.UserType.{Premium, PremiumExpired, Trial}
 import com.uptech.windalerts.core.{OperationNotAllowed, SurfsUpError, UnknownError, UserNotFoundError}
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
+import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Google}
+import com.uptech.windalerts.infrastructure.social.subscriptions.PurchaseTokenRepository
 import io.circe.parser.parse
 
-class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepository[F],
-                                    androidPurchaseRepository: AndroidTokenRepository[F],
-                                    alertsRepository: AlertsRepository[F],
-                                    userRepository: UserRepository[F],
-                                    otpRepository: OtpRepository[F],
-                                    socialPlatformSubscriptionsService: SocialPlatformSubscriptionsService[F],
-                                    userSessionsRepository: UserSessionRepository[F],
-                                    appleAppSecret: String) {
+class UserRolesService[F[_] : Sync](userSessionRepository: UserSessionRepository[F], alertsRepository: AlertsRepository[F], userRepository: UserRepository[F], otpRepository: OtpRepository[F], socialPlatformSubscriptionsService: SocialPlatformSubscriptionsService[F]) {
   def updateTrialUsers() = {
     for {
       users <- EitherT.right(userRepository.findTrialExpiredUsers())
-      _ <- makeAllTrialExpired(users)
+      _ <- makeUsersTrialExpired(users)
     } yield ()
   }
 
-  private def makeAllTrialExpired(users: Seq[UserT]): EitherT[F, UserNotFoundError, List[UserT]] = {
+  private def makeUsersTrialExpired(users: Seq[UserT]): EitherT[F, UserNotFoundError, List[UserT]] = {
     users.map(user => makeUserTrialExpired(user)).toList.sequence
   }
 
-  def updateAndroidSubscribedUsers() = {
+
+  def updateSubscribedUsers() = {
     for {
-      users <- EitherT.right(userRepository.findAndroidPremiumExpiredUsers())
-      _ <- users.map(user => updateAndroidSubscribedUser(user)).toList.sequence
+      users <- EitherT.right(userRepository.findPremiumExpiredUsers())
+      _ <- users.map(user => updateSubscribedUser(user)).toList.sequence
     } yield ()
   }
 
-  private def updateAndroidSubscribedUser(user: UserT): EitherT[F, SurfsUpError, Unit] = {
+  private def updateSubscribedUser(user: UserT): EitherT[F, SurfsUpError, Unit] = {
+
     for {
-      token <- androidPurchaseRepository.getLastForUser(user._id.toHexString)
-      purchase <- socialPlatformSubscriptionsService.getAndroidPurchase(token.subscriptionId, token.purchaseToken)
+      purchase <- socialPlatformSubscriptionsService.find(user._id.toHexString, user.deviceType)
       _ <- updateSubscribedUserRole(user, purchase.startTimeMillis, purchase.expiryTimeMillis).leftWiden[SurfsUpError]
     } yield ()
   }
 
-  def updateAppleSubscribedUsers(): EitherT[F, SurfsUpError, Unit] = {
-    for {
-      users <- EitherT.right(userRepository.findApplePremiumExpiredUsers())
-      _ <- users.map(user => updateAppleSubscribedUser(user)).toList.sequence
-    } yield ()
-  }
-
-  private def updateAppleSubscribedUser(user: UserT) = {
-    for {
-      token <- applePurchaseRepository.getLastForUser(user._id.toHexString)
-      purchase <- socialPlatformSubscriptionsService.getApplePurchase(token.purchaseToken, appleAppSecret)
-      _ <- updateSubscribedUserRole(user, purchase.startTimeMillis, purchase.expiryTimeMillis).leftWiden[SurfsUpError]
-    } yield ()
-  }
 
   def updateSubscribedUserRole(user: UserT, startTime: Long, expiryTime: Long) = {
     for {
@@ -84,17 +66,13 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
   }
 
 
-  def handleAndroidUpdate(update: AndroidUpdate): EitherT[F, SurfsUpError, UserT] = {
+  def handleUpdate(socialPlatformType:SocialPlatformType, purchaseToken: String): EitherT[F, SurfsUpError, UserT] = {
     for {
-      decoded <- EitherT.fromEither[F](Either.right(new String(java.util.Base64.getDecoder.decode(update.message.data))))
-      subscription <- asSubscription(decoded)
-      token <- androidPurchaseRepository.getPurchaseByToken(subscription.subscriptionNotification.purchaseToken)
-      purchase <- socialPlatformSubscriptionsService.getAndroidPurchase(token.subscriptionId, subscription.subscriptionNotification.purchaseToken)
-      user <- userRepository.getByUserId(token.userId).toRight(UserNotFoundError())
-      updatedUser <- updateSubscribedUserRole(user, purchase.startTimeMillis, purchase.expiryTimeMillis).leftWiden[SurfsUpError]
+      purchase <- socialPlatformSubscriptionsService.getLatestForToken(socialPlatformType, purchaseToken)
+      user <- userRepository.getByUserId(purchase.userId.id).toRight(UserNotFoundError())
+      updatedUser <- updateSubscribedUserRole(user, purchase.subscriptionPurchase.startTimeMillis, purchase.subscriptionPurchase.expiryTimeMillis).leftWiden[SurfsUpError]
     } yield updatedUser
   }
-
 
   def verifyEmail(user: UserId, request: OTP): EitherT[F, SurfsUpError, UserDTO] = {
     for {
@@ -104,30 +82,12 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
     } yield updateResult
   }
 
-  def getAndroidPurchase(u: UserId) = {
+  def updateUserPurchase(u: UserId) = {
     for {
-      token <- androidPurchaseRepository.getLastForUser(u.id)
-      purchase <- socialPlatformSubscriptionsService.getAndroidPurchase(token.subscriptionId, token.purchaseToken)
       dbUser <- userRepository.getByUserId(u.id).toRight(UserNotFoundError()).leftWiden[SurfsUpError]
-      premiumUser <- updateSubscribedUserRole(dbUser, purchase.startTimeMillis, purchase.expiryTimeMillis).map(_.asDTO()).leftWiden[SurfsUpError]
-    } yield premiumUser
-  }
-
-  private def asSubscription(response: String): EitherT[F, SurfsUpError, SubscriptionNotificationWrapper] = {
-    EitherT.fromEither((for {
-      parsed <- parse(response)
-      decoded <- parsed.as[SubscriptionNotificationWrapper].leftWiden[io.circe.Error]
-    } yield decoded).leftMap(error => UnknownError(error.getMessage)).leftWiden[SurfsUpError])
-
-  }
-
-  def updateAppleUser(user: UserId) = {
-    for {
-      token <- applePurchaseRepository.getLastForUser(user.id)
-      purchase <- socialPlatformSubscriptionsService.getApplePurchase(token.purchaseToken, appleAppSecret)
-      dbUser <- userRepository.getByUserId(user.id).toRight(UserNotFoundError()).leftWiden[SurfsUpError]
-      premiumUser <- updateSubscribedUserRole(dbUser, purchase.startTimeMillis, purchase.expiryTimeMillis).map(_.asDTO()).leftWiden[SurfsUpError]
-    } yield premiumUser
+      purchase <- socialPlatformSubscriptionsService.find(u.id, dbUser.deviceType)
+      userWithUpdatedRole <- updateSubscribedUserRole(dbUser, purchase.startTimeMillis, purchase.expiryTimeMillis).map(_.asDTO()).leftWiden[SurfsUpError]
+    } yield userWithUpdatedRole
   }
 
   def makeUserTrial(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
@@ -154,7 +114,11 @@ class UserRolesService[F[_] : Sync](applePurchaseRepository: AppleTokenRepositor
 
 
   private def update(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
-    userRepository.update(user).toRight(UserNotFoundError("User not found"))
+    for {
+      updated <- userRepository.update(user).toRight(UserNotFoundError("User not found"))
+      _ <- EitherT.right(userSessionRepository.deleteForUserId(user._id.toHexString))
+    } yield updated
+
   }
 
 }

@@ -3,7 +3,7 @@ package com.uptech.windalerts.infrastructure.endpoints
 import cats.data.{EitherT, OptionT}
 import cats.effect.Effect
 import cats.implicits._
-import com.uptech.windalerts.core.{OtpNotFoundError, RefreshTokenExpiredError, RefreshTokenNotFoundError, TokenNotFoundError, UserAlreadyExistsError, UserAuthenticationFailedError, UserNotFoundError}
+import com.uptech.windalerts.core.{OtpNotFoundError, RefreshTokenExpiredError, RefreshTokenNotFoundError, SurfsUpError, TokenNotFoundError, UnknownError, UserAlreadyExistsError, UserAuthenticationFailedError, UserNotFoundError}
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.social.subscriptions.SocialPlatformSubscriptionsService
@@ -11,8 +11,9 @@ import com.uptech.windalerts.core.user.{UserIdMetadata, UserRolesService, UserSe
 import com.uptech.windalerts.config._
 import codecs._
 import com.uptech.windalerts.core.otp.OTPService
-import com.uptech.windalerts.infrastructure.social.SocialPlatformType.{Apple, Facebook}
+import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Facebook, Google}
 import dtos.{AppleRegisterRequest, ChangePasswordRequest, FacebookRegisterRequest, ResetPasswordRequest, UserIdDTO, _}
+import io.circe.parser.parse
 import org.http4s.dsl.Http4sDsl
 import org.http4s.{AuthedRoutes, HttpRoutes}
 
@@ -88,12 +89,22 @@ class UsersEndpoints[F[_] : Effect]
       case req@POST -> Root / "purchase" / "android" / "update" =>
         (for {
           update <- EitherT.liftF(req.as[AndroidUpdate])
-          user <- userRolesService.handleAndroidUpdate(update)
+          decoded <- EitherT.fromEither[F](Either.right(new String(java.util.Base64.getDecoder.decode(update.message.data))))
+          subscription <- asSubscription(decoded)
+          user <- userRolesService.handleUpdate(Google, subscription.subscriptionNotification.purchaseToken)
         } yield user).value.flatMap {
           case Right(_) => Ok()
           case Left(error) => InternalServerError(error.getMessage)
         }
     }
+
+  private def asSubscription(response: String): EitherT[F, SurfsUpError, SubscriptionNotificationWrapper] = {
+    EitherT.fromEither((for {
+      parsed <- parse(response)
+      decoded <- parsed.as[SubscriptionNotificationWrapper].leftWiden[io.circe.Error]
+    } yield decoded).leftMap(error => UnknownError(error.getMessage)).leftWiden[SurfsUpError])
+
+  }
 
 
   def authedService(): AuthedRoutes[UserIdMetadata, F] =
@@ -168,7 +179,7 @@ class UsersEndpoints[F[_] : Effect]
       case _@GET -> Root / "purchase" / "android" as user =>
         OptionT.liftF(
           (for {
-            response <- userRolesService.getAndroidPurchase(user.userId)
+            response <- userRolesService.updateUserPurchase(user.userId)
           } yield response).value.flatMap {
             case Right(response) => Ok(response)
             case Left(TokenNotFoundError(_)) => NotFound("Token not found")
@@ -177,10 +188,10 @@ class UsersEndpoints[F[_] : Effect]
         )
 
       case authReq@POST -> Root / "purchase" / "android" as user =>
-        OptionT.liftF(authReq.req.decode[AndroidReceiptValidationRequest] {
+        OptionT.liftF(authReq.req.decode[PurchaseReceiptValidationRequest] {
           req =>
             (for {
-              response <- subscriptionsService.updateAndroidPurchase(user.userId, req)
+              response <- subscriptionsService.handleNewPurchase(Google, user.userId, req)
             } yield response).value.flatMap {
               case Right(_) => Ok()
               case Left(TokenNotFoundError(_)) => NotFound("Token not found")
@@ -191,7 +202,7 @@ class UsersEndpoints[F[_] : Effect]
       case _@GET -> Root / "purchase" / "apple" as user => {
         OptionT.liftF(
           (for {
-            response <- userRolesService.updateAppleUser(user.userId)
+            response <- userRolesService.updateUserPurchase(user.userId)
           } yield response).value.flatMap {
             case Right(response) => Ok(response)
             case Left(TokenNotFoundError(_)) => NotFound("Token not found")
@@ -201,10 +212,10 @@ class UsersEndpoints[F[_] : Effect]
       }
 
       case authReq@POST -> Root / "purchase" / "apple" as user =>
-        OptionT.liftF(authReq.req.decode[ApplePurchaseToken] {
+        OptionT.liftF(authReq.req.decode[PurchaseReceiptValidationRequest] {
           req =>
             (for {
-              response <- subscriptionsService.updateApplePurchase(user.userId, req)
+              response <- subscriptionsService.handleNewPurchase(Apple, user.userId, req)
             } yield response).value.flatMap {
               case Right(_) => Ok()
               case Left(TokenNotFoundError(_)) => NotFound("Token not found")

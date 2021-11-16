@@ -50,28 +50,19 @@ class MongoUserRepository[F[_]](collection: MongoCollection[UserT])(implicit cs:
     ))
   }
 
-  override def findAndroidPremiumExpiredUsers() = {
-    findAllByCriteria(
-      and(equal("userType", Premium.value),
-        equal("deviceType", "ANDROID"),
-        lt("nextPaymentAt", System.currentTimeMillis())
-      ))
-  }
-
-  override def findApplePremiumExpiredUsers() = {
-    findAllByCriteria(
-      and(
-        equal("userType", Premium.value),
-        equal("deviceType", "IOS"),
-        lt("nextPaymentAt", System.currentTimeMillis())
-      ))
-  }
-
   override def usersWithNotificationsEnabledAndNotSnoozed(): F[Seq[UserT]] = {
     findAllByCriteria(
       and(
         equal("disableAllAlerts", false),
         lt("snoozeTill", System.currentTimeMillis())
+      ))
+  }
+
+  override def findPremiumExpiredUsers(): F[Seq[UserT]] = {
+    findAllByCriteria(
+      and(
+        equal("userType", Premium.value),
+        lt("nextPaymentAt", System.currentTimeMillis())
       ))
   }
 }
