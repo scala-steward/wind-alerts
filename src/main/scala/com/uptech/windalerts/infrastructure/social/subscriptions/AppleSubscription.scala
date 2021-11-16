@@ -3,7 +3,6 @@ package com.uptech.windalerts.infrastructure.social.subscriptions
 import cats.effect.Async
 import cats.implicits._
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
-import com.uptech.windalerts.config.secrets
 import com.uptech.windalerts.core.UnknownError
 import com.uptech.windalerts.core.social.subscriptions.{SocialSubscription, SubscriptionPurchase}
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
@@ -15,7 +14,7 @@ import io.circe.syntax._
 
 class AppleSubscription[F[_] : Async](appSecret:String)(implicit F: Async[F]) extends SocialSubscription[F] {
 
-  override def getPurchase(receiptData: String, productId: String): F[SubscriptionPurchase] = {
+  override def getPurchase(receiptData: String): F[SubscriptionPurchase] = {
     implicit val backend = HttpURLConnectionBackend()
 
     val json = ApplePurchaseVerificationRequest(receiptData, appSecret, true).asJson.toString()

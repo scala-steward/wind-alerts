@@ -17,13 +17,13 @@ import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry}
 import com.uptech.windalerts.core.refresh.tokens.UserSession
 import com.uptech.windalerts.core.social.SocialPlatformType
 import com.uptech.windalerts.core.social.login.{AccessRequest, SocialLoginProvider, SocialLoginProviders, SocialLoginService}
-import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken}
+import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken, PurchaseToken, SocialPlatformSubscriptionsService}
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService, UserT}
 import com.uptech.windalerts.infrastructure.{EmailSender, GooglePubSubEventpublisher}
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints.{AlertsEndpoints, BeachesEndpoints, SwaggerEndpoints, UsersEndpoints, errors}
-import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoAlertsRepository, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoOtpRepository, MongoSocialCredentialsRepository, MongoUserRepository, MongoUserSessionRepository, Repos}
-import com.uptech.windalerts.infrastructure.social.SocialPlatformType.{Apple, Facebook}
+import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoAlertsRepository, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoOtpRepository, MongoPurchaseTokenRepository, MongoSocialCredentialsRepository, MongoUserRepository, MongoUserSessionRepository, Repos}
+import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Facebook}
 import com.uptech.windalerts.infrastructure.social.login.{AppleLoginProvider, FacebookLoginProvider, FixedSocialLoginProviders}
 import com.uptech.windalerts.infrastructure.social.subscriptions.{AndroidPublisherHelper, AndroidSubscription, AppleSubscription, ApplicationConfig, SocialPlatformSubscriptionsServiceImpl}
 import io.circe.config.parser.decodePathF
@@ -54,8 +54,9 @@ object UsersServer extends IOApp {
       credentialsRepository = new MongoCredentialsRepository[F](db.getCollection[Credentials]("credentials"))
       facebookCredentialsRepository = new MongoSocialCredentialsRepository[F](db.getCollection[SocialCredentials]("facebookCredentials"))
       appleCredentialsRepository = new MongoSocialCredentialsRepository[F](db.getCollection[SocialCredentials]("appleCredentials"))
-      androidPurchaseRepository = new MongoAndroidPurchaseRepository[F](db.getCollection[AndroidToken]("androidPurchases"))
-      applePurchaseRepository = new MongoApplePurchaseRepository[F](db.getCollection[AppleToken]("applePurchases"))
+      androidPurchaseRepository = new MongoPurchaseTokenRepository[F](db.getCollection[PurchaseToken]("androidPurchases"))
+      applePurchaseRepository = new MongoPurchaseTokenRepository[F](db.getCollection[PurchaseToken]("applePurchases"))
+
       alertsRepository = new MongoAlertsRepository[F](db.getCollection[Alert]("alerts"))
       applePlatform = new AppleLoginProvider[F](config.getConfigFile(s"Apple-$projectId.p8", "Apple.p8"))
       facebookPlatform = new FacebookLoginProvider[F](surfsUp.facebook.key)
@@ -76,9 +77,10 @@ object UsersServer extends IOApp {
       appleSubscription = new AppleSubscription[F](surfsUp.apple.appSecret)
       androidSubscription = new AndroidSubscription[F](androidPublisher)
       subscriptionsService = new SocialPlatformSubscriptionsServiceImpl[F](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
-      userRolesService = new UserRolesService[F](applePurchaseRepository, androidPurchaseRepository, alertsRepository, usersRepository, otpRepositoy, subscriptionsService, userSessionsRepository, surfsUp.apple.appSecret)
+      socialPlatformSubscriptionsService = new SocialPlatformSubscriptionsService[F](subscriptionsService)
+      userRolesService = new UserRolesService[F](alertsRepository, usersRepository, otpRepositoy, socialPlatformSubscriptionsService)
 
-      endpoints = new UsersEndpoints[F](userCredentialsService, usersService, socialLoginService, userRolesService, subscriptionsService, otpService)
+      endpoints = new UsersEndpoints[F](userCredentialsService, usersService, socialLoginService, userRolesService, socialPlatformSubscriptionsService, otpService)
       alertService = new AlertsService[F](alertsRepository)
       alertsEndPoints = new AlertsEndpoints[F](alertService)
       blocker <- Blocker[F]

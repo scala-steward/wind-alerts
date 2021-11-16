@@ -7,7 +7,7 @@ import com.uptech.windalerts.config.secrets.SurfsUpSecret
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.otp.OTPWithExpiry
 import com.uptech.windalerts.core.refresh.tokens.UserSession
-import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken}
+import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken, PurchaseToken, SocialPlatformSubscriptionsService}
 import com.uptech.windalerts.core.user.{UserRolesService, UserT}
 import com.uptech.windalerts.infrastructure.endpoints.{UpdateUserRolesEndpoints, errors}
 import com.uptech.windalerts.infrastructure.repositories.mongo._
@@ -24,8 +24,8 @@ object UpdateUserRolesServer extends IOApp {
       db = Repos.acquireDb(surfsUp.mongodb.url)
       otpRepositoy = new MongoOtpRepository[F](db.getCollection[OTPWithExpiry]("otp"))
       usersRepository = new MongoUserRepository[F](db.getCollection[UserT]("users"))
-      androidPurchaseRepository = new MongoAndroidPurchaseRepository[F](db.getCollection[AndroidToken]("androidPurchases"))
-      applePurchaseRepository = new MongoApplePurchaseRepository[F](db.getCollection[AppleToken]("applePurchases"))
+      androidPurchaseRepository = new MongoPurchaseTokenRepository[F](db.getCollection[PurchaseToken]("androidPurchases"))
+      applePurchaseRepository = new MongoPurchaseTokenRepository[F](db.getCollection[PurchaseToken]("applePurchases"))
       alertsRepository = new MongoAlertsRepository[F](db.getCollection[Alert]("alerts"))
       userSessionsRepository = new MongoUserSessionRepository[F](db.getCollection[UserSession]("userSessions"))
 
@@ -33,7 +33,7 @@ object UpdateUserRolesServer extends IOApp {
       appleSubscription = new AppleSubscription[F](surfsUp.apple.appSecret)
       androidSubscription = new AndroidSubscription[F](androidPublisher)
       subscriptionsService = new SocialPlatformSubscriptionsServiceImpl[F](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
-      userRolesService = new UserRolesService[F](applePurchaseRepository, androidPurchaseRepository, alertsRepository, usersRepository, otpRepositoy, subscriptionsService, userSessionsRepository, surfsUp.apple.appSecret)
+      userRolesService = new UserRolesService[F](alertsRepository, usersRepository, otpRepositoy, new SocialPlatformSubscriptionsService[F](subscriptionsService))
       endpoints = new UpdateUserRolesEndpoints[F](userRolesService)
 
       httpApp = Router(

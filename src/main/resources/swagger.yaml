@@ -361,7 +361,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AndroidReceiptValidationRequest'
+              $ref: '#/components/schemas/PurchaseReceiptValidationRequest'
           description: Created user object
           required: true
       security:
@@ -584,7 +584,7 @@ components:
       properties:
         otp:
           type: string
-    AndroidReceiptValidationRequest:
+    PurchaseReceiptValidationRequest:
       type: object
       properties:
         productId:

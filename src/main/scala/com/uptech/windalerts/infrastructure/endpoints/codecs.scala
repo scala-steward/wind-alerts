@@ -9,7 +9,7 @@ import com.uptech.windalerts.core.credentials.{Credentials, SocialCredentials}
 import com.uptech.windalerts.core.notifications.Notification
 import com.uptech.windalerts.core.otp.OTPWithExpiry
 import com.uptech.windalerts.core.refresh.tokens.UserSession
-import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken}
+import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken, PurchaseToken}
 import com.uptech.windalerts.core.user.{TokensWithUser, UserT}
 import dtos._
 import io.circe.generic.extras.semiauto.{deriveUnwrappedDecoder, deriveUnwrappedEncoder}
@@ -25,7 +25,7 @@ object codecs {
   val codecRegistry = fromRegistries(
     fromProviders(classOf[Notification]),
     fromProviders(classOf[OTPWithExpiry]),
-    fromProviders(classOf[AndroidToken]),
+    fromProviders(classOf[PurchaseToken]),
     fromProviders(classOf[UserSession]),
     fromProviders(classOf[UserT]),
     fromProviders(classOf[Credentials]),
@@ -33,7 +33,6 @@ object codecs {
     fromProviders(classOf[Alerts]),
     fromProviders(classOf[TimeRange]),
     fromProviders(classOf[SocialCredentials]),
-    fromProviders(classOf[AppleToken]),
     DEFAULT_CODEC_REGISTRY)
 
 
@@ -212,29 +211,29 @@ object codecs {
 
   implicit def otpEncoder[F[_] : Applicative]: EntityEncoder[F, OTP] = jsonEncoderOf
 
-  lazy implicit val androidReceiptValidationRequestDecoder: Decoder[AndroidReceiptValidationRequest] = deriveDecoder[AndroidReceiptValidationRequest]
+  lazy implicit val receiptValidationRequestDecoder: Decoder[PurchaseReceiptValidationRequest] = deriveDecoder[PurchaseReceiptValidationRequest]
 
-  implicit def androidReceiptValidationRequestEntityDecoder[F[_] : Sync]: EntityDecoder[F, AndroidReceiptValidationRequest] = jsonOf
+  implicit def receiptValidationRequestEntityDecoder[F[_] : Sync]: EntityDecoder[F, PurchaseReceiptValidationRequest] = jsonOf
 
-  lazy implicit val androidReceiptValidationRequestEncoder: Encoder[AndroidReceiptValidationRequest] = deriveEncoder[AndroidReceiptValidationRequest]
+  lazy implicit val purchaseReceiptValidationRequestEncoder: Encoder[PurchaseReceiptValidationRequest] = deriveEncoder[PurchaseReceiptValidationRequest]
 
-  implicit def androidReceiptValidationRequestEncoder[F[_] : Applicative]: EntityEncoder[F, AndroidReceiptValidationRequest] = jsonEncoderOf
+  implicit def purchaseReceiptValidationRequestEncoder[F[_] : Applicative]: EntityEncoder[F, PurchaseReceiptValidationRequest] = jsonEncoderOf
 
-  lazy implicit val s1androidReceiptValidationRequestDecoder: Decoder[AndroidUpdate] = deriveDecoder[AndroidUpdate]
+  lazy implicit val s1PurchaseReceiptValidationRequestDecoder: Decoder[AndroidUpdate] = deriveDecoder[AndroidUpdate]
 
-  implicit def s1androidReceiptValidationRequestEntityDecoder[F[_] : Sync]: EntityDecoder[F, AndroidUpdate] = jsonOf
+  implicit def s1PurchaseReceiptValidationRequestEntityDecoder[F[_] : Sync]: EntityDecoder[F, AndroidUpdate] = jsonOf
 
-  lazy implicit val s1androidReceiptValidationRequestEncoder: Encoder[AndroidUpdate] = deriveEncoder[AndroidUpdate]
+  lazy implicit val s1PurchaseReceiptValidationRequestEncoder: Encoder[AndroidUpdate] = deriveEncoder[AndroidUpdate]
 
-  implicit def s1androidReceiptValidationRequestEncoder[F[_] : Applicative]: EntityEncoder[F, AndroidUpdate] = jsonEncoderOf
+  implicit def s1PurchaseReceiptValidationRequestEncoder[F[_] : Applicative]: EntityEncoder[F, AndroidUpdate] = jsonEncoderOf
 
-  lazy implicit val ms1androidReceiptValidationRequestDecoder: Decoder[Message] = deriveDecoder[Message]
+  lazy implicit val messageDecoder: Decoder[Message] = deriveDecoder[Message]
 
-  implicit def ms1androidReceiptValidationRequestEntityDecoder[F[_] : Sync]: EntityDecoder[F, Message] = jsonOf
+  implicit def messageEntityDecoder[F[_] : Sync]: EntityDecoder[F, Message] = jsonOf
 
-  lazy implicit val ms1androidReceiptValidationRequestEncoder: Encoder[Message] = deriveEncoder[Message]
+  lazy implicit val messageEncoder: Encoder[Message] = deriveEncoder[Message]
 
-  implicit def ms1androidReceiptValidationRequestEncoder[F[_] : Applicative]: EntityEncoder[F, Message] = jsonEncoderOf
+  implicit def messageEntityEncoder[F[_] : Applicative]: EntityEncoder[F, Message] = jsonEncoderOf
 
 
   lazy implicit val subscriptionNotificationDecoder: Decoder[SubscriptionNotification] = deriveDecoder[SubscriptionNotification]
@@ -272,14 +271,6 @@ object codecs {
 
   implicit def appleSubscriptionPurchaseEnityEncoder[F[_] : Applicative]: EntityEncoder[F, AppleSubscriptionPurchase] = jsonEncoderOf
 
-
-  lazy implicit val applePurchaseTokenDecoder: Decoder[ApplePurchaseToken] = deriveDecoder[ApplePurchaseToken]
-
-  implicit def applePurchaseTokenEntityDecoder[F[_] : Sync]: EntityDecoder[F, ApplePurchaseToken] = jsonOf
-
-  lazy implicit val applePurchaseTokenEncoder: Encoder[ApplePurchaseToken] = deriveEncoder[ApplePurchaseToken]
-
-  implicit def applePurchaseTokenEnityEncoder[F[_] : Applicative]: EntityEncoder[F, ApplePurchaseToken] = jsonEncoderOf
 
 
   lazy implicit val tokenResponseDecoder: Decoder[TokenResponse] = deriveDecoder[TokenResponse]

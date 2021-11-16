@@ -42,8 +42,7 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
   def resetUserSession(emailId: String, deviceType:String, newDeviceToken: String):EitherT[F, UserNotFoundError, TokensWithUser] = {
     for {
       persistedUser <- getUser(emailId, deviceType)
-      _ <- EitherT.liftF(userSessionsRepository.deleteForUserId(persistedUser._id.toHexString))
-      tokens <- EitherT.right(generateNewTokens(persistedUser, newDeviceToken))
+      tokens <- resetUserSession(persistedUser, newDeviceToken)
     } yield tokens
   }
 
@@ -95,12 +94,8 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
     } yield user
   }
 
-
-  def logoutUser(userId: String): EitherT[F, UserNotFoundError, Unit] = {
-    for {
-      _ <- EitherT.liftF(userSessionsRepository.deleteForUserId(userId))
-    } yield ()
-  }
+  def logoutUser(userId: String): EitherT[F, UserNotFoundError, Unit] =
+    EitherT.liftF(userSessionsRepository.deleteForUserId(userId))
 
   def getUser(email: String, deviceType: String): EitherT[F, UserNotFoundError, UserT] =
     userRepository.getByEmailAndDeviceType(email, deviceType).toRight(UserNotFoundError())
