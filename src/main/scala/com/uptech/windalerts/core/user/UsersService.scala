@@ -42,8 +42,7 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
   def resetUserSession(emailId: String, deviceType:String, newDeviceToken: String):EitherT[F, UserNotFoundError, TokensWithUser] = {
     for {
       persistedUser <- getUser(emailId, deviceType)
-      _ <- EitherT.liftF(userSessionsRepository.deleteForUserId(persistedUser._id.toHexString))
-      tokens <- EitherT.right(generateNewTokens(persistedUser, newDeviceToken))
+      tokens <- resetUserSession(persistedUser, newDeviceToken)
     } yield tokens
   }
 
