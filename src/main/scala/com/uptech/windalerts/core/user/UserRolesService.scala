@@ -16,7 +16,7 @@ import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, G
 import com.uptech.windalerts.infrastructure.social.subscriptions.PurchaseTokenRepository
 import io.circe.parser.parse
 
-class UserRolesService[F[_] : Sync](userSessionRepository: UserSessionRepository[F], alertsRepository: AlertsRepository[F], userRepository: UserRepository[F], otpRepository: OtpRepository[F], socialPlatformSubscriptionsService: SocialPlatformSubscriptionsService[F]) {
+class UserRolesService[F[_] : Sync](alertsRepository: AlertsRepository[F], userRepository: UserRepository[F], otpRepository: OtpRepository[F], socialPlatformSubscriptionsService: SocialPlatformSubscriptionsService[F]) {
   def updateTrialUsers() = {
     for {
       users <- EitherT.right(userRepository.findTrialExpiredUsers())

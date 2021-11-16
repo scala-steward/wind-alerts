@@ -78,7 +78,7 @@ object UsersServer extends IOApp {
       androidSubscription = new AndroidSubscription[F](androidPublisher)
       subscriptionsService = new SocialPlatformSubscriptionsServiceImpl[F](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
       socialPlatformSubscriptionsService = new SocialPlatformSubscriptionsService[F](subscriptionsService)
-      userRolesService = new UserRolesService[F](userSessionsRepository, alertsRepository, usersRepository, otpRepositoy, socialPlatformSubscriptionsService)
+      userRolesService = new UserRolesService[F](alertsRepository, usersRepository, otpRepositoy, socialPlatformSubscriptionsService)
 
       endpoints = new UsersEndpoints[F](userCredentialsService, usersService, socialLoginService, userRolesService, socialPlatformSubscriptionsService, otpService)
       alertService = new AlertsService[F](alertsRepository)

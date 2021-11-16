@@ -33,7 +33,7 @@ object UpdateUserRolesServer extends IOApp {
       appleSubscription = new AppleSubscription[F](surfsUp.apple.appSecret)
       androidSubscription = new AndroidSubscription[F](androidPublisher)
       subscriptionsService = new SocialPlatformSubscriptionsServiceImpl[F](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
-      userRolesService = new UserRolesService[F](userSessionsRepository, alertsRepository, usersRepository, otpRepositoy, new SocialPlatformSubscriptionsService[F](subscriptionsService))
+      userRolesService = new UserRolesService[F](alertsRepository, usersRepository, otpRepositoy, new SocialPlatformSubscriptionsService[F](subscriptionsService))
       endpoints = new UpdateUserRolesEndpoints[F](userRolesService)
 
       httpApp = Router(
