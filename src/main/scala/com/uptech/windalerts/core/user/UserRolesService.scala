@@ -116,7 +116,6 @@ class UserRolesService[F[_] : Sync](userSessionRepository: UserSessionRepository
   private def update(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
     for {
       updated <- userRepository.update(user).toRight(UserNotFoundError("User not found"))
-      _ <- EitherT.right(userSessionRepository.deleteForUserId(user._id.toHexString))
     } yield updated
 
   }

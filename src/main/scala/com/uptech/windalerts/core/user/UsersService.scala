@@ -95,12 +95,8 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
     } yield user
   }
 
-
-  def logoutUser(userId: String): EitherT[F, UserNotFoundError, Unit] = {
-    for {
-      _ <- EitherT.liftF(userSessionsRepository.deleteForUserId(userId))
-    } yield ()
-  }
+  def logoutUser(userId: String): EitherT[F, UserNotFoundError, Unit] =
+    EitherT.liftF(userSessionsRepository.deleteForUserId(userId))
 
   def getUser(email: String, deviceType: String): EitherT[F, UserNotFoundError, UserT] =
     userRepository.getByEmailAndDeviceType(email, deviceType).toRight(UserNotFoundError())
