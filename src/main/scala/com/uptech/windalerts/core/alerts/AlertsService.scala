@@ -52,11 +52,6 @@ class AlertsService[F[_] : Sync](alertsRepository: AlertsRepository[F]) {
 
   def getAllForUser(user: String): F[Alerts] = alertsRepository.getAllForUser(user)
 
-  def getAllForDayAndTimeRange()(implicit F: Functor[F]): EitherT[F, Exception, Seq[Alert]] = {
-    EitherT.liftF(alertsRepository.getAllEnabled())
-      .map(_.filter(_.isToBeAlertedNow()))
-  }
-
   def delete(requester: String, alertId: String) = {
     alertsRepository.delete(requester, alertId)
   }

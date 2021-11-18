@@ -1,6 +1,6 @@
 package com.uptech.windalerts.core.notifications
 
-import cats.Parallel
+import cats.{FlatMap, Monad, Parallel}
 import cats.data.EitherT
 import cats.effect.{Async, Sync}
 import cats.implicits._
@@ -75,8 +75,9 @@ class NotificationsService[F[_] : Sync: Parallel](N: NotificationRepository[F],
   private def alertsForUsers(users: Seq[UserDetailsWithDeviceToken]) = {
     for {
       alertsForUsers <- users.map(u => alertsRepository.getAllEnabledForUser(u.userId)).sequence.map(_.flatten)
-      alertsByBeaches = alertsForUsers.groupBy(_.beachId).map(kv => (BeachId(kv._1), kv._2))
-      _ <- F.delay(logger.info(s"alertsByBeaches : ${alertsForUsers.map(_._id.toHexString).mkString(", ")}"))
+      alertsForUsersWithMathcingTime = alertsForUsers.toList.filter(_.isTimeMatch())
+      alertsByBeaches = alertsForUsersWithMathcingTime.groupBy(_.beachId).map(kv => (BeachId(kv._1), kv._2))
+      _ <- F.delay(logger.info(s"alertsForUsersWithMathcingTime : ${alertsForUsersWithMathcingTime.map(_._id.toHexString).mkString(", ")}"))
     } yield alertsByBeaches
   }
 

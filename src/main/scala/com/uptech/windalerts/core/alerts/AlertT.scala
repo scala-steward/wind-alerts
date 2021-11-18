@@ -27,7 +27,6 @@ object domain {
     def isToBeNotified(beachStatus: Beach): Boolean = {
       logger.info(s"beach to check $beachStatus")
       logger.info(s"self $swellDirections $waveHeightFrom $waveHeightTo $windDirections")
-
       swellDirections.contains(beachStatus.tide.swell.directionText) &&
         waveHeightFrom <= beachStatus.tide.swell.height && waveHeightTo >= beachStatus.tide.swell.height &&
         windDirections.contains(beachStatus.wind.directionText) &&
@@ -38,9 +37,7 @@ object domain {
 
     }
 
-    def isToBeAlertedAt(minutes: Int): Boolean = timeRanges.exists(_.isWithinRange(minutes))
-
-    def isToBeAlertedNow(): Boolean = {
+    def isTimeMatch(): Boolean = {
       val cal = Calendar.getInstance(TimeZone.getTimeZone(timeZone))
       val day = adjustDay(cal.get(DAY_OF_WEEK))
       val minutes = cal.get(HOUR_OF_DAY) * 60 + cal.get(MINUTE)
@@ -53,7 +50,7 @@ object domain {
       else day - 1
     }
 
-    def isToBeAlertedAtMinutes(minutes: Int): Boolean = timeRanges.exists(_.isWithinRange(minutes))
+
 
     def asDTO(): AlertDTO = {
       this.into[AlertDTO].withFieldComputed(_.id, _._id.toHexString).transform
