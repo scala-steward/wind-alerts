@@ -38,4 +38,10 @@ class MongoOtpRepository[F[_]](collection: MongoCollection[OTPWithExpiry])(impli
           .map(_ => otp)))
   }
 
+
+  override def deleteForUser(userId: String): F[Unit] = {
+    Async.fromFuture(M.pure(collection.deleteOne(equal("userId", userId)).toFuture().map(_ => ())))
+  }
+
+
 }

@@ -32,7 +32,7 @@ class SocialLoginService[F[_] : Sync](userRepository: UserRepository[F],
       existingCredential <- EitherT.liftF(credentialsRepository.find(socialUser.email, socialUser.deviceType))
       tokens <- existingCredential.map(_ => userService.resetUserSession(socialUser.email, socialUser.deviceType, socialUser.deviceToken).leftWiden[SurfsUpError])
         .getOrElse(tokensForNewUser(credentialsRepository, socialUser).leftWiden[SurfsUpError])
-    } yield tokens
+    } yield (tokens, existingCredential.isEmpty)
   }
 
   private def tokensForNewUser[T <: SocialCredentials](credentialsRepository: SocialCredentialsRepository[F], socialUser: SocialUser):EitherT[F, UserAlreadyExistsError, TokensWithUser] = {
