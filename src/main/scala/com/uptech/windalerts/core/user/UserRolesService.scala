@@ -79,6 +79,7 @@ class UserRolesService[F[_] : Sync](alertsRepository: AlertsRepository[F], userR
       _ <- otpRepository.exists(request.otp, user.id)
       user <- userRepository.getByUserId(user.id).toRight(UserNotFoundError())
       updateResult <- makeUserTrial(user).map(_.asDTO()).leftWiden[SurfsUpError]
+      _ <- EitherT.liftF(otpRepository.deleteForUser(user._id.toHexString))
     } yield updateResult
   }
 
