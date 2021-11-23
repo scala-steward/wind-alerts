@@ -8,4 +8,6 @@ trait OtpRepository[F[_]] {
   def exists(otp: String, userId: String): EitherT[F, OtpNotFoundError, OTPWithExpiry]
 
   def updateForUser(userId:String, otp: OTPWithExpiry): F[OTPWithExpiry]
+
+  def deleteForUser(userId: String) : F[Unit]
 }
