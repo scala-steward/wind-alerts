@@ -35,7 +35,6 @@ class OTPService[F[_] : Sync](otpRepository: OtpRepository[F], emailSender: Emai
       otp <- M.pure(createOtp(4))
       _ <- otpRepository.updateForUser(userId, OTPWithExpiry(otp, System.currentTimeMillis() + 5 * 60 * 1000, userId))
       result <- emailSender.sendOtp(email, otp)
-      _ <- otpRepository.deleteForUser(userId)
     } yield result
   }
 
