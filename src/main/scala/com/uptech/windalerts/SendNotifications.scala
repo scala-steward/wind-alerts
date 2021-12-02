@@ -42,7 +42,7 @@ object SendNotifications extends IOApp {
 
       beaches <- eval(decodePathF[F, Beaches](parseFileAnySyntax(config.getConfigFile("beaches.json")), "surfsUp"))
       swellAdjustments <- eval(decodePathF[F, Adjustments](parseFileAnySyntax(config.getConfigFile("swellAdjustments.json")), "surfsUp"))
-      willyWeatherAPIKey = surfsUp.willyWeather.key
+      willyWeatherAPIKey = sys.env("WILLY_WEATHER_KEY")
 
       beachService = new BeachService[F](
         new WWBackedWindsService[F](willyWeatherAPIKey),
