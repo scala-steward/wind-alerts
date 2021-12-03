@@ -8,6 +8,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.softwaremill.sttp.quick.backend
 import com.typesafe.config.ConfigFactory.parseFileAnySyntax
+import com.uptech.windalerts.SendNotifications.firebaseCredentials
 import com.uptech.windalerts.config._
 import com.uptech.windalerts.config.beaches.{Beaches, _}
 import com.uptech.windalerts.config.secrets.SurfsUpSecret
@@ -22,10 +23,11 @@ import com.uptech.windalerts.infrastructure.endpoints.NotificationEndpoints
 import com.uptech.windalerts.infrastructure.notifications.FirebaseBasedNotificationsSender
 import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoAlertsRepository, MongoNotificationsRepository, MongoUserRepository, MongoUserSessionRepository, Repos}
 import io.circe.config.parser.decodePathF
+import org.apache.commons.compress.utils.IOUtils
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.{Server => H4Server}
 
-import java.io.FileInputStream
+import java.io.{ByteArrayInputStream, FileInputStream}
 import scala.util.Try
 
 object SendNotifications extends IOApp {
@@ -34,8 +36,9 @@ object SendNotifications extends IOApp {
       surfsUp <- eval(decodePathF[F, SurfsUpSecret](parseFileAnySyntax(secrets.getConfigFile()), "surfsUp"))
       appConfig <- eval(decodePathF[F, com.uptech.windalerts.config.config.SurfsUp](parseFileAnySyntax(config.getConfigFile("application.conf")), "surfsUp"))
       projectId = sys.env("projectId")
+      credentials = sys.env("FIREBASE_CREDENTIALS")
 
-      googleCredentials = firebaseCredentials(projectId)
+      googleCredentials = firebaseCredentials(projectId, credentials)
       firebaseOptions = new FirebaseOptions.Builder().setCredentials(googleCredentials).setProjectId(projectId).build
       app =  FirebaseApp.initializeApp(firebaseOptions)
       notifications = FirebaseMessaging.getInstance
@@ -66,10 +69,11 @@ object SendNotifications extends IOApp {
         .resource
     } yield server
 
-  private def firebaseCredentials(projectId:String) = {
+  private def firebaseCredentials(projectId:String, credentials: String) = {
     import cats.implicits._
 
-    Try(GoogleCredentials.fromStream(new FileInputStream(s"/app/resources/$projectId.json"))).onError(e => Try(logger.error("Could not load creds from app file", e)))
+
+    Try(GoogleCredentials.fromStream(new ByteArrayInputStream(credentials.getBytes()))).onError(e => Try(logger.error("Could not load creds from app file", e)))
       .orElse(Try(GoogleCredentials.getApplicationDefault)).onError(e => Try(logger.error("Could not load default creds", e)))
       .orElse(Try(GoogleCredentials.fromStream(new FileInputStream(s"src/main/resources/$projectId.json")))).onError(e => Try(logger.error("Could not load creds from src file", e)))
       .getOrElse(GoogleCredentials.getApplicationDefault)
