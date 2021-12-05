@@ -12,6 +12,7 @@ project/target
 resources/*.json
 resources/*.conf
 resources/*.p8
+resources/*.p12
 src/main/resources/*.json
 src/main/resources/secrets.conf
 src/main/resources/application.conf
