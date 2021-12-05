@@ -17,6 +17,8 @@ object AndroidPublisherHelper {
 
   import com.google.api.client.json.jackson2.JacksonFactory
 
+  private val ENV_RESOURCES_KEY_P12 = "/secrets/androidServiceAccountPrivateKey.p12"
+
   private val SRC_RESOURCES_KEY_P12 = "src/main/resources/key.p12"
 
   private val RESOURCES_CLIENT_SECRETS_JSON = "/resources/client_secrets.json"
@@ -52,7 +54,7 @@ object AndroidPublisherHelper {
   }
 
   private def authorizeWithServiceAccount(serviceAccountEmail: String) = {
-    val keyFile = if (new File("/app/resources/key.p12").exists()) "/app/resources/key.p12" else SRC_RESOURCES_KEY_P12
+    val keyFile = if (new File(ENV_RESOURCES_KEY_P12).exists()) ENV_RESOURCES_KEY_P12 else SRC_RESOURCES_KEY_P12
     new GoogleCredential
       .Builder()
       .setTransport(HTTP_TRANSPORT)
