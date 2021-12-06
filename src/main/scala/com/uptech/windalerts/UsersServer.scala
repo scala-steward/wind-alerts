@@ -58,7 +58,7 @@ object UsersServer extends IOApp {
       applePurchaseRepository = new MongoPurchaseTokenRepository[F](db.getCollection[PurchaseToken]("applePurchases"))
 
       alertsRepository = new MongoAlertsRepository[F](db.getCollection[Alert]("alerts"))
-      applePlatform = new AppleLoginProvider[F](config.getConfigFile(s"Apple-$projectId.p8", "Apple.p8"))
+      applePlatform = new AppleLoginProvider[F](config.getSecretsFile(s"apple/Apple.p8"))
       facebookPlatform = new FacebookLoginProvider[F](surfsUp.facebook.key)
       beachService = new BeachService[F](
         new WWBackedWindsService[F](willyWeatherAPIKey),
