@@ -59,7 +59,7 @@ object UsersServer extends IOApp {
 
       alertsRepository = new MongoAlertsRepository[F](db.getCollection[Alert]("alerts"))
       applePlatform = new AppleLoginProvider[F](config.getSecretsFile(s"apple/Apple.p8"))
-      facebookPlatform = new FacebookLoginProvider[F](surfsUp.facebook.key)
+      facebookPlatform = new FacebookLoginProvider[F](sys.env("FACEBOOK_KEY"))
       beachService = new BeachService[F](
         new WWBackedWindsService[F](willyWeatherAPIKey),
         new WWBackedTidesService[F](willyWeatherAPIKey, beaches.toMap()),
