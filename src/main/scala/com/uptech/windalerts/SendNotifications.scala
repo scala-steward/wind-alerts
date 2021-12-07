@@ -8,7 +8,6 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.softwaremill.sttp.quick.backend
 import com.typesafe.config.ConfigFactory.parseFileAnySyntax
-import com.uptech.windalerts.SendNotifications.firebaseCredentials
 import com.uptech.windalerts.config._
 import com.uptech.windalerts.config.beaches.{Beaches, _}
 import com.uptech.windalerts.config.secrets.SurfsUpSecret
@@ -75,7 +74,7 @@ object SendNotifications extends IOApp {
 
     Try(GoogleCredentials.fromStream(new ByteArrayInputStream(credentials.getBytes()))).onError(e => Try(logger.error("Could not load creds from app file", e)))
       .orElse(Try(GoogleCredentials.getApplicationDefault)).onError(e => Try(logger.error("Could not load default creds", e)))
-      .orElse(Try(GoogleCredentials.fromStream(new FileInputStream(s"src/main/resources/$projectId.json")))).onError(e => Try(logger.error("Could not load creds from src file", e)))
+      .orElse(Try(GoogleCredentials.fromStream(new FileInputStream(s"src/main/resources/secrets/firbase.json")))).onError(e => Try(logger.error("Could not load creds from src file", e)))
       .getOrElse(GoogleCredentials.getApplicationDefault)
   }
 
