@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
 case class AccessTokenWithExpiry(accessToken: String, expiredAt: Long)
 
 
-class AuthenticationService[F[_] : Effect]() {
+class AuthenticationService[F[_] : Effect](userRepository: UserRepository[F]) {
   val ACCESS_TOKEN_EXPIRY = 6L * 60L * 60L * 1000L
 
   private val key = JwtSecretKey("secretKey")
@@ -33,9 +33,14 @@ class AuthenticationService[F[_] : Effect]() {
           logger.error("Error while authenticating request", e)
           e
         })
+
         .toOption
+
         .flatMap(claims => OptionT.fromOption(claim.subject)
-          .map(userId => UserIdMetadata(UserId(userId), claims._1, claims._2, claims._3))).value
+          .flatMap(u=>userRepository.getByUserId(u))
+          .map(user => {
+            UserIdMetadata(UserId(user._id.toHexString), claims._1, UserType(user.userType), claims._3)
+          })).value
     }
   }
 
