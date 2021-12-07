@@ -26,7 +26,7 @@ import org.apache.commons.compress.utils.IOUtils
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.{Server => H4Server}
 
-import java.io.{ByteArrayInputStream, FileInputStream}
+import java.io.{ByteArrayInputStream, File, FileInputStream}
 import scala.util.Try
 
 object SendNotifications extends IOApp {
@@ -37,7 +37,7 @@ object SendNotifications extends IOApp {
       projectId = sys.env("projectId")
       credentials = sys.env("FIREBASE_CREDENTIALS")
 
-      googleCredentials = firebaseCredentials(projectId, credentials)
+      googleCredentials = firebaseCredentials(config.getSecretsFile(s"firebase/firebase.json"))
       firebaseOptions = new FirebaseOptions.Builder().setCredentials(googleCredentials).setProjectId(projectId).build
       app =  FirebaseApp.initializeApp(firebaseOptions)
       notifications = FirebaseMessaging.getInstance
@@ -68,13 +68,11 @@ object SendNotifications extends IOApp {
         .resource
     } yield server
 
-  private def firebaseCredentials(projectId:String, credentials: String) = {
+  private def firebaseCredentials(file:File) = {
     import cats.implicits._
 
-
-    Try(GoogleCredentials.fromStream(new ByteArrayInputStream(credentials.getBytes()))).onError(e => Try(logger.error("Could not load creds from app file", e)))
-      .orElse(Try(GoogleCredentials.getApplicationDefault)).onError(e => Try(logger.error("Could not load default creds", e)))
-      .orElse(Try(GoogleCredentials.fromStream(new FileInputStream(s"src/main/resources/secrets/firbase.json")))).onError(e => Try(logger.error("Could not load creds from src file", e)))
+    Try(GoogleCredentials.fromStream(new FileInputStream(file)))
+      .onError(e => Try(logger.error("Could not load creds from app file", e)))
       .getOrElse(GoogleCredentials.getApplicationDefault)
   }
 
