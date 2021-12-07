@@ -35,7 +35,6 @@ object SendNotifications extends IOApp {
       _ <- Resource.pure(())
       appConfig <- eval(decodePathF[F, com.uptech.windalerts.config.config.SurfsUp](parseFileAnySyntax(config.getConfigFile("application.conf")), "surfsUp"))
       projectId = sys.env("projectId")
-      credentials = sys.env("FIREBASE_CREDENTIALS")
 
       googleCredentials = firebaseCredentials(config.getSecretsFile(s"firebase/firebase.json"))
       firebaseOptions = new FirebaseOptions.Builder().setCredentials(googleCredentials).setProjectId(projectId).build
