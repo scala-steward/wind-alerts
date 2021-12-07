@@ -25,8 +25,8 @@ object EmailServer extends IOApp {
   def createServer[F[_] : ContextShift : ConcurrentEffect : Timer](): Resource[F, H4Server[F]] =
     for {
       surfsUp <- eval(decodePathF[F, SurfsUpSecret](parseFileAnySyntax(secrets.getConfigFile()), "surfsUp"))
-      db = Repos.acquireDb(surfsUp.mongodb.url)
-      emailSender = new EmailSender[F](surfsUp.email.apiKey)
+      db = Repos.acquireDb(sys.env("MONGO_DB_URL"))
+      emailSender = new EmailSender[F](sys.env("EMAIL_KEY"))
       otpRepositoy = new MongoOtpRepository[F](db.getCollection[OTPWithExpiry]("otp"))
       otpService = new OTPService[F](otpRepositoy, emailSender)
 

@@ -21,16 +21,15 @@ object UpdateUserRolesServer extends IOApp {
   def createServer[F[_] : ContextShift : ConcurrentEffect : Timer](): Resource[F, H4Server[F]] =
     for {
       surfsUp <- eval(decodePathF[F, SurfsUpSecret](parseFileAnySyntax(secrets.getConfigFile()), "surfsUp"))
-      db = Repos.acquireDb(surfsUp.mongodb.url)
+      db = Repos.acquireDb(sys.env("MONGO_DB_URL"))
       otpRepositoy = new MongoOtpRepository[F](db.getCollection[OTPWithExpiry]("otp"))
       usersRepository = new MongoUserRepository[F](db.getCollection[UserT]("users"))
       androidPurchaseRepository = new MongoPurchaseTokenRepository[F](db.getCollection[PurchaseToken]("androidPurchases"))
       applePurchaseRepository = new MongoPurchaseTokenRepository[F](db.getCollection[PurchaseToken]("applePurchases"))
       alertsRepository = new MongoAlertsRepository[F](db.getCollection[Alert]("alerts"))
-      userSessionsRepository = new MongoUserSessionRepository[F](db.getCollection[UserSession]("userSessions"))
 
       androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
-      appleSubscription = new AppleSubscription[F](surfsUp.apple.appSecret)
+      appleSubscription = new AppleSubscription[F](sys.env("APPLE_APP_SECRET"))
       androidSubscription = new AndroidSubscription[F](androidPublisher)
       subscriptionsService = new SocialPlatformSubscriptionsServiceImpl[F](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
       userRolesService = new UserRolesService[F](alertsRepository, usersRepository, otpRepositoy, new SocialPlatformSubscriptionsService[F](subscriptionsService))
