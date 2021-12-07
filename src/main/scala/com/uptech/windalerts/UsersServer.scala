@@ -63,7 +63,7 @@ object UsersServer extends IOApp {
         new WWBackedWindsService[F](willyWeatherAPIKey),
         new WWBackedTidesService[F](willyWeatherAPIKey, beaches.toMap()),
         new WWBackedSwellsService[F](willyWeatherAPIKey, swellAdjustments))
-      auth = new AuthenticationService[F]()
+      auth = new AuthenticationService[F](usersRepository)
       emailSender = new EmailSender[F](sys.env("EMAIL_KEY"))
       otpService = new OTPService(otpRepositoy, emailSender)
       socialCredentialsRepositories = Map(Facebook -> facebookCredentialsRepository, Apple -> appleCredentialsRepository)
