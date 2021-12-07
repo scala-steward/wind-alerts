@@ -15,17 +15,16 @@ import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.credentials.{Credentials, SocialCredentials, UserCredentialService}
 import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry}
 import com.uptech.windalerts.core.refresh.tokens.UserSession
-import com.uptech.windalerts.core.social.SocialPlatformType
-import com.uptech.windalerts.core.social.login.{AccessRequest, SocialLoginProvider, SocialLoginProviders, SocialLoginService}
-import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken, PurchaseToken, SocialPlatformSubscriptionsService}
+import com.uptech.windalerts.core.social.login.SocialLoginService
+import com.uptech.windalerts.core.social.subscriptions.{PurchaseToken, SocialPlatformSubscriptionsService}
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService, UserT}
-import com.uptech.windalerts.infrastructure.{EmailSender, GooglePubSubEventpublisher}
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
-import com.uptech.windalerts.infrastructure.endpoints.{AlertsEndpoints, BeachesEndpoints, SwaggerEndpoints, UsersEndpoints, errors}
-import com.uptech.windalerts.infrastructure.repositories.mongo.{MongoAlertsRepository, MongoAndroidPurchaseRepository, MongoApplePurchaseRepository, MongoCredentialsRepository, MongoOtpRepository, MongoPurchaseTokenRepository, MongoSocialCredentialsRepository, MongoUserRepository, MongoUserSessionRepository, Repos}
+import com.uptech.windalerts.infrastructure.endpoints._
+import com.uptech.windalerts.infrastructure.repositories.mongo._
 import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Facebook}
 import com.uptech.windalerts.infrastructure.social.login.{AppleLoginProvider, FacebookLoginProvider, FixedSocialLoginProviders}
-import com.uptech.windalerts.infrastructure.social.subscriptions.{AndroidPublisherHelper, AndroidSubscription, AppleSubscription, ApplicationConfig, SocialPlatformSubscriptionsServiceImpl}
+import com.uptech.windalerts.infrastructure.social.subscriptions._
+import com.uptech.windalerts.infrastructure.{EmailSender, GooglePubSubEventpublisher}
 import io.circe.config.parser.decodePathF
 import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
@@ -47,7 +46,7 @@ object UsersServer extends IOApp {
       googlePublisher = new GooglePubSubEventpublisher[F](projectId)
       androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
 
-      db = Repos.acquireDb(surfsUp.mongodb.url)
+      db = Repos.acquireDb(sys.env("MONGO_DB_URL"))
       userSessionsRepository = new MongoUserSessionRepository[F](db.getCollection[UserSession]("userSessions"))
       otpRepositoy = new MongoOtpRepository[F](db.getCollection[OTPWithExpiry]("otp"))
       usersRepository = new MongoUserRepository[F](db.getCollection[UserT]("users"))
@@ -65,7 +64,7 @@ object UsersServer extends IOApp {
         new WWBackedTidesService[F](willyWeatherAPIKey, beaches.toMap()),
         new WWBackedSwellsService[F](willyWeatherAPIKey, swellAdjustments))
       auth = new AuthenticationService[F]()
-      emailSender = new EmailSender[F](surfsUp.email.apiKey)
+      emailSender = new EmailSender[F](sys.env("EMAIL_KEY"))
       otpService = new OTPService(otpRepositoy, emailSender)
       socialCredentialsRepositories = Map(Facebook -> facebookCredentialsRepository, Apple -> appleCredentialsRepository)
 
@@ -74,7 +73,7 @@ object UsersServer extends IOApp {
       socialLoginPlatforms = new FixedSocialLoginProviders[F](applePlatform, facebookPlatform)
       socialLoginService = new SocialLoginService[F](usersRepository, usersService, userCredentialsService, socialCredentialsRepositories, socialLoginPlatforms)
 
-      appleSubscription = new AppleSubscription[F](surfsUp.apple.appSecret)
+      appleSubscription = new AppleSubscription[F](sys.env("APPLE_APP_SECRET"))
       androidSubscription = new AndroidSubscription[F](androidPublisher)
       subscriptionsService = new SocialPlatformSubscriptionsServiceImpl[F](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
       socialPlatformSubscriptionsService = new SocialPlatformSubscriptionsService[F](subscriptionsService)
