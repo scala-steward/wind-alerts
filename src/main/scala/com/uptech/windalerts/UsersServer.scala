@@ -7,7 +7,6 @@ import com.softwaremill.sttp.quick.backend
 import com.typesafe.config.ConfigFactory.parseFileAnySyntax
 import com.uptech.windalerts.config._
 import com.uptech.windalerts.config.beaches.{Beaches, _}
-import com.uptech.windalerts.config.secrets.SurfsUpSecret
 import com.uptech.windalerts.config.swellAdjustments.Adjustments
 import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.alerts.domain.Alert
@@ -63,7 +62,7 @@ object UsersServer extends IOApp {
         new WWBackedWindsService[F](willyWeatherAPIKey),
         new WWBackedTidesService[F](willyWeatherAPIKey, beaches.toMap()),
         new WWBackedSwellsService[F](willyWeatherAPIKey, swellAdjustments))
-      auth = new AuthenticationService[F](usersRepository)
+      auth = new AuthenticationService[F](sys.env("JWT_KEY"), usersRepository)
       emailSender = new EmailSender[F](sys.env("EMAIL_KEY"))
       otpService = new OTPService(otpRepositoy, emailSender)
       socialCredentialsRepositories = Map(Facebook -> facebookCredentialsRepository, Apple -> appleCredentialsRepository)

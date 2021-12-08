@@ -15,38 +15,22 @@ import java.util.concurrent.TimeUnit
 case class AccessTokenWithExpiry(accessToken: String, expiredAt: Long)
 
 
-class AuthenticationService[F[_] : Effect](userRepository: UserRepository[F]) {
+class AuthenticationService[F[_] : Effect](jwtKey:String, userRepository: UserRepository[F]) {
   val ACCESS_TOKEN_EXPIRY = 6L * 60L * 60L * 1000L
 
-  private val key = JwtSecretKey("secretKey")
-  val jwtAuth = JwtAuth.hmac("secretKey", JwtAlgorithm.HS256)
+  private val key = JwtSecretKey(jwtKey)
+  val jwtAuth = JwtAuth.hmac(jwtKey, JwtAlgorithm.HS256)
 
-  val authenticate: JwtClaim => F[Option[UserIdMetadata]] = {
-    claim => {
-      EitherT.fromEither[F](for {
-        parseResult <- parse(claim.content)
-        emailId <- parseResult.hcursor.downField("emailId").as[String]
-        firstName <- parseResult.hcursor.downField("firstName").as[String]
-        userType <- parseResult.hcursor.downField("userType").as[String]
-      } yield (EmailId(emailId), UserType(userType), firstName))
-        .leftMap(e=>{
-          logger.error("Error while authenticating request", e)
-          e
-        })
-
-        .toOption
-
-        .flatMap(claims => OptionT.fromOption(claim.subject)
-          .flatMap(u=>userRepository.getByUserId(u))
-          .map(user => {
-            UserIdMetadata(UserId(user._id.toHexString), claims._1, UserType(user.userType), claims._3)
-          })).value
-    }
+  val authenticate: JwtClaim => F[Option[UserIdMetadata]] = claim => {
+    OptionT.fromOption(claim.subject)
+      .flatMap(userRepository.getByUserId(_))
+      .map(_.userIdMetadata())
+      .value
   }
 
   val middleware = JwtAuthMiddleware[F, UserIdMetadata](jwtAuth, _ => authenticate)
 
-  def createToken(userId: UserId, emailId: EmailId, firstName: String, userType: UserType): AccessTokenWithExpiry = {
+  def createToken(userId: UserId): AccessTokenWithExpiry = {
     val current = System.currentTimeMillis()
     val expiry = current / 1000 + TimeUnit.MILLISECONDS.toSeconds(ACCESS_TOKEN_EXPIRY)
     val claims = JwtClaim(
@@ -54,7 +38,7 @@ class AuthenticationService[F[_] : Effect](userRepository: UserRepository[F]) {
       issuedAt = Some(current / 1000),
       issuer = Some("wind-alerts.com"),
       subject = Some(userId.id)
-    ) +  ("emailId", emailId.email) + ("firstName", firstName) + ("userType", userType.value)
+    )
 
     AccessTokenWithExpiry(Jwt.encode(claims, key.value, JwtAlgorithm.HS256), expiry)
   }

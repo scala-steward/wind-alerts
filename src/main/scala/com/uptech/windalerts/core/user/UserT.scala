@@ -4,7 +4,7 @@ import cats.data.EitherT
 import com.google.common.base.Strings
 import com.uptech.windalerts.core.UserNotFoundError
 import com.uptech.windalerts.core.user.UserType.{Premium, PremiumExpired, Registered, Trial}
-import com.uptech.windalerts.infrastructure.endpoints.dtos.UserDTO
+import com.uptech.windalerts.infrastructure.endpoints.dtos.{EmailId, UserDTO}
 import org.bson.types.ObjectId
 import io.scalaland.chimney.dsl._
 
@@ -26,6 +26,8 @@ case class UserT(_id: ObjectId, email: String, name: String, deviceType: String,
   def asDTO(): UserDTO = {
     this.into[UserDTO].withFieldComputed(_.id, u => u._id.toHexString).transform
   }
+
+  def userIdMetadata() = UserIdMetadata(UserId(_id.toHexString), EmailId(email), UserType(userType), firstName)
 
 }
 

@@ -1,18 +1,12 @@
 package com.uptech.windalerts
-import cats.effect.Resource.eval
 import cats.effect._
-import com.typesafe.config.ConfigFactory.parseFileAnySyntax
-import com.uptech.windalerts.config._
-import com.uptech.windalerts.config.secrets.SurfsUpSecret
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.otp.OTPWithExpiry
-import com.uptech.windalerts.core.refresh.tokens.UserSession
-import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken, PurchaseToken, SocialPlatformSubscriptionsService}
+import com.uptech.windalerts.core.social.subscriptions.{PurchaseToken, SocialPlatformSubscriptionsService}
 import com.uptech.windalerts.core.user.{UserRolesService, UserT}
 import com.uptech.windalerts.infrastructure.endpoints.{UpdateUserRolesEndpoints, errors}
 import com.uptech.windalerts.infrastructure.repositories.mongo._
 import com.uptech.windalerts.infrastructure.social.subscriptions._
-import io.circe.config.parser.decodePathF
 import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.{Router, Server => H4Server}

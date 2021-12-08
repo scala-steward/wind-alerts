@@ -1,10 +1,9 @@
 package com.uptech.windalerts.core.notifications
 
-import cats.{FlatMap, Monad, Parallel}
+import cats.Parallel
 import cats.data.EitherT
 import cats.effect.{Async, Sync}
 import cats.implicits._
-import com.uptech.windalerts.config.secrets.Email
 import com.uptech.windalerts.core.alerts.AlertsRepository
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.beaches.BeachService
