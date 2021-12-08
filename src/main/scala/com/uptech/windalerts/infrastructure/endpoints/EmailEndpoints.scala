@@ -18,7 +18,7 @@ class EmailEndpoints[F[_] : Effect](otpService: OTPService[F]) extends Http4sDsl
         update <- otpService.handleUserRegistered(userRegistered)
       } yield update).value.flatMap {
         case Right(_) => Ok()
-        case Left(error) => InternalServerError(error.getMessage)
+        case Left(error) => InternalServerError(error.message)
       }
     }
   }

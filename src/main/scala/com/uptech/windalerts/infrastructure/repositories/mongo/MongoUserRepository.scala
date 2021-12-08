@@ -50,7 +50,7 @@ class MongoUserRepository[F[_]](collection: MongoCollection[UserT])(implicit cs:
     ))
   }
 
-  override def usersWithNotificationsEnabledAndNotSnoozed(): F[Seq[UserT]] = {
+  override def findUsersWithNotificationsEnabledAndNotSnoozed(): F[Seq[UserT]] = {
     findAllByCriteria(
       and(
         equal("disableAllAlerts", false),

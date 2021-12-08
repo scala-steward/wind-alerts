@@ -12,11 +12,8 @@ import scala.util.Try
 
 object config {
   implicit val surfsUpDecoder: Decoder[SurfsUp] = deriveDecoder
-
-  implicit def surfsUpDntityDecoder[F[_] : Sync]: EntityDecoder[F, SurfsUp] = jsonOf
-
+  implicit def surfsUpEntityDecoder[F[_] : Sync]: EntityDecoder[F, SurfsUp] = jsonOf
   implicit val notificationsDecoder: Decoder[Notifications] = deriveDecoder
-
   implicit def notificationsEntityDecoder[F[_] : Sync]: EntityDecoder[F, Notifications] = jsonOf
 
   def getConfigFile(name: String): File = {

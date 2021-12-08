@@ -50,7 +50,7 @@ class AlertsService[F[_] : Sync](alertsRepository: AlertsRepository[F]) {
 
   def update(requester: String, alertId: String, updateAlertRequest: AlertRequest): EitherT[F, AlertNotFoundError, Alert] = alertsRepository.update(requester, alertId, updateAlertRequest)
 
-  def getAllForUser(user: String): F[Alerts] = alertsRepository.getAllForUser(user)
+  def getAllForUser(user: String): F[Seq[Alert]] = alertsRepository.getAllForUser(user)
 
   def delete(requester: String, alertId: String) = {
     alertsRepository.delete(requester, alertId)

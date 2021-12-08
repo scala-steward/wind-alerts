@@ -15,9 +15,7 @@ class BeachService[F[_]](windService: WindsService[F],
   def getStatus(beachId: BeachId)(implicit M: Monad[F]
                                   , P: Parallel[F]
   ): cats.data.EitherT[F, SurfsUpError, Beach] = {
-    (windService.get(beachId),
-      tidesService.get(beachId),
-      swellsService.get(beachId))
+    (windService.get(beachId), tidesService.get(beachId), swellsService.get(beachId))
       .parMapN((wind, tide, swell) =>
         Beach(beachId, wind, Tide(tide, SwellOutput(swell.height, swell.direction, swell.directionText))))
   }

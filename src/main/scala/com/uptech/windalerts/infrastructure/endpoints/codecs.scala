@@ -2,16 +2,16 @@ package com.uptech.windalerts.infrastructure.endpoints
 
 import cats.Applicative
 import cats.effect.Sync
+import com.uptech.windalerts.core.alerts.TimeRange
 import com.uptech.windalerts.core.alerts.domain.Alert
-import com.uptech.windalerts.core.alerts.{Alerts, TimeRange}
 import com.uptech.windalerts.core.beaches.domain._
 import com.uptech.windalerts.core.credentials.{Credentials, SocialCredentials}
 import com.uptech.windalerts.core.notifications.Notification
 import com.uptech.windalerts.core.otp.OTPWithExpiry
 import com.uptech.windalerts.core.refresh.tokens.UserSession
-import com.uptech.windalerts.core.social.subscriptions.{AndroidToken, AppleToken, PurchaseToken}
-import com.uptech.windalerts.core.user.{TokensWithUser, UserT}
-import dtos._
+import com.uptech.windalerts.core.social.subscriptions.PurchaseToken
+import com.uptech.windalerts.core.user.UserT
+import com.uptech.windalerts.infrastructure.endpoints.dtos._
 import io.circe.generic.extras.semiauto.{deriveUnwrappedDecoder, deriveUnwrappedEncoder}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}
@@ -30,7 +30,6 @@ object codecs {
     fromProviders(classOf[UserT]),
     fromProviders(classOf[Credentials]),
     fromProviders(classOf[Alert]),
-    fromProviders(classOf[Alerts]),
     fromProviders(classOf[TimeRange]),
     fromProviders(classOf[SocialCredentials]),
     DEFAULT_CODEC_REGISTRY)
