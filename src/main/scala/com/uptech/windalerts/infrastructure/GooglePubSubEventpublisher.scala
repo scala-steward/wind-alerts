@@ -25,6 +25,10 @@ class GooglePubSubEventpublisher[F[_]](projectId: String)
 
     Async.fromFuture(M.pure(concurrent.Future {
       publisher.publish(pubsubMessage).get()
-    })).map(_ => ())
+    }.map(_ => {
+      ()
+    }).onComplete(_=>
+      publisher.shutdown()
+    )))
   }
 }
