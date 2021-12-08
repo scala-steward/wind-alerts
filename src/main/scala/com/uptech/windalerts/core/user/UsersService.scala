@@ -56,7 +56,7 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
   def generateNewTokens(user:UserT, deviceToken:String): F[TokensWithUser] = {
     import cats.syntax.functor._
 
-    val token = auth.createToken(UserId(user._id.toHexString), EmailId(user.email), user.firstName(), UserType(user.userType))
+    val token = auth.createToken(UserId(user._id.toHexString))
 
     userSessionsRepository.create(UserSession(user._id.toHexString, deviceToken))
       .map(newRefreshToken=>TokensWithUser(token.accessToken, newRefreshToken.refreshToken, token.expiredAt, user))

@@ -9,7 +9,6 @@ import org.http4s.circe.jsonOf
 import java.io.File
 import scala.io.Source
 import scala.util.Try
-import io.circe.generic.semiauto.deriveDecoder
 
 object config {
   implicit val surfsUpDecoder: Decoder[SurfsUp] = deriveDecoder
@@ -80,62 +79,7 @@ object beaches {
   case class Beach(id: Long, location: String, postCode: Long, region: String)
 
   implicit val beachesDecoder: Decoder[Beaches] = deriveDecoder
-
   implicit def beachesEntityDecoder[F[_] : Sync]: EntityDecoder[F, Beaches] = jsonOf
-
   implicit val beachDecoder: Decoder[Beach] = deriveDecoder
-
   implicit def beachEntityDecoder[F[_] : Sync]: EntityDecoder[F, Beach] = jsonOf
-
-}
-
-object secrets {
-  implicit val willyWeatherDecoder: Decoder[WillyWeather] = deriveDecoder
-
-  implicit def willyWeatherEntityDecoder[F[_] : Sync]: EntityDecoder[F, WillyWeather] = jsonOf
-
-  implicit val facebookDecoder: Decoder[Facebook] = deriveDecoder
-
-  implicit def facebookEntityDecoder[F[_] : Sync]: EntityDecoder[F, Facebook] = jsonOf
-
-  implicit val appleDecoder: Decoder[Apple] = deriveDecoder
-
-  implicit def appleEntityDecoder[F[_] : Sync]: EntityDecoder[F, Apple] = jsonOf
-
-  implicit val emailDecoder: Decoder[Email] = deriveDecoder
-
-  implicit def emailEntityDecoder[F[_] : Sync]: EntityDecoder[F, Email] = jsonOf
-
-  implicit val mongodbDecoder: Decoder[Mongodb] = deriveDecoder
-
-  implicit def mongodbEntityDecoder[F[_] : Sync]: EntityDecoder[F, Mongodb] = jsonOf
-
-  implicit val surfsUpSecretDecoder: Decoder[SurfsUpSecret] = deriveDecoder
-
-  implicit def surfsUpSecretDntityDecoder[F[_] : Sync]: EntityDecoder[F, SurfsUpSecret] = jsonOf
-
-  case class SecretsSettings(surfsUp: SurfsUpSecret)
-
-  case class SurfsUpSecret(willyWeather: WillyWeather, facebook: Facebook, apple: Apple, email: Email, mongodb: Mongodb)
-
-  case class WillyWeather(key: String)
-
-  case class Facebook(key: String)
-
-  case class Apple(appSecret: String)
-
-  case class Email(apiKey: String)
-
-  case class Mongodb(url: String)
-
-  def getConfigFile(): File = {
-    val projectId = sys.env("projectId")
-    val prodFile = new File(s"/app/resources/secrets-$projectId.conf")
-    if (prodFile.exists()) {
-      prodFile
-    }
-    else {
-      new File("src/main/resources/secrets.conf")
-    }
-  }
 }
