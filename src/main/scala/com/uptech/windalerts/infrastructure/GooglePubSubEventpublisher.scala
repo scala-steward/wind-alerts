@@ -23,12 +23,12 @@ class GooglePubSubEventpublisher[F[_]](projectId: String)
     val data = ByteString.copyFromUtf8(message)
     val pubsubMessage = PubsubMessage.newBuilder.setData(data).build
 
-    Async.fromFuture(M.pure(concurrent.Future {
+    val future = concurrent.Future {
       publisher.publish(pubsubMessage).get()
     }.map(_ => {
       ()
-    }).onComplete(_=>
-      publisher.shutdown()
-    )))
+    })
+    future.onComplete(_=>publisher.shutdown())
+    Async.fromFuture(M.pure(future))
   }
 }
