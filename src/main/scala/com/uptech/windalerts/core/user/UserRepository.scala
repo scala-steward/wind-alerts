@@ -16,5 +16,5 @@ trait UserRepository[F[_]] {
 
   def findPremiumExpiredUsers(): F[Seq[UserT]]
 
-  def usersWithNotificationsEnabledAndNotSnoozed(): F[Seq[UserT]]
+  def findUsersWithNotificationsEnabledAndNotSnoozed(): F[Seq[UserT]]
 }

@@ -95,7 +95,7 @@ class UsersEndpoints[F[_] : Effect]
           user <- userRolesService.handleUpdate(Google, subscription.subscriptionNotification.purchaseToken)
         } yield user).value.flatMap {
           case Right(_) => Ok()
-          case Left(error) => InternalServerError(error.getMessage)
+          case Left(error) => InternalServerError(error.message)
         }
     }
 

@@ -26,14 +26,15 @@ class AppleSubscription[F[_] : Async](appSecret:String)(implicit F: Async[F]) ex
         .send().body
         .left.map(UnknownError(_))
         .flatMap(json => {
-          logger.info(s"Json from apple $json")
-          parser.parse(json)
+          logger.info(s"Subscription response from apple $json")
+          parser.parse(json).left.map(e => UnknownError(e.getMessage()))
         })
         .map(root.receipt.in_app.each.json.getAll(_))
-        .flatMap(_.map(p => p.as[AppleSubscriptionPurchase])
+        .flatMap(_.map(p => p.as[AppleSubscriptionPurchase].left.map(e=>UnknownError(e.getMessage())))
           .filter(_.isRight).maxBy(_.right.get.expires_date_ms))
         .map(purchase => SubscriptionPurchase(purchase.purchase_date_ms, purchase.expires_date_ms))
-        .left.map(e => UnknownError(e.getMessage)).right.get
+        .right
+        .get
     )
   }
 }

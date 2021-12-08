@@ -1,20 +1,19 @@
 package com.uptech.windalerts.infrastructure.repositories.mongo
 
 
-import cats.{Applicative, Monad}
+import cats.Monad
 import cats.data.{EitherT, OptionT}
-import cats.effect.{Async, ContextShift, IO}
+import cats.effect.{Async, ContextShift}
 import cats.implicits._
 import com.uptech.windalerts.core.AlertNotFoundError
+import com.uptech.windalerts.core.alerts.AlertsRepository
 import com.uptech.windalerts.core.alerts.domain.Alert
-import com.uptech.windalerts.core.alerts.{Alerts, AlertsRepository}
-import com.uptech.windalerts.core.user.UserType.Premium
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
 import io.scalaland.chimney.dsl._
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.model.Filters.{and, equal, lt}
+import org.mongodb.scala.model.Filters.{and, equal}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -23,14 +22,14 @@ class MongoAlertsRepository[F[_]](collection: MongoCollection[Alert])(implicit c
   override def disableAllButFirstAlerts(userId: String): F[Seq[Alert]] = {
     for {
       all <- getAllForUser(userId)
-      updatedIOs <- all.alerts.sortBy(_.createdAt).tail.map(alert => update(alert._id.toHexString, alert.copy(enabled = false))).toList.sequence
+      updatedIOs <- all.sortBy(_.createdAt).tail.map(alert => update(alert._id.toHexString, alert.copy(enabled = false))).toList.sequence
     } yield updatedIOs
   }
 
   override def getFirstAlert(userId: String): OptionT[F, Alert] = {
     OptionT(for {
       all <- getAllForUser(userId)
-      head = all.alerts.sortBy(_.createdAt).headOption
+      head = all.sortBy(_.createdAt).headOption
     } yield head)
   }
 
@@ -72,8 +71,8 @@ class MongoAlertsRepository[F[_]](collection: MongoCollection[Alert])(implicit c
     } yield alert
   }
 
-  override def getAllForUser(user: String): F[Alerts] = {
-    findByCriteria(equal("owner", user)).map(Alerts(_))
+  override def getAllForUser(user: String): F[Seq[Alert]] = {
+    findByCriteria(equal("owner", user))
   }
 
   override def getAllEnabledForUser(user: String): F[Seq[Alert]] = {

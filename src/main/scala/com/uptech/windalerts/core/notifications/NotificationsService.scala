@@ -50,7 +50,7 @@ class NotificationsService[F[_] : Sync: Parallel](N: NotificationRepository[F],
 
   private def allLoggedInUsersReadyToRecieveNotifications() = {
     for {
-      usersWithNotificationsEnabledAndNotSnoozed <- U.usersWithNotificationsEnabledAndNotSnoozed()
+      usersWithNotificationsEnabledAndNotSnoozed <- U.findUsersWithNotificationsEnabledAndNotSnoozed()
       _ <- F.delay(logger.info(s"usersWithNotificationsEnabledAndNotSnoozed : ${usersWithNotificationsEnabledAndNotSnoozed.map(_._id.toHexString).mkString(", ")}"))
 
       loggedInUsers <- filterLoggedOutUsers(usersWithNotificationsEnabledAndNotSnoozed)

@@ -20,7 +20,7 @@ class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F]) extends Htt
       case _@GET -> Root as user => {
         OptionT.liftF(
           for {
-            response <- alertService.getAllForUser(user.userId.id).map(alerts => AlertsDTO(alerts.alerts.map(_.asDTO())))
+            response <- alertService.getAllForUser(user.userId.id).map(alerts => AlertsDTO( alerts.map(_.asDTO())))
             resp <- Ok(response)
           } yield resp)
       }

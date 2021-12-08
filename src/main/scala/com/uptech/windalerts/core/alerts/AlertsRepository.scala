@@ -12,7 +12,7 @@ trait AlertsRepository[F[_]] {
 
   def getAllEnabled(): F[Seq[Alert]]
 
-  def getAllForUser(user: String): F[Alerts]
+  def getAllForUser(user: String): F[Seq[Alert]]
 
   def getAllEnabledForUser(user: String): F[Seq[Alert]]
 
