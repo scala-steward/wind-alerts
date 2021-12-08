@@ -13,11 +13,10 @@ class EmailEndpoints[F[_] : Effect](otpService: OTPService[F]) extends Http4sDsl
 
   def allRoutes() = HttpRoutes.of[F] {
     case req@POST -> Root / "userRegistered" => {
-      val value = for {
+      (for {
         userRegistered <- EitherT.liftF(req.as[UserRegisteredUpdate])
         update <- otpService.handleUserRegistered(userRegistered)
-      } yield update
-      value.value.flatMap {
+      } yield update).value.flatMap {
         case Right(_) => Ok()
         case Left(error) => InternalServerError(error.message)
       }
