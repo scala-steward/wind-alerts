@@ -1,8 +1,7 @@
 package com.uptech.windalerts.infrastructure
 
-import cats.Applicative.ops.toAllApplicativeOps
 import cats.Monad
-import cats.effect.{Async, ContextShift}
+import cats.effect.{Async, ContextShift, Resource}
 import com.google.cloud.pubsub.v1.Publisher
 import com.google.protobuf.ByteString
 import com.google.pubsub.v1.{PubsubMessage, TopicName}
@@ -24,7 +23,7 @@ class GooglePubSubEventpublisher[F[_]](projectId: String)
     val pubsubMessage = PubsubMessage.newBuilder.setData(data).build
 
     val future = concurrent.Future {
-      publisher.publish(pubsubMessage).get()
+        publisher.publish(pubsubMessage).get()
     }.map(_ => {
       ()
     })

@@ -10,7 +10,6 @@ import org.http4s.{HttpRoutes, StaticFile}
 import org.webjars.WebJarAssetLocator
 
 class SwaggerEndpoints[F[_] : Effect] extends Http4sDsl[F] {
-  private val applicationUrl = "http://localhost:9091" //should be configurable to match your deploy
   private val swaggerUiPath = Path("swagger-ui")
   private val swaggerUiResources = s"/META-INF/resources/webjars/swagger-ui/$swaggerUiVersion"
   private lazy val swaggerUiVersion: String = {

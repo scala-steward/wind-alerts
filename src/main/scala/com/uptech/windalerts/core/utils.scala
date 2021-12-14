@@ -1,7 +1,5 @@
 package com.uptech.windalerts.core
 
-import cats.effect.IO
-
 import scala.util.Random
 
 object utils {

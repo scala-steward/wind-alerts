@@ -6,7 +6,7 @@ import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
 
 trait AlertsRepository[F[_]] {
-  def disableAllButFirstAlerts(userId: String): F[Seq[Alert]]
+  def disableAllButFirstAlerts(userId: String): F[Unit]
 
   def getFirstAlert(userId: String): OptionT[F, Alert]
 
