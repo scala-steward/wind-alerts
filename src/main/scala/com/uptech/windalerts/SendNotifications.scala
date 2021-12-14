@@ -30,7 +30,6 @@ import scala.util.Try
 object SendNotifications extends IOApp {
   def createServer[F[_] : ContextShift : ConcurrentEffect : Timer: Parallel](): Resource[F, H4Server[F]] =
     for {
-      _ <- Resource.pure(())
       appConfig <- eval(decodePathF[F, com.uptech.windalerts.config.config.SurfsUp](parseFileAnySyntax(config.getConfigFile("application.conf")), "surfsUp"))
       projectId = sys.env("projectId")
 

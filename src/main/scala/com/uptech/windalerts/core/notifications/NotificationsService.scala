@@ -4,6 +4,7 @@ import cats.Parallel
 import cats.data.EitherT
 import cats.effect.{Async, Sync}
 import cats.implicits._
+import com.uptech.windalerts.core.NotificationNotSentError
 import com.uptech.windalerts.core.alerts.AlertsRepository
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.beaches.BeachService
@@ -86,7 +87,7 @@ class NotificationsService[F[_] : Sync: Parallel](N: NotificationRepository[F],
     }).getOrElse(Map()))
   }
 
-  private def submit(u: AlertWithUserWithBeach):EitherT[F, Throwable, Unit] = {
+  private def submit(u: AlertWithUserWithBeach):EitherT[F, NotificationNotSentError, Unit] = {
     for {
       _ <- notificationSender.send(NotificationDetails(BeachId(u.alert.beachId), u.user.deviceToken, UserId(u.user.userId)))
       _ <- EitherT.liftF(N.create(Notification(u.alert._id.toHexString, u.user.userId, u.user.deviceToken,  System.currentTimeMillis())))
