@@ -11,7 +11,7 @@ import org.mongodb.scala.bson.ObjectId
 
 object domain {
   case class Alert(
-                     _id: ObjectId,
+                     id: String,
                      owner: String,
                      beachId: Long,
                      days: Seq[Long],
@@ -53,7 +53,7 @@ object domain {
 
 
     def asDTO(): AlertDTO = {
-      this.into[AlertDTO].withFieldComputed(_.id, _._id.toHexString).transform
+      this.into[AlertDTO].withFieldComputed(_.id, _.id).transform
     }
 
     def allFieldExceptStatusAreSame(alertRequest: AlertRequest) = {
@@ -67,11 +67,4 @@ object domain {
         timeZone == alertRequest.timeZone
     }
   }
-
-  object Alert {
-    def apply(alertRequest: AlertRequest, user: String): Alert = {
-      alertRequest.into[Alert].withFieldComputed(_.owner, u => user).withFieldComputed(_._id, a => new ObjectId()).withFieldComputed(_.createdAt, _=>System.currentTimeMillis()).transform
-    }
-  }
-
 }

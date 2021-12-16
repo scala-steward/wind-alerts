@@ -6,7 +6,7 @@ import cats.data.{EitherT, OptionT}
 import cats.effect.{Async, ContextShift}
 import cats.implicits._
 import com.uptech.windalerts.core.AlertNotFoundError
-import com.uptech.windalerts.core.alerts.AlertsRepository
+import com.uptech.windalerts.core.alerts.{AlertsRepository, TimeRange}
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
 import io.scalaland.chimney.dsl._
@@ -17,12 +17,12 @@ import org.mongodb.scala.model.Filters.{and, equal}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class MongoAlertsRepository[F[_]](collection: MongoCollection[Alert])(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends AlertsRepository[F] {
+class MongoAlertsRepository[F[_]](collection: MongoCollection[DBAlert])(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends AlertsRepository[F] {
 
   override def disableAllButFirstAlerts(userId: String): F[Unit] = {
     for {
       all <- getAllForUser(userId)
-      updatedIOs <- all.sortBy(_.createdAt).tail.map(alert => update(alert._id.toHexString, alert.copy(enabled = false))).toList.sequence
+      _ <- all.sortBy(_.createdAt).tail.map(alert => update(alert.id, alert.copy(enabled = false))).toList.sequence
     } yield ()
   }
 
@@ -34,21 +34,21 @@ class MongoAlertsRepository[F[_]](collection: MongoCollection[Alert])(implicit c
   }
 
   private def update(alertId: String, alert: Alert): F[Alert] = {
-    Async.fromFuture(M.pure(collection.replaceOne(equal("_id", new ObjectId(alertId)), alert).toFuture().map(_ => alert)))
+    Async.fromFuture(M.pure(collection.replaceOne(equal("_id", new ObjectId(alertId)), DBAlert(alert)).toFuture().map(_ => alert)))
   }
 
-  def getById(id: String): OptionT[F, Alert] = {
-    OptionT(Async.fromFuture(M.pure(collection.find(equal("_id", new ObjectId(id))).toFuture().map(_.headOption))))
+  def getById(id: String) = {
+    OptionT(Async.fromFuture(M.pure(collection.find(equal("_id", new ObjectId(id))).toFuture().map(_.headOption.map(_.toAlert())))))
   }
 
   override def getAllEnabled(): F[Seq[Alert]] = {
-    Async.fromFuture(M.pure(collection.find(equal("enabled", true)).toFuture()))
+    Async.fromFuture(M.pure(collection.find(equal("enabled", true)).toFuture())).map(_.map(_.toAlert()))
   }
 
   override def save(alertRequest: AlertRequest, user: String): F[Alert] = {
-    val alert = Alert(alertRequest, user)
+    val dBAlert = DBAlert(alertRequest, user)
 
-    Async.fromFuture(M.pure(collection.insertOne(alert).toFuture().map(_ => alert)))
+    Async.fromFuture(M.pure(collection.insertOne(dBAlert).toFuture().map(_ => dBAlert.toAlert())))
   }
 
   override def delete(requester: String, alertId: String): EitherT[F, AlertNotFoundError, Unit] = {
@@ -62,10 +62,7 @@ class MongoAlertsRepository[F[_]](collection: MongoCollection[Alert])(implicit c
   override def update(requester: String, alertId: String, updateAlertRequest: AlertRequest): EitherT[F, AlertNotFoundError, Alert] = {
     for {
       oldAlert <- getById(alertId).toRight(AlertNotFoundError())
-      alertUpdated = updateAlertRequest.into[Alert]
-        .withFieldComputed(_._id, u => new ObjectId(alertId))
-        .withFieldComputed(_.owner, _ => requester)
-        .withFieldComputed(_.createdAt, _ => oldAlert.createdAt).transform
+      alertUpdated = DBAlert(updateAlertRequest, requester, alertId, oldAlert.createdAt)
       _ <- EitherT.liftF(M.pure(collection.replaceOne(equal("_id", new ObjectId(alertId)), alertUpdated).toFuture()))
       alert <- getById(alertId).toRight(AlertNotFoundError())
     } yield alert
@@ -82,8 +79,53 @@ class MongoAlertsRepository[F[_]](collection: MongoCollection[Alert])(implicit c
       ))
   }
 
-
   private def findByCriteria(criteria: Bson) =
-    Async.fromFuture(M.pure(collection.find(criteria).toFuture()))
+    Async.fromFuture(M.pure(collection.find(criteria).toFuture())).map(_.map(_.toAlert()))
 
+}
+
+case class DBAlert(
+                    _id: ObjectId,
+                    owner: String,
+                    beachId: Long,
+                    days: Seq[Long],
+                    swellDirections: Seq[String],
+                    timeRanges: Seq[TimeRange],
+                    waveHeightFrom: Double,
+                    waveHeightTo: Double,
+                    windDirections: Seq[String],
+                    tideHeightStatuses: Seq[String] = Seq("Rising", "Falling"),
+                    enabled: Boolean,
+                    timeZone: String = "Australia/Sydney",
+                    createdAt: Long) {
+
+  def toAlert(): Alert = {
+    this.into[Alert]
+      .withFieldComputed(_.id, dbAlert => dbAlert._id.toHexString)
+      .transform
+  }
+}
+
+object DBAlert {
+  def apply(alert: Alert): DBAlert = {
+    alert.into[DBAlert]
+      .withFieldComputed(_._id, alert => new ObjectId(alert.id))
+      .transform
+  }
+
+  def apply(alertRequest: AlertRequest, user: String): DBAlert = {
+    alertRequest.into[DBAlert]
+      .withFieldComputed(_.owner, _ => user)
+      .withFieldComputed(_._id, _ => new ObjectId())
+      .withFieldComputed(_.createdAt, _ => System.currentTimeMillis())
+      .transform
+  }
+
+  def apply(alertRequest: AlertRequest, user: String, alertId:String, createdAt:Long): DBAlert = {
+    alertRequest.into[DBAlert]
+      .withFieldComputed(_.owner, _ => user)
+      .withFieldComputed(_._id, _ => new ObjectId(alertId))
+      .withFieldComputed(_.createdAt, _ => createdAt)
+      .transform
+  }
 }

@@ -43,7 +43,7 @@ class NotificationsService[F[_] : Sync: Parallel](N: NotificationRepository[F],
       alertsToBeNotified = alertsByBeaches
         .map(kv => (beaches(kv._1), kv._2))
         .map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)).map(AlertWithBeach(_, kv._1))))
-      _ <- F.delay(logger.info(s"alertsToBeNotified : ${alertsToBeNotified.values.map(_.flatMap(_.alert._id.toHexString)).mkString(", ")}"))
+      _ <- F.delay(logger.info(s"alertsToBeNotified : ${alertsToBeNotified.values.map(_.flatMap(_.alert.id)).mkString(", ")}"))
       alertWithUserWithBeach = alertsToBeNotified.values.flatten.map(v => AlertWithUserWithBeach(v.alert, userIdToUser(v.alert.owner), v.beach))
     } yield alertWithUserWithBeach
   }
@@ -77,7 +77,7 @@ class NotificationsService[F[_] : Sync: Parallel](N: NotificationRepository[F],
       alertsForUsers <- users.map(u => alertsRepository.getAllEnabledForUser(u.userId)).sequence.map(_.flatten)
       alertsForUsersWithMathcingTime = alertsForUsers.toList.filter(_.isTimeMatch())
       alertsByBeaches = alertsForUsersWithMathcingTime.groupBy(_.beachId).map(kv => (BeachId(kv._1), kv._2))
-      _ <- F.delay(logger.info(s"alertsForUsersWithMathcingTime : ${alertsForUsersWithMathcingTime.map(_._id.toHexString).mkString(", ")}"))
+      _ <- F.delay(logger.info(s"alertsForUsersWithMathcingTime : ${alertsForUsersWithMathcingTime.map(_.id).mkString(", ")}"))
     } yield alertsByBeaches
   }
 
@@ -90,7 +90,7 @@ class NotificationsService[F[_] : Sync: Parallel](N: NotificationRepository[F],
   private def submit(u: AlertWithUserWithBeach):EitherT[F, NotificationNotSentError, Unit] = {
     for {
       _ <- notificationSender.send(NotificationDetails(BeachId(u.alert.beachId), u.user.deviceToken, UserId(u.user.userId)))
-      _ <- EitherT.liftF(N.create(Notification(u.alert._id.toHexString, u.user.userId, u.user.deviceToken,  System.currentTimeMillis())))
+      _ <- EitherT.liftF(N.create(Notification(u.alert.id, u.user.userId, u.user.deviceToken,  System.currentTimeMillis())))
     } yield ()
   }
 

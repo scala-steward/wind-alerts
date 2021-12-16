@@ -41,7 +41,7 @@ class AlertsService[F[_] : Sync](alertsRepository: AlertsRepository[F]) {
   }
 
   def checkForNonPremiumUser(alertId: String, alert: Alert, alertRequest: AlertRequest) = {
-    if (alert._id.toHexString != alertId) {
+    if (alert.id != alertId) {
       false
     } else {
       alert.allFieldExceptStatusAreSame(alertRequest)
