@@ -44,7 +44,7 @@ object UsersServer extends IOApp {
       androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
 
       db = Repos.acquireDb(sys.env("MONGO_DB_URL"))
-      userSessionsRepository = new MongoUserSessionRepository[F](db.getCollection[UserSession]("userSessions"))
+      userSessionsRepository = new MongoUserSessionRepository[F](db.getCollection[DBUserSession]("userSessions"))
       otpRepositoy = new MongoOtpRepository[F](db.getCollection[OTPWithExpiry]("otp"))
       usersRepository = new MongoUserRepository[F](db.getCollection[UserT]("users"))
       credentialsRepository = new MongoCredentialsRepository[F](db.getCollection[Credentials]("credentials"))

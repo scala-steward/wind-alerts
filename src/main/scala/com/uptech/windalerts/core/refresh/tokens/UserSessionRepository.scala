@@ -5,7 +5,7 @@ import com.uptech.windalerts.core.TokenNotFoundError
 import com.uptech.windalerts.core.user.UserT
 
 trait UserSessionRepository[F[_]] {
-  def create(refreshToken: UserSession): F[UserSession]
+  def create(refreshToken: String, expiry: Long, userId: String, deviceToken: String): F[UserSession]
 
   def getByUserId(userId: String): OptionT[F, UserSession]
 

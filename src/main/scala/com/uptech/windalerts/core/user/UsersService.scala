@@ -5,6 +5,7 @@ import cats.effect.Sync
 import cats.implicits._
 import com.uptech.windalerts.core._
 import com.uptech.windalerts.core.credentials.{Credentials, UserCredentialService}
+import com.uptech.windalerts.core.refresh.tokens.UserSession.REFRESH_TOKEN_EXPIRY
 import com.uptech.windalerts.core.refresh.tokens.{UserSession, UserSessionRepository}
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
@@ -58,7 +59,7 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
 
     val token = auth.createToken(UserId(user._id.toHexString))
 
-    userSessionsRepository.create(UserSession(user._id.toHexString, deviceToken))
+    userSessionsRepository.create( utils.generateRandomString(40), System.currentTimeMillis() + REFRESH_TOKEN_EXPIRY, user._id.toHexString, deviceToken)
       .map(newRefreshToken=>TokensWithUser(token.accessToken, newRefreshToken.refreshToken, token.expiredAt, user))
 
   }

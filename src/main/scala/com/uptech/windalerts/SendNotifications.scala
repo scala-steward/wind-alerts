@@ -50,7 +50,7 @@ object SendNotifications extends IOApp {
       db = Repos.acquireDb(sys.env("MONGO_DB_URL"))
       usersRepository = new MongoUserRepository[F](db.getCollection[UserT]("users"))
       alertsRepository = new MongoAlertsRepository[F](db.getCollection[DBAlert]("alerts"))
-      userSessionsRepository = new MongoUserSessionRepository[F](db.getCollection[UserSession]("userSessions"))
+      userSessionsRepository = new MongoUserSessionRepository[F](db.getCollection[DBUserSession]("userSessions"))
 
       notificationsRepository = new MongoNotificationsRepository[F](db.getCollection[Notification]("notifications"))
 
