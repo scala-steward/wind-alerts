@@ -14,14 +14,14 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class MongoOtpRepository[F[_]](collection: MongoCollection[OTPWithExpiry])(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends OtpRepository[F] {
   override def findByOtpAndUserId(otp: String, userId: String): OptionT[F, OTPWithExpiry] = {
-      Async.fromFuture(
+    OptionT(Async.fromFuture(
         M.pure(
           collection.find(
             and(
               equal("userId", userId),
               equal("otp", otp)
             )
-          ).headOption()))
+          ).headOption())))
   }
 
   override def updateForUser(userId: String, otp: OTPWithExpiry): F[OTPWithExpiry] = {

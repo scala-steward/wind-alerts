@@ -1,7 +1,6 @@
-package com.uptech.windalerts.infrastructure.social.subscriptions
+package com.uptech.windalerts.core.social.subscriptions
 
 import cats.data.EitherT
-import com.uptech.windalerts.core.social.subscriptions.PurchaseToken
 import com.uptech.windalerts.core.{SurfsUpError, TokenNotFoundError}
 
 trait PurchaseTokenRepository[F[_]] {

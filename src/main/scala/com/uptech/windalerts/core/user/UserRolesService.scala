@@ -8,13 +8,12 @@ import com.uptech.windalerts.core.alerts.AlertsRepository
 import com.uptech.windalerts.core.otp.OtpRepository
 import com.uptech.windalerts.core.refresh.tokens.UserSessionRepository
 import com.uptech.windalerts.core.social.SocialPlatformType
-import com.uptech.windalerts.core.social.subscriptions.SocialPlatformSubscriptionsService
+import com.uptech.windalerts.core.social.subscriptions.{PurchaseTokenRepository, SocialPlatformSubscriptionsService}
 import com.uptech.windalerts.core.user.UserType.{Premium, PremiumExpired, Trial}
 import com.uptech.windalerts.core.{OperationNotAllowed, OtpNotFoundError, SurfsUpError, UnknownError, UserNotFoundError}
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
 import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Google}
-import com.uptech.windalerts.infrastructure.social.subscriptions.PurchaseTokenRepository
 import io.circe.parser.parse
 
 class UserRolesService[F[_] : Sync](alertsRepository: AlertsRepository[F], userRepository: UserRepository[F], otpRepository: OtpRepository[F], socialPlatformSubscriptionsService: SocialPlatformSubscriptionsService[F]) {

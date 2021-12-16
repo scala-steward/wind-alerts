@@ -3,9 +3,8 @@ package com.uptech.windalerts.infrastructure.repositories.mongo
 import cats.Monad
 import cats.data.EitherT
 import cats.effect.{Async, ContextShift}
-import com.uptech.windalerts.core.social.subscriptions.PurchaseToken
+import com.uptech.windalerts.core.social.subscriptions.{PurchaseToken, PurchaseTokenRepository}
 import com.uptech.windalerts.core.{SurfsUpError, TokenNotFoundError}
-import com.uptech.windalerts.infrastructure.social.subscriptions.PurchaseTokenRepository
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.equal
