@@ -1,7 +1,7 @@
 package com.uptech.windalerts.infrastructure.repositories.mongo
 
 import cats.Monad
-import cats.data.EitherT
+import cats.data.{EitherT, OptionT}
 import cats.effect.{Async, ContextShift}
 import com.uptech.windalerts.core.OtpNotFoundError
 import com.uptech.windalerts.core.otp.{OTPWithExpiry, OtpRepository}
@@ -13,17 +13,15 @@ import org.mongodb.scala.model.Updates._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class MongoOtpRepository[F[_]](collection: MongoCollection[OTPWithExpiry])(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends OtpRepository[F] {
-  override def exists(otp: String, userId: String): EitherT[F, OtpNotFoundError, OTPWithExpiry] = {
-    EitherT.fromOptionF(
-      Async.fromFuture(
+  override def findByOtpAndUserId(otp: String, userId: String): OptionT[F, OTPWithExpiry] = {
+    OptionT(Async.fromFuture(
         M.pure(
           collection.find(
             and(
               equal("userId", userId),
               equal("otp", otp)
             )
-          ).headOption())),
-      OtpNotFoundError("OTP not found"))
+          ).headOption())))
   }
 
   override def updateForUser(userId: String, otp: OTPWithExpiry): F[OTPWithExpiry] = {
