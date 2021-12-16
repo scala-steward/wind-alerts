@@ -53,7 +53,7 @@ object UsersServer extends IOApp {
       androidPurchaseRepository = new MongoPurchaseTokenRepository[F](db.getCollection[PurchaseToken]("androidPurchases"))
       applePurchaseRepository = new MongoPurchaseTokenRepository[F](db.getCollection[PurchaseToken]("applePurchases"))
 
-      alertsRepository = new MongoAlertsRepository[F](db.getCollection[Alert]("alerts"))
+      alertsRepository = new MongoAlertsRepository[F](db.getCollection[DBAlert]("alerts"))
       applePlatform = new AppleLoginProvider[F](config.getSecretsFile(s"apple/Apple.p8"))
       facebookPlatform = new FacebookLoginProvider[F](sys.env("FACEBOOK_KEY"))
       beachService = new BeachService[F](

@@ -20,7 +20,7 @@ object UpdateUserRolesServer extends IOApp {
       usersRepository = new MongoUserRepository[F](db.getCollection[UserT]("users"))
       androidPurchaseRepository = new MongoPurchaseTokenRepository[F](db.getCollection[PurchaseToken]("androidPurchases"))
       applePurchaseRepository = new MongoPurchaseTokenRepository[F](db.getCollection[PurchaseToken]("applePurchases"))
-      alertsRepository = new MongoAlertsRepository[F](db.getCollection[Alert]("alerts"))
+      alertsRepository = new MongoAlertsRepository[F](db.getCollection[DBAlert]("alerts"))
 
       androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
       appleSubscription = new AppleSubscription[F](sys.env("APPLE_APP_SECRET"))
