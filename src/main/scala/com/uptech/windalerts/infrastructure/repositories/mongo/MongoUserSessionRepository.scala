@@ -1,22 +1,23 @@
 package com.uptech.windalerts.infrastructure.repositories.mongo
+
 import cats.Monad
 import cats.data.{EitherT, OptionT}
 import cats.effect.{Async, ContextShift}
 import com.uptech.windalerts.core.TokenNotFoundError
 import com.uptech.windalerts.core.refresh.tokens.{UserSession, UserSessionRepository}
-import com.uptech.windalerts.core.user.UserId
+import io.scalaland.chimney.dsl._
+import org.bson.types.ObjectId
 import org.mongodb.scala.MongoCollection
-import org.mongodb.scala.bson.ObjectId
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.Updates.set
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-
-class MongoUserSessionRepository[F[_]](collection: MongoCollection[UserSession])(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends UserSessionRepository[F] {
-  override def create(refreshToken: UserSession): F[UserSession] = {
-    Async.fromFuture(M.pure(collection.insertOne(refreshToken).toFuture().map(_ => refreshToken)))
+class MongoUserSessionRepository[F[_]](collection: MongoCollection[DBUserSession])(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends UserSessionRepository[F] {
+  override def create(refreshToken: String, expiry: Long, userId: String, deviceToken: String): F[UserSession] = {
+    val dBUserSession = DBUserSession(refreshToken, expiry, userId, deviceToken)
+    Async.fromFuture(M.pure(collection.insertOne(dBUserSession).toFuture().map(_=>dBUserSession.toUserSession())))
   }
 
   override def getByRefreshToken(refreshToken: String): OptionT[F, UserSession] = {
@@ -32,7 +33,7 @@ class MongoUserSessionRepository[F[_]](collection: MongoCollection[UserSession])
       Async.fromFuture(
         M.pure(collection.find(criteria)
           .toFuture()
-          .map(_.headOption)
+          .map(_.headOption.map(_.toUserSession))
         )
       )
     )
@@ -55,6 +56,25 @@ class MongoUserSessionRepository[F[_]](collection: MongoCollection[UserSession])
   }
 
   override def updateDeviceToken(userId: String, deviceToken: String): F[Unit] = {
-    Async.fromFuture(M.pure(collection.updateOne(equal("userId", userId), set("deviceToken", deviceToken)).toFuture().map(_=>())))
+    Async.fromFuture(M.pure(collection.updateOne(equal("userId", userId), set("deviceToken", deviceToken)).toFuture().map(_ => ())))
   }
+}
+
+
+case class DBUserSession(_id: ObjectId, refreshToken: String, expiry: Long, userId: String, deviceToken: String) {
+  def toUserSession(): UserSession = {
+    this.into[UserSession]
+      .withFieldComputed(_.id, dbUserSession => dbUserSession._id.toHexString)
+      .transform
+  }
+}
+
+object DBUserSession {
+  def apply(refreshToken: String, expiry: Long, userId: String, deviceToken: String) = new DBUserSession(
+    new ObjectId(),
+    refreshToken,
+    expiry,
+    userId,
+    deviceToken)
+
 }

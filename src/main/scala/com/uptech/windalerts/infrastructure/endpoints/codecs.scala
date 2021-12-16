@@ -12,7 +12,7 @@ import com.uptech.windalerts.core.refresh.tokens.UserSession
 import com.uptech.windalerts.core.social.subscriptions.PurchaseToken
 import com.uptech.windalerts.core.user.UserT
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
-import com.uptech.windalerts.infrastructure.repositories.mongo.DBAlert
+import com.uptech.windalerts.infrastructure.repositories.mongo.{DBAlert, DBUserSession}
 import io.circe.generic.extras.semiauto.{deriveUnwrappedDecoder, deriveUnwrappedEncoder}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}
@@ -27,7 +27,7 @@ object codecs {
     fromProviders(classOf[Notification]),
     fromProviders(classOf[OTPWithExpiry]),
     fromProviders(classOf[PurchaseToken]),
-    fromProviders(classOf[UserSession]),
+    fromProviders(classOf[DBUserSession]),
     fromProviders(classOf[UserT]),
     fromProviders(classOf[Credentials]),
     fromProviders(classOf[DBAlert]),
