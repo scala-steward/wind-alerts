@@ -2,6 +2,7 @@ package com.uptech.windalerts.core.user
 
 import cats.data.{EitherT, OptionT}
 import com.uptech.windalerts.core.UserNotFoundError
+import com.uptech.windalerts.infrastructure.endpoints.dtos.UserRequest
 
 trait UserRepository[F[_]] {
   def getByUserId(userId: String): OptionT[F, UserT]

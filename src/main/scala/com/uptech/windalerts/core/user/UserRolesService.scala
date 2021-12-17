@@ -39,7 +39,7 @@ class UserRolesService[F[_] : Sync](alertsRepository: AlertsRepository[F], userR
   private def updateSubscribedUser(user: UserT): EitherT[F, SurfsUpError, Unit] = {
 
     for {
-      purchase <- socialPlatformSubscriptionsService.find(user._id.toHexString, user.deviceType)
+      purchase <- socialPlatformSubscriptionsService.find(user.id, user.deviceType)
       _ <- updateSubscribedUserRole(user, purchase.startTimeMillis, purchase.expiryTimeMillis).leftWiden[SurfsUpError]
     } yield ()
   }
@@ -79,7 +79,7 @@ class UserRolesService[F[_] : Sync](alertsRepository: AlertsRepository[F], userR
       _ <- otpRepository.findByOtpAndUserId(request.otp, user.id).toRight(OtpNotFoundError())
       user <- userRepository.getByUserId(user.id).toRight(UserNotFoundError())
       updateResult <- makeUserTrial(user).map(_.asDTO()).leftWiden[SurfsUpError]
-      _ <- EitherT.liftF(otpRepository.deleteForUser(user._id.toHexString))
+      _ <- EitherT.liftF(otpRepository.deleteForUser(user.id))
     } yield updateResult
   }
 
@@ -102,14 +102,14 @@ class UserRolesService[F[_] : Sync](alertsRepository: AlertsRepository[F], userR
   def makeUserPremiumExpired(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
     for {
       operationResult <- update(user.copy(userType = PremiumExpired.value, nextPaymentAt = -1))
-      _ <- EitherT.liftF(alertsRepository.disableAllButFirstAlerts(user._id.toHexString))
+      _ <- EitherT.liftF(alertsRepository.disableAllButFirstAlerts(user.id))
     } yield operationResult
   }
 
   private def makeUserTrialExpired(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
     for {
       updated <- update(user.copy(userType = UserType.TrialExpired.value, lastPaymentAt = -1, nextPaymentAt = -1))
-      _ <- EitherT.liftF(alertsRepository.disableAllButFirstAlerts(updated._id.toHexString))
+      _ <- EitherT.liftF(alertsRepository.disableAllButFirstAlerts(updated.id))
     } yield updated
   }
 

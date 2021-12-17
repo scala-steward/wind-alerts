@@ -48,7 +48,7 @@ object SendNotifications extends IOApp {
         new WWBackedSwellsService[F](willyWeatherAPIKey, swellAdjustments))
 
       db = Repos.acquireDb(sys.env("MONGO_DB_URL"))
-      usersRepository = new MongoUserRepository[F](db.getCollection[UserT]("users"))
+      usersRepository = new MongoUserRepository[F](db.getCollection[DBUser]("users"))
       alertsRepository = new MongoAlertsRepository[F](db.getCollection[DBAlert]("alerts"))
       userSessionsRepository = new MongoUserSessionRepository[F](db.getCollection[DBUserSession]("userSessions"))
 

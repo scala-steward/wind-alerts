@@ -16,6 +16,7 @@ import cats.implicits._
 import com.uptech.windalerts.infrastructure.EmailSender
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
+import com.uptech.windalerts.infrastructure.repositories.mongo.DBUser
 import io.circe.parser.parse
 
 import scala.util.Random
@@ -48,7 +49,7 @@ class SocialLoginService[F[_] : Sync](userRepository: UserRepository[F],
     for {
       savedCreds <- credentialsRepository.create(SocialCredentials(user.email, user.socialId, user.deviceType))
       savedUser <- userRepository.create(
-        UserT.createSocialUser(new ObjectId(savedCreds._id.toHexString), user.email, user.name, user.deviceType))
+        UserT.createSocialUser(savedCreds._id.toHexString, user.email, user.name, user.deviceType))
     } yield (savedUser, savedCreds)
   }
 

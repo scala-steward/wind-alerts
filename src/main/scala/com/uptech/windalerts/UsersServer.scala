@@ -46,7 +46,7 @@ object UsersServer extends IOApp {
       db = Repos.acquireDb(sys.env("MONGO_DB_URL"))
       userSessionsRepository = new MongoUserSessionRepository[F](db.getCollection[DBUserSession]("userSessions"))
       otpRepositoy = new MongoOtpRepository[F](db.getCollection[OTPWithExpiry]("otp"))
-      usersRepository = new MongoUserRepository[F](db.getCollection[UserT]("users"))
+      usersRepository = new MongoUserRepository[F](db.getCollection[DBUser]("users"))
       credentialsRepository = new MongoCredentialsRepository[F](db.getCollection[Credentials]("credentials"))
       facebookCredentialsRepository = new MongoSocialCredentialsRepository[F](db.getCollection[SocialCredentials]("facebookCredentials"))
       appleCredentialsRepository = new MongoSocialCredentialsRepository[F](db.getCollection[SocialCredentials]("appleCredentials"))
