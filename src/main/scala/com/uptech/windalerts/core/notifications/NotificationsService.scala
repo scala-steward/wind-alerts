@@ -52,7 +52,7 @@ class NotificationsService[F[_] : Sync: Parallel](N: NotificationRepository[F],
   private def allLoggedInUsersReadyToRecieveNotifications() = {
     for {
       usersWithNotificationsEnabledAndNotSnoozed <- U.findUsersWithNotificationsEnabledAndNotSnoozed()
-      _ <- F.delay(logger.info(s"usersWithNotificationsEnabledAndNotSnoozed : ${usersWithNotificationsEnabledAndNotSnoozed.map(_._id.toHexString).mkString(", ")}"))
+      _ <- F.delay(logger.info(s"usersWithNotificationsEnabledAndNotSnoozed : ${usersWithNotificationsEnabledAndNotSnoozed.map(_.id).mkString(", ")}"))
 
       loggedInUsers <- filterLoggedOutUsers(usersWithNotificationsEnabledAndNotSnoozed)
 
@@ -66,9 +66,9 @@ class NotificationsService[F[_] : Sync: Parallel](N: NotificationRepository[F],
 
   private def filterLoggedOutUsers(usersWithNotificationsEnabledAndNotSnoozed:Seq[UserT]) = {
     for {
-      userSessions <- usersWithNotificationsEnabledAndNotSnoozed.map(u=>userSessionsRepository.getByUserId(u._id.toHexString).value).toList.sequence
+      userSessions <- usersWithNotificationsEnabledAndNotSnoozed.map(u=>userSessionsRepository.getByUserId(u.id).value).toList.sequence
       usersWithSession = usersWithNotificationsEnabledAndNotSnoozed.zip(userSessions)
-      loggedInUsers = usersWithSession.filter(_._2.isDefined).map(u=>UserDetailsWithDeviceToken(u._1._id.toHexString, u._1.email, u._2.get.deviceToken, u._1.notificationsPerHour))
+      loggedInUsers = usersWithSession.filter(_._2.isDefined).map(u=>UserDetailsWithDeviceToken(u._1.id, u._1.email, u._2.get.deviceToken, u._1.notificationsPerHour))
     } yield loggedInUsers
   }
 

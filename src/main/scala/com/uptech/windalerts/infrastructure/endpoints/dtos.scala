@@ -1,6 +1,5 @@
 package com.uptech.windalerts.infrastructure.endpoints
 
-import com.uptech.windalerts.core.EventPublisher.Event
 import com.uptech.windalerts.core.alerts.TimeRange
 import com.uptech.windalerts.core.user.TokensWithUser
 import com.uptech.windalerts.infrastructure.social.login.AccessRequests.{AppleAccessRequest, FacebookAccessRequest}
@@ -8,6 +7,8 @@ import io.scalaland.chimney.dsl._
 
 
 object dtos {
+
+  case class UserRequest(email: String, name: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long)
 
   case class UpdateUserRequest(name: String, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long)
 
