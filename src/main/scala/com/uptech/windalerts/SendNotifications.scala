@@ -1,6 +1,6 @@
 package com.uptech.windalerts
 
-import cats.Parallel
+import cats.{Monad, Parallel}
 import cats.effect.Resource.eval
 import cats.effect._
 import com.google.auth.oauth2.GoogleCredentials
@@ -21,6 +21,7 @@ import com.uptech.windalerts.infrastructure.endpoints.NotificationEndpoints
 import com.uptech.windalerts.infrastructure.notifications.FirebaseBasedNotificationsSender
 import com.uptech.windalerts.infrastructure.repositories.mongo._
 import io.circe.config.parser.decodePathF
+import org.http4s.{Response, Status}
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.{Server => H4Server}
 
@@ -28,7 +29,7 @@ import java.io.{File, FileInputStream}
 import scala.util.Try
 
 object SendNotifications extends IOApp {
-  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer: Parallel](): Resource[F, H4Server[F]] =
+  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer: Parallel]()(implicit M:Monad[F]): Resource[F, H4Server[F]] =
     for {
       appConfig <- eval(decodePathF[F, com.uptech.windalerts.config.config.SurfsUp](parseFileAnySyntax(config.getConfigFile("application.conf")), "surfsUp"))
       projectId = sys.env("projectId")
@@ -61,6 +62,11 @@ object SendNotifications extends IOApp {
       server <- BlazeServerBuilder[F]
         .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
         .withHttpApp(httpApp)
+        .withServiceErrorHandler(_ => {
+          case e: Throwable =>
+            logger.error("Exception ", e)
+            M.pure(Response[F](status = Status.InternalServerError))
+        })
         .resource
     } yield server
 

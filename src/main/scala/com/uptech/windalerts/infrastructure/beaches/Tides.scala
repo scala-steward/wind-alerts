@@ -57,7 +57,9 @@ extends TidesService[F] {
   def sendRequestAndParseResponse(beachId: BeachId, startDateFormatted: String, tzId: ZoneId, currentTimeGmt:Long) = {
     val future: Future[Id[Response[String]]] =
       resilience.willyWeatherRequestsDecorator(() => {
-        sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecastGraphs=tides&days=3&startDate=$startDateFormatted").send()
+        val response = sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecastGraphs=tides&days=3&startDate=$startDateFormatted").send()
+        logger.info(s"Response from WW $response")
+        response
       })
 
     EitherT(F.map(Async.fromFuture(F.pure(future)))(response=>parse(response, tzId, currentTimeGmt)))

@@ -13,7 +13,7 @@
                 <thread>[ignore]</thread>
                 <levelValue>[ignore]</levelValue>
             </fieldNames>
-        </encoder>
+       </encoder>
     </appender>
     <logger name="com.uptech" level="info">
 <!--        <appender-ref ref="classicConsoleAppender"/>-->

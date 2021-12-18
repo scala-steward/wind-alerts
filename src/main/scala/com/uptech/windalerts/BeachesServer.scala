@@ -1,6 +1,6 @@
 package com.uptech.windalerts
 
-import cats.Parallel
+import cats.{Monad, Parallel}
 import cats.effect.Resource.eval
 import cats.effect._
 import com.softwaremill.sttp.quick.backend
@@ -12,13 +12,14 @@ import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints.BeachesEndpoints
 import io.circe.config.parser.decodePathF
+import org.http4s.{Response, Status}
 import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.{Router, Server => H4Server}
 
 object BeachesServer extends IOApp {
 
-  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer: Parallel](): Resource[F, H4Server[F]] =
+  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer: Parallel]()(implicit M:Monad[F]): Resource[F, H4Server[F]] =
     for {
       beaches <- eval(decodePathF[F, Beaches](parseFileAnySyntax(config.getConfigFile("beaches.json")), "surfsUp"))
       swellAdjustments <- eval(decodePathF[F, Adjustments](parseFileAnySyntax(config.getConfigFile("swellAdjustments.json")), "surfsUp"))
@@ -35,6 +36,11 @@ object BeachesServer extends IOApp {
       server <- BlazeServerBuilder[F]
         .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
         .withHttpApp(httpApp)
+        .withServiceErrorHandler(_ => {
+          case e: Throwable =>
+            logger.error("Exception ", e)
+            M.pure(Response[F](status = Status.InternalServerError))
+        })
         .resource
     } yield server
 
