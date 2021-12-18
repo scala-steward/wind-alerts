@@ -1,7 +1,9 @@
 package com.uptech.windalerts.core.user
 
+import cats.data.EitherT
 import com.google.common.base.Strings
-import com.uptech.windalerts.core.user.UserType.{Registered, Trial}
+import com.uptech.windalerts.core.UserNotFoundError
+import com.uptech.windalerts.core.user.UserType.{Premium, PremiumExpired, Registered, Trial}
 import com.uptech.windalerts.infrastructure.endpoints.dtos.{EmailId, UserDTO}
 import io.scalaland.chimney.dsl._
 
@@ -25,6 +27,22 @@ case class UserT(id: String, email: String, name: String, deviceType: String, st
   }
 
   def userIdMetadata() = UserIdMetadata(UserId(id), EmailId(email), UserType(userType), firstName)
+
+  def makeTrial() = {
+    copy(startTrialAt = System.currentTimeMillis(), endTrialAt = System.currentTimeMillis() + (30L * 24L * 60L * 60L * 1000L), userType = Trial.value)
+  }
+
+  def makePremium(start: Long, expiry: Long) = {
+    copy(userType = Premium.value, lastPaymentAt = start, nextPaymentAt = expiry)
+  }
+
+  def makePremiumExpired() = {
+    copy(userType = PremiumExpired.value, nextPaymentAt = -1)
+  }
+
+  def makeTrialExpired() = {
+    copy(userType = UserType.TrialExpired.value, lastPaymentAt = -1, nextPaymentAt = -1)
+  }
 
 }
 
