@@ -17,7 +17,8 @@ object resilience {
       .withBulkhead(Bulkhead.ofDefaults("willy-weather-bulkhead"))
       .withCircuitBreaker(CircuitBreaker.ofDefaults("willy-weather-circuit-breaker"))
       .withRetry(Retry.of("willy-weather-retry", new RetryConfig.Builder().maxAttempts(10).intervalFunction(IntervalFunction.ofDefaults()).build()))
-      .decorate().call()
+      .decorate()
+      .call()
   })
   }
 

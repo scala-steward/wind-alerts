@@ -1,22 +1,20 @@
 package com.uptech.windalerts
 
-import cats.Parallel
 import cats.effect.Resource.eval
-import cats.effect._
+import cats.effect.{IO, _}
+import cats.{Monad, Parallel}
 import com.softwaremill.sttp.quick.backend
 import com.typesafe.config.ConfigFactory.parseFileAnySyntax
 import com.uptech.windalerts.config._
 import com.uptech.windalerts.config.beaches.{Beaches, _}
 import com.uptech.windalerts.config.swellAdjustments.Adjustments
 import com.uptech.windalerts.core.alerts.AlertsService
-import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.credentials.{Credentials, SocialCredentials, UserCredentialService}
 import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry}
-import com.uptech.windalerts.core.refresh.tokens.UserSession
 import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.social.subscriptions.{PurchaseToken, SocialPlatformSubscriptionsService}
-import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService, UserT}
+import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints._
 import com.uptech.windalerts.infrastructure.repositories.mongo._
@@ -25,12 +23,13 @@ import com.uptech.windalerts.infrastructure.social.login.{AppleLoginProvider, Fa
 import com.uptech.windalerts.infrastructure.social.subscriptions._
 import com.uptech.windalerts.infrastructure.{EmailSender, GooglePubSubEventpublisher}
 import io.circe.config.parser.decodePathF
+import org.http4s.{Response, Status}
 import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.{Router, Server => H4Server}
 
 object UsersServer extends IOApp {
-  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer : Parallel](): Resource[F, H4Server[F]] =
+  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer : Parallel]()(implicit M:Monad[F]): Resource[F, H4Server[F]] =
 
     for {
       beaches <- eval(decodePathF[F, Beaches](parseFileAnySyntax(config.getConfigFile("beaches.json")), "surfsUp"))
@@ -92,6 +91,11 @@ object UsersServer extends IOApp {
       server <- BlazeServerBuilder[F]
         .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
         .withHttpApp(new errors[F].errorMapper(httpApp))
+        .withServiceErrorHandler(_ => {
+          case e: Throwable =>
+            logger.error("Exception ", e)
+            M.pure(Response[F](status = Status.InternalServerError))
+        })
         .resource
     } yield server
 

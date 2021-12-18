@@ -1,4 +1,5 @@
 package com.uptech.windalerts
+import cats.Monad
 import cats.effect._
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.otp.OTPWithExpiry
@@ -7,12 +8,13 @@ import com.uptech.windalerts.core.user.{UserRolesService, UserT}
 import com.uptech.windalerts.infrastructure.endpoints.{UpdateUserRolesEndpoints, errors}
 import com.uptech.windalerts.infrastructure.repositories.mongo._
 import com.uptech.windalerts.infrastructure.social.subscriptions._
+import org.http4s.{Response, Status}
 import org.http4s.implicits._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.{Router, Server => H4Server}
 
 object UpdateUserRolesServer extends IOApp {
-  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer](): Resource[F, H4Server[F]] =
+  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer]()(implicit M:Monad[F]): Resource[F, H4Server[F]] =
     for {
       _ <- Resource.pure(())
       db = Repos.acquireDb(sys.env("MONGO_DB_URL"))
@@ -35,6 +37,11 @@ object UpdateUserRolesServer extends IOApp {
       server <- BlazeServerBuilder[F]
         .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
         .withHttpApp(new errors[F].errorMapper(httpApp))
+        .withServiceErrorHandler(_ => {
+          case e: Throwable =>
+            logger.error("Exception ", e)
+            M.pure(Response[F](status = Status.InternalServerError))
+        })
         .resource
     } yield server
 

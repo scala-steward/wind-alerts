@@ -1,13 +1,9 @@
 package com.uptech.windalerts.core.user
 
-import cats.data.{EitherT, OptionT}
+import cats.data.OptionT
 import cats.effect.Effect
-import com.uptech.windalerts.core.refresh.tokens.{UserSession, UserSessionRepository}
-import com.uptech.windalerts.infrastructure.endpoints.dtos._
-import com.uptech.windalerts.logger
 import dev.profunktor.auth.JwtAuthMiddleware
 import dev.profunktor.auth.jwt.{JwtAuth, JwtSecretKey}
-import io.circe.parser._
 import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim}
 
 import java.util.concurrent.TimeUnit
@@ -44,6 +40,7 @@ class AuthenticationService[F[_] : Effect](jwtKey:String, userRepository: UserRe
   val middleware = JwtAuthMiddleware[F, UserIdMetadata](jwtAuth, _ => authenticate)
 
   def createToken(userId: UserId): AccessTokenWithExpiry = AccessTokenWithExpiry(key, userId)
+
 
 
 }
