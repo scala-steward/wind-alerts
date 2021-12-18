@@ -1,20 +1,14 @@
 package com.uptech.windalerts.core.user
 
-import cats.Functor
 import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
 import com.uptech.windalerts.core.alerts.AlertsRepository
 import com.uptech.windalerts.core.otp.OtpRepository
-import com.uptech.windalerts.core.refresh.tokens.UserSessionRepository
 import com.uptech.windalerts.core.social.SocialPlatformType
-import com.uptech.windalerts.core.social.subscriptions.{PurchaseTokenRepository, SocialPlatformSubscriptionsService}
-import com.uptech.windalerts.core.user.UserType.{Premium, PremiumExpired, Trial}
-import com.uptech.windalerts.core.{OperationNotAllowed, OtpNotFoundError, SurfsUpError, UnknownError, UserNotFoundError}
-import com.uptech.windalerts.infrastructure.endpoints.codecs._
+import com.uptech.windalerts.core.social.subscriptions.SocialPlatformSubscriptionsService
+import com.uptech.windalerts.core.{OperationNotAllowed, OtpNotFoundError, SurfsUpError, UserNotFoundError}
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
-import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Google}
-import io.circe.parser.parse
 
 class UserRolesService[F[_] : Sync](alertsRepository: AlertsRepository[F], userRepository: UserRepository[F], otpRepository: OtpRepository[F], socialPlatformSubscriptionsService: SocialPlatformSubscriptionsService[F]) {
   def updateTrialUsers() = {
@@ -92,27 +86,26 @@ class UserRolesService[F[_] : Sync](alertsRepository: AlertsRepository[F], userR
   }
 
   def makeUserTrial(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
-    update(user.copy(startTrialAt = System.currentTimeMillis(), endTrialAt = System.currentTimeMillis() + (30L * 24L * 60L * 60L * 1000L), userType = Trial.value))
+    update(user.makeTrial())
   }
 
   def makeUserPremium(user: UserT, start: Long, expiry: Long): EitherT[F, UserNotFoundError, UserT] = {
-    update(user.copy(userType = Premium.value, lastPaymentAt = start, nextPaymentAt = expiry))
+    update(user.makePremium(start, expiry))
   }
 
   def makeUserPremiumExpired(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
     for {
-      operationResult <- update(user.copy(userType = PremiumExpired.value, nextPaymentAt = -1))
+      operationResult <- update(user.makePremiumExpired())
       _ <- EitherT.liftF(alertsRepository.disableAllButFirstAlerts(user.id))
     } yield operationResult
   }
 
   private def makeUserTrialExpired(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
     for {
-      updated <- update(user.copy(userType = UserType.TrialExpired.value, lastPaymentAt = -1, nextPaymentAt = -1))
+      updated <- update(user.makeTrialExpired())
       _ <- EitherT.liftF(alertsRepository.disableAllButFirstAlerts(updated.id))
     } yield updated
   }
-
 
   private def update(user: UserT): EitherT[F, UserNotFoundError, UserT] = {
     userRepository.update(user).toRight(UserNotFoundError())

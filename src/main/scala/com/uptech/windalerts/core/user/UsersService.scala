@@ -108,7 +108,6 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
 }
 
 object UserService {
-
   def apply[F[_] : Sync](userRepository: UserRepository[F], userCredentialService: UserCredentialService[F], authenticationService: AuthenticationService[F], refreshTokenRepo: UserSessionRepository[F], eventPublisher: EventPublisher[F]): UserService[F] =
     new UserService[F](userRepository, userCredentialService, authenticationService, refreshTokenRepo, eventPublisher)
 }
