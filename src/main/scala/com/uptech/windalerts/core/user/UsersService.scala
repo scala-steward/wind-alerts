@@ -30,7 +30,7 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
   def persistUserAndCredentials(rr: RegisterRequest): EitherT[F, UserAlreadyExistsError, (UserT, Credentials)] = {
     for {
       savedCreds <- userCredentialsService.createIfDoesNotExist(rr)
-      saved <- EitherT.right(userRepository.create(UserT.createEmailUser(savedCreds._id.toHexString, rr.email, rr.name, rr.deviceType)))
+      saved <- EitherT.right(userRepository.create(UserT.createEmailUser(savedCreds.id, rr.email, rr.name, rr.deviceType)))
     } yield (saved, savedCreds)
   }
 

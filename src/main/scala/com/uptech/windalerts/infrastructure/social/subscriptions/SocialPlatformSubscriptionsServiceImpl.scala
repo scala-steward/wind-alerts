@@ -21,7 +21,7 @@ class SocialPlatformSubscriptionsServiceImpl[F[_] : Sync](
   def find(userId: String, deviceType: String)(implicit A:Applicative[F]): EitherT[F, SurfsUpError, SubscriptionPurchase] = {
     for {
       platformType <- EitherT.fromOption[F](SocialPlatformTypes(deviceType), PlatformNotSupported())
-      purchase <- find( userId, platformType)
+      purchase <- find(userId, platformType)
     } yield purchase
   }
 
@@ -42,7 +42,7 @@ class SocialPlatformSubscriptionsServiceImpl[F[_] : Sync](
   private def handleNewPurchase(user: UserId, req: PurchaseReceiptValidationRequest, repository: PurchaseTokenRepository[F], subscription: SocialSubscription[F]) = {
     for {
       _ <- getPurchase(subscription, req.token)
-      savedToken <- repository.create(PurchaseToken(user.id, req.token, System.currentTimeMillis()))
+      savedToken <- repository.create(user.id, req.token, System.currentTimeMillis())
     } yield savedToken
   }
 
