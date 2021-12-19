@@ -12,7 +12,7 @@ import com.uptech.windalerts.core.refresh.tokens.UserSession
 import com.uptech.windalerts.core.social.subscriptions.PurchaseToken
 import com.uptech.windalerts.core.user.UserT
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
-import com.uptech.windalerts.infrastructure.repositories.mongo.{DBAlert, DBNotification, DBOTPWithExpiry, DBUser, DBUserSession}
+import com.uptech.windalerts.infrastructure.repositories.mongo.{DBAlert, DBNotification, DBOTPWithExpiry, DBPurchaseToken, DBUser, DBUserSession}
 import io.circe.generic.extras.semiauto.{deriveUnwrappedDecoder, deriveUnwrappedEncoder}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}
@@ -26,7 +26,7 @@ object codecs {
   val codecRegistry = fromRegistries(
     fromProviders(classOf[DBNotification]),
     fromProviders(classOf[DBOTPWithExpiry]),
-    fromProviders(classOf[PurchaseToken]),
+    fromProviders(classOf[DBPurchaseToken]),
     fromProviders(classOf[DBUserSession]),
     fromProviders(classOf[DBUser]),
     fromProviders(classOf[Credentials]),

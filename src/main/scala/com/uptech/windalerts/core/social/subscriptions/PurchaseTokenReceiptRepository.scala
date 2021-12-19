@@ -8,5 +8,5 @@ trait PurchaseTokenRepository[F[_]] {
 
   def getLastForUser(userId: String): EitherT[F, TokenNotFoundError, PurchaseToken]
 
-  def create(token: PurchaseToken): EitherT[F, SurfsUpError, PurchaseToken]
+  def create(userId: String, purchaseToken: String, creationTime: Long): EitherT[F, SurfsUpError, PurchaseToken]
 }

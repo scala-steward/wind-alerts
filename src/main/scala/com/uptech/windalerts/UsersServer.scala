@@ -49,8 +49,8 @@ object UsersServer extends IOApp {
       credentialsRepository = new MongoCredentialsRepository[F](db.getCollection[Credentials]("credentials"))
       facebookCredentialsRepository = new MongoSocialCredentialsRepository[F](db.getCollection[SocialCredentials]("facebookCredentials"))
       appleCredentialsRepository = new MongoSocialCredentialsRepository[F](db.getCollection[SocialCredentials]("appleCredentials"))
-      androidPurchaseRepository = new MongoPurchaseTokenRepository[F](db.getCollection[PurchaseToken]("androidPurchases"))
-      applePurchaseRepository = new MongoPurchaseTokenRepository[F](db.getCollection[PurchaseToken]("applePurchases"))
+      androidPurchaseRepository = new MongoPurchaseTokenRepository[F](db.getCollection[DBPurchaseToken]("androidPurchases"))
+      applePurchaseRepository = new MongoPurchaseTokenRepository[F](db.getCollection[DBPurchaseToken]("applePurchases"))
 
       alertsRepository = new MongoAlertsRepository[F](db.getCollection[DBAlert]("alerts"))
       applePlatform = new AppleLoginProvider[F](config.getSecretsFile(s"apple/Apple.p8"))
