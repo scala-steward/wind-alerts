@@ -33,7 +33,7 @@ class MongoUserRepository[F[_]](collection: MongoCollection[DBUser])(implicit cs
 
   override def update(user: UserT): OptionT[F, UserT] = {
     for {
-      _ <- OptionT.liftF(Async.fromFuture(M.pure(collection.replaceOne(equal("_id", user.id), DBUser(user)).toFuture())))
+      _ <- OptionT.liftF(Async.fromFuture(M.pure(collection.replaceOne(equal("_id", new ObjectId(user.id)), DBUser(user)).toFuture())))
       updatedUser <- getByUserId(user.id)
     } yield updatedUser
   }
