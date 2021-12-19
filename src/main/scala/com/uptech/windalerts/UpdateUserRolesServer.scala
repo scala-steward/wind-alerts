@@ -18,7 +18,7 @@ object UpdateUserRolesServer extends IOApp {
     for {
       _ <- Resource.pure(())
       db = Repos.acquireDb(sys.env("MONGO_DB_URL"))
-      otpRepositoy = new MongoOtpRepository[F](db.getCollection[OTPWithExpiry]("otp"))
+      otpRepositoy = new MongoOtpRepository[F](db.getCollection[DBOTPWithExpiry]("otp"))
       usersRepository = new MongoUserRepository[F](db.getCollection[DBUser]("users"))
       androidPurchaseRepository = new MongoPurchaseTokenRepository[F](db.getCollection[PurchaseToken]("androidPurchases"))
       applePurchaseRepository = new MongoPurchaseTokenRepository[F](db.getCollection[PurchaseToken]("applePurchases"))
