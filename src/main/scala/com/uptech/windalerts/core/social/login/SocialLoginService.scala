@@ -47,9 +47,9 @@ class SocialLoginService[F[_] : Sync](userRepository: UserRepository[F],
   def createUser[T <: SocialCredentials](credentialsRepository: SocialCredentialsRepository[F], user: SocialUser)
   : F[(UserT, SocialCredentials)] = {
     for {
-      savedCreds <- credentialsRepository.create(SocialCredentials(user.email, user.socialId, user.deviceType))
+      savedCreds <- credentialsRepository.create(user.email, user.socialId, user.deviceType)
       savedUser <- userRepository.create(
-        UserT.createSocialUser(savedCreds._id.toHexString, user.email, user.name, user.deviceType))
+        UserT.createSocialUser(savedCreds.id, user.email, user.name, user.deviceType))
     } yield (savedUser, savedCreds)
   }
 
