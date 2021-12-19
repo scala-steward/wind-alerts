@@ -36,9 +36,9 @@ class UserCredentialService[F[_] : Sync](
     for {
       creds <- credentialsRepository.findByCredentials(email, deviceType).toRight(UserAuthenticationFailedError(email))
       newPassword <- EitherT.pure(utils.generateRandomString(10))(A)
-      _ <- EitherT.right(credentialsRepository.updatePassword(creds._id.toHexString, newPassword.bcrypt))
-      _ <- EitherT.right(userSessionsRepository.deleteForUserId(creds._id.toHexString))
-      user <- userRepository.getByUserId(creds._id.toHexString).toRight(UserNotFoundError("User not found"))
+      _ <- EitherT.right(credentialsRepository.updatePassword(creds.id, newPassword.bcrypt))
+      _ <- EitherT.right(userSessionsRepository.deleteForUserId(creds.id))
+      user <- userRepository.getByUserId(creds.id).toRight(UserNotFoundError("User not found"))
       _ <- EitherT.pure(emailSender.sendResetPassword(user.firstName(), email, newPassword))(A)
     } yield creds
 
@@ -46,15 +46,14 @@ class UserCredentialService[F[_] : Sync](
   def changePassword(request: ChangePasswordRequest): EitherT[F, UserAuthenticationFailedError, Unit] = {
     for {
       credentials <- findByCredentials(request.email, request.oldPassword, request.deviceType)
-      result <- EitherT.right(credentialsRepository.updatePassword(credentials._id.toHexString, request.newPassword.bcrypt))
+      result <- EitherT.right(credentialsRepository.updatePassword(credentials.id, request.newPassword.bcrypt))
     } yield result
   }
 
   def createIfDoesNotExist(rr: RegisterRequest): EitherT[F, UserAlreadyExistsError, Credentials] = {
-    val credentials = Credentials(rr.email, rr.password.bcrypt, rr.deviceType)
     for {
-      _ <- doesNotExist(credentials.email, credentials.deviceType)
-      savedCredentials <- EitherT.right(credentialsRepository.create(credentials))
+      _ <- doesNotExist(rr.email, rr.deviceType)
+      savedCredentials <- EitherT.right(credentialsRepository.create(rr.email, rr.password, rr.deviceType))
     } yield savedCredentials
   }
 

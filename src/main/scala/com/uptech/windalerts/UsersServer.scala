@@ -46,7 +46,7 @@ object UsersServer extends IOApp {
       userSessionsRepository = new MongoUserSessionRepository[F](db.getCollection[DBUserSession]("userSessions"))
       otpRepositoy = new MongoOtpRepository[F](db.getCollection[DBOTPWithExpiry]("otp"))
       usersRepository = new MongoUserRepository[F](db.getCollection[DBUser]("users"))
-      credentialsRepository = new MongoCredentialsRepository[F](db.getCollection[Credentials]("credentials"))
+      credentialsRepository = new MongoCredentialsRepository[F](db.getCollection[DBCredentials]("credentials"))
       facebookCredentialsRepository = new MongoSocialCredentialsRepository[F](db.getCollection[SocialCredentials]("facebookCredentials"))
       appleCredentialsRepository = new MongoSocialCredentialsRepository[F](db.getCollection[SocialCredentials]("appleCredentials"))
       androidPurchaseRepository = new MongoPurchaseTokenRepository[F](db.getCollection[DBPurchaseToken]("androidPurchases"))

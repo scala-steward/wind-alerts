@@ -4,7 +4,7 @@ import cats.data.OptionT
 
 
 trait CredentialsRepository[F[_]] {
-  def create(credentials: Credentials): F[Credentials]
+  def create(email: String, password: String, deviceType: String): F[Credentials]
 
   def findByCredentials(email: String, deviceType: String): OptionT[F, Credentials]
 
