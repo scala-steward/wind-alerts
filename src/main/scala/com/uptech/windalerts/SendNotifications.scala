@@ -53,7 +53,7 @@ object SendNotifications extends IOApp {
       alertsRepository = new MongoAlertsRepository[F](db.getCollection[DBAlert]("alerts"))
       userSessionsRepository = new MongoUserSessionRepository[F](db.getCollection[DBUserSession]("userSessions"))
 
-      notificationsRepository = new MongoNotificationsRepository[F](db.getCollection[Notification]("notifications"))
+      notificationsRepository = new MongoNotificationsRepository[F](db.getCollection[DBNotification]("notifications"))
 
       notificationsSender = new FirebaseBasedNotificationsSender[F](notifications, beaches.toMap(), appConfig.notifications )
       notificationService = new NotificationsService[F](notificationsRepository, usersRepository, beachService, alertsRepository, notificationsSender, userSessionsRepository)
