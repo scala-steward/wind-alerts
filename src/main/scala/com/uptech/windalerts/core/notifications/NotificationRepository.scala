@@ -1,6 +1,6 @@
 package com.uptech.windalerts.core.notifications
 
 trait NotificationRepository[F[_]] {
-  def create(notifications: Notification): F[Notification]
+  def create(alertId: String, userId: String, deviceToken: String, sentAt: Long): F[Notification]
   def countNotificationInLastHour(userId: String): F[UserWithNotificationsCount]
 }

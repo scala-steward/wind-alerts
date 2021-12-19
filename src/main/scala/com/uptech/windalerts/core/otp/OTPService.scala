@@ -33,7 +33,7 @@ class OTPService[F[_] : Sync](otpRepository: OtpRepository[F], emailSender: Emai
   def send(userId: String, email: String)(implicit M: Monad[F]):F[Unit] = {
     for {
       otp <- M.pure(createOtp(4))
-      _ <- otpRepository.updateForUser(userId, OTPWithExpiry(otp, System.currentTimeMillis() + 5 * 60 * 1000, userId))
+      _ <- otpRepository.updateForUser(userId, otp, System.currentTimeMillis() + 5 * 60 * 1000)
       result <- emailSender.sendOtp(email, otp)
     } yield result
   }

@@ -90,7 +90,7 @@ class NotificationsService[F[_] : Sync: Parallel](N: NotificationRepository[F],
   private def submit(u: AlertWithUserWithBeach):EitherT[F, NotificationNotSentError, Unit] = {
     for {
       _ <- notificationSender.send(NotificationDetails(BeachId(u.alert.beachId), u.user.deviceToken, UserId(u.user.userId)))
-      _ <- EitherT.liftF(N.create(Notification(u.alert.id, u.user.userId, u.user.deviceToken,  System.currentTimeMillis())))
+      _ <- EitherT.liftF(N.create(u.alert.id, u.user.userId, u.user.deviceToken,  System.currentTimeMillis()))
     } yield ()
   }
 
