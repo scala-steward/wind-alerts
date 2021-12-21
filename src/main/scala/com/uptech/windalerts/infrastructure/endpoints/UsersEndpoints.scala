@@ -1,22 +1,22 @@
 package com.uptech.windalerts.infrastructure.endpoints
 
 import cats.data.{EitherT, OptionT}
-import cats.effect.{Effect, IO, Sync}
+import cats.effect.{Effect, Sync}
 import cats.implicits._
-import com.uptech.windalerts.core.{OtpNotFoundError, RefreshTokenExpiredError, RefreshTokenNotFoundError, SurfsUpError, TokenNotFoundError, UnknownError, UserAlreadyExistsError, UserAuthenticationFailedError, UserNotFoundError}
+import com.uptech.windalerts.config._
 import com.uptech.windalerts.core.credentials.UserCredentialService
+import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.social.subscriptions.SocialPlatformSubscriptionsService
 import com.uptech.windalerts.core.user.{TokensWithUser, UserIdMetadata, UserRolesService, UserService}
-import com.uptech.windalerts.config._
-import codecs._
-import com.uptech.windalerts.core.otp.OTPService
+import com.uptech.windalerts.core._
+import com.uptech.windalerts.infrastructure.endpoints.codecs._
+import com.uptech.windalerts.infrastructure.endpoints.dtos._
 import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Facebook, Google}
-import dtos.{AppleRegisterRequest, ChangePasswordRequest, FacebookRegisterRequest, ResetPasswordRequest, UserIdDTO, _}
 import io.circe.parser.parse
 import org.http4s.dsl.Http4sDsl
 import org.http4s.util.CaseInsensitiveString
-import org.http4s.{AuthedRoutes, Header, Headers, HttpRoutes, Response}
+import org.http4s._
 
 class UsersEndpoints[F[_] : Effect]
 (userCredentialsService: UserCredentialService[F],
@@ -42,7 +42,7 @@ class UsersEndpoints[F[_] : Effect]
           rr <- EitherT.liftF(req.as[RegisterRequest])
           user <- userService.register(rr)
         } yield user).value.flatMap {
-          case Right(tokensWithUser) => Ok(TokensWithUserDTO.fromDomain(tokensWithUser))
+          case Right(tokensWithUser) => Ok(tokensWithUser)
           case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")
         }
 
@@ -51,7 +51,7 @@ class UsersEndpoints[F[_] : Effect]
           credentials <- EitherT.liftF(req.as[LoginRequest])
           user <- userService.login(credentials)
         } yield user).value.flatMap {
-          case Right(tokensWithUser) => Ok(TokensWithUserDTO.fromDomain(tokensWithUser))
+          case Right(tokensWithUser) => Ok(tokensWithUser)
           case Left(UserNotFoundError(_)) => NotFound("User not found")
           case Left(UserAuthenticationFailedError(name)) => BadRequest(s"Authentication failed for user $name")
         }
@@ -61,7 +61,7 @@ class UsersEndpoints[F[_] : Effect]
           refreshToken <- EitherT.liftF(req.as[AccessTokenRequest])
           user <- userService.refresh(refreshToken)
         } yield user).value.flatMap {
-          case Right(tokensWithUser) => Ok(TokensWithUserDTO.fromDomain(tokensWithUser))
+          case Right(tokensWithUser) => Ok(tokensWithUser)
           case Left(RefreshTokenNotFoundError(_)) => BadRequest(s"Refresh token not found")
           case Left(RefreshTokenExpiredError(_)) => BadRequest(s"Refresh token expired")
           case Left(TokenNotFoundError(_)) => BadRequest(s"Token not found")
@@ -116,7 +116,6 @@ class UsersEndpoints[F[_] : Effect]
           request =>
             (for {
               response <- userService.updateUserProfile(u.userId.id, request.name, request.snoozeTill, request.disableAllAlerts, request.notificationsPerHour)
-                .map(_.asDTO)
             } yield response).value.flatMap {
               case Right(response) => Ok(response)
               case Left(UserNotFoundError(_)) => NotFound("User not found")
@@ -127,7 +126,7 @@ class UsersEndpoints[F[_] : Effect]
       case _@GET -> Root / "profile" as user => {
         OptionT.liftF(
           (for {
-            response <- userService.getUser(user.userId.id).map(_.asDTO())
+            response <- userService.getUser(user.userId.id)
           } yield response).value.flatMap {
             case Right(response) => Ok(response)
             case Left(UserNotFoundError(_)) => NotFound("User not found")
@@ -140,7 +139,6 @@ class UsersEndpoints[F[_] : Effect]
           req =>
             (for {
               response <- userService.updateDeviceToken(user.userId.id, req.deviceToken)
-                .map(_.asDTO)
             } yield response).value.flatMap {
               case Right(response) => Ok(response)
               case Left(UserNotFoundError(_)) => NotFound("User not found")
@@ -284,7 +282,7 @@ class UsersEndpoints[F[_] : Effect]
     F.pure(
       Response[F](headers = Headers.of {
         Header.Raw(CaseInsensitiveString("X-is-new-user"), tokensWithUser._2.toString)
-      }).withEntity(TokensWithUserDTO.fromDomain(tokensWithUser._1))
+      }).withEntity(tokensWithUser._1)
     )
   }
 }

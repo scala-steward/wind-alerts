@@ -2,7 +2,7 @@ package com.uptech.windalerts.infrastructure.endpoints
 
 import com.uptech.windalerts.core.alerts.TimeRange
 import com.uptech.windalerts.core.alerts.domain.Alert
-import com.uptech.windalerts.core.user.TokensWithUser
+import com.uptech.windalerts.core.user.{TokensWithUser, UserT}
 import com.uptech.windalerts.infrastructure.social.login.AccessRequests.{AppleAccessRequest, FacebookAccessRequest}
 import io.scalaland.chimney.dsl._
 
@@ -17,20 +17,9 @@ object dtos {
 
   case class AccessTokenRequest(refreshToken: String)
 
-  case class TokensWithUserDTO(accessToken: String, refreshToken: String, expiredAt: Long, user: UserDTO)
-
-  object TokensWithUserDTO {
-    def fromDomain(tokenWithUser: TokensWithUser) = {
-      tokenWithUser.into[TokensWithUserDTO].withFieldComputed(_.user, _.user.asDTO()).transform
-    }
-  }
+  case class TokensWithUserDTO(accessToken: String, refreshToken: String, expiredAt: Long, user: UserT)
 
   final case class OTP(otp: String)
-
-  final case class UserDTO(id: String, email: String, name: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long) {
-    def this(id: String, email: String, name: String, deviceType: String, startTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long) =
-      this(id, email, name, deviceType, startTrialAt, if (startTrialAt == -1) -1L else (startTrialAt + (30L * 24L * 60L * 60L * 1000L)), userType, snoozeTill, disableAllAlerts, notificationsPerHour, -1, -1)
-  }
 
 
   case class FacebookRegisterRequest(accessToken: String, deviceType: String, deviceToken: String) {
