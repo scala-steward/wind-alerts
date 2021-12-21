@@ -50,12 +50,6 @@ object domain {
       else day - 1
     }
 
-
-
-    def asDTO(): AlertDTO = {
-      this.into[AlertDTO].withFieldComputed(_.id, _.id).transform
-    }
-
     def allFieldExceptStatusAreSame(alertRequest: AlertRequest) = {
       days.sorted == alertRequest.days.sorted &&
         swellDirections.sorted == alertRequest.swellDirections.sorted &&

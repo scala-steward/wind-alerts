@@ -1,12 +1,9 @@
 package com.uptech.windalerts.core.user
 
-import cats.data.EitherT
 import com.google.common.base.Strings
-import com.uptech.windalerts.core.UserNotFoundError
 import com.uptech.windalerts.core.user.UserType.{Premium, PremiumExpired, Registered, Trial}
 import com.uptech.windalerts.infrastructure.endpoints.dtos.{EmailId, UserDTO}
 import io.scalaland.chimney.dsl._
-
 
 case class UserT(id: String, email: String, name: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long) {
   def firstName() = {
@@ -23,7 +20,7 @@ case class UserT(id: String, email: String, name: String, deviceType: String, st
   }
 
   def asDTO(): UserDTO = {
-    this.into[UserDTO].withFieldComputed(_.id, u => u.id).transform
+    this.into[UserDTO].transform
   }
 
   def userIdMetadata() = UserIdMetadata(UserId(id), EmailId(email), UserType(userType), firstName)

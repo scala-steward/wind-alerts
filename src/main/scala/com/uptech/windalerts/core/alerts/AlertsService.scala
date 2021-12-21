@@ -10,17 +10,17 @@ import com.uptech.windalerts.core.{AlertNotFoundError, OperationNotAllowed, Surf
 import com.uptech.windalerts.infrastructure.endpoints.dtos.{AlertDTO, AlertRequest}
 
 class AlertsService[F[_] : Sync](alertsRepository: AlertsRepository[F]) {
-  def createAlert(u: UserId, userType: UserType, r: AlertRequest)(implicit M: Monad[F]):EitherT[F, OperationNotAllowed, AlertDTO] = {
+  def createAlert(u: UserId, userType: UserType, r: AlertRequest)(implicit M: Monad[F]):EitherT[F, OperationNotAllowed, Alert] = {
     for {
       _ <- EitherT.cond[F](userType.isPremiumUser(), (), OperationNotAllowed(s"Please subscribe to perform this action"))
-      saved <- EitherT.liftF(alertsRepository.save(r, u.id)).map(_.asDTO())
+      saved <- EitherT.liftF(alertsRepository.save(r, u.id))
     } yield saved
   }
 
-  def update(alertId: String, u: UserId, userType: UserType, r: AlertRequest): EitherT[F, SurfsUpError, AlertDTO] = {
+  def update(alertId: String, u: UserId, userType: UserType, r: AlertRequest): EitherT[F, SurfsUpError, Alert] = {
     for {
       _ <- authorizeAlertEditRequest(u, userType, alertId, r).leftWiden[SurfsUpError]
-      saved <- update(u.id, alertId, r).map(_.asDTO()).leftWiden[SurfsUpError]
+      saved <- update(u.id, alertId, r).leftWiden[SurfsUpError]
     } yield saved
   }
 

@@ -1,6 +1,7 @@
 package com.uptech.windalerts.infrastructure.endpoints
 
 import com.uptech.windalerts.core.alerts.TimeRange
+import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.user.TokensWithUser
 import com.uptech.windalerts.infrastructure.social.login.AccessRequests.{AppleAccessRequest, FacebookAccessRequest}
 import io.scalaland.chimney.dsl._
@@ -78,7 +79,7 @@ object dtos {
                            enabled: Boolean,
                            timeZone: String = "Australia/Sydney")
 
-  case class AlertsDTO(alerts: Seq[AlertDTO])
+  case class AlertsDTO(alerts: Seq[Alert])
 
   case class AlertDTO(
                        id: String,

@@ -3,13 +3,13 @@ package com.uptech.windalerts.infrastructure.endpoints
 import cats.data.OptionT
 import cats.effect.Effect
 import cats.implicits._
-import com.uptech.windalerts.core.{AlertNotFoundError, OperationNotAllowed, UserNotFoundError}
 import com.uptech.windalerts.core.alerts.AlertsService
-import codecs._
-import dtos._
-import com.uptech.windalerts.config._
 import com.uptech.windalerts.core.user.UserIdMetadata
+import com.uptech.windalerts.core.{AlertNotFoundError, OperationNotAllowed, UserNotFoundError}
+import com.uptech.windalerts.infrastructure.endpoints.codecs._
+import com.uptech.windalerts.infrastructure.endpoints.dtos._
 import org.http4s.AuthedRoutes
+import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.dsl.Http4sDsl
 
 
@@ -20,7 +20,7 @@ class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F]) extends Htt
       case _@GET -> Root as user => {
         OptionT.liftF(
           for {
-            response <- alertService.getAllForUser(user.userId.id).map(alerts => AlertsDTO( alerts.map(_.asDTO())))
+            response <- alertService.getAllForUser(user.userId.id).map(alerts => AlertsDTO( alerts))
             resp <- Ok(response)
           } yield resp)
       }

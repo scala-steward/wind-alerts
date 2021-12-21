@@ -35,11 +35,11 @@ class UserCredentialService[F[_] : Sync](
                    )(implicit A: Applicative[F]): EitherT[F, SurfsUpError, Credentials] =
     for {
       creds <- credentialsRepository.findByCredentials(email, deviceType).toRight(UserAuthenticationFailedError(email))
-      newPassword <- EitherT.pure(utils.generateRandomString(10))(A)
+      newPassword = utils.generateRandomString(10)
       _ <- EitherT.right(credentialsRepository.updatePassword(creds.id, newPassword.bcrypt))
       _ <- EitherT.right(userSessionsRepository.deleteForUserId(creds.id))
       user <- userRepository.getByUserId(creds.id).toRight(UserNotFoundError("User not found"))
-      _ <- EitherT.pure(emailSender.sendResetPassword(user.firstName(), email, newPassword))(A)
+      _ <- emailSender.sendResetPassword(user.firstName(), email, newPassword).leftMap[SurfsUpError](UnknownError(_))
     } yield creds
 
 
