@@ -68,11 +68,11 @@ class UserRolesService[F[_] : Sync](alertsRepository: AlertsRepository[F], userR
     } yield updatedUser
   }
 
-  def verifyEmail(user: UserId, request: OTP): EitherT[F, SurfsUpError, UserDTO] = {
+  def verifyEmail(user: UserId, request: OTP): EitherT[F, SurfsUpError, UserT] = {
     for {
       _ <- otpRepository.findByOtpAndUserId(request.otp, user.id).toRight(OtpNotFoundError())
       user <- userRepository.getByUserId(user.id).toRight(UserNotFoundError())
-      updateResult <- makeUserTrial(user).map(_.asDTO()).leftWiden[SurfsUpError]
+      updateResult <- makeUserTrial(user).leftWiden[SurfsUpError]
       _ <- EitherT.liftF(otpRepository.deleteForUser(user.id))
     } yield updateResult
   }
@@ -81,7 +81,7 @@ class UserRolesService[F[_] : Sync](alertsRepository: AlertsRepository[F], userR
     for {
       dbUser <- userRepository.getByUserId(u.id).toRight(UserNotFoundError()).leftWiden[SurfsUpError]
       purchase <- socialPlatformSubscriptionsService.find(u.id, dbUser.deviceType)
-      userWithUpdatedRole <- updateSubscribedUserRole(dbUser, purchase.startTimeMillis, purchase.expiryTimeMillis).map(_.asDTO()).leftWiden[SurfsUpError]
+      userWithUpdatedRole <- updateSubscribedUserRole(dbUser, purchase.startTimeMillis, purchase.expiryTimeMillis).leftWiden[SurfsUpError]
     } yield userWithUpdatedRole
   }
 
