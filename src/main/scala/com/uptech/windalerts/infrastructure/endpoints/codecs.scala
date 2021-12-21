@@ -93,13 +93,13 @@ object codecs {
 
   implicit def tideHeightEntityEncoder[F[_] : Applicative]: EntityEncoder[F, TideHeight] = jsonEncoderOf
 
-  lazy implicit val alertDecoder: Decoder[AlertDTO] = deriveDecoder[AlertDTO]
+  lazy implicit val alertDecoder: Decoder[Alert] = deriveDecoder[Alert]
 
-  implicit def alertEntityDecoder[F[_] : Sync]: EntityDecoder[F, AlertDTO] = jsonOf
+  implicit def alertEntityDecoder[F[_] : Sync]: EntityDecoder[F, Alert] = jsonOf
 
-  lazy implicit val alertEncoder: Encoder[AlertDTO] = deriveEncoder[AlertDTO]
+  lazy implicit val alertEncoder: Encoder[Alert] = deriveEncoder[Alert]
 
-  implicit def alertEntityEncoder[F[_] : Applicative]: EntityEncoder[F, AlertDTO] = jsonEncoderOf
+  implicit def alertEntityEncoder[F[_] : Applicative]: EntityEncoder[F, Alert] = jsonEncoderOf
 
   lazy implicit val timeRangeDecoder: Decoder[TimeRange] = deriveDecoder[TimeRange]
 
@@ -126,13 +126,9 @@ object codecs {
 
   implicit def alertREntityEncoder[F[_] : Applicative]: EntityEncoder[F, AlertRequest] = jsonEncoderOf
 
-  lazy implicit val salertDecoder: Decoder[AlertsDTO] = deriveDecoder[AlertsDTO]
+  lazy implicit val alertsEncoder: Encoder[AlertsDTO] = deriveEncoder[AlertsDTO]
 
-  implicit def salertEntityDecoder[F[_] : Sync]: EntityDecoder[F, AlertsDTO] = jsonOf
-
-  lazy implicit val salertEncoder: Encoder[AlertsDTO] = deriveEncoder[AlertsDTO]
-
-  implicit def salertEntityEncoder[F[_] : Applicative]: EntityEncoder[F, AlertsDTO] = jsonEncoderOf
+  implicit def alertsEntityEncoder[F[_] : Applicative]: EntityEncoder[F, AlertsDTO] = jsonEncoderOf
 
 
   lazy implicit val srDecoder: Decoder[FacebookRegisterRequest] = deriveDecoder[FacebookRegisterRequest]

@@ -149,10 +149,11 @@ class UsersEndpoints[F[_] : Effect]
       }
 
       case _@POST -> Root / "sendOTP" as user =>
-        OptionT.liftF(for {
-          _ <- otpService.send(user.userId.id, user.emailId.email)
-          resp <- Ok()
-        } yield resp)
+        OptionT.liftF({(for {
+          response <- otpService.send(user.userId.id, user.emailId.email)
+        } yield response).value.flatMap{
+          case Right(response) => Ok(response)
+        }})
 
       case authReq@POST -> Root / "verifyEmail" as user =>
         OptionT.liftF(authReq.req.decode[OTP] {

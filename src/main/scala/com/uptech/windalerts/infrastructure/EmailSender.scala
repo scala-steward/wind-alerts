@@ -1,6 +1,7 @@
 package com.uptech.windalerts.infrastructure
 
 import cats.Monad
+import cats.data.EitherT
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.uptech.windalerts.logger
 
@@ -14,7 +15,7 @@ class EmailSender[F[_]](apiKey: String) {
        """.stripMargin)
   }
 
-  def sendResetPassword(firstName:String, to: String, password: String)(implicit F: Monad[F]) = {
+  def sendResetPassword(firstName: String, to: String, password: String)(implicit F: Monad[F]) = {
     send(to, 3l,
       s"""
             "password": "${password}",
@@ -24,7 +25,7 @@ class EmailSender[F[_]](apiKey: String) {
   }
 
   def send(to: String, templateId: Long, params: String)(implicit F: Monad[F]) = {
-    F.pure(try {
+    EitherT.fromEither({
       val requestBody =
         s"""{
            "to": [
@@ -46,11 +47,10 @@ class EmailSender[F[_]](apiKey: String) {
       implicit val backend = HttpURLConnectionBackend()
 
       val body = req.send().body
-      logger.info(body.toString)
-
-    } catch {
-      case e: Throwable => logger.error(s"Exception sending email ${e.getMessage}" , e)
-    })
+      logger.info(s"Response from sendinblue ${body.toString}")
+      body
+    }
+    )
 
   }
 }
