@@ -3,17 +3,16 @@ package com.uptech.windalerts.core.alerts
 import cats.Bifunctor.ops.toAllBifunctorOps
 import cats.data.EitherT
 import cats.effect.Sync
-import cats.{Functor, Monad}
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.user.{UserId, UserType}
 import com.uptech.windalerts.core.{AlertNotFoundError, OperationNotAllowed, SurfsUpError}
-import com.uptech.windalerts.infrastructure.endpoints.dtos.{AlertDTO, AlertRequest}
+import com.uptech.windalerts.infrastructure.endpoints.dtos.AlertRequest
 
 class AlertsService[F[_] : Sync](alertsRepository: AlertsRepository[F]) {
-  def createAlert(u: UserId, userType: UserType, r: AlertRequest)(implicit M: Monad[F]):EitherT[F, OperationNotAllowed, Alert] = {
+  def createAlert(u: UserId, userType: UserType, r: AlertRequest):EitherT[F, OperationNotAllowed, Alert] = {
     for {
       _ <- EitherT.cond[F](userType.isPremiumUser(), (), OperationNotAllowed(s"Please subscribe to perform this action"))
-      saved <- EitherT.liftF(alertsRepository.save(r, u.id))
+      saved <- EitherT.liftF(alertsRepository.create(r, u.id))
     } yield saved
   }
 
@@ -23,7 +22,6 @@ class AlertsService[F[_] : Sync](alertsRepository: AlertsRepository[F]) {
       saved <- update(u.id, alertId, r).leftWiden[SurfsUpError]
     } yield saved
   }
-
 
   def authorizeAlertEditRequest(userId: UserId, userType: UserType, alertId: String, alertRequest: AlertRequest): EitherT[F, OperationNotAllowed, Unit] = {
     if (userType.isPremiumUser())

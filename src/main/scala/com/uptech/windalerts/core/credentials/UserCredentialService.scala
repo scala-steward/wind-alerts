@@ -22,8 +22,8 @@ class UserCredentialService[F[_] : Sync](
                          email: String, password: String, deviceType: String
                        ): EitherT[F, UserAuthenticationFailedError, Credentials] =
     for {
-      creds <- credentialsRepository.findByCredentials(email, deviceType).toRight(UserAuthenticationFailedError(email))
-      passwordMatched <- isPasswordMatch(password, creds)
+      credentials <- credentialsRepository.findByCredentials(email, deviceType).toRight(UserAuthenticationFailedError(email))
+      passwordMatched <- isPasswordMatch(password, credentials)
     } yield passwordMatched
 
   private def isPasswordMatch(password: String, creds: Credentials) = {
@@ -32,15 +32,15 @@ class UserCredentialService[F[_] : Sync](
 
   def resetPassword(
                      email: String, deviceType: String
-                   )(implicit A: Applicative[F]): EitherT[F, SurfsUpError, Credentials] =
+                   ): EitherT[F, SurfsUpError, Credentials] =
     for {
-      creds <- credentialsRepository.findByCredentials(email, deviceType).toRight(UserAuthenticationFailedError(email))
+      credentials <- credentialsRepository.findByCredentials(email, deviceType).toRight(UserAuthenticationFailedError(email))
       newPassword = utils.generateRandomString(10)
-      _ <- EitherT.right(credentialsRepository.updatePassword(creds.id, newPassword.bcrypt))
-      _ <- EitherT.right(userSessionsRepository.deleteForUserId(creds.id))
-      user <- userRepository.getByUserId(creds.id).toRight(UserNotFoundError("User not found"))
+      _ <- EitherT.right(credentialsRepository.updatePassword(credentials.id, newPassword.bcrypt))
+      _ <- EitherT.right(userSessionsRepository.deleteForUserId(credentials.id))
+      user <- userRepository.getByUserId(credentials.id).toRight(UserNotFoundError(s"User not found ($email, $deviceType) "))
       _ <- emailSender.sendResetPassword(user.firstName(), email, newPassword).leftMap[SurfsUpError](UnknownError(_))
-    } yield creds
+    } yield credentials
 
 
   def changePassword(request: ChangePasswordRequest): EitherT[F, UserAuthenticationFailedError, Unit] = {

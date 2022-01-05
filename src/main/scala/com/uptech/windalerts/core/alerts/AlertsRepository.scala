@@ -6,6 +6,8 @@ import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
 
 trait AlertsRepository[F[_]] {
+  def create(alert: AlertRequest, user: String): F[Alert]
+
   def disableAllButFirstAlerts(userId: String): F[Unit]
 
   def getFirstAlert(userId: String): OptionT[F, Alert]
@@ -15,8 +17,6 @@ trait AlertsRepository[F[_]] {
   def getAllForUser(user: String): F[Seq[Alert]]
 
   def getAllEnabledForUser(user: String): F[Seq[Alert]]
-
-  def save(alert: AlertRequest, user: String): F[Alert]
 
   def delete(requester: String, id: String):  EitherT[F, AlertNotFoundError, Unit]
 

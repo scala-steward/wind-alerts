@@ -40,7 +40,4 @@ class AuthenticationService[F[_] : Effect](jwtKey:String, userRepository: UserRe
   val middleware = JwtAuthMiddleware[F, UserIdMetadata](jwtAuth, _ => authenticate)
 
   def createToken(userId: UserId): AccessTokenWithExpiry = AccessTokenWithExpiry(key, userId)
-
-
-
 }
