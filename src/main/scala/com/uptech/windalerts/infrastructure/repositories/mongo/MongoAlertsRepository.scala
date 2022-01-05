@@ -45,7 +45,7 @@ class MongoAlertsRepository[F[_]](collection: MongoCollection[DBAlert])(implicit
     Async.fromFuture(M.pure(collection.find(equal("enabled", true)).toFuture())).map(_.map(_.toAlert()))
   }
 
-  override def save(alertRequest: AlertRequest, user: String): F[Alert] = {
+  override def create(alertRequest: AlertRequest, user: String): F[Alert] = {
     val dBAlert = DBAlert(alertRequest, user)
 
     Async.fromFuture(M.pure(collection.insertOne(dBAlert).toFuture().map(_ => dBAlert.toAlert())))

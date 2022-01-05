@@ -7,7 +7,6 @@ import cats.effect.{Async, ContextShift}
 import cats.implicits.toFunctorOps
 import com.uptech.windalerts.core.user.UserType.{Premium, Trial}
 import com.uptech.windalerts.core.user.{UserRepository, UserT}
-import com.uptech.windalerts.infrastructure.endpoints.dtos.UserRequest
 import io.scalaland.chimney.dsl._
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId
@@ -77,11 +76,6 @@ case class DBUser(_id: ObjectId, email: String, name: String, deviceType: String
 }
 
 object DBUser {
-  def apply(userRequest: UserRequest) : DBUser = {
-    userRequest.into[DBUser]
-      .withFieldComputed(_._id, _ => new ObjectId())
-      .transform
-  }
   def apply(user: UserT) : DBUser = {
     user.into[DBUser]
       .withFieldComputed(_._id, _ => new ObjectId(user.id))

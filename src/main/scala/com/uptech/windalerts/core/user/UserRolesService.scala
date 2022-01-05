@@ -22,7 +22,6 @@ class UserRolesService[F[_] : Sync](alertsRepository: AlertsRepository[F], userR
     users.map(user => makeUserTrialExpired(user)).toList.sequence
   }
 
-
   def updateSubscribedUsers() = {
     for {
       users <- EitherT.right(userRepository.findPremiumExpiredUsers())

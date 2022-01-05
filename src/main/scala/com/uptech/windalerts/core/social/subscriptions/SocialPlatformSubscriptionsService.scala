@@ -13,10 +13,6 @@ class SocialPlatformSubscriptionsService[F[_]:Sync](socialPlatformSubscriptionsS
     socialPlatformSubscriptionsService.find(userId, deviceType)
   }
 
-  def find(userId: String, platformType: SocialPlatformType): EitherT[F, SurfsUpError, SubscriptionPurchase] = {
-    socialPlatformSubscriptionsService.find(userId, platformType)
-  }
-
   def getPurchase(socialPlatformType:SocialPlatformType, token: String): EitherT[F, SurfsUpError, SubscriptionPurchase] = {
     socialPlatformSubscriptionsService.getPurchase(socialPlatformType:SocialPlatformType, token: String)
   }

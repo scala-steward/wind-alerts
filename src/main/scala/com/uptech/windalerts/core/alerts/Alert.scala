@@ -1,13 +1,11 @@
 package com.uptech.windalerts.core.alerts
 
 import com.uptech.windalerts.core.beaches.domain.Beach
+import com.uptech.windalerts.infrastructure.endpoints.dtos.AlertRequest
+import com.uptech.windalerts.logger
 
 import java.util.Calendar.{DAY_OF_WEEK, HOUR_OF_DAY, MINUTE}
 import java.util.{Calendar, TimeZone}
-import com.uptech.windalerts.infrastructure.endpoints.dtos.{AlertDTO, AlertRequest}
-import com.uptech.windalerts.logger
-import io.scalaland.chimney.dsl._
-import org.mongodb.scala.bson.ObjectId
 
 object domain {
   case class Alert(
