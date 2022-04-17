@@ -8,7 +8,7 @@ import cats.implicits._
 import com.uptech.windalerts.core.AlertNotFoundError
 import com.uptech.windalerts.core.alerts.{AlertRequest, AlertsRepository, TimeRange}
 import com.uptech.windalerts.core.alerts.domain.Alert
-import com.uptech.windalerts.infrastructure.endpoints.dtos._
+import com.uptech.windalerts.core.types._
 import io.scalaland.chimney.dsl._
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId

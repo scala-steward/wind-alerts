@@ -1,12 +1,11 @@
-package com.uptech.windalerts.infrastructure.endpoints
+package com.uptech.windalerts.core
 
-import com.uptech.windalerts.core.alerts.TimeRange
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.infrastructure.social.login.AccessRequests.{AppleAccessRequest, FacebookAccessRequest}
 import io.scalaland.chimney.dsl._
 
 
-object dtos {
+object types {
 
   case class UpdateUserRequest(name: String, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long)
 

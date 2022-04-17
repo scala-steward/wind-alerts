@@ -9,7 +9,7 @@ import com.uptech.windalerts.core._
 import com.uptech.windalerts.core.refresh.tokens.UserSessionRepository
 import com.uptech.windalerts.core.social.SocialPlatformType
 import com.uptech.windalerts.core.user.UserRepository
-import com.uptech.windalerts.infrastructure.endpoints.dtos.{ChangePasswordRequest, RegisterRequest}
+import types.{ChangePasswordRequest, RegisterRequest}
 
 class UserCredentialService[F[_] : Sync](
                                           socialCredentialsRepositories:Map[SocialPlatformType, SocialCredentialsRepository[F]],

@@ -3,13 +3,7 @@ package com.uptech.windalerts.core.otp
 import cats.Monad
 import cats.data.EitherT
 import cats.effect.Sync
-import cats.implicits._
-import com.uptech.windalerts.core.user.UserRepository
-import com.uptech.windalerts.core.{SurfsUpError, UnknownError, UserNotFoundError}
-import com.uptech.windalerts.core.EmailSender
-import com.uptech.windalerts.infrastructure.endpoints.codecs._
-import com.uptech.windalerts.infrastructure.endpoints.dtos._
-import io.circe.parser.parse
+import com.uptech.windalerts.core.{EmailSender, UnknownError}
 
 import scala.util.Random
 

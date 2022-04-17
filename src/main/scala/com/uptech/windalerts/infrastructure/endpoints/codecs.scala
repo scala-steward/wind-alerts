@@ -11,7 +11,7 @@ import com.uptech.windalerts.core.otp.OTPWithExpiry
 import com.uptech.windalerts.core.refresh.tokens.UserSession
 import com.uptech.windalerts.core.social.subscriptions.PurchaseToken
 import com.uptech.windalerts.core.user.{TokensWithUser, UserT}
-import com.uptech.windalerts.infrastructure.endpoints.dtos._
+import com.uptech.windalerts.core.types._
 import com.uptech.windalerts.infrastructure.repositories.mongo.{DBAlert, DBCredentials, DBNotification, DBOTPWithExpiry, DBPurchaseToken, DBSocialCredentials, DBUser, DBUserSession}
 import io.circe.generic.extras.semiauto.{deriveUnwrappedDecoder, deriveUnwrappedEncoder}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}

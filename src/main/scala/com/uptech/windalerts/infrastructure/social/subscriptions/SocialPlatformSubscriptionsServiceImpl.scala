@@ -7,7 +7,7 @@ import com.uptech.windalerts.core.{PlatformNotSupported, SurfsUpError}
 import com.uptech.windalerts.core.social.SocialPlatformType
 import com.uptech.windalerts.core.social.subscriptions._
 import com.uptech.windalerts.core.user.UserId
-import com.uptech.windalerts.infrastructure.endpoints.dtos._
+import com.uptech.windalerts.core.types._
 import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes
 import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Google}
 import com.uptech.windalerts.core.social.subscriptions.PurchaseToken

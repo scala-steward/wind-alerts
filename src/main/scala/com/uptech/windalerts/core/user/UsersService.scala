@@ -8,7 +8,7 @@ import com.uptech.windalerts.core.credentials.{Credentials, UserCredentialServic
 import com.uptech.windalerts.core.refresh.tokens.UserSession.REFRESH_TOKEN_EXPIRY
 import com.uptech.windalerts.core.refresh.tokens.{UserSession, UserSessionRepository}
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
-import com.uptech.windalerts.infrastructure.endpoints.dtos._
+import types._
 import com.uptech.windalerts.infrastructure.repositories.mongo.DBUser
 import io.circe.syntax._
 import org.mongodb.scala.bson.ObjectId

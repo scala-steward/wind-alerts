@@ -5,7 +5,7 @@ import cats.effect.Sync
 import com.uptech.windalerts.core.SurfsUpError
 import com.uptech.windalerts.core.social.SocialPlatformType
 import com.uptech.windalerts.core.user.UserId
-import com.uptech.windalerts.infrastructure.endpoints.dtos.PurchaseReceiptValidationRequest
+import com.uptech.windalerts.core.types.PurchaseReceiptValidationRequest
 import com.uptech.windalerts.infrastructure.social.subscriptions.SocialPlatformSubscriptionsServiceImpl
 
 class SocialPlatformSubscriptionsService[F[_]:Sync](socialPlatformSubscriptionsService: SocialPlatformSubscriptionsServiceImpl[F]) {

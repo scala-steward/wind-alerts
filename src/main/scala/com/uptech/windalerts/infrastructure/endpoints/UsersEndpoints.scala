@@ -11,7 +11,7 @@ import com.uptech.windalerts.core.social.subscriptions.SocialPlatformSubscriptio
 import com.uptech.windalerts.core.user.{TokensWithUser, UserIdMetadata, UserRolesService, UserService}
 import com.uptech.windalerts.core._
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
-import com.uptech.windalerts.infrastructure.endpoints.dtos._
+import types._
 import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Facebook, Google}
 import io.circe.parser.parse
 import org.http4s.dsl.Http4sDsl

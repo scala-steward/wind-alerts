@@ -7,7 +7,7 @@ import cats.implicits._
 import com.uptech.windalerts.core.{SurfsUpError, UnknownError}
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
-import com.uptech.windalerts.infrastructure.endpoints.dtos.{UserRegistered, UserRegisteredUpdate}
+import com.uptech.windalerts.core.types.{UserRegistered, UserRegisteredUpdate}
 import io.circe.parser.parse
 import org.http4s.{HttpRoutes, Request}
 import org.http4s.dsl.Http4sDsl

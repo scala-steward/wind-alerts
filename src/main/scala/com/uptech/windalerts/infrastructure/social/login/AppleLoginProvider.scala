@@ -7,7 +7,7 @@ import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.turo.pushy.apns.auth.ApnsSigningKey
 import com.uptech.windalerts.core.social.login.{SocialLoginProvider, SocialUser}
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
-import com.uptech.windalerts.infrastructure.endpoints.dtos.{AppleUser, TokenResponse}
+import com.uptech.windalerts.core.types.{AppleUser, TokenResponse}
 import com.uptech.windalerts.infrastructure.social.login.AccessRequests.AppleAccessRequest
 import com.uptech.windalerts.logger
 import io.circe.parser

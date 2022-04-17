@@ -8,7 +8,7 @@ import com.uptech.windalerts.core.otp.OtpRepository
 import com.uptech.windalerts.core.social.SocialPlatformType
 import com.uptech.windalerts.core.social.subscriptions.SocialPlatformSubscriptionsService
 import com.uptech.windalerts.core.{OperationNotAllowed, OtpNotFoundError, SurfsUpError, UserNotFoundError}
-import com.uptech.windalerts.infrastructure.endpoints.dtos._
+import com.uptech.windalerts.core.types._
 
 class UserRolesService[F[_] : Sync](alertsRepository: AlertsRepository[F], userRepository: UserRepository[F], otpRepository: OtpRepository[F], socialPlatformSubscriptionsService: SocialPlatformSubscriptionsService[F]) {
   def updateTrialUsers() = {
