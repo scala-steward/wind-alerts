@@ -3,7 +3,7 @@ package com.uptech.windalerts.infrastructure.endpoints
 import cats.data.OptionT
 import cats.effect.Effect
 import cats.implicits._
-import com.uptech.windalerts.core.alerts.AlertsService
+import com.uptech.windalerts.core.alerts.{AlertRequest, AlertsService}
 import com.uptech.windalerts.core.user.UserIdMetadata
 import com.uptech.windalerts.core.{AlertNotFoundError, OperationNotAllowed, UserNotFoundError}
 import com.uptech.windalerts.infrastructure.endpoints.codecs._

@@ -2,7 +2,7 @@ package com.uptech.windalerts.infrastructure.endpoints
 
 import cats.Applicative
 import cats.effect.Sync
-import com.uptech.windalerts.core.alerts.TimeRange
+import com.uptech.windalerts.core.alerts.{AlertRequest, TimeRange}
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.beaches.domain._
 import com.uptech.windalerts.core.credentials.{Credentials, SocialCredentials}

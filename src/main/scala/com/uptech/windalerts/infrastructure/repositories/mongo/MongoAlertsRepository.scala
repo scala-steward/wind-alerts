@@ -6,7 +6,7 @@ import cats.data.{EitherT, OptionT}
 import cats.effect.{Async, ContextShift}
 import cats.implicits._
 import com.uptech.windalerts.core.AlertNotFoundError
-import com.uptech.windalerts.core.alerts.{AlertsRepository, TimeRange}
+import com.uptech.windalerts.core.alerts.{AlertRequest, AlertsRepository, TimeRange}
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.infrastructure.endpoints.dtos._
 import io.scalaland.chimney.dsl._

@@ -1,7 +1,6 @@
 package com.uptech.windalerts.core.alerts
 
 import com.uptech.windalerts.core.beaches.domain.Beach
-import com.uptech.windalerts.infrastructure.endpoints.dtos.AlertRequest
 import com.uptech.windalerts.logger
 
 import java.util.Calendar.{DAY_OF_WEEK, HOUR_OF_DAY, MINUTE}
