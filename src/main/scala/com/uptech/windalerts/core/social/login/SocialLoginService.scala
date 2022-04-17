@@ -7,19 +7,7 @@ import cats.implicits._
 import com.uptech.windalerts.core.credentials.{SocialCredentials, SocialCredentialsRepository, UserCredentialService}
 import com.uptech.windalerts.core.social.SocialPlatformType
 import com.uptech.windalerts.core.user.{TokensWithUser, UserRepository, UserService, UserT}
-import com.uptech.windalerts.core.{SurfsUpError, UnknownError, UserAlreadyExistsError, UserNotFoundError}
-import org.mongodb.scala.bson.ObjectId
-import cats.Monad
-import cats.data.EitherT
-import cats.effect.Sync
-import cats.implicits._
-import com.uptech.windalerts.infrastructure.EmailSender
-import com.uptech.windalerts.infrastructure.endpoints.codecs._
-import com.uptech.windalerts.infrastructure.endpoints.dtos._
-import com.uptech.windalerts.infrastructure.repositories.mongo.DBUser
-import io.circe.parser.parse
-
-import scala.util.Random
+import com.uptech.windalerts.core.{SurfsUpError, UserAlreadyExistsError}
 
 class SocialLoginService[F[_] : Sync](userRepository: UserRepository[F],
                                       userService: UserService[F],

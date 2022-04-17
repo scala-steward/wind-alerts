@@ -21,7 +21,7 @@ import com.uptech.windalerts.infrastructure.repositories.mongo._
 import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Facebook}
 import com.uptech.windalerts.infrastructure.social.login.{AppleLoginProvider, FacebookLoginProvider, FixedSocialLoginProviders}
 import com.uptech.windalerts.infrastructure.social.subscriptions._
-import com.uptech.windalerts.infrastructure.{EmailSender, GooglePubSubEventpublisher}
+import com.uptech.windalerts.infrastructure.{SendInBlueEmailSender, GooglePubSubEventpublisher}
 import io.circe.config.parser.decodePathF
 import org.http4s.{Response, Status}
 import org.http4s.implicits._
@@ -60,7 +60,7 @@ object UsersServer extends IOApp {
         new WWBackedTidesService[F](willyWeatherAPIKey, beaches.toMap()),
         new WWBackedSwellsService[F](willyWeatherAPIKey, swellAdjustments))
       auth = new AuthenticationService[F](sys.env("JWT_KEY"), usersRepository)
-      emailSender = new EmailSender[F](sys.env("EMAIL_KEY"))
+      emailSender = new SendInBlueEmailSender[F](sys.env("EMAIL_KEY"))
       otpService = new OTPService(otpRepositoy, emailSender)
       socialCredentialsRepositories = Map(Facebook -> facebookCredentialsRepository, Apple -> appleCredentialsRepository)
 

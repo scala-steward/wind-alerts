@@ -4,10 +4,11 @@ import cats.Monad
 import cats.data.EitherT
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.uptech.windalerts.logger
+import com.uptech.windalerts.core.EmailSender
 
 
-class EmailSender[F[_]](apiKey: String) {
-  def sendOtp(to: String, otp: String)(implicit F: Monad[F]) = {
+class SendInBlueEmailSender[F[_]](apiKey: String) extends EmailSender[F] {
+  override def sendOtp(to: String, otp: String)(implicit F: Monad[F]):EitherT[F, String, String] = {
     send(to, 1l,
       s"""
             "code": "$otp",
@@ -15,7 +16,7 @@ class EmailSender[F[_]](apiKey: String) {
        """.stripMargin)
   }
 
-  def sendResetPassword(firstName: String, to: String, password: String)(implicit F: Monad[F]) = {
+  override def sendResetPassword(firstName: String, to: String, password: String)(implicit F: Monad[F]):EitherT[F, String, String] = {
     send(to, 3l,
       s"""
             "password": "${password}",
