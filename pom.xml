@@ -116,7 +116,7 @@
         <dependency>
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-androidpublisher</artifactId>
-            <version>v3-rev20191113-1.30.3</version>
+            <version>v3-rev20220411-1.32.1</version>
         </dependency>
 
         <dependency>
