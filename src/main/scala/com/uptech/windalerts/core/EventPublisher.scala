@@ -1,5 +1,6 @@
 package com.uptech.windalerts.core
 
+import com.uptech.windalerts.core.types.UserRegistered
 import io.circe.Json
 
 case class PublishFailed()
@@ -9,5 +10,5 @@ object EventPublisher {
 }
 
 trait EventPublisher[F[_]] {
-  def publish(topic: String, event: Json): F[Unit]
+  def publishUserRegistered(topic: String, message: UserRegistered): F[Unit]
 }

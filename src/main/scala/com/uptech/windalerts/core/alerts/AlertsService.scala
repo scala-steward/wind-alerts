@@ -6,7 +6,6 @@ import cats.effect.Sync
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.user.{UserId, UserType}
 import com.uptech.windalerts.core.{AlertNotFoundError, OperationNotAllowed, SurfsUpError}
-import com.uptech.windalerts.infrastructure.endpoints.dtos.AlertRequest
 
 class AlertsService[F[_] : Sync](alertsRepository: AlertsRepository[F]) {
   def createAlert(u: UserId, userType: UserType, r: AlertRequest):EitherT[F, OperationNotAllowed, Alert] = {

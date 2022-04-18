@@ -3,11 +3,11 @@ package com.uptech.windalerts.infrastructure.endpoints
 import cats.data.OptionT
 import cats.effect.Effect
 import cats.implicits._
-import com.uptech.windalerts.core.alerts.AlertsService
+import com.uptech.windalerts.core.alerts.{AlertRequest, AlertsService}
 import com.uptech.windalerts.core.user.UserIdMetadata
 import com.uptech.windalerts.core.{AlertNotFoundError, OperationNotAllowed, UserNotFoundError}
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
-import com.uptech.windalerts.infrastructure.endpoints.dtos._
+import com.uptech.windalerts.core.types._
 import org.http4s.AuthedRoutes
 import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.dsl.Http4sDsl

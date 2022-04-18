@@ -1,12 +1,10 @@
-package com.uptech.windalerts.infrastructure.endpoints
+package com.uptech.windalerts.core
 
-import com.uptech.windalerts.core.alerts.TimeRange
 import com.uptech.windalerts.core.alerts.domain.Alert
-import com.uptech.windalerts.infrastructure.social.login.AccessRequests.{AppleAccessRequest, FacebookAccessRequest}
-import io.scalaland.chimney.dsl._
+import com.uptech.windalerts.core.social.login.AccessRequest
 
 
-object dtos {
+object types {
 
   case class UpdateUserRequest(name: String, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long)
 
@@ -18,18 +16,6 @@ object dtos {
   final case class OTP(otp: String)
 
 
-  case class FacebookRegisterRequest(accessToken: String, deviceType: String, deviceToken: String) {
-    def asDomain(): FacebookAccessRequest = {
-      this.into[FacebookAccessRequest].transform
-    }
-  }
-
-  case class AppleRegisterRequest(authorizationCode: String, nonce: String, deviceType: String, deviceToken: String, name: String) {
-    def asDomain(): AppleAccessRequest = {
-      this.into[AppleAccessRequest].transform
-    }
-  }
-
   case class RegisterRequest(email: String, name: String, password: String, deviceType: String, deviceToken: String)
 
   case class LoginRequest(email: String, password: String, deviceType: String, deviceToken: String)
@@ -38,17 +24,6 @@ object dtos {
 
   case class ResetPasswordRequest(email: String, deviceType: String)
 
-  case class AlertRequest(
-                           beachId: Long,
-                           days: Seq[Long],
-                           swellDirections: Seq[String],
-                           timeRanges: Seq[TimeRange],
-                           waveHeightFrom: Double,
-                           waveHeightTo: Double,
-                           windDirections: Seq[String],
-                           tideHeightStatuses: Seq[String] = Seq("Rising", "Falling"),
-                           enabled: Boolean,
-                           timeZone: String = "Australia/Sydney")
 
   case class AlertsDTO(alerts: Seq[Alert])
 

@@ -5,12 +5,11 @@ import cats.effect.Sync
 import cats.implicits._
 import com.uptech.windalerts.core.alerts.AlertsRepository
 import com.uptech.windalerts.core.otp.OtpRepository
-import com.uptech.windalerts.core.social.SocialPlatformType
-import com.uptech.windalerts.core.social.subscriptions.SocialPlatformSubscriptionsService
+import com.uptech.windalerts.core.social.subscriptions.SocialPlatformSubscriptionsProviders
+import com.uptech.windalerts.core.types._
 import com.uptech.windalerts.core.{OperationNotAllowed, OtpNotFoundError, SurfsUpError, UserNotFoundError}
-import com.uptech.windalerts.infrastructure.endpoints.dtos._
 
-class UserRolesService[F[_] : Sync](alertsRepository: AlertsRepository[F], userRepository: UserRepository[F], otpRepository: OtpRepository[F], socialPlatformSubscriptionsService: SocialPlatformSubscriptionsService[F]) {
+class UserRolesService[F[_] : Sync](alertsRepository: AlertsRepository[F], userRepository: UserRepository[F], otpRepository: OtpRepository[F], socialPlatformSubscriptionsProviders: SocialPlatformSubscriptionsProviders[F]) {
   def updateTrialUsers() = {
     for {
       users <- EitherT.right(userRepository.findTrialExpiredUsers())
@@ -32,7 +31,7 @@ class UserRolesService[F[_] : Sync](alertsRepository: AlertsRepository[F], userR
   private def updateSubscribedUser(user: UserT): EitherT[F, SurfsUpError, Unit] = {
 
     for {
-      purchase <- socialPlatformSubscriptionsService.find(user.id, user.deviceType)
+      purchase <- socialPlatformSubscriptionsProviders.findByType(user.deviceType).find(user.id)
       _ <- updateSubscribedUserRole(user, purchase.startTimeMillis, purchase.expiryTimeMillis).leftWiden[SurfsUpError]
     } yield ()
   }
@@ -59,9 +58,9 @@ class UserRolesService[F[_] : Sync](alertsRepository: AlertsRepository[F], userR
   }
 
 
-  def handleUpdate(socialPlatformType:SocialPlatformType, purchaseToken: String): EitherT[F, SurfsUpError, UserT] = {
+  def handleUpdate(socialPlatformType:String, purchaseToken: String): EitherT[F, SurfsUpError, UserT] = {
     for {
-      purchase <- socialPlatformSubscriptionsService.getLatestForToken(socialPlatformType, purchaseToken)
+      purchase <-  socialPlatformSubscriptionsProviders.findByType(socialPlatformType).getLatestForToken(purchaseToken)
       user <- userRepository.getByUserId(purchase.userId.id).toRight(UserNotFoundError())
       updatedUser <- updateSubscribedUserRole(user, purchase.subscriptionPurchase.startTimeMillis, purchase.subscriptionPurchase.expiryTimeMillis).leftWiden[SurfsUpError]
     } yield updatedUser
@@ -79,7 +78,7 @@ class UserRolesService[F[_] : Sync](alertsRepository: AlertsRepository[F], userR
   def updateUserPurchase(u: UserId) = {
     for {
       dbUser <- userRepository.getByUserId(u.id).toRight(UserNotFoundError()).leftWiden[SurfsUpError]
-      purchase <- socialPlatformSubscriptionsService.find(u.id, dbUser.deviceType)
+      purchase <- socialPlatformSubscriptionsProviders.findByType(dbUser.deviceType).find(u.id)
       userWithUpdatedRole <- updateSubscribedUserRole(dbUser, purchase.startTimeMillis, purchase.expiryTimeMillis).leftWiden[SurfsUpError]
     } yield userWithUpdatedRole
   }

@@ -1,7 +1,7 @@
 package com.uptech.windalerts.core.credentials
 
-import cats.Applicative
-import cats.data.{EitherT, OptionT}
+import cats.Monad
+import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
 import com.github.t3hnar.bcrypt._
@@ -9,8 +9,7 @@ import com.uptech.windalerts.core._
 import com.uptech.windalerts.core.refresh.tokens.UserSessionRepository
 import com.uptech.windalerts.core.social.SocialPlatformType
 import com.uptech.windalerts.core.user.UserRepository
-import com.uptech.windalerts.infrastructure.EmailSender
-import com.uptech.windalerts.infrastructure.endpoints.dtos.{ChangePasswordRequest, RegisterRequest}
+import types.{ChangePasswordRequest, RegisterRequest}
 
 class UserCredentialService[F[_] : Sync](
                                           socialCredentialsRepositories:Map[SocialPlatformType, SocialCredentialsRepository[F]],
@@ -32,7 +31,7 @@ class UserCredentialService[F[_] : Sync](
 
   def resetPassword(
                      email: String, deviceType: String
-                   ): EitherT[F, SurfsUpError, Credentials] =
+                   )(implicit F: Monad[F]): EitherT[F, SurfsUpError, Credentials] =
     for {
       credentials <- credentialsRepository.findByCredentials(email, deviceType).toRight(UserAuthenticationFailedError(email))
       newPassword = utils.generateRandomString(10)

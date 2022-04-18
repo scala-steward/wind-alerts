@@ -6,7 +6,7 @@ import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.uptech.windalerts.core.UnknownError
 import com.uptech.windalerts.core.social.subscriptions.{SocialSubscription, SubscriptionPurchase}
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
-import com.uptech.windalerts.infrastructure.endpoints.dtos.{ApplePurchaseVerificationRequest, AppleSubscriptionPurchase}
+import com.uptech.windalerts.core.types.{ApplePurchaseVerificationRequest, AppleSubscriptionPurchase}
 import com.uptech.windalerts.logger
 import io.circe.optics.JsonPath.root
 import io.circe.parser

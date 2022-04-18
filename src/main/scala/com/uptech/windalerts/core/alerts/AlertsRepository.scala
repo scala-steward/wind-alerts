@@ -3,7 +3,6 @@ package com.uptech.windalerts.core.alerts
 import cats.data.{EitherT, OptionT}
 import com.uptech.windalerts.core.AlertNotFoundError
 import com.uptech.windalerts.core.alerts.domain.Alert
-import com.uptech.windalerts.infrastructure.endpoints.dtos._
 
 trait AlertsRepository[F[_]] {
   def create(alert: AlertRequest, user: String): F[Alert]

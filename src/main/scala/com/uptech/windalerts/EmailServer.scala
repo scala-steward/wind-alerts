@@ -3,7 +3,7 @@ package com.uptech.windalerts
 import cats.Monad
 import cats.effect._
 import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry}
-import com.uptech.windalerts.infrastructure.EmailSender
+import com.uptech.windalerts.infrastructure.SendInBlueEmailSender
 import com.uptech.windalerts.infrastructure.endpoints.EmailEndpoints
 import com.uptech.windalerts.infrastructure.repositories.mongo.{DBOTPWithExpiry, MongoOtpRepository, Repos}
 import org.http4s.{Response, Status}
@@ -17,7 +17,7 @@ object EmailServer extends IOApp {
     for {
       _ <- Resource.pure(())
       db = Repos.acquireDb(sys.env("MONGO_DB_URL"))
-      emailSender = new EmailSender[F](sys.env("EMAIL_KEY"))
+      emailSender = new SendInBlueEmailSender[F](sys.env("EMAIL_KEY"))
       otpRepositoy = new MongoOtpRepository[F](db.getCollection[DBOTPWithExpiry]("otp"))
       otpService = new OTPService[F](otpRepositoy, emailSender)
 

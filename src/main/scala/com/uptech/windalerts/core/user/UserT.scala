@@ -2,7 +2,7 @@ package com.uptech.windalerts.core.user
 
 import com.google.common.base.Strings
 import com.uptech.windalerts.core.user.UserType.{Premium, PremiumExpired, Registered, Trial}
-import com.uptech.windalerts.infrastructure.endpoints.dtos.EmailId
+import com.uptech.windalerts.core.types.EmailId
 
 case class UserT(id: String, email: String, name: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long) {
   def firstName() = {

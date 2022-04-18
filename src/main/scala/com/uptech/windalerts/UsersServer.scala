@@ -13,7 +13,7 @@ import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.credentials.{Credentials, SocialCredentials, UserCredentialService}
 import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry}
 import com.uptech.windalerts.core.social.login.SocialLoginService
-import com.uptech.windalerts.core.social.subscriptions.{PurchaseToken, SocialPlatformSubscriptionsService}
+import com.uptech.windalerts.core.social.subscriptions.PurchaseToken
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints._
@@ -21,7 +21,7 @@ import com.uptech.windalerts.infrastructure.repositories.mongo._
 import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Facebook}
 import com.uptech.windalerts.infrastructure.social.login.{AppleLoginProvider, FacebookLoginProvider, FixedSocialLoginProviders}
 import com.uptech.windalerts.infrastructure.social.subscriptions._
-import com.uptech.windalerts.infrastructure.{EmailSender, GooglePubSubEventpublisher}
+import com.uptech.windalerts.infrastructure.{SendInBlueEmailSender, GooglePubSubEventpublisher}
 import io.circe.config.parser.decodePathF
 import org.http4s.{Response, Status}
 import org.http4s.implicits._
@@ -60,7 +60,7 @@ object UsersServer extends IOApp {
         new WWBackedTidesService[F](willyWeatherAPIKey, beaches.toMap()),
         new WWBackedSwellsService[F](willyWeatherAPIKey, swellAdjustments))
       auth = new AuthenticationService[F](sys.env("JWT_KEY"), usersRepository)
-      emailSender = new EmailSender[F](sys.env("EMAIL_KEY"))
+      emailSender = new SendInBlueEmailSender[F](sys.env("EMAIL_KEY"))
       otpService = new OTPService(otpRepositoy, emailSender)
       socialCredentialsRepositories = Map(Facebook -> facebookCredentialsRepository, Apple -> appleCredentialsRepository)
 
@@ -71,11 +71,10 @@ object UsersServer extends IOApp {
 
       appleSubscription = new AppleSubscription[F](sys.env("APPLE_APP_SECRET"))
       androidSubscription = new AndroidSubscription[F](androidPublisher)
-      subscriptionsService = new SocialPlatformSubscriptionsServiceImpl[F](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
-      socialPlatformSubscriptionsService = new SocialPlatformSubscriptionsService[F](subscriptionsService)
-      userRolesService = new UserRolesService[F](alertsRepository, usersRepository, otpRepositoy, socialPlatformSubscriptionsService)
-
-      endpoints = new UsersEndpoints[F](userCredentialsService, usersService, socialLoginService, userRolesService, socialPlatformSubscriptionsService, otpService)
+      subscriptionsService = new AllSocialPlatformSubscriptionsProviders[F](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
+      userRolesService = new UserRolesService[F](alertsRepository, usersRepository, otpRepositoy, subscriptionsService)
+      socialPlatformSubscriptionsProviders = new AllSocialPlatformSubscriptionsProviders[F](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
+      endpoints = new UsersEndpoints[F](userCredentialsService, usersService, socialLoginService, userRolesService, socialPlatformSubscriptionsProviders, otpService)
       alertService = new AlertsService[F](alertsRepository)
       alertsEndPoints = new AlertsEndpoints[F](alertService)
       blocker <- Blocker[F]
