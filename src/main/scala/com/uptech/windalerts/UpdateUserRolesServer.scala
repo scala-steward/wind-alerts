@@ -3,7 +3,7 @@ import cats.Monad
 import cats.effect._
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.otp.OTPWithExpiry
-import com.uptech.windalerts.core.social.subscriptions.{PurchaseToken, SocialPlatformSubscriptionsService}
+import com.uptech.windalerts.core.social.subscriptions.PurchaseToken
 import com.uptech.windalerts.core.user.{UserRolesService, UserT}
 import com.uptech.windalerts.infrastructure.endpoints.{UpdateUserRolesEndpoints, errors}
 import com.uptech.windalerts.infrastructure.repositories.mongo._
@@ -27,8 +27,8 @@ object UpdateUserRolesServer extends IOApp {
       androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
       appleSubscription = new AppleSubscription[F](sys.env("APPLE_APP_SECRET"))
       androidSubscription = new AndroidSubscription[F](androidPublisher)
-      subscriptionsService = new SocialPlatformSubscriptionsServiceImpl[F](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
-      userRolesService = new UserRolesService[F](alertsRepository, usersRepository, otpRepositoy, new SocialPlatformSubscriptionsService[F](subscriptionsService))
+      subscriptionsService = new AllSocialPlatformSubscriptionsProviders[F](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
+      userRolesService = new UserRolesService[F](alertsRepository, usersRepository, otpRepositoy, subscriptionsService)
       endpoints = new UpdateUserRolesEndpoints[F](userRolesService)
 
       httpApp = Router(

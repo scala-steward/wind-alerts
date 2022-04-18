@@ -7,11 +7,8 @@ import com.uptech.windalerts.core._
 import com.uptech.windalerts.core.credentials.{Credentials, UserCredentialService}
 import com.uptech.windalerts.core.refresh.tokens.UserSession.REFRESH_TOKEN_EXPIRY
 import com.uptech.windalerts.core.refresh.tokens.{UserSession, UserSessionRepository}
-import com.uptech.windalerts.infrastructure.endpoints.codecs._
 import types._
-import com.uptech.windalerts.infrastructure.repositories.mongo.DBUser
 import io.circe.syntax._
-import org.mongodb.scala.bson.ObjectId
 
 
 class UserService[F[_] : Sync](userRepository: UserRepository[F],
@@ -23,7 +20,7 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
     for {
       createUserResponse <- persistUserAndCredentials(registerRequest)
       tokens <- EitherT.right(generateNewTokens(createUserResponse._1, registerRequest.deviceToken))
-      _ <- EitherT.right(eventPublisher.publish("userRegistered", UserRegistered(UserIdDTO(createUserResponse._1.id), EmailId(createUserResponse._1.email)).asJson))
+      _ <- EitherT.right(eventPublisher.publishUserRegistered("userRegistered", UserRegistered(UserIdDTO(createUserResponse._1.id), EmailId(createUserResponse._1.email))))
     } yield tokens
   }
 

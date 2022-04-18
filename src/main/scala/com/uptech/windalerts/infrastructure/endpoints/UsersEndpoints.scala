@@ -7,12 +7,13 @@ import com.uptech.windalerts.config._
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.social.login.SocialLoginService
-import com.uptech.windalerts.core.social.subscriptions.SocialPlatformSubscriptionsService
+import com.uptech.windalerts.core.social.subscriptions.SocialPlatformSubscriptionsProviders
 import com.uptech.windalerts.core.user.{TokensWithUser, UserIdMetadata, UserRolesService, UserService}
 import com.uptech.windalerts.core._
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
 import types._
 import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Facebook, Google}
+import com.uptech.windalerts.infrastructure.social.login.AccessRequests.{FacebookRegisterRequest, AppleRegisterRequest}
 import io.circe.parser.parse
 import org.http4s.dsl.Http4sDsl
 import org.http4s.util.CaseInsensitiveString
@@ -23,7 +24,7 @@ class UsersEndpoints[F[_] : Effect]
  userService: UserService[F],
  socialLoginService: SocialLoginService[F],
  userRolesService: UserRolesService[F],
- subscriptionsService: SocialPlatformSubscriptionsService[F],
+ socialPlatformSubscriptionsProviders: SocialPlatformSubscriptionsProviders[F],
  otpService: OTPService[F])
   extends Http4sDsl[F] {
 
@@ -92,7 +93,7 @@ class UsersEndpoints[F[_] : Effect]
           update <- EitherT.liftF(req.as[AndroidUpdate])
           decoded <- EitherT.fromEither[F](Either.right(new String(java.util.Base64.getDecoder.decode(update.message.data))))
           subscription <- asSubscription(decoded)
-          user <- userRolesService.handleUpdate(Google, subscription.subscriptionNotification.purchaseToken)
+          user <- userRolesService.handleUpdate("Google", subscription.subscriptionNotification.purchaseToken)
         } yield user).value.flatMap {
           case Right(_) => Ok()
           case Left(error) => InternalServerError(error.message)
@@ -147,11 +148,13 @@ class UsersEndpoints[F[_] : Effect]
       }
 
       case _@POST -> Root / "sendOTP" as user =>
-        OptionT.liftF({(for {
-          response <- otpService.send(user.userId.id, user.emailId.email)
-        } yield response).value.flatMap{
-          case Right(response) => Ok(response)
-        }})
+        OptionT.liftF({
+          (for {
+            response <- otpService.send(user.userId.id, user.emailId.email)
+          } yield response).value.flatMap {
+            case Right(response) => Ok(response)
+          }
+        })
 
       case authReq@POST -> Root / "verifyEmail" as user =>
         OptionT.liftF(authReq.req.decode[OTP] {
@@ -191,7 +194,7 @@ class UsersEndpoints[F[_] : Effect]
         OptionT.liftF(authReq.req.decode[PurchaseReceiptValidationRequest] {
           req =>
             (for {
-              response <- subscriptionsService.handleNewPurchase(Google, user.userId, req)
+              response <- socialPlatformSubscriptionsProviders.findByType(Google).handleNewPurchase(user.userId, req)
             } yield response).value.flatMap {
               case Right(_) => Ok()
               case Left(TokenNotFoundError(_)) => NotFound("Token not found")
@@ -215,7 +218,7 @@ class UsersEndpoints[F[_] : Effect]
         OptionT.liftF(authReq.req.decode[PurchaseReceiptValidationRequest] {
           req =>
             (for {
-              response <- subscriptionsService.handleNewPurchase(Apple, user.userId, req)
+              response <- socialPlatformSubscriptionsProviders.findByType(Apple).handleNewPurchase(user.userId, req)
             } yield response).value.flatMap {
               case Right(_) => Ok()
               case Left(TokenNotFoundError(_)) => NotFound("Token not found")
@@ -231,7 +234,7 @@ class UsersEndpoints[F[_] : Effect]
       case req@POST -> Root => {
         (for {
           facebookRegisterRequest <- EitherT.liftF(req.as[FacebookRegisterRequest])
-          tokensWithUser <- socialLoginService.registerOrLoginSocialUser(Facebook, facebookRegisterRequest.asDomain())
+          tokensWithUser <- socialLoginService.registerOrLoginSocialUser(Facebook, facebookRegisterRequest)
         } yield tokensWithUser).value.flatMap {
           case Right(tokensWithUser) => handleRegisterOrLoginResponse(F, tokensWithUser)
           case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")
@@ -242,7 +245,7 @@ class UsersEndpoints[F[_] : Effect]
       case req@POST -> Root / "login" => {
         (for {
           facebookRegisterRequest <- EitherT.liftF(req.as[FacebookRegisterRequest])
-          tokensWithUser <- socialLoginService.registerOrLoginSocialUser(Facebook, facebookRegisterRequest.asDomain())
+          tokensWithUser <- socialLoginService.registerOrLoginSocialUser(Facebook, facebookRegisterRequest)
         } yield tokensWithUser).value.flatMap {
           case Right(tokensWithUser) => handleRegisterOrLoginResponse(F, tokensWithUser)
           case Left(UserNotFoundError(_)) => NotFound("User not found")
@@ -257,7 +260,7 @@ class UsersEndpoints[F[_] : Effect]
       case req@POST -> Root => {
         (for {
           appleRegisterRequest <- EitherT.liftF(req.as[AppleRegisterRequest])
-          tokensWithUser <- socialLoginService.registerOrLoginSocialUser(Apple, appleRegisterRequest.asDomain())
+          tokensWithUser <- socialLoginService.registerOrLoginSocialUser(Apple, appleRegisterRequest)
         } yield tokensWithUser).value.flatMap {
           case Right(tokensWithUser) => handleRegisterOrLoginResponse(F, tokensWithUser)
           case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")
@@ -268,7 +271,7 @@ class UsersEndpoints[F[_] : Effect]
       case req@POST -> Root / "login" =>
         (for {
           appleRegisterRequest <- EitherT.liftF(req.as[AppleRegisterRequest])
-          tokensWithUser <- socialLoginService.registerOrLoginSocialUser(Apple, appleRegisterRequest.asDomain())
+          tokensWithUser <- socialLoginService.registerOrLoginSocialUser(Apple, appleRegisterRequest)
         } yield tokensWithUser).value.flatMap {
           case Right(tokensWithUser) => handleRegisterOrLoginResponse(F, tokensWithUser)
           case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")

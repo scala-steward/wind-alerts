@@ -1,8 +1,7 @@
 package com.uptech.windalerts.core
 
 import com.uptech.windalerts.core.alerts.domain.Alert
-import com.uptech.windalerts.infrastructure.social.login.AccessRequests.{AppleAccessRequest, FacebookAccessRequest}
-import io.scalaland.chimney.dsl._
+import com.uptech.windalerts.core.social.login.AccessRequest
 
 
 object types {
@@ -16,18 +15,6 @@ object types {
 
   final case class OTP(otp: String)
 
-
-  case class FacebookRegisterRequest(accessToken: String, deviceType: String, deviceToken: String) {
-    def asDomain(): FacebookAccessRequest = {
-      this.into[FacebookAccessRequest].transform
-    }
-  }
-
-  case class AppleRegisterRequest(authorizationCode: String, nonce: String, deviceType: String, deviceToken: String, name: String) {
-    def asDomain(): AppleAccessRequest = {
-      this.into[AppleAccessRequest].transform
-    }
-  }
 
   case class RegisterRequest(email: String, name: String, password: String, deviceType: String, deviceToken: String)
 

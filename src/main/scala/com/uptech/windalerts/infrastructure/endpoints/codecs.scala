@@ -13,6 +13,7 @@ import com.uptech.windalerts.core.social.subscriptions.PurchaseToken
 import com.uptech.windalerts.core.user.{TokensWithUser, UserT}
 import com.uptech.windalerts.core.types._
 import com.uptech.windalerts.infrastructure.repositories.mongo.{DBAlert, DBCredentials, DBNotification, DBOTPWithExpiry, DBPurchaseToken, DBSocialCredentials, DBUser, DBUserSession}
+import com.uptech.windalerts.infrastructure.social.login.AccessRequests.{AppleRegisterRequest, FacebookRegisterRequest}
 import io.circe.generic.extras.semiauto.{deriveUnwrappedDecoder, deriveUnwrappedEncoder}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.{Decoder, Encoder}
