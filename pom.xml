@@ -148,7 +148,7 @@
         <dependency>
             <groupId>com.github.t3hnar</groupId>
             <artifactId>scala-bcrypt_2.13</artifactId>
-            <version>4.1</version>
+            <version>4.3.0</version>
         </dependency>
         <dependency>
             <groupId>com.turo</groupId>
