@@ -18,25 +18,23 @@ import java.security.PrivateKey
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class AppleLoginProvider[F[_]](file: File)(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends SocialLoginProvider[F, AppleRegisterRequest] {
-  val privateKey = getPrivateKey(file)
-  override def fetchUserFromPlatform(credentials: AppleRegisterRequest): F[SocialUser] = {
-    fetchUserFromPlatform_(credentials)
+class AppleLoginProvider[F[_]](file: File)(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends SocialLoginProvider[F] {
+
+  val jwt = generateJWT()
+
+  override def fetchUserFromPlatform(accessToken: String,
+                                     deviceType: String,
+                                     deviceToken: String,
+                                     name: Option[String]): F[SocialUser] = {
+    Async.fromFuture(M.pure(Future(getUser(accessToken))))
+      .map(appleUser => SocialUser(appleUser.sub, appleUser.email, deviceType, deviceToken, name.getOrElse("")))
   }
 
-  private def fetchUserFromPlatform_(credentials: AppleRegisterRequest) = {
-    Async.fromFuture(M.pure(Future(getUser(credentials.authorizationCode))))
-      .map(appleUser => SocialUser(appleUser.sub, appleUser.email, credentials.deviceType, credentials.deviceToken, credentials.name))
-  }
 
-  def getUser(authorizationCode: String): AppleUser = {
-    getUser(authorizationCode, privateKey)
-  }
-
-  private def getUser(authorizationCode: String, privateKey: PrivateKey): AppleUser = {
+  private def getUser(authorizationCode: String): AppleUser = {
     val req = sttp.body(Map(
       "client_id" -> "com.passiondigital.surfsup.ios",
-      "client_secret" -> generateJWT(privateKey),
+      "client_secret" -> jwt,
       "grant_type" -> "authorization_code",
       "code" -> authorizationCode,
     ))
@@ -52,7 +50,7 @@ class AppleLoginProvider[F[_]](file: File)(implicit cs: ContextShift[F], s: Asyn
     parsedEither.flatMap(x => x.as[AppleUser]).right.get
   }
 
-  private def generateJWT(privateKey:PrivateKey) = {
+  private def generateJWT() = {
     val current = System.currentTimeMillis()
     val claims = JwtClaim(
       issuer = Some("W9WH7WV85S"),
@@ -62,6 +60,7 @@ class AppleLoginProvider[F[_]](file: File)(implicit cs: ContextShift[F], s: Asyn
       issuedAt = Some(current / 1000)
     )
     val header = JwtHeader(JwtAlgorithm.ES256).withType(null).withKeyId("A423X8QGF3")
+    val privateKey = getPrivateKey(file)
     Jwt.encode(header.toJson, claims.toJson, privateKey, JwtAlgorithm.ES256)
   }
 

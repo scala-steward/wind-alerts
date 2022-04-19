@@ -9,7 +9,6 @@ import com.uptech.windalerts.core.user.UserId
 class SocialPlatformSubscriptionsProvider[F[_] : Sync](
                                                         purchaseTokenRepository: PurchaseTokenRepository[F],
                                                         socialSubscription: SocialSubscription[F]) {
-
   def find(userId: String): EitherT[F, SurfsUpError, SubscriptionPurchase] = {
     for {
       token <- purchaseTokenRepository.getLastForUser(userId)

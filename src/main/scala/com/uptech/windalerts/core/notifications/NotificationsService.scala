@@ -36,27 +36,27 @@ class NotificationsService[F[_] : Sync: Parallel](N: NotificationRepository[F],
 
   def findAllAlertsToNotify() = {
     for {
-      usersReadyToRecieveNotifications <- allLoggedInUsersReadyToRecieveNotifications()
-      alertsByBeaches <- alertsForUsers(usersReadyToRecieveNotifications)
-      beaches <- beachStatuses(alertsByBeaches.keys.toSeq)
-      userIdToUser = usersReadyToRecieveNotifications.map(u => (u.userId, u)).toMap
-      alertsToBeNotified = alertsByBeaches
-        .map(kv => (beaches(kv._1), kv._2))
-        .map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)).map(AlertWithBeach(_, kv._1))))
-      _ <- F.delay(logger.info(s"alertsToBeNotified : ${alertsToBeNotified.values.map(_.flatMap(_.alert.id)).mkString(", ")}"))
-      alertWithUserWithBeach = alertsToBeNotified.values.flatten.map(v => AlertWithUserWithBeach(v.alert, userIdToUser(v.alert.owner), v.beach))
+      usersReadyToReceiveNotifications    <- allLoggedInUsersReadyToReceiveNotifications()
+      alertsByBeaches                     <- alertsForUsers(usersReadyToReceiveNotifications)
+      beaches                             <- beachStatuses(alertsByBeaches.keys.toSeq)
+      alertsToBeNotified                  =  alertsByBeaches
+                                              .map(kv => (beaches(kv._1), kv._2))
+                                              .map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)).map(AlertWithBeach(_, kv._1))))
+      _                                   <- F.delay(logger.info(s"alertsToBeNotified : ${alertsToBeNotified.values.map(_.flatMap(_.alert.id)).mkString(", ")}"))
+      userIdToUser                        =  usersReadyToReceiveNotifications.map(u => (u.userId, u)).toMap
+      alertWithUserWithBeach              =  alertsToBeNotified.values.flatten.map(v => AlertWithUserWithBeach(v.alert, userIdToUser(v.alert.owner), v.beach))
     } yield alertWithUserWithBeach
   }
 
 
-  private def allLoggedInUsersReadyToRecieveNotifications() = {
+  private def allLoggedInUsersReadyToReceiveNotifications() = {
     for {
       usersWithNotificationsEnabledAndNotSnoozed <- U.findUsersWithNotificationsEnabledAndNotSnoozed()
       _ <- F.delay(logger.info(s"usersWithNotificationsEnabledAndNotSnoozed : ${usersWithNotificationsEnabledAndNotSnoozed.map(_.id).mkString(", ")}"))
 
       loggedInUsers <- filterLoggedOutUsers(usersWithNotificationsEnabledAndNotSnoozed)
 
-      usersWithLastHourNotificationCounts <- loggedInUsers.map(u => N.countNotificationInLastHour(u.userId)).toList.sequence
+      usersWithLastHourNotificationCounts <- loggedInUsers.map(u => N.countNotificationsInLastHour(u.userId)).toList.sequence
       zipped = loggedInUsers.zip(usersWithLastHourNotificationCounts)
 
       usersReadyToReceiveNotifications = zipped.filter(u => u._2.count < u._1.notificationsPerHour).map(_._1)

@@ -14,9 +14,19 @@ class SocialLoginService[F[_] : Sync](userRepository: UserRepository[F],
                                       credentialService: UserCredentialService[F],
                                       socialCredentialsRepositories: Map[SocialPlatformType, SocialCredentialsRepository[F]],
                                       socialLoginProviders: SocialLoginProviders[F]) {
-  def registerOrLoginSocialUser(socialPlatform: SocialPlatformType, accessRequest: AccessRequest)(implicit A:Applicative[F]) = {
+  def registerOrLoginSocialUser(
+                                 socialPlatform: SocialPlatformType,
+                                 accessToken: String,
+                                 deviceType: String,
+                                 deviceToken: String,
+                                 name: Option[String])(implicit A: Applicative[F]) = {
     for {
-      socialUser <- EitherT.right(socialLoginProviders.fetchUserFromPlatform(accessRequest))
+      socialUser <- EitherT.right(socialLoginProviders.findByType(socialPlatform)
+        .fetchUserFromPlatform(
+          accessToken,
+          deviceType,
+          deviceToken,
+          name))
       credentialsRepository <- EitherT.fromEither(socialCredentialsRepositories(socialPlatform).asRight)(A)
       existingCredential <- EitherT.liftF(credentialsRepository.find(socialUser.email, socialUser.deviceType))
       tokens <- existingCredential.map(_ => userService.resetUserSession(socialUser.email, socialUser.deviceType, socialUser.deviceToken).leftWiden[SurfsUpError])
@@ -24,9 +34,9 @@ class SocialLoginService[F[_] : Sync](userRepository: UserRepository[F],
     } yield (tokens, existingCredential.isEmpty)
   }
 
-  private def tokensForNewUser[T <: SocialCredentials](credentialsRepository: SocialCredentialsRepository[F], socialUser: SocialUser):EitherT[F, UserAlreadyExistsError, TokensWithUser] = {
+  private def tokensForNewUser[T <: SocialCredentials](credentialsRepository: SocialCredentialsRepository[F], socialUser: SocialUser): EitherT[F, UserAlreadyExistsError, TokensWithUser] = {
     for {
-      _ <- credentialService.doesNotExist(socialUser.email, socialUser.deviceType)
+      _ <- credentialService.notRegistered(socialUser.email, socialUser.deviceType)
       result <- EitherT.right(createUser(credentialsRepository, socialUser))
       tokens <- EitherT.right(userService.generateNewTokens(result._1, socialUser.deviceToken))
     } yield tokens

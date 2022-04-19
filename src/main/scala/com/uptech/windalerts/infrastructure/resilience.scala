@@ -4,7 +4,8 @@ import io.github.resilience4j.bulkhead.Bulkhead
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.core.IntervalFunction
 import io.github.resilience4j.decorators.Decorators
-import io.github.resilience4j.retry.{Retry, RetryConfig}
+import io.github.resilience4j.retry.Retry
+import io.github.resilience4j.retry.RetryConfig
 
 import java.time.Duration
 import java.util.concurrent.Callable
