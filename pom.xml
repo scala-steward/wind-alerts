@@ -85,7 +85,7 @@
         <dependency>
             <groupId>com.softwaremill.sttp</groupId>
             <artifactId>core_2.13</artifactId>
-            <version>1.6.4</version>
+            <version>1.7.2</version>
         </dependency>
         <dependency>
             <groupId>org.webjars</groupId>
