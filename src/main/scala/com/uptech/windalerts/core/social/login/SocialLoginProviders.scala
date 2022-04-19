@@ -1,5 +1,7 @@
 package com.uptech.windalerts.core.social.login
 
+import com.uptech.windalerts.core.social.SocialPlatformType
+
 trait SocialLoginProviders[F[_]] {
-  def fetchUserFromPlatform(accessRequest: AccessRequest): F[SocialUser]
+  def findByType(socialPlatformType: SocialPlatformType): SocialLoginProvider[F]
 }

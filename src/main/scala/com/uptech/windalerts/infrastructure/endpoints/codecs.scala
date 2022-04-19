@@ -2,17 +2,12 @@ package com.uptech.windalerts.infrastructure.endpoints
 
 import cats.Applicative
 import cats.effect.Sync
-import com.uptech.windalerts.core.alerts.{AlertRequest, TimeRange}
 import com.uptech.windalerts.core.alerts.domain.Alert
+import com.uptech.windalerts.core.alerts.{AlertRequest, TimeRange}
 import com.uptech.windalerts.core.beaches.domain._
-import com.uptech.windalerts.core.credentials.{Credentials, SocialCredentials}
-import com.uptech.windalerts.core.notifications.Notification
-import com.uptech.windalerts.core.otp.OTPWithExpiry
-import com.uptech.windalerts.core.refresh.tokens.UserSession
-import com.uptech.windalerts.core.social.subscriptions.PurchaseToken
-import com.uptech.windalerts.core.user.{TokensWithUser, UserT}
 import com.uptech.windalerts.core.types._
-import com.uptech.windalerts.infrastructure.repositories.mongo.{DBAlert, DBCredentials, DBNotification, DBOTPWithExpiry, DBPurchaseToken, DBSocialCredentials, DBUser, DBUserSession}
+import com.uptech.windalerts.core.user.{TokensWithUser, UserT}
+import com.uptech.windalerts.infrastructure.repositories.mongo._
 import com.uptech.windalerts.infrastructure.social.login.AccessRequests.{AppleRegisterRequest, FacebookRegisterRequest}
 import io.circe.generic.extras.semiauto.{deriveUnwrappedDecoder, deriveUnwrappedEncoder}
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}

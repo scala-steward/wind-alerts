@@ -1,5 +1,8 @@
 package com.uptech.windalerts.core.social.login
 
-trait SocialLoginProvider[F[_], T <: AccessRequest] {
-  def fetchUserFromPlatform(registerRequest: T): F[SocialUser]
+trait SocialLoginProvider[F[_]] {
+  def fetchUserFromPlatform(accessToken: String,
+                            deviceType: String,
+                            deviceToken: String,
+                            name: Option[String]): F[SocialUser]
 }

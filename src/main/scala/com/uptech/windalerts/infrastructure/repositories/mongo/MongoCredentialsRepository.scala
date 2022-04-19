@@ -19,7 +19,7 @@ class MongoCredentialsRepository[F[_]](collection: MongoCollection[DBCredentials
     Async.fromFuture(M.pure(collection.insertOne(dbCredentials).toFuture().map(_ => dbCredentials.toCredentials())))
   }
 
-  override def findByCredentials(email: String, deviceType: String): OptionT[F, Credentials] =
+  override def findByEmailAndDeviceType(email: String, deviceType: String): OptionT[F, Credentials] =
     OptionT(Async.fromFuture(M.pure(collection.find(and(equal("email", email), equal("deviceType", deviceType))).toFuture().map(_.headOption.map(_.toCredentials())))))
 
   override def updatePassword(userId: String, password: String): F[Unit] =

@@ -12,7 +12,7 @@ import com.uptech.windalerts.core.user.UserRepository
 import types.{ChangePasswordRequest, RegisterRequest}
 
 class UserCredentialService[F[_] : Sync](
-                                          socialCredentialsRepositories:Map[SocialPlatformType, SocialCredentialsRepository[F]],
+                                          socialCredentialsRepositories: Map[SocialPlatformType, SocialCredentialsRepository[F]],
                                           credentialsRepository: CredentialsRepository[F],
                                           userRepository: UserRepository[F],
                                           userSessionsRepository: UserSessionRepository[F],
@@ -21,7 +21,7 @@ class UserCredentialService[F[_] : Sync](
                          email: String, password: String, deviceType: String
                        ): EitherT[F, UserAuthenticationFailedError, Credentials] =
     for {
-      credentials <- credentialsRepository.findByCredentials(email, deviceType).toRight(UserAuthenticationFailedError(email))
+      credentials <- credentialsRepository.findByEmailAndDeviceType(email, deviceType).toRight(UserAuthenticationFailedError(email))
       passwordMatched <- isPasswordMatch(password, credentials)
     } yield passwordMatched
 
@@ -33,7 +33,7 @@ class UserCredentialService[F[_] : Sync](
                      email: String, deviceType: String
                    )(implicit F: Monad[F]): EitherT[F, SurfsUpError, Credentials] =
     for {
-      credentials <- credentialsRepository.findByCredentials(email, deviceType).toRight(UserAuthenticationFailedError(email))
+      credentials <- credentialsRepository.findByEmailAndDeviceType(email, deviceType).toRight(UserAuthenticationFailedError(email))
       newPassword = utils.generateRandomString(10)
       _ <- EitherT.right(credentialsRepository.updatePassword(credentials.id, newPassword.bcrypt))
       _ <- EitherT.right(userSessionsRepository.deleteForUserId(credentials.id))
@@ -49,22 +49,22 @@ class UserCredentialService[F[_] : Sync](
     } yield result
   }
 
-  def createIfDoesNotExist(rr: RegisterRequest): EitherT[F, UserAlreadyExistsError, Credentials] = {
+  def register(rr: RegisterRequest): EitherT[F, UserAlreadyExistsError, Credentials] = {
     for {
-      _ <- doesNotExist(rr.email, rr.deviceType)
+      _ <- notRegistered(rr.email, rr.deviceType)
       savedCredentials <- EitherT.right(credentialsRepository.create(rr.email, rr.password, rr.deviceType))
     } yield savedCredentials
   }
 
-  def doesNotExist(email: String, deviceType: String): EitherT[F, UserAlreadyExistsError, Unit] = {
+  def notRegistered(email: String, deviceType: String): EitherT[F, UserAlreadyExistsError, Unit] = {
     EitherT((for {
-      doesNotExistAsEmailUser <- credentialsRepository.findByCredentials(email, deviceType).isEmpty
-      doesNotExistAsSocialUser <- doesNotExistAsSocialUser(email, deviceType)
-    } yield (doesNotExistAsEmailUser && doesNotExistAsSocialUser))
+      notRegisteredAsEmailUser <- credentialsRepository.findByEmailAndDeviceType(email, deviceType).isEmpty
+      notRegisteredAsSocialUser <- notRegisteredAsSocialUser(email, deviceType)
+    } yield notRegisteredAsEmailUser && notRegisteredAsSocialUser)
       .map(doesNotExist => Either.cond(doesNotExist, (), UserAlreadyExistsError(email, deviceType))))
   }
 
-  private def doesNotExistAsSocialUser(email: String, deviceType: String) = {
+  private def notRegisteredAsSocialUser(email: String, deviceType: String) = {
     socialCredentialsRepositories
       .values
       .map(_.find(email, deviceType).map(_.isDefined))

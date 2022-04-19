@@ -19,7 +19,7 @@ import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBa
 import com.uptech.windalerts.infrastructure.endpoints._
 import com.uptech.windalerts.infrastructure.repositories.mongo._
 import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Facebook}
-import com.uptech.windalerts.infrastructure.social.login.{AppleLoginProvider, FacebookLoginProvider, FixedSocialLoginProviders}
+import com.uptech.windalerts.infrastructure.social.login.{AppleLoginProvider, FacebookLoginProvider, AllSocialLoginProviders}
 import com.uptech.windalerts.infrastructure.social.subscriptions._
 import com.uptech.windalerts.infrastructure.{SendInBlueEmailSender, GooglePubSubEventpublisher}
 import io.circe.config.parser.decodePathF
@@ -66,7 +66,7 @@ object UsersServer extends IOApp {
 
       userCredentialsService = new UserCredentialService[F](socialCredentialsRepositories, credentialsRepository, usersRepository, userSessionsRepository, emailSender)
       usersService = new UserService[F](usersRepository, userCredentialsService, auth, userSessionsRepository, googlePublisher)
-      socialLoginPlatforms = new FixedSocialLoginProviders[F](applePlatform, facebookPlatform)
+      socialLoginPlatforms = new AllSocialLoginProviders[F](applePlatform, facebookPlatform)
       socialLoginService = new SocialLoginService[F](usersRepository, usersService, userCredentialsService, socialCredentialsRepositories, socialLoginPlatforms)
 
       appleSubscription = new AppleSubscription[F](sys.env("APPLE_APP_SECRET"))

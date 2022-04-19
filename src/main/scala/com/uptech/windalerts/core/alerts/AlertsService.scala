@@ -8,18 +8,18 @@ import com.uptech.windalerts.core.user.{UserId, UserType}
 import com.uptech.windalerts.core.{AlertNotFoundError, OperationNotAllowed, SurfsUpError}
 
 class AlertsService[F[_] : Sync](alertsRepository: AlertsRepository[F]) {
-  def createAlert(u: UserId, userType: UserType, r: AlertRequest):EitherT[F, OperationNotAllowed, Alert] = {
+  def createAlert(userId: UserId, userType: UserType, alertRequest: AlertRequest):EitherT[F, OperationNotAllowed, Alert] = {
     for {
       _ <- EitherT.cond[F](userType.isPremiumUser(), (), OperationNotAllowed(s"Please subscribe to perform this action"))
-      saved <- EitherT.liftF(alertsRepository.create(r, u.id))
+      saved <- EitherT.liftF(alertsRepository.create(alertRequest, userId.id))
     } yield saved
   }
 
-  def update(alertId: String, u: UserId, userType: UserType, r: AlertRequest): EitherT[F, SurfsUpError, Alert] = {
+  def update(alertId: String, userId: UserId, userType: UserType, alertRequest: AlertRequest): EitherT[F, SurfsUpError, Alert] = {
     for {
-      _ <- authorizeAlertEditRequest(u, userType, alertId, r).leftWiden[SurfsUpError]
-      saved <- update(u.id, alertId, r).leftWiden[SurfsUpError]
-    } yield saved
+      _ <- authorizeAlertEditRequest(userId, userType, alertId, alertRequest).leftWiden[SurfsUpError]
+      updated <- alertsRepository.update(userId.id, alertId, alertRequest).leftWiden[SurfsUpError]
+    } yield updated
   }
 
   def authorizeAlertEditRequest(userId: UserId, userType: UserType, alertId: String, alertRequest: AlertRequest): EitherT[F, OperationNotAllowed, Unit] = {
@@ -44,8 +44,6 @@ class AlertsService[F[_] : Sync](alertsRepository: AlertsRepository[F]) {
       alert.allFieldExceptStatusAreSame(alertRequest)
     }
   }
-
-  def update(requester: String, alertId: String, updateAlertRequest: AlertRequest): EitherT[F, AlertNotFoundError, Alert] = alertsRepository.update(requester, alertId, updateAlertRequest)
 
   def getAllForUser(user: String): F[Seq[Alert]] = alertsRepository.getAllForUser(user)
 
