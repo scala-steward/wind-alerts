@@ -1,4 +1,6 @@
+
 **SurfsUp!**
+[![Renovate enabled](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://renovatebot.com/)
 
 Backend for [SurfsUp Alerts](https://play.google.com/store/apps/details?id=com.passiondigital.surfsup.android).
 
