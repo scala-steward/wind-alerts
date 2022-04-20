@@ -176,7 +176,7 @@
         <dependency>
             <groupId>com.pauldijou</groupId>
             <artifactId>jwt-core_2.13</artifactId>
-            <version>4.1.0</version>
+            <version>4.3.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
