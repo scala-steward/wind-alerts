@@ -26,7 +26,7 @@ lazy val root = (project in file("."))
       "com.google.oauth-client" % "google-oauth-client-java6" % "1.33.3",
       "com.google.oauth-client" % "google-oauth-client-jetty" % "1.33.3",
       "com.google.apis" % "google-api-services-androidpublisher" % "v3-rev20220411-1.32.1",
-      "org.mongodb.scala" % "mongo-scala-driver_2.13" % "2.9.0",
+      "org.mongodb.scala" % "mongo-scala-driver_2.13" % "4.6.0",
       "io.netty" % "netty-all" % "4.1.76.Final",
       "ch.qos.logback" % "logback-classic" % "1.2.11",
       "com.google.firebase" % "firebase-admin" % "6.16.0",
