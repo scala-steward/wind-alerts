@@ -11,7 +11,7 @@ import org.mongodb.scala.model.Filters.{and, equal}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class MongoSocialCredentialsRepository[F[_]](collection: MongoCollection[DBSocialCredentials])(implicit cs: ContextShift[F], s: Async[F], M: Monad[F])  extends SocialCredentialsRepository[F] {
+class MongoSocialCredentialsRepository[F[_]](collection: MongoCollection[DBSocialCredentials])(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends SocialCredentialsRepository[F] {
   override def create(email: String, socialId: String, deviceType: String): F[SocialCredentials] = {
     val dbSocialCredentials = DBSocialCredentials(email, socialId, deviceType)
     Async.fromFuture(M.pure(collection.insertOne(dbSocialCredentials).toFuture().map(_ => dbSocialCredentials.toSocialCredentials())))

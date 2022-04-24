@@ -13,14 +13,14 @@ import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.dsl.Http4sDsl
 
 
-class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F]) extends Http4sDsl[F]  {
+class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F]) extends Http4sDsl[F] {
   def allUsersService(): AuthedRoutes[UserIdMetadata, F] =
     AuthedRoutes {
 
       case _@GET -> Root as user => {
         OptionT.liftF(
           for {
-            response <- alertService.getAllForUser(user.userId.id).map(alerts => AlertsDTO( alerts))
+            response <- alertService.getAllForUser(user.userId.id).map(alerts => AlertsDTO(alerts))
             resp <- Ok(response)
           } yield resp)
       }

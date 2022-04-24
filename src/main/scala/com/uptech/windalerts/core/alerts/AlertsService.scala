@@ -8,7 +8,7 @@ import com.uptech.windalerts.core.user.{UserId, UserType}
 import com.uptech.windalerts.core.{AlertNotFoundError, OperationNotAllowed, SurfsUpError}
 
 class AlertsService[F[_] : Sync](alertsRepository: AlertsRepository[F]) {
-  def createAlert(userId: UserId, userType: UserType, alertRequest: AlertRequest):EitherT[F, OperationNotAllowed, Alert] = {
+  def createAlert(userId: UserId, userType: UserType, alertRequest: AlertRequest): EitherT[F, OperationNotAllowed, Alert] = {
     for {
       _ <- EitherT.cond[F](userType.isPremiumUser(), (), OperationNotAllowed(s"Please subscribe to perform this action"))
       saved <- EitherT.liftF(alertsRepository.create(alertRequest, userId.id))

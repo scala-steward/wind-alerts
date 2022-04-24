@@ -15,5 +15,5 @@ trait UserSessionRepository[F[_]] {
 
   def updateExpiry(id: String, expiry: Long): EitherT[F, TokenNotFoundError, UserSession]
 
-  def updateDeviceToken(userId: String, deviceToken: String):F[Unit]
+  def updateDeviceToken(userId: String, deviceToken: String): F[Unit]
 }

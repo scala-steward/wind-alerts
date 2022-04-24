@@ -48,11 +48,13 @@ object types {
   case class AppleUser(sub: String, email: String)
 
   case class UserIdDTO(userId: String) extends AnyVal
+
   case class EmailId(email: String) extends AnyVal
 
-  case class UserRegisteredUpdate(message:Message)
+  case class UserRegisteredUpdate(message: Message)
 
   case class UserRegisteredWrapper(userRegistered: UserRegistered)
+
   case class UserRegistered(userId: UserIdDTO, emailId: EmailId)
 
 }

@@ -26,7 +26,7 @@ class FirebaseBasedNotificationsSender[F[_] : Sync]
       val message = s"Error while sending notification to user ${nd.userId} for beach ${nd.beachId} "
       logger.warn(message, e)
       NotificationNotSentError(message)
-    }).map(status=>{
+    }).map(status => {
       logger.warn(s"Sent notification to user ${nd.userId} for beach ${nd.beachId}, status ${status} ")
       status
     })

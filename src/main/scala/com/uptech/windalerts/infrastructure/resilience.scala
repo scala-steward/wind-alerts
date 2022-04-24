@@ -13,14 +13,15 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 object resilience {
-  def  willyWeatherRequestsDecorator[T](callable: Callable[T]) : Future[T] = {
-    Future({Decorators.ofCallable(callable)
-      .withBulkhead(Bulkhead.ofDefaults("willy-weather-bulkhead"))
-      .withCircuitBreaker(CircuitBreaker.ofDefaults("willy-weather-circuit-breaker"))
-      .withRetry(Retry.of("willy-weather-retry", new RetryConfig.Builder().maxAttempts(10).intervalFunction(IntervalFunction.ofDefaults()).build()))
-      .decorate()
-      .call()
-  })
+  def willyWeatherRequestsDecorator[T](callable: Callable[T]): Future[T] = {
+    Future({
+      Decorators.ofCallable(callable)
+        .withBulkhead(Bulkhead.ofDefaults("willy-weather-bulkhead"))
+        .withCircuitBreaker(CircuitBreaker.ofDefaults("willy-weather-circuit-breaker"))
+        .withRetry(Retry.of("willy-weather-retry", new RetryConfig.Builder().maxAttempts(10).intervalFunction(IntervalFunction.ofDefaults()).build()))
+        .decorate()
+        .call()
+    })
   }
 
 }

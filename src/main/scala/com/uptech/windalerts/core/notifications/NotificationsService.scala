@@ -14,15 +14,17 @@ import com.uptech.windalerts.core.refresh.tokens.UserSessionRepository
 import com.uptech.windalerts.core.user.{UserId, UserRepository, UserT}
 import com.uptech.windalerts.logger
 
-class NotificationsService[F[_] : Sync: Parallel](N: NotificationRepository[F],
-                                        U: UserRepository[F],
-                                        B: BeachService[F],
-                                        alertsRepository: AlertsRepository[F],
-                                        notificationSender: NotificationsSender[F],
-                                        userSessionsRepository: UserSessionRepository[F])(implicit F: Async[F]) {
-  final case class UserDetails(userId:String, email:String)
+class NotificationsService[F[_] : Sync : Parallel](N: NotificationRepository[F],
+                                                   U: UserRepository[F],
+                                                   B: BeachService[F],
+                                                   alertsRepository: AlertsRepository[F],
+                                                   notificationSender: NotificationsSender[F],
+                                                   userSessionsRepository: UserSessionRepository[F])(implicit F: Async[F]) {
+  final case class UserDetails(userId: String, email: String)
+
   final case class AlertWithBeach(alert: Alert, beach: Beach)
-  final case class UserDetailsWithDeviceToken(userId:String, email:String, deviceToken: String, notificationsPerHour: Long)
+
+  final case class UserDetailsWithDeviceToken(userId: String, email: String, deviceToken: String, notificationsPerHour: Long)
 
   final case class AlertWithUserWithBeach(alert: Alert, user: UserDetailsWithDeviceToken, beach: Beach)
 
@@ -36,15 +38,15 @@ class NotificationsService[F[_] : Sync: Parallel](N: NotificationRepository[F],
 
   def findAllAlertsToNotify() = {
     for {
-      usersReadyToReceiveNotifications    <- allLoggedInUsersReadyToReceiveNotifications()
-      alertsByBeaches                     <- alertsForUsers(usersReadyToReceiveNotifications)
-      beaches                             <- beachStatuses(alertsByBeaches.keys.toSeq)
-      alertsToBeNotified                  =  alertsByBeaches
-                                              .map(kv => (beaches(kv._1), kv._2))
-                                              .map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)).map(AlertWithBeach(_, kv._1))))
-      _                                   <- F.delay(logger.info(s"alertsToBeNotified : ${alertsToBeNotified.values.map(_.flatMap(_.alert.id)).mkString(", ")}"))
-      userIdToUser                        =  usersReadyToReceiveNotifications.map(u => (u.userId, u)).toMap
-      alertWithUserWithBeach              =  alertsToBeNotified.values.flatten.map(v => AlertWithUserWithBeach(v.alert, userIdToUser(v.alert.owner), v.beach))
+      usersReadyToReceiveNotifications <- allLoggedInUsersReadyToReceiveNotifications()
+      alertsByBeaches <- alertsForUsers(usersReadyToReceiveNotifications)
+      beaches <- beachStatuses(alertsByBeaches.keys.toSeq)
+      alertsToBeNotified = alertsByBeaches
+        .map(kv => (beaches(kv._1), kv._2))
+        .map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)).map(AlertWithBeach(_, kv._1))))
+      _ <- F.delay(logger.info(s"alertsToBeNotified : ${alertsToBeNotified.values.map(_.flatMap(_.alert.id)).mkString(", ")}"))
+      userIdToUser = usersReadyToReceiveNotifications.map(u => (u.userId, u)).toMap
+      alertWithUserWithBeach = alertsToBeNotified.values.flatten.map(v => AlertWithUserWithBeach(v.alert, userIdToUser(v.alert.owner), v.beach))
     } yield alertWithUserWithBeach
   }
 
@@ -64,11 +66,11 @@ class NotificationsService[F[_] : Sync: Parallel](N: NotificationRepository[F],
     } yield usersReadyToReceiveNotifications
   }
 
-  private def filterLoggedOutUsers(usersWithNotificationsEnabledAndNotSnoozed:Seq[UserT]) = {
+  private def filterLoggedOutUsers(usersWithNotificationsEnabledAndNotSnoozed: Seq[UserT]) = {
     for {
-      userSessions <- usersWithNotificationsEnabledAndNotSnoozed.map(u=>userSessionsRepository.getByUserId(u.id).value).toList.sequence
+      userSessions <- usersWithNotificationsEnabledAndNotSnoozed.map(u => userSessionsRepository.getByUserId(u.id).value).toList.sequence
       usersWithSession = usersWithNotificationsEnabledAndNotSnoozed.zip(userSessions)
-      loggedInUsers = usersWithSession.filter(_._2.isDefined).map(u=>UserDetailsWithDeviceToken(u._1.id, u._1.email, u._2.get.deviceToken, u._1.notificationsPerHour))
+      loggedInUsers = usersWithSession.filter(_._2.isDefined).map(u => UserDetailsWithDeviceToken(u._1.id, u._1.email, u._2.get.deviceToken, u._1.notificationsPerHour))
     } yield loggedInUsers
   }
 
@@ -87,10 +89,10 @@ class NotificationsService[F[_] : Sync: Parallel](N: NotificationRepository[F],
     }).getOrElse(Map()))
   }
 
-  private def submit(u: AlertWithUserWithBeach):EitherT[F, NotificationNotSentError, Unit] = {
+  private def submit(u: AlertWithUserWithBeach): EitherT[F, NotificationNotSentError, Unit] = {
     for {
       _ <- notificationSender.send(NotificationDetails(BeachId(u.alert.beachId), u.user.deviceToken, UserId(u.user.userId)))
-      _ <- EitherT.liftF(N.create(u.alert.id, u.user.userId, u.user.deviceToken,  System.currentTimeMillis()))
+      _ <- EitherT.liftF(N.create(u.alert.id, u.user.userId, u.user.deviceToken, System.currentTimeMillis()))
     } yield ()
   }
 

@@ -38,27 +38,27 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
     } yield tokens
   }
 
-  def resetUserSession(emailId: String, deviceType:String, newDeviceToken: String):EitherT[F, UserNotFoundError, TokensWithUser] = {
+  def resetUserSession(emailId: String, deviceType: String, newDeviceToken: String): EitherT[F, UserNotFoundError, TokensWithUser] = {
     for {
       persistedUser <- getUser(emailId, deviceType)
       tokens <- resetUserSession(persistedUser, newDeviceToken)
     } yield tokens
   }
 
-  def resetUserSession(dbUser: UserT, newDeviceToken: String):EitherT[F, UserNotFoundError, TokensWithUser] = {
+  def resetUserSession(dbUser: UserT, newDeviceToken: String): EitherT[F, UserNotFoundError, TokensWithUser] = {
     for {
       _ <- EitherT.liftF(userSessionsRepository.deleteForUserId(dbUser.id))
       tokens <- EitherT.right(generateNewTokens(dbUser, newDeviceToken))
     } yield tokens
   }
 
-  def generateNewTokens(user:UserT, deviceToken:String): F[TokensWithUser] = {
+  def generateNewTokens(user: UserT, deviceToken: String): F[TokensWithUser] = {
     import cats.syntax.functor._
 
     val token = auth.createToken(UserId(user.id))
 
-    userSessionsRepository.create( utils.generateRandomString(40), System.currentTimeMillis() + REFRESH_TOKEN_EXPIRY, user.id, deviceToken)
-      .map(newRefreshToken=>TokensWithUser(token.accessToken, newRefreshToken.refreshToken, token.expiredAt, user))
+    userSessionsRepository.create(utils.generateRandomString(40), System.currentTimeMillis() + REFRESH_TOKEN_EXPIRY, user.id, deviceToken)
+      .map(newRefreshToken => TokensWithUser(token.accessToken, newRefreshToken.refreshToken, token.expiredAt, user))
 
   }
 

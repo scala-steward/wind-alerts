@@ -14,12 +14,12 @@ import com.uptech.windalerts.infrastructure.endpoints.BeachesEndpoints
 import io.circe.config.parser.decodePathF
 import org.http4s.{Response, Status}
 import org.http4s.implicits._
-import org.http4s.server.blaze.BlazeServerBuilder
+import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.{Router, Server => H4Server}
 
 object BeachesServer extends IOApp {
 
-  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer: Parallel]()(implicit M:Monad[F]): Resource[F, H4Server[F]] =
+  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer : Parallel]()(implicit M: Monad[F]): Resource[F, H4Server] =
     for {
       beaches <- eval(decodePathF[F, Beaches](parseFileAnySyntax(config.getConfigFile("beaches.json")), "surfsUp"))
       swellAdjustments <- eval(decodePathF[F, Adjustments](parseFileAnySyntax(config.getConfigFile("swellAdjustments.json")), "surfsUp"))

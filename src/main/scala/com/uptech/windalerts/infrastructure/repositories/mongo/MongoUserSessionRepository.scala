@@ -17,7 +17,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class MongoUserSessionRepository[F[_]](collection: MongoCollection[DBUserSession])(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends UserSessionRepository[F] {
   override def create(refreshToken: String, expiry: Long, userId: String, deviceToken: String): F[UserSession] = {
     val dBUserSession = DBUserSession(refreshToken, expiry, userId, deviceToken)
-    Async.fromFuture(M.pure(collection.insertOne(dBUserSession).toFuture().map(_=>dBUserSession.toUserSession())))
+    Async.fromFuture(M.pure(collection.insertOne(dBUserSession).toFuture().map(_ => dBUserSession.toUserSession())))
   }
 
   override def getByRefreshToken(refreshToken: String): OptionT[F, UserSession] = {

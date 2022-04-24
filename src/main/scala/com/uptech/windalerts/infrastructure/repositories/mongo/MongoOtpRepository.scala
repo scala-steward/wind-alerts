@@ -16,16 +16,16 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class MongoOtpRepository[F[_]](collection: MongoCollection[DBOTPWithExpiry])(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends OtpRepository[F] {
   override def findByOtpAndUserId(otp: String, userId: String): OptionT[F, OTPWithExpiry] = {
     OptionT(Async.fromFuture(
-        M.pure(
-          collection.find(
-            and(
-              equal("userId", userId),
-              equal("otp", otp)
-            )
-          ).headOption().map(_.map(_.toOTPWithExpiry())))))
+      M.pure(
+        collection.find(
+          and(
+            equal("userId", userId),
+            equal("otp", otp)
+          )
+        ).headOption().map(_.map(_.toOTPWithExpiry())))))
   }
 
-  override def updateForUser(userId: String, otp: String, expiry:Long): F[OTPWithExpiry] = {
+  override def updateForUser(userId: String, otp: String, expiry: Long): F[OTPWithExpiry] = {
     Async.fromFuture(
       M.pure(
         collection.updateOne(
@@ -34,7 +34,7 @@ class MongoOtpRepository[F[_]](collection: MongoCollection[DBOTPWithExpiry])(imp
             set("expiry", expiry)),
           UpdateOptions().upsert(true))
           .toFuture()
-          .map(updateResult =>  OTPWithExpiry(updateResult.getUpsertedId.asObjectId().getValue.toHexString, otp, expiry, userId))))
+          .map(updateResult => OTPWithExpiry(updateResult.getUpsertedId.asObjectId().getValue.toHexString, otp, expiry, userId))))
   }
 
 

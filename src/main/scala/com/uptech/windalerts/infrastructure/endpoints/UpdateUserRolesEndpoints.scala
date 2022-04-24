@@ -7,7 +7,7 @@ import com.uptech.windalerts.core.user.UserRolesService
 import org.http4s.HttpRoutes
 import org.http4s.dsl.Http4sDsl
 
-class UpdateUserRolesEndpoints[F[_]: Effect](userRoles: UserRolesService[F]) extends Http4sDsl[F] {
+class UpdateUserRolesEndpoints[F[_] : Effect](userRoles: UserRolesService[F]) extends Http4sDsl[F] {
   def endpoints(): HttpRoutes[F] =
     HttpRoutes.of[F] {
       case _@GET -> Root / "update" / "trial" =>

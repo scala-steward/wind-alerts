@@ -11,6 +11,7 @@ import com.uptech.windalerts.core.types.{UserRegistered, UserRegisteredUpdate}
 import io.circe.parser.parse
 import org.http4s.{HttpRoutes, Request}
 import org.http4s.dsl.Http4sDsl
+
 class EmailEndpoints[F[_] : Effect](otpService: OTPService[F]) extends Http4sDsl[F] {
 
   def allRoutes() = HttpRoutes.of[F] {
@@ -32,7 +33,7 @@ class EmailEndpoints[F[_] : Effect](otpService: OTPService[F]) extends Http4sDsl
     } yield userRegistered
   }
 
-  private def asUserRegisteredUpdate(req: Request[F]):EitherT[F, UnknownError, UserRegisteredUpdate] = {
+  private def asUserRegisteredUpdate(req: Request[F]): EitherT[F, UnknownError, UserRegisteredUpdate] = {
     val eitherUserRegistered = EitherT.liftF(req.as[UserRegisteredUpdate])
     eitherUserRegistered.leftMap[UnknownError](e => UnknownError(e.toString))
   }

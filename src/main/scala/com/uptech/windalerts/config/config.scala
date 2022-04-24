@@ -12,8 +12,11 @@ import scala.util.Try
 
 object config {
   implicit val surfsUpDecoder: Decoder[SurfsUp] = deriveDecoder
+
   implicit def surfsUpEntityDecoder[F[_] : Sync]: EntityDecoder[F, SurfsUp] = jsonOf
+
   implicit val notificationsDecoder: Decoder[Notifications] = deriveDecoder
+
   implicit def notificationsEntityDecoder[F[_] : Sync]: EntityDecoder[F, Notifications] = jsonOf
 
   def getConfigFile(name: String): File = {
@@ -76,7 +79,10 @@ object beaches {
   case class Beach(id: Long, location: String, postCode: Long, region: String)
 
   implicit val beachesDecoder: Decoder[Beaches] = deriveDecoder
+
   implicit def beachesEntityDecoder[F[_] : Sync]: EntityDecoder[F, Beaches] = jsonOf
+
   implicit val beachDecoder: Decoder[Beach] = deriveDecoder
+
   implicit def beachEntityDecoder[F[_] : Sync]: EntityDecoder[F, Beach] = jsonOf
 }

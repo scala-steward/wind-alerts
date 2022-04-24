@@ -5,22 +5,23 @@ import com.uptech.windalerts.logger
 
 import java.util.Calendar.{DAY_OF_WEEK, HOUR_OF_DAY, MINUTE}
 import java.util.{Calendar, TimeZone}
+import io.scalaland.chimney.dsl._
 
 object domain {
   case class Alert(
-                     id: String,
-                     owner: String,
-                     beachId: Long,
-                     days: Seq[Long],
-                     swellDirections: Seq[String],
-                     timeRanges: Seq[TimeRange],
-                     waveHeightFrom: Double,
-                     waveHeightTo: Double,
-                     windDirections: Seq[String],
-                     tideHeightStatuses: Seq[String] = Seq("Rising", "Falling"),
-                     enabled: Boolean,
-                     timeZone: String = "Australia/Sydney",
-                     createdAt: Long) {
+                    id: String,
+                    owner: String,
+                    beachId: Long,
+                    days: Seq[Long],
+                    swellDirections: Seq[String],
+                    timeRanges: Seq[TimeRange],
+                    waveHeightFrom: Double,
+                    waveHeightTo: Double,
+                    windDirections: Seq[String],
+                    tideHeightStatuses: Seq[String] = Seq("Rising", "Falling"),
+                    enabled: Boolean,
+                    timeZone: String = "Australia/Sydney",
+                    createdAt: Long) {
     def isToBeNotified(beachStatus: Beach): Boolean = {
       logger.info(s"beach to check $beachStatus")
       logger.info(s"self $swellDirections $waveHeightFrom $waveHeightTo $windDirections")

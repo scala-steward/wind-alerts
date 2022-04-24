@@ -17,7 +17,7 @@ trait AlertsRepository[F[_]] {
 
   def getAllEnabledForUser(user: String): F[Seq[Alert]]
 
-  def delete(requester: String, id: String):  EitherT[F, AlertNotFoundError, Unit]
+  def delete(requester: String, id: String): EitherT[F, AlertNotFoundError, Unit]
 
   def update(requester: String, alertId: String, updateAlertRequest: AlertRequest): EitherT[F, AlertNotFoundError, Alert]
 }

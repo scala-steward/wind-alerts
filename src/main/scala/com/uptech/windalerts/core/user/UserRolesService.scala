@@ -58,9 +58,9 @@ class UserRolesService[F[_] : Sync](alertsRepository: AlertsRepository[F], userR
   }
 
 
-  def handleUpdate(socialPlatformType:String, purchaseToken: String): EitherT[F, SurfsUpError, UserT] = {
+  def handleUpdate(socialPlatformType: String, purchaseToken: String): EitherT[F, SurfsUpError, UserT] = {
     for {
-      purchase <-  socialPlatformSubscriptionsProviders.findByType(socialPlatformType).getLatestForToken(purchaseToken)
+      purchase <- socialPlatformSubscriptionsProviders.findByType(socialPlatformType).getLatestForToken(purchaseToken)
       user <- userRepository.getByUserId(purchase.userId.id).toRight(UserNotFoundError())
       updatedUser <- updateSubscribedUserRole(user, purchase.subscriptionPurchase.startTimeMillis, purchase.subscriptionPurchase.expiryTimeMillis).leftWiden[SurfsUpError]
     } yield updatedUser

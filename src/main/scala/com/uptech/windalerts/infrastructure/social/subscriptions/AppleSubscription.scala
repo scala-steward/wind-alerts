@@ -12,7 +12,7 @@ import io.circe.optics.JsonPath.root
 import io.circe.parser
 import io.circe.syntax._
 
-class AppleSubscription[F[_] : Async](appSecret:String)(implicit F: Async[F]) extends SocialSubscription[F] {
+class AppleSubscription[F[_] : Async](appSecret: String)(implicit F: Async[F]) extends SocialSubscription[F] {
 
   override def getPurchase(receiptData: String): F[SubscriptionPurchase] = {
     implicit val backend = HttpURLConnectionBackend()
@@ -30,7 +30,7 @@ class AppleSubscription[F[_] : Async](appSecret:String)(implicit F: Async[F]) ex
           parser.parse(json).left.map(e => UnknownError(e.getMessage()))
         })
         .map(root.receipt.in_app.each.json.getAll(_))
-        .flatMap(_.map(p => p.as[AppleSubscriptionPurchase].left.map(e=>UnknownError(e.getMessage())))
+        .flatMap(_.map(p => p.as[AppleSubscriptionPurchase].left.map(e => UnknownError(e.getMessage())))
           .filter(_.isRight).maxBy(_.right.get.expires_date_ms))
         .map(purchase => SubscriptionPurchase(purchase.purchase_date_ms, purchase.expires_date_ms))
         .right

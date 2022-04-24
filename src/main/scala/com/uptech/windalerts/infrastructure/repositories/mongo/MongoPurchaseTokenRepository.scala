@@ -54,7 +54,7 @@ case class DBPurchaseToken(_id: ObjectId,
 }
 
 object DBPurchaseToken {
-    def apply(userId: String,
-              purchaseToken: String,
-              creationTime: Long) = new DBPurchaseToken(new ObjectId(), userId,  purchaseToken, creationTime)
+  def apply(userId: String,
+            purchaseToken: String,
+            creationTime: Long) = new DBPurchaseToken(new ObjectId(), userId, purchaseToken, creationTime)
 }

@@ -3,10 +3,10 @@ package com.uptech.windalerts
 import cats.data.EitherT
 import cats.effect.{ContextShift, IO}
 import com.uptech.windalerts.core.SurfsUpError
-import com.uptech.windalerts.core.beaches.domain._
 import com.uptech.windalerts.core.beaches._
+import com.uptech.windalerts.core.beaches.domain._
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
-import org.http4s.Uri
+import org.http4s._
 import org.http4s.client.dsl.Http4sClientDsl
 import org.http4s.dsl.Http4sDsl
 import org.http4s.implicits._
@@ -28,8 +28,7 @@ class BeachesEndpointsSpec extends AnyFunSuite
     forAll { (w: Wind, t: TideHeight, s: Swell) =>
       (
         for {
-          request <- GET(Uri.unsafeFromString(s"1/currentStatus"))
-          response <- beachEndPoints(w, t, s).orNotFound.run(request)
+          response <- beachEndPoints(w, t, s).orNotFound.run(Request(method = Method.GET, uri = uri"/1/currentStatus" ))
           status <- response.as[Beach]
         } yield status shouldBe Beach(BeachId(1), w, Tide(t, SwellOutput(s.height, s.direction, s.directionText)))
         ).unsafeRunSync()

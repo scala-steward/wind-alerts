@@ -41,10 +41,12 @@ object codecs {
   implicit def beachIdEntityEncoder[F[_] : Applicative]: EntityEncoder[F, BeachId] = jsonEncoderOf
 
   lazy implicit val beachDecoder: Decoder[Beach] = deriveDecoder[Beach]
+
   implicit def beachEntityDecoder[F[_] : Sync]: EntityDecoder[F, Beach] = jsonOf
 
 
   lazy implicit val beachEncoder: Encoder[Beach] = deriveEncoder[Beach]
+
   implicit def beachEntityEncoder[F[_] : Applicative]: EntityEncoder[F, Beach] = jsonEncoderOf
 
   lazy implicit val swellDecoder: Decoder[Swell] = deriveDecoder[Swell]
@@ -105,9 +107,9 @@ object codecs {
 
   implicit def timeRangeEntityEncoder[F[_] : Applicative]: EntityEncoder[F, TimeRange] = jsonEncoderOf
 
-//  lazy implicit val userDecoder: Decoder[UserT] = deriveDecoder[UserT]
-//
-//  implicit def userEntityDecoder[F[_] : Sync]: EntityDecoder[F, UserT] = jsonOf
+  //  lazy implicit val userDecoder: Decoder[UserT] = deriveDecoder[UserT]
+  //
+  //  implicit def userEntityDecoder[F[_] : Sync]: EntityDecoder[F, UserT] = jsonOf
 
   lazy implicit val userEncoder: Encoder[UserT] = deriveEncoder[UserT]
 
@@ -231,7 +233,6 @@ object codecs {
   implicit def appleSubscriptionPurchaseEnityEncoder[F[_] : Applicative]: EntityEncoder[F, AppleSubscriptionPurchase] = jsonEncoderOf
 
 
-
   lazy implicit val tokenResponseDecoder: Decoder[TokenResponse] = deriveDecoder[TokenResponse]
 
   implicit def tokenResponseEntityDecoder[F[_] : Sync]: EntityDecoder[F, TokenResponse] = jsonOf
@@ -253,26 +254,37 @@ object codecs {
   implicit def appleUserEntityEncoder[F[_] : Applicative]: EntityEncoder[F, AppleUser] = jsonEncoderOf
 
   lazy implicit val userIdDTODecoder: Decoder[UserIdDTO] = deriveUnwrappedDecoder[UserIdDTO]
-  implicit def  userIdDTOEntityDecoder[F[_] : Sync]: EntityDecoder[F, UserIdDTO] = jsonOf
-  lazy implicit val  userIdDTOEncoder: Encoder[UserIdDTO] = deriveUnwrappedEncoder[UserIdDTO]
-  implicit def  userIdDTOEntityEncoder[F[_] : Applicative]: EntityEncoder[F, UserIdDTO] = jsonEncoderOf
+
+  implicit def userIdDTOEntityDecoder[F[_] : Sync]: EntityDecoder[F, UserIdDTO] = jsonOf
+
+  lazy implicit val userIdDTOEncoder: Encoder[UserIdDTO] = deriveUnwrappedEncoder[UserIdDTO]
+
+  implicit def userIdDTOEntityEncoder[F[_] : Applicative]: EntityEncoder[F, UserIdDTO] = jsonEncoderOf
 
   lazy implicit val emailIddDecoder: Decoder[EmailId] = deriveUnwrappedDecoder[EmailId]
+
   implicit def emailIdEntityDecoder[F[_] : Sync]: EntityDecoder[F, EmailId] = jsonOf
+
   lazy implicit val emailIdEncoder: Encoder[EmailId] = deriveUnwrappedEncoder[EmailId]
+
   implicit def emailIdEntityEncoder[F[_] : Applicative]: EntityEncoder[F, EmailId] = jsonEncoderOf
 
   lazy implicit val userRegisteredDecoder: Decoder[UserRegistered] = deriveDecoder[UserRegistered]
+
   implicit def userRegisteredEntityDecoder[F[_] : Sync]: EntityDecoder[F, UserRegistered] = jsonOf
+
   lazy implicit val userRegisteredEncoder: Encoder[UserRegistered] = deriveEncoder[UserRegistered]
+
   implicit def userRegisteredEntityEncoder[F[_] : Applicative]: EntityEncoder[F, UserRegistered] = jsonEncoderOf
 
 
   lazy implicit val userRegisteredUpdateDecoder: Decoder[UserRegisteredUpdate] = deriveDecoder[UserRegisteredUpdate]
+
   implicit def userRegisteredEntityUpdateDecoder[F[_] : Sync]: EntityDecoder[F, UserRegisteredUpdate] = jsonOf
 
 
   lazy implicit val userRegisteredWrapperDecoder: Decoder[UserRegisteredWrapper] = deriveDecoder[UserRegisteredWrapper]
+
   implicit def userRegisteredWrapperEntityDecoder[F[_] : Sync]: EntityDecoder[F, UserRegisteredWrapper] = jsonOf
 
 }
