@@ -21,7 +21,7 @@ lazy val root = (project in file("."))
       "org.typelevel" % "cats-core_2.13" % props.catsVersion,
       "com.softwaremill.sttp" % "core_2.13" % "1.7.2",
       "org.webjars" % "webjars-locator" % "0.45",
-      "org.webjars" % "swagger-ui" % "3.52.5",
+      "org.webjars" % "swagger-ui" % "4.10.3",
       "io.scalaland" % "chimney_2.13" % "0.6.1",
       "com.google.oauth-client" % "google-oauth-client-java6" % "1.33.3",
       "com.google.oauth-client" % "google-oauth-client-jetty" % "1.33.3",
