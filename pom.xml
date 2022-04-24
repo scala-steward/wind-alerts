@@ -199,7 +199,7 @@
         <dependency>
             <groupId>com.restfb</groupId>
             <artifactId>restfb</artifactId>
-            <version>2.27.1</version>
+            <version>2022.4.0</version>
         </dependency>
         <dependency>
             <groupId>io.github.resilience4j</groupId>
