@@ -36,7 +36,7 @@ lazy val root = (project in file("."))
       "junit" % "junit" % "4.13.2" % Test,
       "org.scalatest" % "scalatest_2.13" % "3.3.0-SNAP3" % Test,
       "org.specs2" % "specs2-junit_2.13" % "4.15.0" % Test,
-      "com.pauldijou" % "jwt-core_2.13" % "4.3.0",
+      "com.pauldijou" % "jwt-core_2.13" % "5.0.0",
       "dev.profunktor" % "http4s-jwt-auth_2.13" % "1.0.0-RC2",
       "com.restfb" % "restfb" % "2.27.1",
       "io.github.resilience4j" % "resilience4j-circuitbreaker" % "1.7.1",
