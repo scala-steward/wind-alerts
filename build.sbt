@@ -44,7 +44,7 @@ lazy val root = (project in file("."))
       "io.github.resilience4j" % "resilience4j-retry" % "1.7.1",
       "io.github.resilience4j" % "resilience4j-all" % "1.7.1",
       "com.google.cloud" % "google-cloud-pubsub" % "1.116.4",
-      "net.logstash.logback" % "logstash-logback-encoder" % "6.6",
+      "net.logstash.logback" % "logstash-logback-encoder" % "7.1.1",
       "org.scalacheck" % "scalacheck_2.13" % "1.16.0",
       "org.scalatest" % "scalatest_2.13" % "3.2.11",
       "org.scalatestplus" % "scalacheck-1-14_2.13" % "3.2.2.0",
