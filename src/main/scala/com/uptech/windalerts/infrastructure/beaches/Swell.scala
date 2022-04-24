@@ -40,7 +40,7 @@ class WWBackedSwellsService[F[_] : Sync](apiKey: String, adjustments: Adjustment
     EitherT(F.map(Async.fromFuture(F.pure(future)))(parse(_)))
   }
 
-  def parse(response: Id[Response[String]])= {
+  def parse(response: Id[Response[String]]) = {
     val res = for {
       body <- response
         .body

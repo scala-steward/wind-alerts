@@ -6,7 +6,7 @@ import org.http4s.HttpRoutes
 import org.http4s.dsl.Http4sDsl
 import org.http4s.implicits._
 
-class NotificationEndpoints[F[_]:Effect](notifications: NotificationsService[F]) extends Http4sDsl[F] {
+class NotificationEndpoints[F[_] : Effect](notifications: NotificationsService[F]) extends Http4sDsl[F] {
   def allRoutes() =
     routes().orNotFound
 
@@ -21,7 +21,7 @@ class NotificationEndpoints[F[_]:Effect](notifications: NotificationsService[F])
       }
 
 
-      case GET -> Root  => {
+      case GET -> Root => {
         notifications.sendNotification().value.flatMap {
           case Right(_) => Ok()
         }

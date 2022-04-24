@@ -8,12 +8,12 @@ import com.uptech.windalerts.infrastructure.endpoints.EmailEndpoints
 import com.uptech.windalerts.infrastructure.repositories.mongo.{DBOTPWithExpiry, MongoOtpRepository, Repos}
 import org.http4s.{Response, Status}
 import org.http4s.implicits._
-import org.http4s.server.blaze.BlazeServerBuilder
+import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.{Router, Server => H4Server}
 
 object EmailServer extends IOApp {
 
-  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer]()(implicit M:Monad[F]): Resource[F, H4Server[F]] =
+  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer]()(implicit M: Monad[F]): Resource[F, H4Server] =
     for {
       _ <- Resource.pure(())
       db = Repos.acquireDb(sys.env("MONGO_DB_URL"))

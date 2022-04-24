@@ -23,7 +23,7 @@ import scala.concurrent.Future
 
 
 class WWBackedTidesService[F[_] : Sync](apiKey: String, beachesConfig: Map[Long, com.uptech.windalerts.config.beaches.Beach])(implicit backend: SttpBackend[Id, Nothing], F: Async[F], C: ContextShift[F])
-extends TidesService[F] {
+  extends TidesService[F] {
   val startDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
   val timeZoneForRegion = Map("TAS" -> "Australia/Tasmania",
@@ -54,7 +54,7 @@ extends TidesService[F] {
     }
   }
 
-  def sendRequestAndParseResponse(beachId: BeachId, startDateFormatted: String, tzId: ZoneId, currentTimeGmt:Long) = {
+  def sendRequestAndParseResponse(beachId: BeachId, startDateFormatted: String, tzId: ZoneId, currentTimeGmt: Long) = {
     val future: Future[Id[Response[String]]] =
       resilience.willyWeatherRequestsDecorator(() => {
         val response = sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecastGraphs=tides&days=3&startDate=$startDateFormatted").send()
@@ -62,11 +62,11 @@ extends TidesService[F] {
         response
       })
 
-    EitherT(F.map(Async.fromFuture(F.pure(future)))(response=>parse(response, tzId, currentTimeGmt)))
+    EitherT(F.map(Async.fromFuture(F.pure(future)))(response => parse(response, tzId, currentTimeGmt)))
   }
 
 
-  def parse(response: Id[Response[String]], tzId: ZoneId, currentTimeGmt:Long) = {
+  def parse(response: Id[Response[String]], tzId: ZoneId, currentTimeGmt: Long) = {
     val res = for {
       body <- response
         .body
@@ -82,7 +82,6 @@ extends TidesService[F] {
 
     WillyWeatherHelper.leftOnBeachNotFoundError(res, domain.TideHeight(Double.NaN, "NA", Long.MinValue, Long.MinValue))
   }
-
 
 
   private def interpolate(zoneId: ZoneId, currentTimeGmt: Long, sorted: List[Datum]) = {

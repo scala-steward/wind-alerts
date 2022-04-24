@@ -22,21 +22,21 @@ import com.uptech.windalerts.infrastructure.notifications.FirebaseBasedNotificat
 import com.uptech.windalerts.infrastructure.repositories.mongo._
 import io.circe.config.parser.decodePathF
 import org.http4s.{Response, Status}
-import org.http4s.server.blaze.BlazeServerBuilder
+import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.{Server => H4Server}
 
 import java.io.{File, FileInputStream}
 import scala.util.Try
 
 object SendNotifications extends IOApp {
-  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer: Parallel]()(implicit M:Monad[F]): Resource[F, H4Server[F]] =
+  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer : Parallel]()(implicit M: Monad[F]): Resource[F, H4Server] =
     for {
       appConfig <- eval(decodePathF[F, com.uptech.windalerts.config.config.SurfsUp](parseFileAnySyntax(config.getConfigFile("application.conf")), "surfsUp"))
       projectId = sys.env("projectId")
 
       googleCredentials = firebaseCredentials(config.getSecretsFile(s"firebase/firebase.json"))
       firebaseOptions = new FirebaseOptions.Builder().setCredentials(googleCredentials).setProjectId(projectId).build
-      app =  FirebaseApp.initializeApp(firebaseOptions)
+      app = FirebaseApp.initializeApp(firebaseOptions)
       notifications = FirebaseMessaging.getInstance
 
       beaches <- eval(decodePathF[F, Beaches](parseFileAnySyntax(config.getConfigFile("beaches.json")), "surfsUp"))
@@ -55,7 +55,7 @@ object SendNotifications extends IOApp {
 
       notificationsRepository = new MongoNotificationsRepository[F](db.getCollection[DBNotification]("notifications"))
 
-      notificationsSender = new FirebaseBasedNotificationsSender[F](notifications, beaches.toMap(), appConfig.notifications )
+      notificationsSender = new FirebaseBasedNotificationsSender[F](notifications, beaches.toMap(), appConfig.notifications)
       notificationService = new NotificationsService[F](notificationsRepository, usersRepository, beachService, alertsRepository, notificationsSender, userSessionsRepository)
       notificationsEndPoints = new NotificationEndpoints[F](notificationService)
       httpApp = notificationsEndPoints.allRoutes()
@@ -70,7 +70,7 @@ object SendNotifications extends IOApp {
         .resource
     } yield server
 
-  private def firebaseCredentials(file:File) = {
+  private def firebaseCredentials(file: File) = {
     import cats.implicits._
 
     Try(GoogleCredentials.fromStream(new FileInputStream(file)))

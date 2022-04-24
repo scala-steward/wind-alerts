@@ -10,7 +10,7 @@ object SocialPlatformTypes {
 
   object Google extends SocialPlatformType
 
-  def apply(deviceType:String): Option[SocialPlatformType] = deviceType match {
+  def apply(deviceType: String): Option[SocialPlatformType] = deviceType match {
     case "ANDROID" => Some(Google)
     case "IOS" => Some(Apple)
     case _ => None

@@ -180,7 +180,7 @@ paths:
       '401':
         description: Refresh token not found or Refresh token expired
       '404':
-          description: User not found
+        description: User not found
       requestBody:
         content:
           application/json:

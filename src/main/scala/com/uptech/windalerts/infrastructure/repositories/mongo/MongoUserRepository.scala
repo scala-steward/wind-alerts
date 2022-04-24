@@ -76,7 +76,7 @@ case class DBUser(_id: ObjectId, email: String, name: String, deviceType: String
 }
 
 object DBUser {
-  def apply(user: UserT) : DBUser = {
+  def apply(user: UserT): DBUser = {
     user.into[DBUser]
       .withFieldComputed(_._id, _ => new ObjectId(user.id))
       .transform

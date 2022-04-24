@@ -11,13 +11,13 @@ import com.uptech.windalerts.core.beaches.domain.BeachId
 import org.http4s._
 import org.http4s.dsl.Http4sDsl
 
-class BeachesEndpoints[F[_] : Effect](B: BeachService[F])(implicit P:Parallel[F]) extends Http4sDsl[F] {
+class BeachesEndpoints[F[_] : Effect](B: BeachService[F])(implicit P: Parallel[F]) extends Http4sDsl[F] {
   def allRoutes() = HttpRoutes.of[F] {
     case GET -> Root / IntVar(id) / "currentStatus" =>
       getStatus(B, id)
   }
 
-  private def getStatus(B: BeachService[F], id: Int)(implicit P:Parallel[F]) = {
+  private def getStatus(B: BeachService[F], id: Int)(implicit P: Parallel[F]) = {
     val eitherStatus = for {
       status <- B.getStatus(BeachId(id))
     } yield status

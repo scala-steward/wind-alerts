@@ -1,7 +1,7 @@
 package com.uptech.windalerts.core.refresh.tokens
 
 
-case class UserSession(id: String, refreshToken: String, expiry: Long, userId: String, deviceToken:String) {
+case class UserSession(id: String, refreshToken: String, expiry: Long, userId: String, deviceToken: String) {
   def isExpired() = System.currentTimeMillis() > expiry
 }
 

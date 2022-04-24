@@ -121,7 +121,7 @@ object DBAlert {
       .transform
   }
 
-  def apply(alertRequest: AlertRequest, user: String, alertId:String, createdAt:Long): DBAlert = {
+  def apply(alertRequest: AlertRequest, user: String, alertId: String, createdAt: Long): DBAlert = {
     alertRequest.into[DBAlert]
       .withFieldComputed(_.owner, _ => user)
       .withFieldComputed(_._id, _ => new ObjectId(alertId))

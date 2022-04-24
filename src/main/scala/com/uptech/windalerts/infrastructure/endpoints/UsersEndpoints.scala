@@ -13,11 +13,11 @@ import com.uptech.windalerts.core._
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
 import types._
 import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Facebook, Google}
-import com.uptech.windalerts.infrastructure.social.login.AccessRequests.{FacebookRegisterRequest, AppleRegisterRequest}
+import com.uptech.windalerts.infrastructure.social.login.AccessRequests.{AppleRegisterRequest, FacebookRegisterRequest}
 import io.circe.parser.parse
 import org.http4s.dsl.Http4sDsl
-import org.http4s.util.CaseInsensitiveString
 import org.http4s._
+import org.typelevel.ci.CIString
 
 class UsersEndpoints[F[_] : Effect]
 (userCredentialsService: UserCredentialService[F],
@@ -304,8 +304,8 @@ class UsersEndpoints[F[_] : Effect]
 
   private def handleRegisterOrLoginResponse(F: Sync[F], tokensWithUser: (TokensWithUser, Boolean)) = {
     F.pure(
-      Response[F](headers = Headers.of {
-        Header.Raw(CaseInsensitiveString("X-is-new-user"), tokensWithUser._2.toString)
+      Response[F](headers = Headers {
+        Header.Raw(CIString("X-is-new-user"), tokensWithUser._2.toString)
       }).withEntity(tokensWithUser._1)
     )
   }

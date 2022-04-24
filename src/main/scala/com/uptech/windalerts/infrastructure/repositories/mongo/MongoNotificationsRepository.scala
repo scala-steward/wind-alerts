@@ -35,5 +35,5 @@ case class DBNotification(_id: ObjectId, alertId: String, userId: String, device
 
 object DBNotification {
   def apply(alertId: String, userId: String, deviceToken: String, sentAt: Long): DBNotification
-    = new DBNotification(new ObjectId(), alertId, userId, deviceToken, sentAt)
+  = new DBNotification(new ObjectId(), alertId, userId, deviceToken, sentAt)
 }

@@ -27,11 +27,10 @@ class MongoCredentialsRepository[F[_]](collection: MongoCollection[DBCredentials
 }
 
 
-
 case class DBCredentials(_id: ObjectId,
-                           email: String,
-                           password: String,
-                           deviceType: String) {
+                         email: String,
+                         password: String,
+                         deviceType: String) {
   def toCredentials(): Credentials = {
     this.into[Credentials]
       .withFieldComputed(_.id, dbCredentials => dbCredentials._id.toHexString)

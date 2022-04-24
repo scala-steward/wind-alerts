@@ -17,8 +17,8 @@ class SocialPlatformSubscriptionsServiceImpl[F[_] : Sync](
                                                            applePurchaseRepository: PurchaseTokenRepository[F],
                                                            androidPurchaseRepository: PurchaseTokenRepository[F],
                                                            appleSubscription: SocialSubscription[F],
-                                                           androidSubscription: SocialSubscription[F])  {
-  def find(userId: String, deviceType: String)(implicit A:Applicative[F]): EitherT[F, SurfsUpError, SubscriptionPurchase] = {
+                                                           androidSubscription: SocialSubscription[F]) {
+  def find(userId: String, deviceType: String)(implicit A: Applicative[F]): EitherT[F, SurfsUpError, SubscriptionPurchase] = {
     for {
       platformType <- EitherT.fromOption[F](SocialPlatformTypes(deviceType), PlatformNotSupported())
       purchase <- find(userId, platformType)
@@ -53,7 +53,7 @@ class SocialPlatformSubscriptionsServiceImpl[F[_] : Sync](
     }
   }
 
-  def getPurchase(subscription: SocialSubscription[F], receiptData: String):EitherT[F, SurfsUpError, SubscriptionPurchase] =
+  def getPurchase(subscription: SocialSubscription[F], receiptData: String): EitherT[F, SurfsUpError, SubscriptionPurchase] =
     EitherT.right(subscription.getPurchase(receiptData))
 
   private def findRepo(platformType: SocialPlatformType) = {

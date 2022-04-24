@@ -9,7 +9,7 @@ import scala.util.Random
 
 class OTPService[F[_] : Sync](otpRepository: OtpRepository[F], emailSender: EmailSender[F]) {
 
-  def send(userId: String, email: String)(implicit M: Monad[F]):EitherT[F, UnknownError, String] = {
+  def send(userId: String, email: String)(implicit M: Monad[F]): EitherT[F, UnknownError, String] = {
     val otp = createOtp(4)
     for {
       _ <- EitherT.liftF(otpRepository.updateForUser(userId, otp, System.currentTimeMillis() + 5 * 60 * 1000))

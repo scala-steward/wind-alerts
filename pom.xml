@@ -13,7 +13,7 @@
         <scala.compat.version>2.13</scala.compat.version>
         <spec2.version>4.2.0</spec2.version>
         <envProjectId>wind-alerts-staging</envProjectId>
-        <http4s.version>0.23.11</http4s.version>
+        <http4s.version>0.22.1</http4s.version>
         <cats.version>2.7.0</cats.version>
         <circe.version>0.14.1</circe.version>
         <circeGeneric.version>0.14.1</circeGeneric.version>
@@ -224,6 +224,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-pubsub</artifactId>
+            <version>1.116.4</version>
         </dependency>
         <dependency>
             <groupId>net.logstash.logback</groupId>
@@ -234,11 +235,6 @@
             <groupId>org.scalacheck</groupId>
             <artifactId>scalacheck_2.13</artifactId>
             <version>1.16.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.13</artifactId>
-            <version>3.2.11</version>
         </dependency>
         <dependency>
             <groupId>org.scalatestplus</groupId>
@@ -259,7 +255,6 @@
                 <artifactId>libraries-bom</artifactId>
                 <version>22.0.0</version>
                 <type>pom</type>
-                <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
