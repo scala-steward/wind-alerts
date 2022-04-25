@@ -41,7 +41,7 @@ class FirebaseBasedNotificationsSender[F[_] : Sync]
       builder().setAndroidConfig(AndroidConfig.builder().setPriority(AndroidConfig.Priority.HIGH).build())
         .setWebpushConfig(WebpushConfig.builder().putHeader("Urgency", "high").build())
         .putData("beachId", s"${nd.beachId.id}")
-        .setNotification(new Notification(title, body))
+        .setNotification(Notification.builder().setTitle(title).setBody(body).build())
         .setToken(nd.deviceToken)
         .setApnsConfig(ApnsConfig.builder()
           .setAps(Aps.builder().build())
