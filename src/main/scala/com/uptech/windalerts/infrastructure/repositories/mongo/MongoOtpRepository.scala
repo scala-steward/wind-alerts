@@ -5,8 +5,8 @@ import cats.data.OptionT
 import cats.effect.{Async, ContextShift}
 import com.uptech.windalerts.core.otp.{OTPWithExpiry, OtpRepository}
 import io.scalaland.chimney.dsl._
-import org.bson.types.ObjectId
 import org.mongodb.scala.MongoCollection
+import org.mongodb.scala.bson.ObjectId
 import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model.UpdateOptions
 import org.mongodb.scala.model.Updates.set
