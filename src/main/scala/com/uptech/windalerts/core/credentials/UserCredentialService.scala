@@ -52,7 +52,7 @@ class UserCredentialService[F[_] : Sync](
   def register(rr: RegisterRequest): EitherT[F, UserAlreadyExistsError, Credentials] = {
     for {
       _ <- notRegistered(rr.email, rr.deviceType)
-      savedCredentials <- EitherT.right(credentialsRepository.create(rr.email, rr.password, rr.deviceType))
+      savedCredentials <- EitherT.right(credentialsRepository.create(rr.email, rr.password.bcrypt, rr.deviceType))
     } yield savedCredentials
   }
 
