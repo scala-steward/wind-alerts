@@ -2,14 +2,14 @@ package com.uptech.windalerts
 
 import cats.Monad
 import cats.effect._
-import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry}
+import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.infrastructure.SendInBlueEmailSender
 import com.uptech.windalerts.infrastructure.endpoints.EmailEndpoints
 import com.uptech.windalerts.infrastructure.repositories.mongo.{DBOTPWithExpiry, MongoOtpRepository, Repos}
-import org.http4s.{Response, Status}
-import org.http4s.implicits._
 import org.http4s.blaze.server.BlazeServerBuilder
+import org.http4s.implicits._
 import org.http4s.server.{Router, Server => H4Server}
+import org.http4s.{Response, Status}
 
 object EmailServer extends IOApp {
 

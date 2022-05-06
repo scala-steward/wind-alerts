@@ -34,7 +34,9 @@ class MongoOtpRepository[F[_]](collection: MongoCollection[DBOTPWithExpiry])(imp
             set("expiry", expiry)),
           UpdateOptions().upsert(true))
           .toFuture()
-          .map(updateResult => OTPWithExpiry(updateResult.getUpsertedId.asObjectId().getValue.toHexString, otp, expiry, userId))))
+          .map(updateResult => {
+            OTPWithExpiry(otp, expiry, userId)
+          })))
   }
 
 
@@ -48,7 +50,6 @@ class MongoOtpRepository[F[_]](collection: MongoCollection[DBOTPWithExpiry])(imp
 case class DBOTPWithExpiry(_id: ObjectId, otp: String, expiry: Long, userId: String) {
   def toOTPWithExpiry(): OTPWithExpiry = {
     this.into[OTPWithExpiry]
-      .withFieldComputed(_.id, dbOTPWithExpiry => dbOTPWithExpiry._id.toHexString)
       .transform
   }
 }
