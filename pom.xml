@@ -13,7 +13,7 @@
         <scala.compat.version>2.13</scala.compat.version>
         <spec2.version>4.2.0</spec2.version>
         <envProjectId>wind-alerts-staging</envProjectId>
-        <http4s.version>1.0-232-85dadc2</http4s.version>
+        <http4s.version>0.22.1</http4s.version>
         <cats.version>2.7.0</cats.version>
         <circe.version>0.14.1</circe.version>
         <circeGeneric.version>0.14.1</circeGeneric.version>
@@ -106,19 +106,18 @@
         <dependency>
             <groupId>com.google.oauth-client</groupId>
             <artifactId>google-oauth-client-java6</artifactId>
-            <version>1.33.3</version>
+            <version>1.30.5</version>
         </dependency>
         <dependency>
             <groupId>com.google.oauth-client</groupId>
             <artifactId>google-oauth-client-jetty</artifactId>
-            <version>1.33.3</version>
+            <version>1.30.5</version>
         </dependency>
         <dependency>
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-androidpublisher</artifactId>
-            <version>v3-rev20220411-1.32.1</version>
+            <version>v3-rev142-1.25.0</version>
         </dependency>
-
         <dependency>
             <groupId>org.mongodb.scala</groupId>
             <artifactId>mongo-scala-driver_2.13</artifactId>
@@ -224,7 +223,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-pubsub</artifactId>
-            <version>1.116.4</version>
+            <version>1.113.4</version>
         </dependency>
         <dependency>
             <groupId>net.logstash.logback</groupId>

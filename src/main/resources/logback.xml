@@ -16,7 +16,7 @@
         </encoder>
     </appender>
     <logger name="com.uptech" level="info">
-        <!--        <appender-ref ref="classicConsoleAppender"/>-->
+                <appender-ref ref="classicConsoleAppender"/>
         <appender-ref ref="jsonConsoleAppender"/>
     </logger>
 </configuration>
