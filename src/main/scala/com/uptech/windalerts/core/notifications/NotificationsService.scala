@@ -8,18 +8,24 @@ import com.uptech.windalerts.core.NotificationNotSentError
 import com.uptech.windalerts.core.alerts.AlertsRepository
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.beaches.BeachService
+import com.uptech.windalerts.core.beaches.SwellsService.GetSwellsStatus
+import com.uptech.windalerts.core.beaches.TidesService.GetTidesStatus
+import com.uptech.windalerts.core.beaches.WindsService.GetWindStatus
 import com.uptech.windalerts.core.beaches.domain._
 import com.uptech.windalerts.core.notifications.NotificationsSender.NotificationDetails
 import com.uptech.windalerts.core.refresh.tokens.UserSessionRepository
 import com.uptech.windalerts.core.user.{UserId, UserRepository, UserT}
 import com.uptech.windalerts.logger
 
-class NotificationsService[F[_] : Sync : Parallel](N: NotificationRepository[F],
+class NotificationsService[F[_] : Sync : Parallel](getWindStatus: GetWindStatus[F],
+                                                   getTideStatus: GetTidesStatus[F],
+                                                   getSwellsStatus: GetSwellsStatus[F])
+                                                  (N: NotificationRepository[F],
                                                    U: UserRepository[F],
-                                                   B: BeachService[F],
                                                    alertsRepository: AlertsRepository[F],
                                                    notificationSender: NotificationsSender[F],
-                                                   userSessionsRepository: UserSessionRepository[F])(implicit F: Async[F]) {
+                                                   userSessionsRepository: UserSessionRepository[F])
+                                                  (implicit F: Async[F]) {
   final case class UserDetails(userId: String, email: String)
 
   final case class AlertWithBeach(alert: Alert, beach: Beach)
@@ -40,11 +46,13 @@ class NotificationsService[F[_] : Sync : Parallel](N: NotificationRepository[F],
     for {
       usersReadyToReceiveNotifications <- allLoggedInUsersReadyToReceiveNotifications()
       alertsByBeaches <- alertsForUsers(usersReadyToReceiveNotifications)
-      beaches <- beachStatuses(alertsByBeaches.keys.toSeq)
+      beaches <- beachStatuses(alertsByBeaches.keys.toSeq)(getWindStatus, getTideStatus, getSwellsStatus)
       alertsToBeNotified = alertsByBeaches
         .map(kv => (beaches(kv._1), kv._2))
         .map(kv => (kv._1, kv._2.filter(_.isToBeNotified(kv._1)).map(AlertWithBeach(_, kv._1))))
-      _ <- F.delay(logger.info(s"alertsToBeNotified : ${alertsToBeNotified.values.map(_.flatMap(_.alert.id)).mkString(", ")}"))
+      _ <- F.delay(logger.info(s"alertsToBeNotified : ${
+        alertsToBeNotified.values.map(_.flatMap(_.alert.id)).mkString(", ")
+      }"))
       userIdToUser = usersReadyToReceiveNotifications.map(u => (u.userId, u)).toMap
       alertWithUserWithBeach = alertsToBeNotified.values.flatten.map(v => AlertWithUserWithBeach(v.alert, userIdToUser(v.alert.owner), v.beach))
     } yield alertWithUserWithBeach
@@ -54,7 +62,9 @@ class NotificationsService[F[_] : Sync : Parallel](N: NotificationRepository[F],
   private def allLoggedInUsersReadyToReceiveNotifications() = {
     for {
       usersWithNotificationsEnabledAndNotSnoozed <- U.findUsersWithNotificationsEnabledAndNotSnoozed()
-      _ <- F.delay(logger.info(s"usersWithNotificationsEnabledAndNotSnoozed : ${usersWithNotificationsEnabledAndNotSnoozed.map(_.id).mkString(", ")}"))
+      _ <- F.delay(logger.info(s"usersWithNotificationsEnabledAndNotSnoozed : ${
+        usersWithNotificationsEnabledAndNotSnoozed.map(_.id).mkString(", ")
+      }"))
 
       loggedInUsers <- filterLoggedOutUsers(usersWithNotificationsEnabledAndNotSnoozed)
 
@@ -62,7 +72,9 @@ class NotificationsService[F[_] : Sync : Parallel](N: NotificationRepository[F],
       zipped = loggedInUsers.zip(usersWithLastHourNotificationCounts)
 
       usersReadyToReceiveNotifications = zipped.filter(u => u._2.count < u._1.notificationsPerHour).map(_._1)
-      _ <- F.delay(logger.info(s"usersReadyToReceiveNotifications : ${usersReadyToReceiveNotifications.map(_.userId).mkString(", ")}"))
+      _ <- F.delay(logger.info(s"usersReadyToReceiveNotifications : ${
+        usersReadyToReceiveNotifications.map(_.userId).mkString(", ")
+      }"))
     } yield usersReadyToReceiveNotifications
   }
 
@@ -79,12 +91,16 @@ class NotificationsService[F[_] : Sync : Parallel](N: NotificationRepository[F],
       alertsForUsers <- users.map(u => alertsRepository.getAllEnabledForUser(u.userId)).sequence.map(_.flatten)
       alertsForUsersWithMatchingTime = alertsForUsers.toList.filter(_.isTimeMatch())
       alertsByBeaches = alertsForUsersWithMatchingTime.groupBy(_.beachId).map(kv => (BeachId(kv._1), kv._2))
-      _ <- F.delay(logger.info(s"alertsForUsersWithMathcingTime : ${alertsForUsersWithMatchingTime.map(_.id).mkString(", ")}"))
+      _ <- F.delay(logger.info(s"alertsForUsersWithMathcingTime : ${
+        alertsForUsersWithMatchingTime.map(_.id).mkString(", ")
+      }"))
     } yield alertsByBeaches
   }
 
-  private def beachStatuses(beachIds: Seq[BeachId]) = {
-    B.getAll(beachIds).value.map(_.leftMap(e => {
+  private def beachStatuses(beachIds: Seq[BeachId])(implicit getWindStatus: GetWindStatus[F],
+                                                    getTideStatus: GetTidesStatus[F],
+                                                    getSwellsStatus: GetSwellsStatus[F]) = {
+    BeachService.getAll(beachIds).value.map(_.leftMap(e => {
       logger.warn(s"Error while fetching beach status $e")
     }).getOrElse(Map()))
   }
