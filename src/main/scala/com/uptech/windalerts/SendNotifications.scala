@@ -42,11 +42,10 @@ object SendNotifications extends IOApp {
       beaches <- eval(decodePathF[F, Beaches](parseFileAnySyntax(config.getConfigFile("beaches.json")), "surfsUp"))
       swellAdjustments <- eval(decodePathF[F, Adjustments](parseFileAnySyntax(config.getConfigFile("swellAdjustments.json")), "surfsUp"))
       willyWeatherAPIKey = sys.env("WILLY_WEATHER_KEY")
+      getWindStatus = WWBackedWindsService.get(willyWeatherAPIKey)
+      getTideStatus = WWBackedTidesService.get(willyWeatherAPIKey, beaches.toMap())
+      getSwellsStatus = WWBackedSwellsService.get(willyWeatherAPIKey, swellAdjustments)
 
-      beachService = new BeachService[F](
-        new WWBackedWindsService[F](willyWeatherAPIKey),
-        new WWBackedTidesService[F](willyWeatherAPIKey, beaches.toMap()),
-        new WWBackedSwellsService[F](willyWeatherAPIKey, swellAdjustments))
 
       db = Repos.acquireDb(sys.env("MONGO_DB_URL"))
       usersRepository = new MongoUserRepository[F](db.getCollection[DBUser]("users"))
@@ -56,7 +55,7 @@ object SendNotifications extends IOApp {
       notificationsRepository = new MongoNotificationsRepository[F](db.getCollection[DBNotification]("notifications"))
 
       notificationsSender = new FirebaseBasedNotificationsSender[F](notifications, beaches.toMap(), appConfig.notifications)
-      notificationService = new NotificationsService[F](notificationsRepository, usersRepository, beachService, alertsRepository, notificationsSender, userSessionsRepository)
+      notificationService = new NotificationsService[F](getWindStatus, getTideStatus, getSwellsStatus)(notificationsRepository, usersRepository, alertsRepository, notificationsSender, userSessionsRepository)
       notificationsEndPoints = new NotificationEndpoints[F](notificationService)
       httpApp = notificationsEndPoints.allRoutes()
       server <- BlazeServerBuilder[F]
