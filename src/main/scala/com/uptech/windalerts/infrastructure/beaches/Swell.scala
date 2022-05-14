@@ -5,7 +5,6 @@ import cats.data.EitherT
 import cats.effect.{Async, ContextShift, Sync}
 import com.softwaremill.sttp._
 import com.uptech.windalerts.config.swellAdjustments.Adjustments
-import com.uptech.windalerts.core.beaches.SwellsService.GetSwellsStatus
 import com.uptech.windalerts.core.beaches.{SwellsService, domain}
 import com.uptech.windalerts.core.beaches.domain.BeachId
 import com.uptech.windalerts.core.{SurfsUpError, UnknownError}
@@ -23,9 +22,12 @@ import java.time.format.DateTimeFormatter
 import java.util.TimeZone
 import scala.concurrent.Future
 
-object WWBackedSwellsService  {
+class WWBackedSwellsService[F[_] : Sync](apiKey: String, adjustments: Adjustments)(implicit backend: SttpBackend[Id, Nothing], F: Async[F], C: ContextShift[F]) extends SwellsService[F] {
 
-  def get[F[_]](apiKey: String, adjustments: Adjustments)(implicit backend: SttpBackend[Id, Nothing], F: Async[F], C: ContextShift[F]) : GetSwellsStatus[F] = beachId => {
+  override def get(beachId: BeachId): cats.data.EitherT[F, SurfsUpError, domain.Swell] =
+    getFromWillyWeatther_(apiKey, beachId)
+
+  def getFromWillyWeatther_(apiKey: String, beachId: BeachId) = {
     val future: Future[Id[Response[String]]] =
       resilience.willyWeatherRequestsDecorator(callable = () => {
         logger.info(s"Fetching swell status for $beachId")
@@ -35,10 +37,10 @@ object WWBackedSwellsService  {
         response
       })
 
-    EitherT(F.map(Async.fromFuture(F.pure(future)))(parse(adjustments, _)))
+    EitherT(F.map(Async.fromFuture(F.pure(future)))(parse(_)))
   }
 
-  def parse(adjustments: Adjustments, response: Id[Response[String]]) = {
+  def parse(response: Id[Response[String]]) = {
     val res = for {
       body <- response
         .body
@@ -64,7 +66,6 @@ object WWBackedSwellsService  {
     val entry = LocalDateTime.parse(s.dateTime, sdf).atZone(timeZone.toZoneId).withZoneSameInstant(TimeZone.getDefault.toZoneId)
     entry.getHour == LocalDateTime.now().getHour
   }
-
 }
 
 object Swells {

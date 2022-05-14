@@ -18,13 +18,13 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
                                eventPublisher: EventPublisher[F]) {
   def register(registerRequest: RegisterRequest): EitherT[F, UserAlreadyExistsError, TokensWithUser] = {
     for {
-      createUserResponse <- register_(registerRequest)
+      createUserResponse <- persistUserAndCredentials(registerRequest)
       tokens <- EitherT.right(generateNewTokens(createUserResponse._1, registerRequest.deviceToken))
       _ <- EitherT.right(eventPublisher.publishUserRegistered("userRegistered", UserRegistered(UserIdDTO(createUserResponse._1.id), EmailId(createUserResponse._1.email))))
     } yield tokens
   }
 
-  def register_(rr: RegisterRequest): EitherT[F, UserAlreadyExistsError, (UserT, Credentials)] = {
+  def persistUserAndCredentials(rr: RegisterRequest): EitherT[F, UserAlreadyExistsError, (UserT, Credentials)] = {
     for {
       savedCreds <- userCredentialsService.register(rr)
       saved <- EitherT.right(userRepository.create(UserT.createEmailUser(savedCreds.id, rr.email, rr.name, rr.deviceType)))

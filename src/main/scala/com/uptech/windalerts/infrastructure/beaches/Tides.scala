@@ -4,7 +4,6 @@ import cats.Applicative
 import cats.data.EitherT
 import cats.effect.{Async, ContextShift, Sync}
 import com.softwaremill.sttp._
-import com.uptech.windalerts.core.beaches.TidesService.GetTidesStatus
 import com.uptech.windalerts.core.beaches.domain.{BeachId, TideHeight}
 import com.uptech.windalerts.core.beaches.{TidesService, domain}
 import com.uptech.windalerts.core.{BeachNotFoundError, SurfsUpError, UnknownError}
@@ -23,7 +22,8 @@ import java.time.{ZoneId, ZonedDateTime}
 import scala.concurrent.Future
 
 
-object WWBackedTidesService {
+class WWBackedTidesService[F[_] : Sync](apiKey: String, beachesConfig: Map[Long, com.uptech.windalerts.config.beaches.Beach])(implicit backend: SttpBackend[Id, Nothing], F: Async[F], C: ContextShift[F])
+  extends TidesService[F] {
   val startDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
   val timeZoneForRegion = Map("TAS" -> "Australia/Tasmania",
@@ -35,9 +35,11 @@ object WWBackedTidesService {
     "NSW" -> "Australia/NSW",
     "NT" -> "Australia/Darwin")
 
-  def get[F[_]]
-  (apiKey: String, beachesConfig: Map[Long, com.uptech.windalerts.config.beaches.Beach])
-  (implicit backend: SttpBackend[Id, Nothing], F: Async[F], C: ContextShift[F]): GetTidesStatus[F] = beachId => {
+  override def get(beachId: BeachId): cats.data.EitherT[F, SurfsUpError, domain.TideHeight] =
+    getFromWillyWeatther_(beachId)
+
+
+  def getFromWillyWeatther_(beachId: BeachId): cats.data.EitherT[F, SurfsUpError, domain.TideHeight] = {
     logger.info(s"Fetching tides status for $beachId")
 
     if (!beachesConfig.contains(beachId.id)) {
@@ -48,11 +50,11 @@ object WWBackedTidesService {
       val startDateFormatted = startDateFormat.format(ZonedDateTime.now(tzId).minusDays(1))
 
       val currentTimeGmt = (System.currentTimeMillis() / 1000) + ZonedDateTime.now(tzId).getOffset.getTotalSeconds
-      sendRequestAndParseResponse(apiKey, beachId, startDateFormatted, tzId, currentTimeGmt)
+      sendRequestAndParseResponse(beachId, startDateFormatted, tzId, currentTimeGmt)
     }
   }
 
-  def sendRequestAndParseResponse[F[_]](apiKey: String, beachId: BeachId, startDateFormatted: String, tzId: ZoneId, currentTimeGmt: Long)(implicit backend: SttpBackend[Id, Nothing], F: Async[F], C: ContextShift[F]) = {
+  def sendRequestAndParseResponse(beachId: BeachId, startDateFormatted: String, tzId: ZoneId, currentTimeGmt: Long) = {
     val future: Future[Id[Response[String]]] =
       resilience.willyWeatherRequestsDecorator(() => {
         val response = sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecastGraphs=tides&days=3&startDate=$startDateFormatted").send()
@@ -103,7 +105,6 @@ object WWBackedTidesService {
       }
     }
   }
-
 }
 
 

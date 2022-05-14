@@ -5,7 +5,7 @@ import cats.effect.Resource.eval
 import cats.effect._
 import com.softwaremill.sttp.quick.backend
 import com.typesafe.config.ConfigFactory.parseFileAnySyntax
-import com.uptech.windalerts.config.{beaches, _}
+import com.uptech.windalerts.config._
 import com.uptech.windalerts.config.beaches.{Beaches, _}
 import com.uptech.windalerts.config.swellAdjustments.Adjustments
 import com.uptech.windalerts.core.beaches.BeachService
@@ -19,18 +19,19 @@ import org.http4s.server.{Router, Server => H4Server}
 
 object BeachesServer extends IOApp {
 
-  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer : Parallel]()(implicit M: Monad[F]): Resource[F, H4Server] = {
+  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer : Parallel]()(implicit M: Monad[F]): Resource[F, H4Server] =
     for {
       beaches <- eval(decodePathF[F, Beaches](parseFileAnySyntax(config.getConfigFile("beaches.json")), "surfsUp"))
       swellAdjustments <- eval(decodePathF[F, Adjustments](parseFileAnySyntax(config.getConfigFile("swellAdjustments.json")), "surfsUp"))
       willyWeatherAPIKey = sys.env("WILLY_WEATHER_KEY")
-      getWindStatus = WWBackedWindsService.get(willyWeatherAPIKey)
-      getTideStatus = WWBackedTidesService.get(willyWeatherAPIKey, beaches.toMap())
-      getSwellsStatus = WWBackedSwellsService.get(willyWeatherAPIKey, swellAdjustments)
+
+      beachService = new BeachService[F](
+        new WWBackedWindsService[F](willyWeatherAPIKey),
+        new WWBackedTidesService[F](willyWeatherAPIKey, beaches.toMap()),
+        new WWBackedSwellsService[F](willyWeatherAPIKey, swellAdjustments))
 
       httpApp = Router(
-        "/v1/beaches" -> new BeachesEndpoints[F]()
-          .allRoutes(getWindStatus, getTideStatus, getSwellsStatus)
+        "/v1/beaches" -> new BeachesEndpoints[F](beachService).allRoutes(),
       ).orNotFound
       server <- BlazeServerBuilder[F]
         .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
@@ -42,8 +43,8 @@ object BeachesServer extends IOApp {
         })
         .resource
     } yield server
-  }
-    def run(args: List[String]): IO[ExitCode] = createServer.use(_ => IO.never).as(ExitCode.Success)
+
+  def run(args: List[String]): IO[ExitCode] = createServer.use(_ => IO.never).as(ExitCode.Success)
 
 
-  }
+}

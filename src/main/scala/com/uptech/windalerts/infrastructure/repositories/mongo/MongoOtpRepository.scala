@@ -43,7 +43,8 @@ class MongoOtpRepository[F[_]](collection: MongoCollection[DBOTPWithExpiry])(imp
   override def deleteForUser(userId: String): F[Unit] = {
     Async.fromFuture(M.pure(collection.deleteOne(equal("userId", userId)).toFuture().map(_ => ())))
   }
-  
+
+
 }
 
 case class DBOTPWithExpiry(_id: ObjectId, otp: String, expiry: Long, userId: String) {

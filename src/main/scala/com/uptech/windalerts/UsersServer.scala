@@ -35,9 +35,6 @@ object UsersServer extends IOApp {
       beaches <- eval(decodePathF[F, Beaches](parseFileAnySyntax(config.getConfigFile("beaches.json")), "surfsUp"))
       swellAdjustments <- eval(decodePathF[F, Adjustments](parseFileAnySyntax(config.getConfigFile("swellAdjustments.json")), "surfsUp"))
       willyWeatherAPIKey = sys.env("WILLY_WEATHER_KEY")
-      getWindStatus = WWBackedWindsService.get(willyWeatherAPIKey)
-      getTideStatus = WWBackedTidesService.get(willyWeatherAPIKey, beaches.toMap())
-      getSwellsStatus = WWBackedSwellsService.get(willyWeatherAPIKey, swellAdjustments)
 
 
       projectId = sys.env("projectId")
@@ -58,7 +55,10 @@ object UsersServer extends IOApp {
       alertsRepository = new MongoAlertsRepository[F](db.getCollection[DBAlert]("alerts"))
       applePlatform = new AppleLoginProvider[F](config.getSecretsFile(s"apple/Apple.p8"))
       facebookPlatform = new FacebookLoginProvider[F](sys.env("FACEBOOK_KEY"))
-
+      beachService = new BeachService[F](
+        new WWBackedWindsService[F](willyWeatherAPIKey),
+        new WWBackedTidesService[F](willyWeatherAPIKey, beaches.toMap()),
+        new WWBackedSwellsService[F](willyWeatherAPIKey, swellAdjustments))
       auth = new AuthenticationService[F](sys.env("JWT_KEY"), usersRepository)
       emailSender = new SendInBlueEmailSender[F](sys.env("EMAIL_KEY"))
       otpService = new OTPService(otpRepositoy, emailSender)
@@ -84,7 +84,7 @@ object UsersServer extends IOApp {
         "/v1/users/social/facebook" -> endpoints.facebookEndpoints(),
         "/v1/users/social/apple" -> endpoints.appleEndpoints(),
         "/v1/users/alerts" -> auth.middleware(alertsEndPoints.allUsersService()),
-        "/v1/beaches" -> new BeachesEndpoints[F].allRoutes(getWindStatus, getTideStatus, getSwellsStatus),
+        "/v1/beaches" -> new BeachesEndpoints[F](beachService).allRoutes(),
         "" -> new SwaggerEndpoints[F]().endpoints(blocker),
       ).orNotFound
       server <- BlazeServerBuilder[F]
