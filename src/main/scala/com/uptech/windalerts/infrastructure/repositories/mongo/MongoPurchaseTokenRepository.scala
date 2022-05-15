@@ -1,8 +1,9 @@
 package com.uptech.windalerts.infrastructure.repositories.mongo
 
 import cats.Monad
-import cats.data.EitherT
+import cats.data.{EitherT, OptionT}
 import cats.effect.{Async, ContextShift}
+import cats.mtl.Raise
 import com.uptech.windalerts.core.social.subscriptions.{PurchaseToken, PurchaseTokenRepository}
 import com.uptech.windalerts.core.{SurfsUpError, TokenNotFoundError}
 import io.scalaland.chimney.dsl._
@@ -18,25 +19,25 @@ class MongoPurchaseTokenRepository[F[_]](collection: MongoCollection[DBPurchaseT
 
   override def create(userId: String,
                       purchaseToken: String,
-                      creationTime: Long): EitherT[F, SurfsUpError, PurchaseToken] = {
+                      creationTime: Long)(implicit FR: Raise[F, TokenNotFoundError]):F[PurchaseToken] = {
     val dbPurchaseToken = DBPurchaseToken(userId, purchaseToken, creationTime)
-    EitherT.liftF(Async.fromFuture(M.pure(collection.insertOne(dbPurchaseToken).toFuture().map(_ => dbPurchaseToken.toPurchaseToken()))))
+    Async.fromFuture(M.pure(collection.insertOne(dbPurchaseToken).toFuture().map(_ => dbPurchaseToken.toPurchaseToken())))
   }
 
-  override def getLastForUser(userId: String): EitherT[F, TokenNotFoundError, PurchaseToken] = {
+  override def getLastForUser(userId: String)(implicit FR: Raise[F, TokenNotFoundError]): F[PurchaseToken] = {
     findLastCreationTime(equal("userId", userId))
   }
 
-  override def getPurchaseByToken(purchaseToken: String): EitherT[F, TokenNotFoundError, PurchaseToken] = {
+  override def getPurchaseByToken(purchaseToken: String)(implicit FR: Raise[F, TokenNotFoundError]): F[PurchaseToken] = {
     findLastCreationTime(equal("purchaseToken", purchaseToken))
   }
 
-  private def findLastCreationTime(criteria: Bson): EitherT[F, TokenNotFoundError, PurchaseToken] = {
+  private def findLastCreationTime(criteria: Bson)(implicit FR: Raise[F, TokenNotFoundError]): F[PurchaseToken] = {
     val result = Async.fromFuture(M.pure(collection.find(
       criteria
     ).sort(orderBy(descending("creationTime"))).collect().toFuture().map(_.headOption.map(_.toPurchaseToken()))))
 
-    EitherT.fromOptionF(result, TokenNotFoundError("Token not found"))
+    OptionT(result).getOrElseF(FR.raise(TokenNotFoundError()))
   }
 
 }

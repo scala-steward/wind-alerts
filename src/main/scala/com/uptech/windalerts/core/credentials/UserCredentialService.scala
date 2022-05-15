@@ -4,6 +4,7 @@ import cats.Monad
 import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
+import cats.mtl.Raise
 import com.github.t3hnar.bcrypt._
 import com.uptech.windalerts.core._
 import com.uptech.windalerts.core.refresh.tokens.UserSessionRepository
@@ -31,14 +32,14 @@ class UserCredentialService[F[_] : Sync](
 
   def resetPassword(
                      email: String, deviceType: String
-                   )(implicit F: Monad[F]): EitherT[F, SurfsUpError, Credentials] =
+                   )(implicit F: Monad[F],  UAF: Raise[F, UserAuthenticationFailedError], UNF: Raise[F, UserNotFoundError]): F[Credentials] =
     for {
-      credentials <- credentialsRepository.findByEmailAndDeviceType(email, deviceType).toRight(UserAuthenticationFailedError(email))
+      credentials <- credentialsRepository.findByEmailAndDeviceType(email, deviceType).getOrElseF(UAF.raise(UserAuthenticationFailedError(email)))
       newPassword = utils.generateRandomString(10)
-      _ <- EitherT.right(credentialsRepository.updatePassword(credentials.id, newPassword.bcrypt))
-      _ <- EitherT.right(userSessionsRepository.deleteForUserId(credentials.id))
-      user <- userRepository.getByUserId(credentials.id).toRight(UserNotFoundError(s"User not found ($email, $deviceType) "))
-      _ <- emailSender.sendResetPassword(user.firstName(), email, newPassword).leftMap[SurfsUpError](UnknownError(_))
+      _ <- credentialsRepository.updatePassword(credentials.id, newPassword.bcrypt)
+      _ <- userSessionsRepository.deleteForUserId(credentials.id)
+      user <- userRepository.getByUserId(credentials.id)
+      _ <- emailSender.sendResetPassword(user.firstName(), email, newPassword)
     } yield credentials
 
 

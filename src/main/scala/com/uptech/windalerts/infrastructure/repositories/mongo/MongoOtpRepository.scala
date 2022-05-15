@@ -3,10 +3,12 @@ package com.uptech.windalerts.infrastructure.repositories.mongo
 import cats.Monad
 import cats.data.OptionT
 import cats.effect.{Async, ContextShift}
+import cats.mtl.Raise
+import com.uptech.windalerts.core.OtpNotFoundError
 import com.uptech.windalerts.core.otp.{OTPWithExpiry, OtpRepository}
 import io.scalaland.chimney.dsl._
-import org.mongodb.scala.MongoCollection
 import org.bson.types.ObjectId
+import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.model.Filters.{and, equal}
 import org.mongodb.scala.model.UpdateOptions
 import org.mongodb.scala.model.Updates.set
@@ -14,7 +16,7 @@ import org.mongodb.scala.model.Updates.set
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class MongoOtpRepository[F[_]](collection: MongoCollection[DBOTPWithExpiry])(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends OtpRepository[F] {
-  override def findByOtpAndUserId(otp: String, userId: String): OptionT[F, OTPWithExpiry] = {
+  override def findByOtpAndUserId(otp: String, userId: String)(implicit FR: Raise[F, OtpNotFoundError]): F[OTPWithExpiry] = {
     OptionT(Async.fromFuture(
       M.pure(
         collection.find(
@@ -22,7 +24,7 @@ class MongoOtpRepository[F[_]](collection: MongoCollection[DBOTPWithExpiry])(imp
             equal("userId", userId),
             equal("otp", otp)
           )
-        ).headOption().map(_.map(_.toOTPWithExpiry())))))
+        ).headOption().map(_.map(_.toOTPWithExpiry()))))).getOrElseF(FR.raise(OtpNotFoundError()))
   }
 
   override def updateForUser(userId: String, otp: String, expiry: Long): F[OTPWithExpiry] = {
@@ -34,7 +36,7 @@ class MongoOtpRepository[F[_]](collection: MongoCollection[DBOTPWithExpiry])(imp
             set("expiry", expiry)),
           UpdateOptions().upsert(true))
           .toFuture()
-          .map(updateResult => {
+          .map(_ => {
             OTPWithExpiry(otp, expiry, userId)
           })))
   }
