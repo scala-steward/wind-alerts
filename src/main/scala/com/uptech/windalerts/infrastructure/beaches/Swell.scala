@@ -1,13 +1,14 @@
 package com.uptech.windalerts.infrastructure.beaches
 
 import cats.Applicative
-import cats.data.EitherT
 import cats.effect.{Async, ContextShift, Sync}
+import cats.implicits.toFlatMapOps
+import cats.mtl.Raise
 import com.softwaremill.sttp._
 import com.uptech.windalerts.config.swellAdjustments.Adjustments
-import com.uptech.windalerts.core.beaches.{SwellsService, domain}
 import com.uptech.windalerts.core.beaches.domain.BeachId
-import com.uptech.windalerts.core.{SurfsUpError, UnknownError}
+import com.uptech.windalerts.core.beaches.{SwellsService, domain}
+import com.uptech.windalerts.core.{BeachNotFoundError, UnknownError}
 import com.uptech.windalerts.infrastructure.beaches.Swells.Swell
 import com.uptech.windalerts.infrastructure.resilience
 import com.uptech.windalerts.logger
@@ -24,10 +25,7 @@ import scala.concurrent.Future
 
 class WWBackedSwellsService[F[_] : Sync](apiKey: String, adjustments: Adjustments)(implicit backend: SttpBackend[Id, Nothing], F: Async[F], C: ContextShift[F]) extends SwellsService[F] {
 
-  override def get(beachId: BeachId): cats.data.EitherT[F, SurfsUpError, domain.Swell] =
-    getFromWillyWeatther_(apiKey, beachId)
-
-  def getFromWillyWeatther_(apiKey: String, beachId: BeachId) = {
+  override def get(beachId: BeachId)(implicit FR: Raise[F, BeachNotFoundError]): F[domain.Swell] = {
     val future: Future[Id[Response[String]]] =
       resilience.willyWeatherRequestsDecorator(callable = () => {
         logger.info(s"Fetching swell status for $beachId")
@@ -37,10 +35,10 @@ class WWBackedSwellsService[F[_] : Sync](apiKey: String, adjustments: Adjustment
         response
       })
 
-    EitherT(F.map(Async.fromFuture(F.pure(future)))(parse(_)))
+    Async.fromFuture(F.pure(future)).flatMap(parse(_))
   }
 
-  def parse(response: Id[Response[String]]) = {
+  def parse(response: Id[Response[String]])(implicit FR: Raise[F, BeachNotFoundError]) = {
     val res = for {
       body <- response
         .body

@@ -1,5 +1,7 @@
 package com.uptech.windalerts.infrastructure.beaches
 
+import cats.Applicative
+import cats.mtl.Raise
 import com.uptech.windalerts.core.{BeachNotFoundError, SurfsUpError, UnknownError}
 import io.circe.parser
 
@@ -18,14 +20,14 @@ object WillyWeatherHelper {
     ).getOrElse(UnknownError(""))
   }
 
-  def leftOnBeachNotFoundError[T](result: Either[SurfsUpError, T], default: T) = {
+  def leftOnBeachNotFoundError[F[_]:Applicative,T](result: Either[SurfsUpError, T], default: T)(implicit  FR: Raise[F, BeachNotFoundError]):F[T] = {
     if (result.isLeft) {
       result.left.get match {
-        case e@BeachNotFoundError(_) => Left(e)
-        case _ => Right(default)
+        case e@BeachNotFoundError(_) => FR.raise(e)
+        case _ => Applicative[F].pure(default)
       }
     } else {
-      result
+      Applicative[F].pure(result.toOption.get)
     }
   }
 }

@@ -83,6 +83,11 @@
             <version>${cats.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.typelevel</groupId>
+            <artifactId>cats-mtl_2.13</artifactId>
+            <version>1.2.1</version>
+        </dependency>
+        <dependency>
             <groupId>com.softwaremill.sttp</groupId>
             <artifactId>core_2.13</artifactId>
             <version>1.7.2</version>

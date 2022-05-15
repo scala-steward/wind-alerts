@@ -1,8 +1,9 @@
 package com.uptech.windalerts.core.beaches
 
-import com.uptech.windalerts.core.SurfsUpError
+import cats.mtl.Raise
+import com.uptech.windalerts.core.{BeachNotFoundError, SurfsUpError}
 import com.uptech.windalerts.core.beaches.domain.{BeachId, TideHeight}
 
 trait TidesService[F[_]] {
-  def get(beachId: BeachId): cats.data.EitherT[F, SurfsUpError, TideHeight]
+  def get(beachId: BeachId)(implicit FR: Raise[F, BeachNotFoundError]): F[TideHeight]
 }

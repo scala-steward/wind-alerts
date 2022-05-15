@@ -1,12 +1,13 @@
 package com.uptech.windalerts.infrastructure.beaches
 
 import cats.Applicative
-import cats.data.EitherT
 import cats.effect.{Async, ContextShift, Sync}
+import cats.implicits.toFlatMapOps
+import cats.mtl.Raise
 import com.softwaremill.sttp._
 import com.uptech.windalerts.core.beaches.domain.{BeachId, TideHeight}
 import com.uptech.windalerts.core.beaches.{TidesService, domain}
-import com.uptech.windalerts.core.{BeachNotFoundError, SurfsUpError, UnknownError}
+import com.uptech.windalerts.core.{BeachNotFoundError, UnknownError}
 import com.uptech.windalerts.infrastructure.beaches.Tides.Datum
 import com.uptech.windalerts.infrastructure.beaches.Tides.TideDecoders.tideDecoder
 import com.uptech.windalerts.infrastructure.resilience
@@ -35,15 +36,12 @@ class WWBackedTidesService[F[_] : Sync](apiKey: String, beachesConfig: Map[Long,
     "NSW" -> "Australia/NSW",
     "NT" -> "Australia/Darwin")
 
-  override def get(beachId: BeachId): cats.data.EitherT[F, SurfsUpError, domain.TideHeight] =
-    getFromWillyWeatther_(beachId)
-
-
-  def getFromWillyWeatther_(beachId: BeachId): cats.data.EitherT[F, SurfsUpError, domain.TideHeight] = {
+  override def get(beachId: BeachId)(implicit FR: Raise[F, BeachNotFoundError]): F[domain.TideHeight] = {
     logger.info(s"Fetching tides status for $beachId")
 
+
     if (!beachesConfig.contains(beachId.id)) {
-      EitherT.left[domain.TideHeight](F.pure(BeachNotFoundError("Beach not found")))
+      FR.raise(BeachNotFoundError(s"Beach not found $beachId"))
     } else {
       val tz = timeZoneForRegion.getOrElse(beachesConfig(beachId.id).region, "Australia/NSW")
       val tzId = ZoneId.of(tz)
@@ -54,7 +52,7 @@ class WWBackedTidesService[F[_] : Sync](apiKey: String, beachesConfig: Map[Long,
     }
   }
 
-  def sendRequestAndParseResponse(beachId: BeachId, startDateFormatted: String, tzId: ZoneId, currentTimeGmt: Long) = {
+  def sendRequestAndParseResponse(beachId: BeachId, startDateFormatted: String, tzId: ZoneId, currentTimeGmt: Long)(implicit FR: Raise[F, BeachNotFoundError]) = {
     val future: Future[Id[Response[String]]] =
       resilience.willyWeatherRequestsDecorator(() => {
         val response = sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecastGraphs=tides&days=3&startDate=$startDateFormatted").send()
@@ -62,11 +60,11 @@ class WWBackedTidesService[F[_] : Sync](apiKey: String, beachesConfig: Map[Long,
         response
       })
 
-    EitherT(F.map(Async.fromFuture(F.pure(future)))(response => parse(response, tzId, currentTimeGmt)))
+    Async.fromFuture(F.pure(future)).flatMap(response => parse(response, tzId, currentTimeGmt))
   }
 
 
-  def parse(response: Id[Response[String]], tzId: ZoneId, currentTimeGmt: Long) = {
+  def parse(response: Id[Response[String]], tzId: ZoneId, currentTimeGmt: Long)(implicit FR: Raise[F, BeachNotFoundError]) = {
     val res = for {
       body <- response
         .body

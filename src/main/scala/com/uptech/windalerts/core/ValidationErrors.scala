@@ -1,6 +1,6 @@
 package com.uptech.windalerts.core
 
-abstract class SurfsUpError(val message: String)
+abstract class SurfsUpError (val message: String) extends  Throwable
 
 case class TokenExpiredError(msg: String = "Token not found") extends SurfsUpError(msg)
 
