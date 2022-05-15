@@ -1,8 +1,9 @@
 package com.uptech.windalerts
 
-import cats.{Monad, Parallel}
 import cats.effect.Resource.eval
 import cats.effect._
+import cats.mtl.Handle
+import cats.{Applicative, Monad, Parallel}
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
@@ -11,25 +12,23 @@ import com.typesafe.config.ConfigFactory.parseFileAnySyntax
 import com.uptech.windalerts.config._
 import com.uptech.windalerts.config.beaches.{Beaches, _}
 import com.uptech.windalerts.config.swellAdjustments.Adjustments
-import com.uptech.windalerts.core.alerts.domain.Alert
+import com.uptech.windalerts.core.BeachNotFoundError
 import com.uptech.windalerts.core.beaches.BeachService
-import com.uptech.windalerts.core.notifications.{Notification, NotificationsService}
-import com.uptech.windalerts.core.refresh.tokens.UserSession
-import com.uptech.windalerts.core.user.UserT
+import com.uptech.windalerts.core.notifications.NotificationsService
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints.NotificationEndpoints
 import com.uptech.windalerts.infrastructure.notifications.FirebaseBasedNotificationsSender
 import com.uptech.windalerts.infrastructure.repositories.mongo._
 import io.circe.config.parser.decodePathF
-import org.http4s.{Response, Status}
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.{Server => H4Server}
+import org.http4s.{Response, Status}
 
 import java.io.{File, FileInputStream}
 import scala.util.Try
 
 object SendNotifications extends IOApp {
-  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer : Parallel]()(implicit M: Monad[F]): Resource[F, H4Server] =
+  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer : Parallel]()(implicit M: Monad[F], H: Handle[F, Throwable]): Resource[F, H4Server] =
     for {
       appConfig <- eval(decodePathF[F, com.uptech.windalerts.config.config.SurfsUp](parseFileAnySyntax(config.getConfigFile("application.conf")), "surfsUp"))
       projectId = sys.env("projectId")
@@ -78,7 +77,7 @@ object SendNotifications extends IOApp {
       .getOrElse(GoogleCredentials.getApplicationDefault)
   }
 
-  def run(args: List[String]): IO[ExitCode] = createServer.use(_ => IO.never).as(ExitCode.Success)
-
-
+  def run(args: List[String]): IO[ExitCode] = {
+    createServer[IO].use(_ => IO.never).as(ExitCode.Success)
+  }
 }

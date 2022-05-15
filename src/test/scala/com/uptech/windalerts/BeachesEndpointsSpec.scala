@@ -1,8 +1,8 @@
 package com.uptech.windalerts
 
-import cats.data.EitherT
 import cats.effect.{ContextShift, IO}
-import com.uptech.windalerts.core.SurfsUpError
+import cats.mtl.Raise
+import com.uptech.windalerts.core.{BeachNotFoundError, SurfsUpError}
 import com.uptech.windalerts.core.beaches._
 import com.uptech.windalerts.core.beaches.domain._
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
@@ -28,7 +28,7 @@ class BeachesEndpointsSpec extends AnyFunSuite
     forAll { (w: Wind, t: TideHeight, s: Swell) =>
       (
         for {
-          response <- beachEndPoints(w, t, s).orNotFound.run(Request(method = Method.GET, uri = uri"/1/currentStatus" ))
+          response <- beachEndPoints(w, t, s).orNotFound.run(Request(method = Method.GET, uri = uri"/1/currentStatus"))
           status <- response.as[Beach]
         } yield status shouldBe Beach(BeachId(1), w, Tide(t, SwellOutput(s.height, s.direction, s.directionText)))
         ).unsafeRunSync()
@@ -36,18 +36,18 @@ class BeachesEndpointsSpec extends AnyFunSuite
   }
 
   private def beachEndPoints(w: Wind, t: TideHeight, s: Swell) = {
-    new com.uptech.windalerts.infrastructure.endpoints.BeachesEndpoints[IO](new BeachService[IO](new FixedWindService(w), new FixedTidesService(t), new FixedSwellService(s))).allRoutes()
+    new com.uptech.windalerts.infrastructure.endpoints.BeachesEndpoints[IO](new BeachService[IO](new FixedWindService(w), new FixedTidesService(t), new FixedSwellService(s))).allRoutes
   }
 
   class FixedWindService(wind: Wind) extends WindsService[IO] {
-    override def get(beachId: domain.BeachId): EitherT[IO, SurfsUpError, domain.Wind] = EitherT.pure(wind)
+    override def get(beachId: domain.BeachId)(implicit FR: Raise[IO, BeachNotFoundError]) = IO.pure(wind)
   }
 
   class FixedTidesService(tideHeight: TideHeight) extends TidesService[IO] {
-    override def get(beachId: domain.BeachId): EitherT[IO, SurfsUpError, domain.TideHeight] = EitherT.pure(tideHeight)
+    override def get(beachId: domain.BeachId)(implicit FR: Raise[IO, BeachNotFoundError]) = IO.pure(tideHeight)
   }
 
   class FixedSwellService(swell: Swell) extends SwellsService[IO] {
-    override def get(beachId: domain.BeachId): EitherT[IO, SurfsUpError, domain.Swell] = EitherT.pure(swell)
+    override def get(beachId: domain.BeachId)(implicit FR: Raise[IO, BeachNotFoundError]) = IO.pure(swell)
   }
 }

@@ -2,6 +2,7 @@ package com.uptech.windalerts
 
 import cats.effect.Resource.eval
 import cats.effect.{IO, _}
+import cats.mtl.Handle
 import cats.{Monad, Parallel}
 import com.softwaremill.sttp.quick.backend
 import com.typesafe.config.ConfigFactory.parseFileAnySyntax
@@ -10,26 +11,25 @@ import com.uptech.windalerts.config.beaches.{Beaches, _}
 import com.uptech.windalerts.config.swellAdjustments.Adjustments
 import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.beaches.BeachService
-import com.uptech.windalerts.core.credentials.{Credentials, SocialCredentials, UserCredentialService}
-import com.uptech.windalerts.core.otp.{OTPService, OTPWithExpiry}
+import com.uptech.windalerts.core.credentials.UserCredentialService
+import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.social.login.SocialLoginService
-import com.uptech.windalerts.core.social.subscriptions.PurchaseToken
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints._
 import com.uptech.windalerts.infrastructure.repositories.mongo._
 import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Facebook}
-import com.uptech.windalerts.infrastructure.social.login.{AppleLoginProvider, FacebookLoginProvider, AllSocialLoginProviders}
+import com.uptech.windalerts.infrastructure.social.login.{AllSocialLoginProviders, AppleLoginProvider, FacebookLoginProvider}
 import com.uptech.windalerts.infrastructure.social.subscriptions._
-import com.uptech.windalerts.infrastructure.{SendInBlueEmailSender, GooglePubSubEventpublisher}
+import com.uptech.windalerts.infrastructure.{GooglePubSubEventpublisher, SendInBlueEmailSender}
 import io.circe.config.parser.decodePathF
-import org.http4s.{Response, Status}
-import org.http4s.implicits._
 import org.http4s.blaze.server.BlazeServerBuilder
+import org.http4s.implicits._
 import org.http4s.server.{Router, Server => H4Server}
+import org.http4s.{Response, Status}
 
 object UsersServer extends IOApp {
-  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer : Parallel]()(implicit M: Monad[F]): Resource[F, H4Server] =
+  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer : Parallel]()(implicit M: Monad[F], H: Handle[F, Throwable]): Resource[F, H4Server] =
 
     for {
       beaches <- eval(decodePathF[F, Beaches](parseFileAnySyntax(config.getConfigFile("beaches.json")), "surfsUp"))
@@ -84,7 +84,7 @@ object UsersServer extends IOApp {
         "/v1/users/social/facebook" -> endpoints.facebookEndpoints(),
         "/v1/users/social/apple" -> endpoints.appleEndpoints(),
         "/v1/users/alerts" -> auth.middleware(alertsEndPoints.allUsersService()),
-        "/v1/beaches" -> new BeachesEndpoints[F](beachService).allRoutes(),
+        "/v1/beaches" -> new BeachesEndpoints[F](beachService).allRoutes,
         "" -> new SwaggerEndpoints[F]().endpoints(blocker),
       ).orNotFound
       server <- BlazeServerBuilder[F]
@@ -98,6 +98,9 @@ object UsersServer extends IOApp {
         .resource
     } yield server
 
-  def run(args: List[String]): IO[ExitCode] = createServer.use(_ => IO.never).as(ExitCode.Success)
+
+  def run(args: List[String]): IO[ExitCode] = {
+    createServer[IO].use(_ => IO.never).as(ExitCode.Success)
+  }
 
 }

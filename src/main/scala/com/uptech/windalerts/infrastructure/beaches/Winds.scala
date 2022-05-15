@@ -1,12 +1,13 @@
 package com.uptech.windalerts.infrastructure.beaches
 
 import cats.FlatMap
-import cats.data.EitherT
 import cats.effect.{Async, ContextShift, Sync}
+import cats.implicits.{toFlatMapOps, toFunctorOps}
+import cats.mtl.Raise
 import com.softwaremill.sttp._
-import com.uptech.windalerts.core.beaches.{WindsService, domain}
 import com.uptech.windalerts.core.beaches.domain.BeachId
-import com.uptech.windalerts.core.{SurfsUpError, UnknownError}
+import com.uptech.windalerts.core.beaches.{WindsService, domain}
+import com.uptech.windalerts.core.{BeachNotFoundError, UnknownError}
 import com.uptech.windalerts.infrastructure.resilience
 import com.uptech.windalerts.logger
 import io.circe.generic.semiauto.deriveDecoder
@@ -35,13 +36,8 @@ object Wind {
 
 class WWBackedWindsService[F[_] : FlatMap : Sync](apiKey: String)(implicit backend: SttpBackend[Id, Nothing], F: Async[F], C: ContextShift[F]) extends WindsService[F] {
 
-  override def get(beachId: BeachId): cats.data.EitherT[F, SurfsUpError, domain.Wind] = {
+  override def get(beachId: BeachId)(implicit FR: Raise[F, BeachNotFoundError]): F[domain.Wind] = {
 
-    getFromWillyWeather(beachId)
-  }
-
-
-  def getFromWillyWeather(beachId: BeachId) = {
     val future: Future[Id[Response[String]]] =
       resilience.willyWeatherRequestsDecorator(() => {
         logger.info(s"Fetching wind status for $beachId")
@@ -50,10 +46,11 @@ class WWBackedWindsService[F[_] : FlatMap : Sync](apiKey: String)(implicit backe
         response
       })
 
-    EitherT(F.map(Async.fromFuture(F.pure(future)))(parse(_)))
+    Async.fromFuture(F.pure(future)).flatMap(parse(_))
   }
 
-  private def parse(response: Id[Response[String]]) = {
+
+  private def parse(response: Id[Response[String]])(implicit  FR: Raise[F, BeachNotFoundError]) = {
     val res = for {
       body <- response
         .body

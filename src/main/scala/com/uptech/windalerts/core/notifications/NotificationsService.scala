@@ -1,10 +1,11 @@
 package com.uptech.windalerts.core.notifications
 
-import cats.Parallel
+import cats.{Monad, Parallel}
 import cats.data.EitherT
 import cats.effect.{Async, Sync}
 import cats.implicits._
-import com.uptech.windalerts.core.NotificationNotSentError
+import cats.mtl.Raise
+import com.uptech.windalerts.core.{BeachNotFoundError, NotificationNotSentError}
 import com.uptech.windalerts.core.alerts.AlertsRepository
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.beaches.BeachService
@@ -19,7 +20,7 @@ class NotificationsService[F[_] : Sync : Parallel](N: NotificationRepository[F],
                                                    B: BeachService[F],
                                                    alertsRepository: AlertsRepository[F],
                                                    notificationSender: NotificationsSender[F],
-                                                   userSessionsRepository: UserSessionRepository[F])(implicit F: Async[F]) {
+                                                   userSessionsRepository: UserSessionRepository[F])(implicit F: Async[F],  FR: Raise[F, BeachNotFoundError], M:Monad[F]) {
   final case class UserDetails(userId: String, email: String)
 
   final case class AlertWithBeach(alert: Alert, beach: Beach)
@@ -84,9 +85,7 @@ class NotificationsService[F[_] : Sync : Parallel](N: NotificationRepository[F],
   }
 
   private def beachStatuses(beachIds: Seq[BeachId]) = {
-    B.getAll(beachIds).value.map(_.leftMap(e => {
-      logger.warn(s"Error while fetching beach status $e")
-    }).getOrElse(Map()))
+    B.getAll(beachIds)
   }
 
   private def submit(u: AlertWithUserWithBeach): EitherT[F, NotificationNotSentError, Unit] = {
