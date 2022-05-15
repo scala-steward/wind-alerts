@@ -1,6 +1,7 @@
 package com.uptech.windalerts.core.alerts
 
-import cats.data.{EitherT, OptionT}
+import cats.data.OptionT
+import cats.mtl.Raise
 import com.uptech.windalerts.core.AlertNotFoundError
 import com.uptech.windalerts.core.alerts.domain.Alert
 
@@ -17,7 +18,7 @@ trait AlertsRepository[F[_]] {
 
   def getAllEnabledForUser(user: String): F[Seq[Alert]]
 
-  def delete(requester: String, id: String): EitherT[F, AlertNotFoundError, Unit]
+  def delete(requester: String, id: String)(implicit FR: Raise[F, AlertNotFoundError]):F[Unit]
 
-  def update(requester: String, alertId: String, updateAlertRequest: AlertRequest): EitherT[F, AlertNotFoundError, Alert]
+  def update(requester: String, alertId: String, updateAlertRequest: AlertRequest)(implicit FR: Raise[F, AlertNotFoundError]):F[Alert]
 }

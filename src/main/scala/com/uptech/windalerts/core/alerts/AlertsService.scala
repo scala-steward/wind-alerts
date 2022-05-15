@@ -1,11 +1,13 @@
 package com.uptech.windalerts.core.alerts
 
-import cats.Bifunctor.ops.toAllBifunctorOps
 import cats.data.EitherT
 import cats.effect.Sync
+import cats.implicits._
+import cats.mtl.Raise
+import cats.{Applicative, Monad}
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.user.{UserId, UserType}
-import com.uptech.windalerts.core.{AlertNotFoundError, OperationNotAllowed, SurfsUpError}
+import com.uptech.windalerts.core.{AlertNotFoundError, OperationNotAllowed}
 
 class AlertsService[F[_] : Sync](alertsRepository: AlertsRepository[F]) {
   def createAlert(userId: UserId, userType: UserType, alertRequest: AlertRequest): EitherT[F, OperationNotAllowed, Alert] = {
@@ -15,29 +17,33 @@ class AlertsService[F[_] : Sync](alertsRepository: AlertsRepository[F]) {
     } yield saved
   }
 
-  def update(alertId: String, userId: UserId, userType: UserType, alertRequest: AlertRequest): EitherT[F, SurfsUpError, Alert] = {
+  def update(alertId: String, userId: UserId, userType: UserType, alertRequest: AlertRequest)(implicit ONA: Raise[F, OperationNotAllowed], ANF: Raise[F, AlertNotFoundError] ): F[Alert] = {
     for {
-      _ <- authorizeAlertEditRequest(userId, userType, alertId, alertRequest).leftWiden[SurfsUpError]
-      updated <- alertsRepository.update(userId.id, alertId, alertRequest).leftWiden[SurfsUpError]
+      _ <- authorizeAlertEditRequest(userId, userType, alertId, alertRequest)
+      updated <- alertsRepository.update(userId.id, alertId, alertRequest)
     } yield updated
   }
 
-  def authorizeAlertEditRequest(userId: UserId, userType: UserType, alertId: String, alertRequest: AlertRequest): EitherT[F, OperationNotAllowed, Unit] = {
+  def authorizeAlertEditRequest(userId: UserId, userType: UserType, alertId: String, alertRequest: AlertRequest)(implicit FR: Raise[F, OperationNotAllowed], ONA: Raise[F, AlertNotFoundError], A: Applicative[F]): F[Unit] = {
     if (userType.isPremiumUser())
-      EitherT.pure(())
+      A.pure(())
     else {
       authorizeAlertEditNonPremiumUser(userId, alertId, alertRequest)
     }
   }
 
-  private def authorizeAlertEditNonPremiumUser(userId: UserId, alertId: String, alertRequest: AlertRequest) = {
+  private def authorizeAlertEditNonPremiumUser(userId: UserId, alertId: String, alertRequest: AlertRequest)(implicit M: Monad[F], ONA: Raise[F, OperationNotAllowed], ANF: Raise[F, AlertNotFoundError], A: Applicative[F]): F[Unit] = {
     for {
-      firstAlert <- alertsRepository.getFirstAlert(userId.id).toRight(OperationNotAllowed(s"Please subscribe to perform this action"))
-      canEdit <- EitherT.fromEither(Either.cond(checkForNonPremiumUser(alertId, firstAlert, alertRequest), (), OperationNotAllowed(s"Please subscribe to perform this action")))
+      firstAlert <- getFirstAlert(userId)
+      canEdit <- if (checkForNonPremiumUser(alertId, firstAlert, alertRequest)) A.pure(()) else ONA.raise(OperationNotAllowed(s"Please subscribe to perform this action"))
     } yield canEdit
   }
 
-  def checkForNonPremiumUser(alertId: String, alert: Alert, alertRequest: AlertRequest) = {
+  private def getFirstAlert(userId: UserId)(implicit FR: Raise[F, OperationNotAllowed]) = {
+    alertsRepository.getFirstAlert(userId.id).getOrElseF(FR.raise(OperationNotAllowed("Please subscribe to perform this action")))
+  }
+
+  def checkForNonPremiumUser(alertId: String, alert: Alert, alertRequest: AlertRequest)(implicit FR: Raise[F, AlertNotFoundError]) = {
     if (alert.id != alertId) {
       false
     } else {
@@ -47,7 +53,7 @@ class AlertsService[F[_] : Sync](alertsRepository: AlertsRepository[F]) {
 
   def getAllForUser(user: String): F[Seq[Alert]] = alertsRepository.getAllForUser(user)
 
-  def delete(requester: String, alertId: String) = {
+  def delete(requester: String, alertId: String)(implicit FR: Raise[F, AlertNotFoundError]) = {
     alertsRepository.delete(requester, alertId)
   }
 }

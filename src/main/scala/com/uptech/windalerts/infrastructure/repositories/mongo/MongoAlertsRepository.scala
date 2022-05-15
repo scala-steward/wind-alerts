@@ -1,14 +1,14 @@
 package com.uptech.windalerts.infrastructure.repositories.mongo
 
 
-import cats.Monad
-import cats.data.{EitherT, OptionT}
+import cats.data.OptionT
 import cats.effect.{Async, ContextShift}
 import cats.implicits._
+import cats.mtl.Raise
+import cats.{Applicative, Monad}
 import com.uptech.windalerts.core.AlertNotFoundError
-import com.uptech.windalerts.core.alerts.{AlertRequest, AlertsRepository, TimeRange}
 import com.uptech.windalerts.core.alerts.domain.Alert
-import com.uptech.windalerts.core.types._
+import com.uptech.windalerts.core.alerts.{AlertRequest, AlertsRepository, TimeRange}
 import io.scalaland.chimney.dsl._
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId
@@ -51,22 +51,26 @@ class MongoAlertsRepository[F[_]](collection: MongoCollection[DBAlert])(implicit
     Async.fromFuture(M.pure(collection.insertOne(dBAlert).toFuture().map(_ => dBAlert.toAlert())))
   }
 
-  override def delete(requester: String, alertId: String): EitherT[F, AlertNotFoundError, Unit] = {
-    for {
-      dbAlert <- getById(alertId).toRight(AlertNotFoundError())
-      _ <- EitherT.cond[F](dbAlert.owner == requester, (), AlertNotFoundError())
-      deleted <- EitherT.right(Async.fromFuture(M.pure(collection.deleteOne(equal("_id", new ObjectId(alertId))).toFuture().map(_ => ()))))
-    } yield deleted
+  override def delete(requester: String, alertId: String)(implicit FR: Raise[F, AlertNotFoundError]): F[Unit] = {
+    delete_(requester, alertId)
   }
 
-  override def update(requester: String, alertId: String, updateAlertRequest: AlertRequest): EitherT[F, AlertNotFoundError, Alert] = {
+  def delete_(requester: String, alertId: String)(implicit A: Applicative[F], FR: Raise[F, AlertNotFoundError]): F[Unit] = {
     for {
-      oldAlert <- getById(alertId).toRight(AlertNotFoundError())
+      dbAlert <- getById(alertId).getOrElseF(FR.raise(AlertNotFoundError()))
+      _ <- if (dbAlert.owner != requester) FR.raise(AlertNotFoundError()) else A.pure(dbAlert)
+      deleted <- Async.fromFuture(M.pure(collection.deleteOne(equal("_id", new ObjectId(alertId))).toFuture().map(_ => ())))
+    } yield deleted
+  }
+  override def update(requester: String, alertId: String, updateAlertRequest: AlertRequest)(implicit FR: Raise[F, AlertNotFoundError]): F[Alert] = {
+    for {
+      oldAlert <- getById(alertId).getOrElseF(FR.raise(AlertNotFoundError()))
       alertUpdated = DBAlert(updateAlertRequest, requester, alertId, oldAlert.createdAt)
-      _ <- EitherT.liftF(M.pure(collection.replaceOne(equal("_id", new ObjectId(alertId)), alertUpdated).toFuture()))
-      alert <- getById(alertId).toRight(AlertNotFoundError())
+      _ <- M.pure(collection.replaceOne(equal("_id", new ObjectId(alertId)), alertUpdated).toFuture())
+      alert <- getById(alertId).getOrElseF(FR.raise(AlertNotFoundError()))
     } yield alert
   }
+
 
   override def getAllForUser(user: String): F[Seq[Alert]] = {
     findByCriteria(equal("owner", user))
