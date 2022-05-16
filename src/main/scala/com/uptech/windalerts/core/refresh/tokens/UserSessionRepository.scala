@@ -1,7 +1,8 @@
 package com.uptech.windalerts.core.refresh.tokens
 
 import cats.data.{EitherT, OptionT}
-import com.uptech.windalerts.core.TokenNotFoundError
+import cats.mtl.Raise
+import com.uptech.windalerts.core.{RefreshTokenNotFoundError, TokenNotFoundError}
 import com.uptech.windalerts.core.user.UserT
 
 trait UserSessionRepository[F[_]] {
@@ -9,7 +10,7 @@ trait UserSessionRepository[F[_]] {
 
   def getByUserId(userId: String): OptionT[F, UserSession]
 
-  def getByRefreshToken(refreshToken: String): OptionT[F, UserSession]
+  def getByRefreshToken(refreshToken: String)(implicit RTNF: Raise[F, RefreshTokenNotFoundError]): F[UserSession]
 
   def deleteForUserId(uid: String): F[Unit]
 

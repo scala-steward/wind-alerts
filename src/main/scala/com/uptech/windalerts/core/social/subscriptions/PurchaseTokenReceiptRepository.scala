@@ -1,12 +1,12 @@
 package com.uptech.windalerts.core.social.subscriptions
 
-import cats.data.EitherT
-import com.uptech.windalerts.core.{SurfsUpError, TokenNotFoundError}
+import cats.mtl.Raise
+import com.uptech.windalerts.core.TokenNotFoundError
 
 trait PurchaseTokenRepository[F[_]] {
-  def getPurchaseByToken(purchaseToken: String): EitherT[F, TokenNotFoundError, PurchaseToken]
+  def getPurchaseByToken(purchaseToken: String)(implicit FR: Raise[F, TokenNotFoundError]): F[PurchaseToken]
 
-  def getLastForUser(userId: String): EitherT[F, TokenNotFoundError, PurchaseToken]
+  def getLastForUser(userId: String)(implicit FR: Raise[F, TokenNotFoundError]):F[PurchaseToken]
 
-  def create(userId: String, purchaseToken: String, creationTime: Long): EitherT[F, SurfsUpError, PurchaseToken]
+  def create(userId: String, purchaseToken: String, creationTime: Long)(implicit FR: Raise[F, TokenNotFoundError]):  F[PurchaseToken]
 }

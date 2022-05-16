@@ -1,14 +1,15 @@
 package com.uptech.windalerts.core.user
 
+import cats.Applicative
 import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
+import cats.mtl.Raise
 import com.uptech.windalerts.core._
 import com.uptech.windalerts.core.credentials.{Credentials, UserCredentialService}
 import com.uptech.windalerts.core.refresh.tokens.UserSession.REFRESH_TOKEN_EXPIRY
 import com.uptech.windalerts.core.refresh.tokens.{UserSession, UserSessionRepository}
-import types._
-import io.circe.syntax._
+import com.uptech.windalerts.core.types._
 
 
 class UserService[F[_] : Sync](userRepository: UserRepository[F],
@@ -62,33 +63,37 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
 
   }
 
-  def refresh(accessTokenRequest: AccessTokenRequest): EitherT[F, SurfsUpError, TokensWithUser] = {
+  def refresh(accessTokenRequest: AccessTokenRequest)(implicit FR: Raise[F, UserNotFoundError], RTNF: Raise[F, RefreshTokenNotFoundError],  RTE: Raise[F, RefreshTokenExpiredError]): F[TokensWithUser] = {
     for {
-      oldRefreshToken <- userSessionsRepository.getByRefreshToken(accessTokenRequest.refreshToken).toRight(RefreshTokenNotFoundError())
+      oldRefreshToken <- userSessionsRepository.getByRefreshToken(accessTokenRequest.refreshToken)
       _ <- checkNotExpired(oldRefreshToken)
-      _ <- EitherT.liftF(userSessionsRepository.deleteForUserId(oldRefreshToken.userId))
+      _ <- userSessionsRepository.deleteForUserId(oldRefreshToken.userId)
       user <- getUser(oldRefreshToken.userId)
-      tokens <- EitherT.right[SurfsUpError](generateNewTokens(user, oldRefreshToken.deviceToken))
+      tokens <- generateNewTokens(user, oldRefreshToken.deviceToken)
     } yield tokens
   }
 
-  private def checkNotExpired(oldRefreshToken: UserSession): cats.data.EitherT[F, SurfsUpError, Unit] =
-    EitherT.cond(!oldRefreshToken.isExpired(), (), RefreshTokenExpiredError())
+  private def checkNotExpired(oldRefreshToken: UserSession)(implicit RTNF: Raise[F, RefreshTokenExpiredError], A: Applicative[F]) =
+    if (!oldRefreshToken.isExpired()) {
+      A.pure(())
+    } else {
+      RTNF.raise(RefreshTokenExpiredError())
+    }
 
-  def updateUserProfile(id: String, name: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long): EitherT[F, UserNotFoundError, UserT] = {
+  def updateUserProfile(id: String, name: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long)(implicit FR: Raise[F, UserNotFoundError]): F[UserT] = {
     for {
       user <- getUser(id)
-      operationResult <- updateUser(name, snoozeTill, disableAllAlerts, notificationsPerHour, user).toRight(UserNotFoundError())
+      operationResult <- updateUser(name, snoozeTill, disableAllAlerts, notificationsPerHour, user)
     } yield operationResult
   }
 
-  private def updateUser(name: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, user: UserT) = {
+  private def updateUser(name: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, user: UserT)(implicit FR: Raise[F, UserNotFoundError]) = {
     userRepository.update(user.copy(name = name, snoozeTill = snoozeTill, disableAllAlerts = disableAllAlerts, notificationsPerHour = notificationsPerHour))
   }
 
-  def updateDeviceToken(id: String, deviceToken: String): EitherT[F, UserNotFoundError, UserT] = {
+  def updateDeviceToken(id: String, deviceToken: String)(implicit FR: Raise[F, UserNotFoundError]): F[UserT] = {
     for {
-      _ <- EitherT.liftF(userSessionsRepository.updateDeviceToken(id, deviceToken))
+      _ <- userSessionsRepository.updateDeviceToken(id, deviceToken)
       user <- getUser(id)
     } yield user
   }
@@ -99,8 +104,8 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
   def getUser(email: String, deviceType: String): EitherT[F, UserNotFoundError, UserT] =
     userRepository.getByEmailAndDeviceType(email, deviceType).toRight(UserNotFoundError())
 
-  def getUser(userId: String): EitherT[F, UserNotFoundError, UserT] =
-    userRepository.getByUserId(userId).toRight(UserNotFoundError())
+  def getUser(userId: String)(implicit FR: Raise[F, UserNotFoundError]): F[UserT] =
+    userRepository.getByUserId(userId)
 
 }
 

@@ -2,6 +2,9 @@ package com.uptech.windalerts.core.user
 
 import cats.data.OptionT
 import cats.effect.Effect
+import cats.mtl.Handle.handleForApplicativeError
+import cats.mtl.Raise
+import com.uptech.windalerts.core.{OtpNotFoundError, UserNotFoundError}
 import dev.profunktor.auth.JwtAuthMiddleware
 import dev.profunktor.auth.jwt.{JwtAuth, JwtSecretKey}
 import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim}
@@ -33,10 +36,11 @@ class AuthenticationService[F[_] : Effect](jwtKey: String, userRepository: UserR
 
   val authenticate: JwtClaim => F[Option[UserIdMetadata]] = claim => {
     OptionT.fromOption(claim.subject)
-      .flatMap(userRepository.getByUserId(_))
+      .flatMap(userRepository.getByUserIdOption(_))
       .map(_.userIdMetadata())
       .value
   }
+
 
   val middleware = JwtAuthMiddleware[F, UserIdMetadata](jwtAuth, _ => authenticate)
 

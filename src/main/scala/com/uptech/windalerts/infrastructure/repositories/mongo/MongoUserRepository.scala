@@ -5,6 +5,8 @@ import cats.Monad
 import cats.data.OptionT
 import cats.effect.{Async, ContextShift}
 import cats.implicits.toFunctorOps
+import cats.mtl.Raise
+import com.uptech.windalerts.core.UserNotFoundError
 import com.uptech.windalerts.core.user.UserType.{Premium, Trial}
 import com.uptech.windalerts.core.user.{UserRepository, UserT}
 import io.scalaland.chimney.dsl._
@@ -12,15 +14,17 @@ import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.{and, equal, lt}
-
+import cats.implicits._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class MongoUserRepository[F[_]](collection: MongoCollection[DBUser])(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends UserRepository[F] {
 
-  override def getByUserId(userId: String): OptionT[F, UserT] = {
+  override def getByUserId(userId: String)(implicit FR: Raise[F, UserNotFoundError]): F[UserT] = {
+    getByUserIdOption(userId).getOrElseF(FR.raise(UserNotFoundError()))
+  }
+  override def getByUserIdOption(userId: String) = {
     findByCriteria(equal("_id", new ObjectId(userId)))
   }
-
   override def getByEmailAndDeviceType(email: String, deviceType: String) = {
     findByCriteria(and(equal("email", email), equal("deviceType", deviceType)))
   }
@@ -30,9 +34,9 @@ class MongoUserRepository[F[_]](collection: MongoCollection[DBUser])(implicit cs
     Async.fromFuture(M.pure(collection.insertOne(dbUser).toFuture().map(_ => dbUser.toUser())))
   }
 
-  override def update(user: UserT): OptionT[F, UserT] = {
+  override def update(user: UserT)(implicit FR: Raise[F, UserNotFoundError]): F[UserT] = {
     for {
-      _ <- OptionT.liftF(Async.fromFuture(M.pure(collection.replaceOne(equal("_id", new ObjectId(user.id)), DBUser(user)).toFuture())))
+      _ <- Async.fromFuture(M.pure(collection.replaceOne(equal("_id", new ObjectId(user.id)), DBUser(user)).toFuture()))
       updatedUser <- getByUserId(user.id)
     } yield updatedUser
   }

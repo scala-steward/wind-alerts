@@ -3,7 +3,8 @@ package com.uptech.windalerts.infrastructure.repositories.mongo
 import cats.Monad
 import cats.data.{EitherT, OptionT}
 import cats.effect.{Async, ContextShift}
-import com.uptech.windalerts.core.TokenNotFoundError
+import cats.mtl.Raise
+import com.uptech.windalerts.core.{RefreshTokenNotFoundError, TokenNotFoundError}
 import com.uptech.windalerts.core.refresh.tokens.{UserSession, UserSessionRepository}
 import io.scalaland.chimney.dsl._
 import org.bson.types.ObjectId
@@ -20,8 +21,8 @@ class MongoUserSessionRepository[F[_]](collection: MongoCollection[DBUserSession
     Async.fromFuture(M.pure(collection.insertOne(dBUserSession).toFuture().map(_ => dBUserSession.toUserSession())))
   }
 
-  override def getByRefreshToken(refreshToken: String): OptionT[F, UserSession] = {
-    findByCriteria(equal("refreshToken", refreshToken))
+  override def getByRefreshToken(refreshToken: String)(implicit RTNF: Raise[F, RefreshTokenNotFoundError]): F[UserSession] = {
+    findByCriteria(equal("refreshToken", refreshToken)).getOrElseF(RTNF.raise(RefreshTokenNotFoundError()))
   }
 
   override def getByUserId(userId: String): OptionT[F, UserSession] = {

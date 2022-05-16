@@ -1,8 +1,11 @@
 package com.uptech.windalerts.infrastructure.endpoints
 
+import cats.Applicative
 import cats.data.{EitherT, OptionT}
 import cats.effect.{Effect, Sync}
 import cats.implicits._
+import cats.mtl.Handle
+import cats.mtl.implicits.toHandleOps
 import com.uptech.windalerts.config._
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.otp.OTPService
@@ -11,9 +14,11 @@ import com.uptech.windalerts.core.social.subscriptions.SocialPlatformSubscriptio
 import com.uptech.windalerts.core.user.{TokensWithUser, UserIdMetadata, UserRolesService, UserService}
 import com.uptech.windalerts.core._
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
+import com.uptech.windalerts.infrastructure.endpoints.errors.mapError
 import types._
 import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Facebook, Google}
 import com.uptech.windalerts.infrastructure.social.login.AccessRequests.{AppleRegisterRequest, FacebookRegisterRequest}
+import fs2.Stream
 import io.circe.parser.parse
 import org.http4s.dsl.Http4sDsl
 import org.http4s._
@@ -25,7 +30,7 @@ class UsersEndpoints[F[_] : Effect]
  socialLoginService: SocialLoginService[F],
  userRolesService: UserRolesService[F],
  socialPlatformSubscriptionsProviders: SocialPlatformSubscriptionsProviders[F],
- otpService: OTPService[F])
+ otpService: OTPService[F])(implicit FR: Handle[F, Throwable])
   extends Http4sDsl[F] {
 
   def openEndpoints(): HttpRoutes[F] =
@@ -59,15 +64,13 @@ class UsersEndpoints[F[_] : Effect]
 
       case req@POST -> Root / "refresh" =>
         (for {
-          refreshToken <- EitherT.liftF(req.as[AccessTokenRequest])
+          refreshToken <- req.as[AccessTokenRequest]
           user <- userService.refresh(refreshToken)
-        } yield user).value.flatMap {
-          case Right(tokensWithUser) => Ok(tokensWithUser)
-          case Left(RefreshTokenNotFoundError(_)) => BadRequest(s"Refresh token not found")
-          case Left(RefreshTokenExpiredError(_)) => BadRequest(s"Refresh token expired")
-          case Left(TokenNotFoundError(_)) => BadRequest(s"Token not found")
-          case Left(UserNotFoundError(_)) => NotFound("User not found")
-        }
+        } yield user).flatMap(
+          Ok(_)
+        ).handle[Throwable](mapError(_))
+
+
 
       case req@POST -> Root / "changePassword" =>
         (for {
@@ -80,32 +83,27 @@ class UsersEndpoints[F[_] : Effect]
 
       case req@POST -> Root / "resetPassword" =>
         (for {
-          resetPasswordRequest <- EitherT.liftF(req.as[ResetPasswordRequest])
+          resetPasswordRequest <- req.as[ResetPasswordRequest]
           user <- userCredentialsService.resetPassword(resetPasswordRequest.email, resetPasswordRequest.deviceType)
-        } yield user).value.flatMap {
-          case Right(_) => Ok()
-          case Left(UserAuthenticationFailedError(name)) => BadRequest(s"Authentication failed for user $name")
-          case Left(UserNotFoundError(_)) => NotFound("User not found")
-        }
+        } yield user).flatMap(_=>Ok())
+          .handle[Throwable](mapError(_))
 
       case req@POST -> Root / "purchase" / "android" / "update" =>
         (for {
-          update <- EitherT.liftF(req.as[AndroidUpdate])
-          decoded <- EitherT.fromEither[F](Either.right(new String(java.util.Base64.getDecoder.decode(update.message.data))))
+          update <- req.as[AndroidUpdate]
+          decoded = new String(java.util.Base64.getDecoder.decode(update.message.data))
           subscription <- asSubscription(decoded)
           user <- userRolesService.handleUpdate("Google", subscription.subscriptionNotification.purchaseToken)
-        } yield user).value.flatMap {
-          case Right(_) => Ok()
-          case Left(error) => InternalServerError(error.message)
-        }
+        } yield user).flatMap(_=>Ok())
+          .handle[Throwable](mapError(_))
     }
 
-  private def asSubscription(response: String): EitherT[F, SurfsUpError, SubscriptionNotificationWrapper] = {
-    EitherT.fromEither((for {
-      parsed <- parse(response)
-      decoded <- parsed.as[SubscriptionNotificationWrapper].leftWiden[io.circe.Error]
-    } yield decoded).leftMap(error => UnknownError(error.getMessage)).leftWiden[SurfsUpError])
 
+  private def asSubscription(response: String): F[SubscriptionNotificationWrapper] = {
+    Applicative[F].pure((for {
+      parsed <- parse(response)
+      decoded <- parsed.as[SubscriptionNotificationWrapper]
+    } yield decoded).toOption.get)
   }
 
 
@@ -117,10 +115,8 @@ class UsersEndpoints[F[_] : Effect]
           request =>
             (for {
               response <- userService.updateUserProfile(u.userId.id, request.name, request.snoozeTill, request.disableAllAlerts, request.notificationsPerHour)
-            } yield response).value.flatMap {
-              case Right(response) => Ok(response)
-              case Left(UserNotFoundError(_)) => NotFound("User not found")
-            }
+            } yield response).flatMap(_=>Ok())
+              .handle[Throwable](mapError(_))
         })
       }
 
@@ -128,10 +124,8 @@ class UsersEndpoints[F[_] : Effect]
         OptionT.liftF(
           (for {
             response <- userService.getUser(user.userId.id)
-          } yield response).value.flatMap {
-            case Right(response) => Ok(response)
-            case Left(UserNotFoundError(_)) => NotFound("User not found")
-          }
+          } yield response).flatMap(_=>Ok())
+            .handle[Throwable](mapError(_))
         )
       }
 
@@ -140,10 +134,8 @@ class UsersEndpoints[F[_] : Effect]
           req =>
             (for {
               response <- userService.updateDeviceToken(user.userId.id, req.deviceToken)
-            } yield response).value.flatMap {
-              case Right(response) => Ok(response)
-              case Left(UserNotFoundError(_)) => NotFound("User not found")
-            }
+            } yield response).flatMap(_=>Ok())
+              .handle[Throwable](mapError(_))
         })
       }
 
@@ -151,9 +143,8 @@ class UsersEndpoints[F[_] : Effect]
         OptionT.liftF({
           (for {
             response <- otpService.send(user.userId.id, user.emailId.email)
-          } yield response).value.flatMap {
-            case Right(response) => Ok(response)
-          }
+          } yield response).flatMap(Ok(_))
+            .handle[Throwable](mapError(_))
         })
 
       case authReq@POST -> Root / "verifyEmail" as user =>
@@ -161,11 +152,8 @@ class UsersEndpoints[F[_] : Effect]
           req =>
             (for {
               response <- userRolesService.verifyEmail(user.userId, req)
-            } yield response).value.flatMap {
-              case Right(response) => Ok(response)
-              case Left(OtpNotFoundError(_)) => NotFound("Invalid or expired OTP")
-              case Left(UserNotFoundError(_)) => NotFound("User not found")
-            }
+            } yield response).flatMap(Ok(_))
+              .handle[Throwable](mapError(_))
         })
 
       case _@POST -> Root / "logout" as user => {
@@ -183,11 +171,8 @@ class UsersEndpoints[F[_] : Effect]
         OptionT.liftF(
           (for {
             response <- userRolesService.updateUserPurchase(user.userId)
-          } yield response).value.flatMap {
-            case Right(response) => Ok(response)
-            case Left(TokenNotFoundError(_)) => NotFound("Token not found")
-            case Left(UserNotFoundError(_)) => NotFound("User not found")
-          }
+          } yield response).flatMap(Ok(_))
+          .handle[Throwable](mapError(_))
         )
 
       case authReq@POST -> Root / "purchase" / "android" as user =>
@@ -195,22 +180,16 @@ class UsersEndpoints[F[_] : Effect]
           req =>
             (for {
               response <- socialPlatformSubscriptionsProviders.findByType(Google).handleNewPurchase(user.userId, req)
-            } yield response).value.flatMap {
-              case Right(_) => Ok()
-              case Left(TokenNotFoundError(_)) => NotFound("Token not found")
-              case Left(UserNotFoundError(_)) => NotFound("User not found")
-            }
+            } yield response).flatMap(_=>Ok())
+              .handle[Throwable](mapError(_))
         })
 
       case _@GET -> Root / "purchase" / "apple" as user => {
         OptionT.liftF(
           (for {
             response <- userRolesService.updateUserPurchase(user.userId)
-          } yield response).value.flatMap {
-            case Right(response) => Ok(response)
-            case Left(TokenNotFoundError(_)) => NotFound("Token not found")
-            case Left(UserNotFoundError(_)) => NotFound("User not found")
-          }
+          } yield response).flatMap(Ok(_))
+          .handle[Throwable](mapError(_))
         )
       }
 
@@ -219,11 +198,8 @@ class UsersEndpoints[F[_] : Effect]
           req =>
             (for {
               response <- socialPlatformSubscriptionsProviders.findByType(Apple).handleNewPurchase(user.userId, req)
-            } yield response).value.flatMap {
-              case Right(_) => Ok()
-              case Left(TokenNotFoundError(_)) => NotFound("Token not found")
-              case Left(UserNotFoundError(_)) => NotFound("User not found")
-            }
+            } yield response).flatMap(_=>Ok())
+              .handle[Throwable](mapError(_))
         })
     }
 
@@ -309,4 +285,6 @@ class UsersEndpoints[F[_] : Effect]
       }).withEntity(tokensWithUser._1)
     )
   }
+
+
 }
