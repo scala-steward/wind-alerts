@@ -1,11 +1,10 @@
 package com.uptech.windalerts.core.notifications
 
-import cats.{Monad, Parallel}
-import cats.data.EitherT
 import cats.effect.{Async, Sync}
 import cats.implicits._
 import cats.mtl.Raise
-import com.uptech.windalerts.core.{BeachNotFoundError, NotificationNotSentError}
+import cats.{Monad, Parallel}
+import com.uptech.windalerts.core.BeachNotFoundError
 import com.uptech.windalerts.core.alerts.AlertsRepository
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.beaches.BeachService
@@ -31,10 +30,10 @@ class NotificationsService[F[_] : Sync : Parallel](N: NotificationRepository[F],
 
 
   def sendNotification() = {
-    EitherT.liftF(for {
+    for {
       alertWithUserWithBeach <- findAllAlertsToNotify()
-      submitted <- alertWithUserWithBeach.map(submit(_)).toList.sequence.getOrElse(())
-    } yield submitted)
+      submitted <- alertWithUserWithBeach.map(submit(_)).toList.sequence
+    } yield submitted
   }
 
   def findAllAlertsToNotify() = {
@@ -88,11 +87,13 @@ class NotificationsService[F[_] : Sync : Parallel](N: NotificationRepository[F],
     B.getAll(beachIds)
   }
 
-  private def submit(u: AlertWithUserWithBeach): EitherT[F, NotificationNotSentError, Unit] = {
+  private def submit(u: AlertWithUserWithBeach): F[Unit] = {
     for {
-      _ <- notificationSender.send(NotificationDetails(BeachId(u.alert.beachId), u.user.deviceToken, UserId(u.user.userId)))
-      _ <- EitherT.liftF(N.create(u.alert.id, u.user.userId, u.user.deviceToken, System.currentTimeMillis()))
+      status <- notificationSender.send(NotificationDetails(BeachId(u.alert.beachId), u.user.deviceToken, UserId(u.user.userId)))
+      _ <- F.delay(logger.info(s"Notification response to ${u.user.email} is ${status}"))
+      _ <- N.create(u.alert.id, u.user.userId, u.user.deviceToken, System.currentTimeMillis())
     } yield ()
   }
+
 
 }

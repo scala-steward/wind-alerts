@@ -1,11 +1,11 @@
 package com.uptech.windalerts.infrastructure.repositories.mongo
 
 import cats.Monad
-import cats.data.{EitherT, OptionT}
+import cats.data.OptionT
 import cats.effect.{Async, ContextShift}
 import cats.mtl.Raise
+import com.uptech.windalerts.core.TokenNotFoundError
 import com.uptech.windalerts.core.social.subscriptions.{PurchaseToken, PurchaseTokenRepository}
-import com.uptech.windalerts.core.{SurfsUpError, TokenNotFoundError}
 import io.scalaland.chimney.dsl._
 import org.bson.types.ObjectId
 import org.mongodb.scala.MongoCollection

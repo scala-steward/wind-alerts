@@ -33,7 +33,7 @@ class AppleSubscription[F[_] : Async](appSecret: String)(implicit F: Async[F]) e
         .flatMap(_.map(p => p.as[AppleSubscriptionPurchase].left.map(e => UnknownError(e.getMessage())))
           .filter(_.isRight).maxBy(_.right.get.expires_date_ms))
         .map(purchase => SubscriptionPurchase(purchase.purchase_date_ms, purchase.expires_date_ms))
-        .right
+        .toTry
         .get
     )
   }

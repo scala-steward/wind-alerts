@@ -2,9 +2,6 @@ package com.uptech.windalerts.core.user
 
 import cats.data.OptionT
 import cats.effect.Effect
-import cats.mtl.Handle.handleForApplicativeError
-import cats.mtl.Raise
-import com.uptech.windalerts.core.{OtpNotFoundError, UserNotFoundError}
 import dev.profunktor.auth.JwtAuthMiddleware
 import dev.profunktor.auth.jwt.{JwtAuth, JwtSecretKey}
 import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim}

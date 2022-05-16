@@ -1,10 +1,10 @@
 package com.uptech.windalerts.infrastructure.repositories.mongo
 
 import cats.Monad
-import cats.data.{EitherT, OptionT}
+import cats.data.OptionT
 import cats.effect.{Async, ContextShift}
 import cats.mtl.Raise
-import com.uptech.windalerts.core.{RefreshTokenNotFoundError, TokenNotFoundError}
+import com.uptech.windalerts.core.RefreshTokenNotFoundError
 import com.uptech.windalerts.core.refresh.tokens.{UserSession, UserSessionRepository}
 import io.scalaland.chimney.dsl._
 import org.bson.types.ObjectId
@@ -42,18 +42,6 @@ class MongoUserSessionRepository[F[_]](collection: MongoCollection[DBUserSession
 
   override def deleteForUserId(userId: String): F[Unit] = {
     Async.fromFuture(M.pure(collection.deleteOne(equal("userId", userId)).toFuture().map(_ => ())))
-  }
-
-
-  override def updateExpiry(id: String, expiry: Long): EitherT[F, TokenNotFoundError, UserSession] = {
-    for {
-      _ <- EitherT.liftF(Async.fromFuture(M.pure(collection.updateOne(equal("_id", new ObjectId(id)), set("expiry", expiry)).toFuture())))
-      updated <- getById(id).toRight(TokenNotFoundError("Token not found"))
-    } yield updated
-  }
-
-  private def getById(id: String) = {
-    findByCriteria(equal("_id", new ObjectId(id)))
   }
 
   override def updateDeviceToken(userId: String, deviceToken: String): F[Unit] = {

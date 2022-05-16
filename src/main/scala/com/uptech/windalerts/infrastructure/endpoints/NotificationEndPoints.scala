@@ -1,6 +1,6 @@
 package com.uptech.windalerts.infrastructure.endpoints
 
-import cats.effect.{Async, Effect}
+import cats.effect.Effect
 import com.uptech.windalerts.core.notifications.NotificationsService
 import org.http4s.HttpRoutes
 import org.http4s.dsl.Http4sDsl
@@ -15,15 +15,15 @@ class NotificationEndpoints[F[_] : Effect](notifications: NotificationsService[F
 
     HttpRoutes.of[F] {
       case GET -> Root / "notify" => {
-        notifications.sendNotification().value.flatMap {
-          case Right(_) => Ok()
+        notifications.sendNotification().flatMap {
+          _ => Ok()
         }
       }
 
 
       case GET -> Root => {
-        notifications.sendNotification().value.flatMap {
-          case Right(_) => Ok()
+        notifications.sendNotification().flatMap {
+          _ => Ok()
         }
       }
     }

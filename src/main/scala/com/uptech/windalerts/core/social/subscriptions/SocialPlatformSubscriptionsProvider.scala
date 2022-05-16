@@ -1,10 +1,9 @@
 package com.uptech.windalerts.core.social.subscriptions
 
-import cats.data.EitherT
 import cats.effect.Sync
-import cats.mtl.Raise
 import cats.implicits._
-import com.uptech.windalerts.core.{SurfsUpError, TokenNotFoundError}
+import cats.mtl.Raise
+import com.uptech.windalerts.core.TokenNotFoundError
 import com.uptech.windalerts.core.types._
 import com.uptech.windalerts.core.user.UserId
 

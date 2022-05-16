@@ -14,7 +14,7 @@ case class TokenNotFoundError(msg: String = "Token not found") extends SurfsUpEr
 
 case class AlertNotFoundError(msg: String = "Alert not found") extends SurfsUpError(msg)
 
-case class UserAlreadyExistsError(email: String, deviceType: String) extends SurfsUpError("")
+case class UserAlreadyExistsRegistered(email: String, deviceType: String) extends SurfsUpError("")
 
 case class UserAuthenticationFailedError(email: String) extends SurfsUpError("")
 

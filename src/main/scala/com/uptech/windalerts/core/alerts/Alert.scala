@@ -32,7 +32,6 @@ object domain {
           {
             if (beachStatus.tide.height.status.equals("Increasing")) "Rising" else "Falling"
           }))
-
     }
 
     def isTimeMatch(): Boolean = {

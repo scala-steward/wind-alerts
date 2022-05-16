@@ -1,18 +1,17 @@
 package com.uptech.windalerts.infrastructure.social.subscriptions
 
 import cats.Applicative
-import cats.data.{EitherT, OptionT}
+import cats.data.OptionT
 import cats.effect.Sync
-import com.uptech.windalerts.core.{PlatformNotSupported, SurfsUpError, TokenNotFoundError, UserNotFoundError}
-import com.uptech.windalerts.core.social.SocialPlatformType
-import com.uptech.windalerts.core.social.subscriptions._
-import com.uptech.windalerts.core.user.UserId
-import com.uptech.windalerts.core.types._
-import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes
-import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Google}
-import com.uptech.windalerts.core.social.subscriptions.PurchaseToken
 import cats.implicits._
 import cats.mtl.Raise
+import com.uptech.windalerts.core.social.SocialPlatformType
+import com.uptech.windalerts.core.social.subscriptions._
+import com.uptech.windalerts.core.types._
+import com.uptech.windalerts.core.user.UserId
+import com.uptech.windalerts.core.{PlatformNotSupported, TokenNotFoundError}
+import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes
+import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Google}
 
 class SocialPlatformSubscriptionsServiceImpl[F[_] : Sync](
                                                            applePurchaseRepository: PurchaseTokenRepository[F],

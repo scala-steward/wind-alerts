@@ -47,7 +47,7 @@ class AppleLoginProvider[F[_]](file: File)(implicit cs: ContextShift[F], s: Asyn
     val tokenResponse = responseBody.flatMap(parser.parse(_)).flatMap(x => x.as[TokenResponse]).right.get
     val claims = Jwt.decode(tokenResponse.id_token, JwtOptions(signature = false))
     val parsedEither = parser.parse(claims.toOption.get.content)
-    parsedEither.flatMap(x => x.as[AppleUser]).right.get
+    parsedEither.flatMap(_.as[AppleUser]).toTry.get
   }
 
   private def generateJWT() = {
