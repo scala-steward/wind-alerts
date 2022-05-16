@@ -4,7 +4,7 @@ import cats.Applicative
 import cats.data.Kleisli
 import cats.effect.{IO, Sync}
 import cats.implicits._
-import com.uptech.windalerts.core.{OperationNotAllowed, OtpNotFoundError, RefreshTokenExpiredError, RefreshTokenNotFoundError, TokenNotFoundError, UserAlreadyExistsError, UserAuthenticationFailedError, UserNotFoundError}
+import com.uptech.windalerts.core.{OperationNotAllowed, OtpNotFoundError, RefreshTokenExpiredError, RefreshTokenNotFoundError, TokenNotFoundError, UserAlreadyExistsRegistered, UserAuthenticationFailedError, UserNotFoundError}
 import com.uptech.windalerts.logger
 import fs2.Stream
 import org.http4s.dsl.Http4sDsl
@@ -27,7 +27,7 @@ object errors {
       Response(status = Status.BadRequest).withBodyStream(Stream.emits(s"Authentication failed for user $name".getBytes()))
     case _@OperationNotAllowed(msg) =>
       Response(status = Status.Forbidden).withBodyStream(Stream.emits(msg.getBytes()))
-    case _@UserAlreadyExistsError(email, deviceType) =>
+    case _@UserAlreadyExistsRegistered(email, deviceType) =>
       Response(status = Status.Conflict).withBodyStream(Stream.emits(s"The user with email $email for device type $deviceType already exists".getBytes()))
     case e@_ =>
       Response(status = Status.InternalServerError).withBodyStream(Stream.emits(s"${e.getMessage()}".getBytes()))

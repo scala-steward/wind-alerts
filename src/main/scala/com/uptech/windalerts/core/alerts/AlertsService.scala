@@ -13,9 +13,9 @@ import scala.language.postfixOps
 class AlertsService[F[_] : Sync](alertsRepository: AlertsRepository[F]) {
   def createAlert(userId: UserId, userType: UserType, alertRequest: AlertRequest)(implicit ONA: Raise[F, OperationNotAllowed]): F[Alert] = {
     for {
-      _ <- if(userType.isPremiumUser()) Applicative[F].pure(()) else ONA.raise(OperationNotAllowed(s"Please subscribe to perform this action"))
-      saved <- alertsRepository.create(alertRequest, userId.id)
-    } yield saved
+      _ <- if (userType.isPremiumUser()) Applicative[F].pure(()) else ONA.raise(OperationNotAllowed(s"Please subscribe to perform this action"))
+      created <- alertsRepository.create(alertRequest, userId.id)
+    } yield created
   }
 
   def update(alertId: String, userId: UserId, userType: UserType, alertRequest: AlertRequest)(implicit ONA: Raise[F, OperationNotAllowed], ANF: Raise[F, AlertNotFoundError]): F[Alert] = {

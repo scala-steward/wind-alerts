@@ -1,7 +1,7 @@
 package com.uptech.windalerts.infrastructure.endpoints
 
 import cats.Applicative
-import cats.data.{EitherT, OptionT}
+import cats.data.OptionT
 import cats.effect.{Effect, Sync}
 import cats.implicits._
 import cats.mtl.Handle
@@ -11,17 +11,15 @@ import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.social.subscriptions.SocialPlatformSubscriptionsProviders
+import com.uptech.windalerts.core.types._
 import com.uptech.windalerts.core.user.{TokensWithUser, UserIdMetadata, UserRolesService, UserService}
-import com.uptech.windalerts.core._
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
 import com.uptech.windalerts.infrastructure.endpoints.errors.mapError
-import types._
 import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Facebook, Google}
 import com.uptech.windalerts.infrastructure.social.login.AccessRequests.{AppleRegisterRequest, FacebookRegisterRequest}
-import fs2.Stream
 import io.circe.parser.parse
-import org.http4s.dsl.Http4sDsl
 import org.http4s._
+import org.http4s.dsl.Http4sDsl
 import org.typelevel.ci.CIString
 
 class UsersEndpoints[F[_] : Effect]
@@ -103,7 +101,7 @@ class UsersEndpoints[F[_] : Effect]
   def authedService(): AuthedRoutes[UserIdMetadata, F] =
     AuthedRoutes {
 
-      case authReq@PUT -> Root / "profile" as u => {
+      case authReq@PUT -> Root / "profile" as u =>
         OptionT.liftF(authReq.req.decode[UpdateUserRequest] {
           request =>
             (for {
@@ -111,18 +109,16 @@ class UsersEndpoints[F[_] : Effect]
             } yield response).flatMap(_=>Ok())
               .handle[Throwable](mapError(_))
         })
-      }
 
-      case _@GET -> Root / "profile" as user => {
+      case _@GET -> Root / "profile" as user =>
         OptionT.liftF(
           (for {
             response <- userService.getUser(user.userId.id)
           } yield response).flatMap(_=>Ok())
             .handle[Throwable](mapError(_))
         )
-      }
 
-      case authReq@PUT -> Root / "deviceToken" as user => {
+      case authReq@PUT -> Root / "deviceToken" as user =>
         OptionT.liftF(authReq.req.decode[UpdateUserDeviceTokenRequest] {
           req =>
             (for {
@@ -130,7 +126,6 @@ class UsersEndpoints[F[_] : Effect]
             } yield response).flatMap(_=>Ok())
               .handle[Throwable](mapError(_))
         })
-      }
 
       case _@POST -> Root / "sendOTP" as user =>
         OptionT.liftF({
@@ -149,16 +144,13 @@ class UsersEndpoints[F[_] : Effect]
               .handle[Throwable](mapError(_))
         })
 
-      case _@POST -> Root / "logout" as user => {
+      case _@POST -> Root / "logout" as user =>
         OptionT.liftF({
           (for {
             response <- userService.logoutUser(user.userId.id)
-          } yield response).value.flatMap {
-            case Right(_) => Ok()
-            case Left(UserNotFoundError(_)) => NotFound("User not found")
-          }
+          } yield response).flatMap(_=>Ok())
+            .handle[Throwable](mapError(_))
         })
-      }
 
       case _@GET -> Root / "purchase" / "android" as user =>
         OptionT.liftF(
@@ -177,14 +169,13 @@ class UsersEndpoints[F[_] : Effect]
               .handle[Throwable](mapError(_))
         })
 
-      case _@GET -> Root / "purchase" / "apple" as user => {
+      case _@GET -> Root / "purchase" / "apple" as user =>
         OptionT.liftF(
           (for {
             response <- userRolesService.updateUserPurchase(user.userId)
           } yield response).flatMap(Ok(_))
           .handle[Throwable](mapError(_))
         )
-      }
 
       case authReq@POST -> Root / "purchase" / "apple" as user =>
         OptionT.liftF(authReq.req.decode[PurchaseReceiptValidationRequest] {

@@ -1,15 +1,13 @@
 package com.uptech.windalerts.core.user
 
-import cats.data.{EitherT, OptionT}
 import cats.effect.Sync
 import cats.implicits._
-import cats.mtl.Handle.handleForApplicativeError
 import cats.mtl.Raise
 import com.uptech.windalerts.core.alerts.AlertsRepository
 import com.uptech.windalerts.core.otp.OtpRepository
 import com.uptech.windalerts.core.social.subscriptions.SocialPlatformSubscriptionsProviders
 import com.uptech.windalerts.core.types._
-import com.uptech.windalerts.core.{OperationNotAllowed, OtpNotFoundError, SurfsUpError, TokenNotFoundError, UserNotFoundError}
+import com.uptech.windalerts.core.{OtpNotFoundError, TokenNotFoundError, UserNotFoundError}
 
 class UserRolesService[F[_] : Sync](alertsRepository: AlertsRepository[F], userRepository: UserRepository[F], otpRepository: OtpRepository[F], socialPlatformSubscriptionsProviders: SocialPlatformSubscriptionsProviders[F]) {
   def updateTrialUsers()(implicit FR: Raise[F, UserNotFoundError]) = {
@@ -49,14 +47,6 @@ class UserRolesService[F[_] : Sync](alertsRepository: AlertsRepository[F], userR
         }
       }
     } yield userWithUpdatedRole
-  }
-
-  def authorizePremiumUsers(user: UserT): EitherT[F, SurfsUpError, UserT] = {
-    EitherT.fromEither(if (UserType(user.userType) == UserType.Premium || UserType(user.userType) == UserType.Trial) {
-      Right(user)
-    } else {
-      Left(OperationNotAllowed(s"Please subscribe to perform this action"))
-    })
   }
 
 

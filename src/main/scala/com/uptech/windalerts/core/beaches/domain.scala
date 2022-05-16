@@ -1,6 +1,6 @@
 package com.uptech.windalerts.core.beaches
 
-object domain {
+object  domain {
   final case class BeachId(id: Long) extends AnyVal
 
   final case class Wind(direction: Double = 0, speed: Double = 0, directionText: String, trend: String)

@@ -1,7 +1,6 @@
 package com.uptech.windalerts.core.user
 
 import cats.Applicative
-import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
 import cats.mtl.Raise
@@ -17,7 +16,7 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
                                auth: AuthenticationService[F],
                                userSessionsRepository: UserSessionRepository[F],
                                eventPublisher: EventPublisher[F]) {
-  def register(registerRequest: RegisterRequest)(implicit FR: Raise[F, UserAlreadyExistsError]): F[TokensWithUser] = {
+  def register(registerRequest: RegisterRequest)(implicit FR: Raise[F, UserAlreadyExistsRegistered]): F[TokensWithUser] = {
     for {
       createUserResponse <- persistUserAndCredentials(registerRequest)
       tokens <- generateNewTokens(createUserResponse._1, registerRequest.deviceToken)
@@ -25,7 +24,7 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
     } yield tokens
   }
 
-  def persistUserAndCredentials(rr: RegisterRequest)(implicit FR: Raise[F, UserAlreadyExistsError]): F[(UserT, Credentials)] = {
+  def persistUserAndCredentials(rr: RegisterRequest)(implicit FR: Raise[F, UserAlreadyExistsRegistered]): F[(UserT, Credentials)] = {
     for {
       savedCreds <- userCredentialsService.register(rr)
       saved <- userRepository.create(UserT.createEmailUser(savedCreds.id, rr.email, rr.name, rr.deviceType))
@@ -63,7 +62,7 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
 
   }
 
-  def refresh(accessTokenRequest: AccessTokenRequest)(implicit FR: Raise[F, UserNotFoundError], RTNF: Raise[F, RefreshTokenNotFoundError],  RTE: Raise[F, RefreshTokenExpiredError]): F[TokensWithUser] = {
+  def refresh(accessTokenRequest: AccessTokenRequest)(implicit FR: Raise[F, UserNotFoundError], RTNF: Raise[F, RefreshTokenNotFoundError], RTE: Raise[F, RefreshTokenExpiredError]): F[TokensWithUser] = {
     for {
       oldRefreshToken <- userSessionsRepository.getByRefreshToken(accessTokenRequest.refreshToken)
       _ <- checkNotExpired(oldRefreshToken)
@@ -98,8 +97,8 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
     } yield user
   }
 
-  def logoutUser(userId: String): EitherT[F, UserNotFoundError, Unit] =
-    EitherT.liftF(userSessionsRepository.deleteForUserId(userId))
+  def logoutUser(userId: String): F[Unit] =
+    userSessionsRepository.deleteForUserId(userId)
 
   def getUser(email: String, deviceType: String)(implicit FR: Raise[F, UserNotFoundError]): F[UserT] =
     userRepository.getByEmailAndDeviceType(email, deviceType)

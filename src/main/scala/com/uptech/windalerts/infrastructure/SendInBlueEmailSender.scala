@@ -1,10 +1,11 @@
 package com.uptech.windalerts.infrastructure
 
-import cats.Monad
-import cats.data.EitherT
+import cats.{Applicative, Monad}
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
-import com.uptech.windalerts.logger
 import com.uptech.windalerts.core.EmailSender
+import com.uptech.windalerts.logger
+
+import scala.util.Try
 
 
 class SendInBlueEmailSender[F[_]](apiKey: String) extends EmailSender[F] {
@@ -49,6 +50,7 @@ class SendInBlueEmailSender[F[_]](apiKey: String) extends EmailSender[F] {
 
       val body = req.send().body
       logger.info(s"Response from sendinblue ${body.toString}")
+
       F.pure(body.toOption.get)
   }
 }
