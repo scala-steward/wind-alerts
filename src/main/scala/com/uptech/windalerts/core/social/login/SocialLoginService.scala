@@ -1,13 +1,14 @@
 package com.uptech.windalerts.core.social.login
 
 import cats.Applicative
-import cats.data.EitherT
+import cats.data.{EitherT, OptionT}
 import cats.effect.Sync
 import cats.implicits._
+import cats.mtl.Raise
 import com.uptech.windalerts.core.credentials.{SocialCredentials, SocialCredentialsRepository, UserCredentialService}
 import com.uptech.windalerts.core.social.SocialPlatformType
 import com.uptech.windalerts.core.user.{TokensWithUser, UserRepository, UserService, UserT}
-import com.uptech.windalerts.core.{SurfsUpError, UserAlreadyExistsError}
+import com.uptech.windalerts.core.{SurfsUpError, UserAlreadyExistsError, UserNotFoundError}
 
 class SocialLoginService[F[_] : Sync](userRepository: UserRepository[F],
                                       userService: UserService[F],
@@ -19,26 +20,27 @@ class SocialLoginService[F[_] : Sync](userRepository: UserRepository[F],
                                  accessToken: String,
                                  deviceType: String,
                                  deviceToken: String,
-                                 name: Option[String])(implicit A: Applicative[F]) = {
+                                 name: Option[String])(implicit A: Applicative[F], FR: Raise[F, UserAlreadyExistsError], UNF: Raise[F, UserNotFoundError]) = {
     for {
-      socialUser <- EitherT.right(socialLoginProviders.findByType(socialPlatform)
+      socialUser <- socialLoginProviders.findByType(socialPlatform)
         .fetchUserFromPlatform(
           accessToken,
           deviceType,
           deviceToken,
-          name))
-      credentialsRepository <- EitherT.fromEither(socialCredentialsRepositories(socialPlatform).asRight)(A)
-      existingCredential <- EitherT.liftF(credentialsRepository.find(socialUser.email, socialUser.deviceType))
-      tokens <- existingCredential.map(_ => userService.resetUserSession(socialUser.email, socialUser.deviceType, socialUser.deviceToken).leftWiden[SurfsUpError])
-        .getOrElse(tokensForNewUser(credentialsRepository, socialUser).leftWiden[SurfsUpError])
+          name)
+      credentialsRepository = socialCredentialsRepositories(socialPlatform)
+      existingCredential <- credentialsRepository.find(socialUser.email, socialUser.deviceType)
+      tokens <- existingCredential.map(_ => userService.resetUserSession(socialUser.email, socialUser.deviceType, socialUser.deviceToken))
+        .getOrElse(tokensForNewUser(credentialsRepository, socialUser))
     } yield (tokens, existingCredential.isEmpty)
+
   }
 
-  private def tokensForNewUser[T <: SocialCredentials](credentialsRepository: SocialCredentialsRepository[F], socialUser: SocialUser): EitherT[F, UserAlreadyExistsError, TokensWithUser] = {
+  private def tokensForNewUser[T <: SocialCredentials](credentialsRepository: SocialCredentialsRepository[F], socialUser: SocialUser)(implicit FR: Raise[F, UserAlreadyExistsError]): F[TokensWithUser] = {
     for {
       _ <- credentialService.notRegistered(socialUser.email, socialUser.deviceType)
-      result <- EitherT.right(createUser(credentialsRepository, socialUser))
-      tokens <- EitherT.right(userService.generateNewTokens(result._1, socialUser.deviceToken))
+      result <- createUser(credentialsRepository, socialUser)
+      tokens <- userService.generateNewTokens(result._1, socialUser.deviceToken)
     } yield tokens
   }
 

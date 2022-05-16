@@ -9,7 +9,7 @@ trait UserRepository[F[_]] {
 
   def getByUserIdOption(userId: String): OptionT[F, UserT]
 
-  def getByEmailAndDeviceType(email: String, deviceType: String): OptionT[F, UserT]
+  def getByEmailAndDeviceType(email: String, deviceType: String)(implicit FR: Raise[F, UserNotFoundError]): F[UserT]
 
   def create(user: UserT): F[UserT]
 

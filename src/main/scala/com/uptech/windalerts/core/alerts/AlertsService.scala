@@ -1,6 +1,5 @@
 package com.uptech.windalerts.core.alerts
 
-import cats.data.EitherT
 import cats.effect.Sync
 import cats.implicits._
 import cats.mtl.Raise
@@ -9,15 +8,17 @@ import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.user.{UserId, UserType}
 import com.uptech.windalerts.core.{AlertNotFoundError, OperationNotAllowed}
 
+import scala.language.postfixOps
+
 class AlertsService[F[_] : Sync](alertsRepository: AlertsRepository[F]) {
-  def createAlert(userId: UserId, userType: UserType, alertRequest: AlertRequest): EitherT[F, OperationNotAllowed, Alert] = {
+  def createAlert(userId: UserId, userType: UserType, alertRequest: AlertRequest)(implicit ONA: Raise[F, OperationNotAllowed]): F[Alert] = {
     for {
-      _ <- EitherT.cond[F](userType.isPremiumUser(), (), OperationNotAllowed(s"Please subscribe to perform this action"))
-      saved <- EitherT.liftF(alertsRepository.create(alertRequest, userId.id))
+      _ <- if(userType.isPremiumUser()) Applicative[F].pure(()) else ONA.raise(OperationNotAllowed(s"Please subscribe to perform this action"))
+      saved <- alertsRepository.create(alertRequest, userId.id)
     } yield saved
   }
 
-  def update(alertId: String, userId: UserId, userType: UserType, alertRequest: AlertRequest)(implicit ONA: Raise[F, OperationNotAllowed], ANF: Raise[F, AlertNotFoundError] ): F[Alert] = {
+  def update(alertId: String, userId: UserId, userType: UserType, alertRequest: AlertRequest)(implicit ONA: Raise[F, OperationNotAllowed], ANF: Raise[F, AlertNotFoundError]): F[Alert] = {
     for {
       _ <- authorizeAlertEditRequest(userId, userType, alertId, alertRequest)
       updated <- alertsRepository.update(userId.id, alertId, alertRequest)
