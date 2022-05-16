@@ -25,8 +25,8 @@ class MongoUserRepository[F[_]](collection: MongoCollection[DBUser])(implicit cs
   override def getByUserIdOption(userId: String) = {
     findByCriteria(equal("_id", new ObjectId(userId)))
   }
-  override def getByEmailAndDeviceType(email: String, deviceType: String) = {
-    findByCriteria(and(equal("email", email), equal("deviceType", deviceType)))
+  override def getByEmailAndDeviceType(email: String, deviceType: String)(implicit FR: Raise[F, UserNotFoundError]) = {
+    findByCriteria(and(equal("email", email), equal("deviceType", deviceType))).getOrElseF(FR.raise(UserNotFoundError()))
   }
 
   override def create(userRequest: UserT): F[UserT] = {

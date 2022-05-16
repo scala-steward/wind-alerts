@@ -17,39 +17,39 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
                                auth: AuthenticationService[F],
                                userSessionsRepository: UserSessionRepository[F],
                                eventPublisher: EventPublisher[F]) {
-  def register(registerRequest: RegisterRequest): EitherT[F, UserAlreadyExistsError, TokensWithUser] = {
+  def register(registerRequest: RegisterRequest)(implicit FR: Raise[F, UserAlreadyExistsError]): F[TokensWithUser] = {
     for {
       createUserResponse <- persistUserAndCredentials(registerRequest)
-      tokens <- EitherT.right(generateNewTokens(createUserResponse._1, registerRequest.deviceToken))
-      _ <- EitherT.right(eventPublisher.publishUserRegistered("userRegistered", UserRegistered(UserIdDTO(createUserResponse._1.id), EmailId(createUserResponse._1.email))))
+      tokens <- generateNewTokens(createUserResponse._1, registerRequest.deviceToken)
+      _ <- eventPublisher.publishUserRegistered("userRegistered", UserRegistered(UserIdDTO(createUserResponse._1.id), EmailId(createUserResponse._1.email)))
     } yield tokens
   }
 
-  def persistUserAndCredentials(rr: RegisterRequest): EitherT[F, UserAlreadyExistsError, (UserT, Credentials)] = {
+  def persistUserAndCredentials(rr: RegisterRequest)(implicit FR: Raise[F, UserAlreadyExistsError]): F[(UserT, Credentials)] = {
     for {
       savedCreds <- userCredentialsService.register(rr)
-      saved <- EitherT.right(userRepository.create(UserT.createEmailUser(savedCreds.id, rr.email, rr.name, rr.deviceType)))
+      saved <- userRepository.create(UserT.createEmailUser(savedCreds.id, rr.email, rr.name, rr.deviceType))
     } yield (saved, savedCreds)
   }
 
-  def login(credentials: LoginRequest): EitherT[F, SurfsUpError, TokensWithUser] = {
+  def login(credentials: LoginRequest)(implicit FR: Raise[F, UserNotFoundError], UAF: Raise[F, UserAuthenticationFailedError]):F[TokensWithUser] = {
     for {
       persistedCredentials <- userCredentialsService.findByCredentials(credentials.email, credentials.password, credentials.deviceType)
-      tokens <- resetUserSession(persistedCredentials.email, persistedCredentials.deviceType, credentials.deviceToken).leftWiden[SurfsUpError]
+      tokens <- resetUserSession(persistedCredentials.email, persistedCredentials.deviceType, credentials.deviceToken)
     } yield tokens
   }
 
-  def resetUserSession(emailId: String, deviceType: String, newDeviceToken: String): EitherT[F, UserNotFoundError, TokensWithUser] = {
+  def resetUserSession(emailId: String, deviceType: String, newDeviceToken: String)(implicit FR: Raise[F, UserNotFoundError]): F[TokensWithUser] = {
     for {
       persistedUser <- getUser(emailId, deviceType)
       tokens <- resetUserSession(persistedUser, newDeviceToken)
     } yield tokens
   }
 
-  def resetUserSession(dbUser: UserT, newDeviceToken: String): EitherT[F, UserNotFoundError, TokensWithUser] = {
+  def resetUserSession(dbUser: UserT, newDeviceToken: String):F[TokensWithUser] = {
     for {
-      _ <- EitherT.liftF(userSessionsRepository.deleteForUserId(dbUser.id))
-      tokens <- EitherT.right(generateNewTokens(dbUser, newDeviceToken))
+      _ <- userSessionsRepository.deleteForUserId(dbUser.id)
+      tokens <- generateNewTokens(dbUser, newDeviceToken)
     } yield tokens
   }
 
@@ -101,8 +101,8 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
   def logoutUser(userId: String): EitherT[F, UserNotFoundError, Unit] =
     EitherT.liftF(userSessionsRepository.deleteForUserId(userId))
 
-  def getUser(email: String, deviceType: String): EitherT[F, UserNotFoundError, UserT] =
-    userRepository.getByEmailAndDeviceType(email, deviceType).toRight(UserNotFoundError())
+  def getUser(email: String, deviceType: String)(implicit FR: Raise[F, UserNotFoundError]): F[UserT] =
+    userRepository.getByEmailAndDeviceType(email, deviceType)
 
   def getUser(userId: String)(implicit FR: Raise[F, UserNotFoundError]): F[UserT] =
     userRepository.getByUserId(userId)

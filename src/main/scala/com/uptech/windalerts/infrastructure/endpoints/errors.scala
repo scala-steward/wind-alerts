@@ -4,7 +4,7 @@ import cats.Applicative
 import cats.data.Kleisli
 import cats.effect.{IO, Sync}
 import cats.implicits._
-import com.uptech.windalerts.core.{OtpNotFoundError, RefreshTokenExpiredError, RefreshTokenNotFoundError, TokenNotFoundError, UserAuthenticationFailedError, UserNotFoundError}
+import com.uptech.windalerts.core.{OperationNotAllowed, OtpNotFoundError, RefreshTokenExpiredError, RefreshTokenNotFoundError, TokenNotFoundError, UserAlreadyExistsError, UserAuthenticationFailedError, UserNotFoundError}
 import com.uptech.windalerts.logger
 import fs2.Stream
 import org.http4s.dsl.Http4sDsl
@@ -12,7 +12,7 @@ import org.http4s.{HttpApp, HttpRoutes, Response, Status}
 
 object errors {
 
-  def mapError[F[_]](t:Throwable):Response[F] = t match {
+  def mapError[F[_]](t: Throwable): Response[F] = t match {
     case _@RefreshTokenNotFoundError(msg) =>
       Response(status = Status.BadRequest).withBodyStream(Stream.emits(msg.getBytes()))
     case _@RefreshTokenExpiredError(msg) =>
@@ -25,6 +25,10 @@ object errors {
       Response(status = Status.NotFound).withBodyStream(Stream.emits("Invalid or expired OTP".getBytes()))
     case _@UserAuthenticationFailedError(name) =>
       Response(status = Status.BadRequest).withBodyStream(Stream.emits(s"Authentication failed for user $name".getBytes()))
+    case _@OperationNotAllowed(msg) =>
+      Response(status = Status.Forbidden).withBodyStream(Stream.emits(msg.getBytes()))
+    case _@UserAlreadyExistsError(email, deviceType) =>
+      Response(status = Status.Conflict).withBodyStream(Stream.emits(s"The user with email $email for device type $deviceType already exists".getBytes()))
     case e@_ =>
       Response(status = Status.InternalServerError).withBodyStream(Stream.emits(s"${e.getMessage()}".getBytes()))
   }

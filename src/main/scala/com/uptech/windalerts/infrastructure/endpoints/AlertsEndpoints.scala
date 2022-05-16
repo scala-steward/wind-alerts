@@ -10,6 +10,7 @@ import com.uptech.windalerts.core.types._
 import com.uptech.windalerts.core.user.UserIdMetadata
 import com.uptech.windalerts.core.{AlertNotFoundError, OperationNotAllowed}
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
+import com.uptech.windalerts.infrastructure.endpoints.errors.mapError
 import fs2.Stream
 import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
 import org.http4s.dsl.Http4sDsl
@@ -55,10 +56,9 @@ class AlertsEndpoints[F[_] : Effect](alertService: AlertsService[F])(implicit FR
           request =>
             (for {
               response <- alertService.createAlert(user.userId, user.userType, request)
-            } yield response).value.flatMap {
-              case Right(response) => Created(response)
-              case Left(OperationNotAllowed(message)) => Forbidden(message)
-            }
+            } yield response).flatMap(
+              Created(_)
+            ).handle[Throwable](mapError(_))
         })
       }
 

@@ -45,22 +45,17 @@ class UsersEndpoints[F[_] : Effect]
 
       case req@POST -> Root =>
         (for {
-          rr <- EitherT.liftF(req.as[RegisterRequest])
+          rr <- req.as[RegisterRequest]
           user <- userService.register(rr)
-        } yield user).value.flatMap {
-          case Right(tokensWithUser) => Ok(tokensWithUser)
-          case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")
-        }
+        } yield user).flatMap(Ok(_)
+        ).handle[Throwable](mapError(_))
 
       case req@POST -> Root / "login" =>
         (for {
-          credentials <- EitherT.liftF(req.as[LoginRequest])
+          credentials <- req.as[LoginRequest]
           user <- userService.login(credentials)
-        } yield user).value.flatMap {
-          case Right(tokensWithUser) => Ok(tokensWithUser)
-          case Left(UserNotFoundError(_)) => NotFound("User not found")
-          case Left(UserAuthenticationFailedError(name)) => BadRequest(s"Authentication failed for user $name")
-        }
+        } yield user).flatMap(Ok(_)
+        ).handle[Throwable](mapError(_))
 
       case req@POST -> Root / "refresh" =>
         (for {
@@ -74,12 +69,10 @@ class UsersEndpoints[F[_] : Effect]
 
       case req@POST -> Root / "changePassword" =>
         (for {
-          changePasswordRequest <- EitherT.liftF(req.as[ChangePasswordRequest])
+          changePasswordRequest <- req.as[ChangePasswordRequest]
           user <- userCredentialsService.changePassword(changePasswordRequest)
-        } yield user).value.flatMap {
-          case Right(_) => Ok()
-          case Left(UserAuthenticationFailedError(name)) => BadRequest(s"Authentication failed for user $name")
-        }
+        } yield user).flatMap(Ok(_)
+        ).handle[Throwable](mapError(_))
 
       case req@POST -> Root / "resetPassword" =>
         (for {
@@ -207,36 +200,30 @@ class UsersEndpoints[F[_] : Effect]
   def facebookEndpoints()(implicit F: Sync[F]): HttpRoutes[F] = {
 
     HttpRoutes.of[F] {
-      case req@POST -> Root => {
+      case req@POST -> Root =>
         (for {
-          facebookRegisterRequest <- EitherT.liftF(req.as[FacebookRegisterRequest])
+          facebookRegisterRequest <- req.as[FacebookRegisterRequest]
           tokensWithUser <- socialLoginService.registerOrLoginSocialUser(
             Facebook,
             facebookRegisterRequest.accessToken,
             facebookRegisterRequest.deviceType,
             facebookRegisterRequest.deviceToken,
             None)
-        } yield tokensWithUser).value.flatMap {
-          case Right(tokensWithUser) => handleRegisterOrLoginResponse(F, tokensWithUser)
-          case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")
-          case Left(UserNotFoundError(_)) => NotFound("User not found")
-        }
-      }
+        } yield tokensWithUser).flatMap(handleRegisterOrLoginResponse(F, _)
+        ).handle[Throwable](mapError(_))
+
 
       case req@POST -> Root / "login" => {
         (for {
-          facebookRegisterRequest <- EitherT.liftF(req.as[FacebookRegisterRequest])
+          facebookRegisterRequest <- req.as[FacebookRegisterRequest]
           tokensWithUser <- socialLoginService.registerOrLoginSocialUser(
             Facebook,
             facebookRegisterRequest.accessToken,
             facebookRegisterRequest.deviceType,
             facebookRegisterRequest.deviceToken,
             None)
-        } yield tokensWithUser).value.flatMap {
-          case Right(tokensWithUser) => handleRegisterOrLoginResponse(F, tokensWithUser)
-          case Left(UserNotFoundError(_)) => NotFound("User not found")
-          case Left(UserAuthenticationFailedError(name)) => BadRequest(s"Authentication failed for user $name")
-        }
+        } yield tokensWithUser).flatMap(handleRegisterOrLoginResponse(F, _)
+        ).handle[Throwable](mapError(_))
       }
     }
   }
@@ -245,7 +232,7 @@ class UsersEndpoints[F[_] : Effect]
     HttpRoutes.of[F] {
       case req@POST -> Root => {
         (for {
-          appleRegisterRequest <- EitherT.liftF(req.as[AppleRegisterRequest])
+          appleRegisterRequest <- req.as[AppleRegisterRequest]
           tokensWithUser <- socialLoginService.registerOrLoginSocialUser(
             Apple,
             appleRegisterRequest.authorizationCode,
@@ -253,27 +240,21 @@ class UsersEndpoints[F[_] : Effect]
             appleRegisterRequest.deviceToken,
             Some(appleRegisterRequest.name)
           )
-        } yield tokensWithUser).value.flatMap {
-          case Right(tokensWithUser) => handleRegisterOrLoginResponse(F, tokensWithUser)
-          case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")
-          case Left(UserNotFoundError(_)) => NotFound("User not found")
-        }
+        } yield tokensWithUser).flatMap(handleRegisterOrLoginResponse(F, _)
+        ).handle[Throwable](mapError(_))
       }
 
       case req@POST -> Root / "login" =>
         (for {
-          appleRegisterRequest <- EitherT.liftF(req.as[AppleRegisterRequest])
+          appleRegisterRequest <- req.as[AppleRegisterRequest]
           tokensWithUser <- socialLoginService.registerOrLoginSocialUser(
             Apple, appleRegisterRequest.authorizationCode,
             appleRegisterRequest.deviceType,
             appleRegisterRequest.deviceToken,
             Some(appleRegisterRequest.name)
           )
-        } yield tokensWithUser).value.flatMap {
-          case Right(tokensWithUser) => handleRegisterOrLoginResponse(F, tokensWithUser)
-          case Left(UserAlreadyExistsError(email, deviceType)) => Conflict(s"The user with email $email for device type $deviceType already exists")
-          case Left(UserNotFoundError(_)) => NotFound("User not found")
-        }
+        } yield tokensWithUser).flatMap(handleRegisterOrLoginResponse(F, _)
+        ).handle[Throwable](mapError(_))
 
     }
   }
