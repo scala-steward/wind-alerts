@@ -24,10 +24,9 @@ class SwaggerEndpoints[F[_] : Effect] extends Http4sDsl[F] {
     HttpRoutes.of[F] {
       case request@GET -> Root / "swagger.yaml" =>
         StaticFile.fromResource("swagger.yaml", blocker, Some(request)).getOrElseF(NotFound())
-      case request@GET -> `swaggerUiPath` / "config.json" =>
+      case request@GET -> swaggerUiPath / "config.json" =>
         //Specifies Swagger spec URL
-        Ok(Json.obj("url" -> Json.fromString(s"/swagger.yaml")))
-      //Entry point to Swagger UI
+        Ok(Json.obj("url" -> Json.fromString(s"/swagger.yaml")))//Entry point to Swagger UI
       case request@GET -> `swaggerUiPath` =>
         PermanentRedirect(Location(uri("swagger-ui/index.html")))
       case request@GET -> path if path.startsWith(swaggerUiPath) =>
