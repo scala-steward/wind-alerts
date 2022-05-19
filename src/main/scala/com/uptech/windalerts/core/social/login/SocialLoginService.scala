@@ -22,14 +22,11 @@ class SocialLoginService[F[_] : Sync](userRepository: UserRepository[F],
                                  name: Option[String])(implicit A: Applicative[F], FR: Raise[F, UserAlreadyExistsRegistered], UNF: Raise[F, UserNotFoundError]) = {
     for {
       socialUser <- socialLoginProviders.findByType(socialPlatform)
-        .fetchUserFromPlatform(
-          accessToken,
-          deviceType,
-          deviceToken,
-          name)
+        .fetchUserFromPlatform(accessToken, deviceType, deviceToken, name)
       credentialsRepository = socialCredentialsRepositories(socialPlatform)
       existingCredential <- credentialsRepository.find(socialUser.email, socialUser.deviceType)
-      tokens <- existingCredential.map(_ => userService.resetUserSession(socialUser.email, socialUser.deviceType, socialUser.deviceToken))
+      tokens <- existingCredential
+        .map(_ => userService.resetUserSession(socialUser.email, socialUser.deviceType, socialUser.deviceToken))
         .getOrElse(tokensForNewUser(credentialsRepository, socialUser))
     } yield (tokens, existingCredential.isEmpty)
   }

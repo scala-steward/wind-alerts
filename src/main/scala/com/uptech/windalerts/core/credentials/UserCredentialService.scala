@@ -17,7 +17,7 @@ class UserCredentialService[F[_] : Sync](
                                           credentialsRepository: CredentialsRepository[F],
                                           userRepository: UserRepository[F],
                                           userSessionsRepository: UserSessionRepository[F],
-                                          emailSender: EmailSender[F]) {
+                                          userNotifier: UserNotifier[F]) {
   def findByCredentials(
                          email: String, password: String, deviceType: String
                        )(implicit FR: Raise[F, UserAuthenticationFailedError]): F[Credentials] =
@@ -39,7 +39,7 @@ class UserCredentialService[F[_] : Sync](
       _ <- credentialsRepository.updatePassword(credentials.id, newPassword.bcrypt)
       _ <- userSessionsRepository.deleteForUserId(credentials.id)
       user <- userRepository.getByUserId(credentials.id)
-      _ <- emailSender.sendResetPassword(user.firstName(), email, newPassword)
+      _ <- userNotifier.notifyNewPassword(user.firstName(), email, newPassword)
     } yield credentials
 
 
