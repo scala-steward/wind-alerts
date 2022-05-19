@@ -2,14 +2,14 @@ package com.uptech.windalerts.infrastructure
 
 import cats.{Applicative, Monad}
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
-import com.uptech.windalerts.core.EmailSender
+import com.uptech.windalerts.core.UserNotifier
 import com.uptech.windalerts.logger
 
 import scala.util.Try
 
 
-class SendInBlueEmailSender[F[_]](apiKey: String) extends EmailSender[F] {
-  override def sendOtp(to: String, otp: String)(implicit F: Monad[F]): F[String] = {
+class SendInBlueEmailSender[F[_]](apiKey: String) extends UserNotifier[F] {
+  override def notifyOTP(to: String, otp: String)(implicit F: Monad[F]): F[String] = {
     send(to, 1l,
       s"""
             "code": "$otp",
@@ -17,7 +17,7 @@ class SendInBlueEmailSender[F[_]](apiKey: String) extends EmailSender[F] {
        """.stripMargin)
   }
 
-  override def sendResetPassword(firstName: String, to: String, password: String)(implicit F: Monad[F]) = {
+  override def notifyNewPassword(firstName: String, to: String, password: String)(implicit F: Monad[F]) = {
     send(to, 3l,
       s"""
             "password": "${password}",
