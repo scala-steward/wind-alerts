@@ -33,7 +33,7 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
 
   def login(credentials: LoginRequest)(implicit FR: Raise[F, UserNotFoundError], UAF: Raise[F, UserAuthenticationFailedError]):F[TokensWithUser] = {
     for {
-      persistedCredentials <- userCredentialsService.findByCredentials(credentials.email, credentials.password, credentials.deviceType)
+      persistedCredentials <- userCredentialsService.findByEmailAndPassword(credentials.email, credentials.password, credentials.deviceType)
       tokens <- resetUserSession(persistedCredentials.email, persistedCredentials.deviceType, credentials.deviceToken)
     } yield tokens
   }

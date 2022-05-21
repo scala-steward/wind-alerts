@@ -1,6 +1,7 @@
 package com.uptech.windalerts.core.alerts
 
 import com.uptech.windalerts.core.beaches.domain.Beach
+import com.uptech.windalerts.core.social.subscriptions.PurchaseToken
 import com.uptech.windalerts.logger
 
 import java.util.Calendar.{DAY_OF_WEEK, HOUR_OF_DAY, MINUTE}
@@ -48,14 +49,11 @@ object domain {
     }
 
     def allFieldExceptStatusAreSame(alertRequest: AlertRequest) = {
-      days.sorted == alertRequest.days.sorted &&
-        swellDirections.sorted == alertRequest.swellDirections.sorted &&
-        timeRanges.sortBy(_.from) == alertRequest.timeRanges.sortBy(_.from) &&
-        waveHeightFrom == alertRequest.waveHeightFrom &&
-        waveHeightTo == alertRequest.waveHeightTo &&
-        windDirections.sorted == alertRequest.windDirections.sorted &&
-        tideHeightStatuses.sorted == alertRequest.tideHeightStatuses.sorted &&
-        timeZone == alertRequest.timeZone
+      toAlertRequest().copy(enabled = alertRequest.enabled) == alertRequest
+    }
+
+    def toAlertRequest():AlertRequest = {
+      this.into[AlertRequest].transform
     }
   }
 }

@@ -95,5 +95,4 @@ class NotificationsService[F[_] : Sync : Parallel](N: NotificationRepository[F],
     } yield ()
   }
 
-
 }

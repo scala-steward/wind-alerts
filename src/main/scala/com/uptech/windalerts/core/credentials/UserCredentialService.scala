@@ -9,7 +9,7 @@ import com.uptech.windalerts.core._
 import com.uptech.windalerts.core.refresh.tokens.UserSessionRepository
 import com.uptech.windalerts.core.social.SocialPlatformType
 import com.uptech.windalerts.core.types.{ChangePasswordRequest, RegisterRequest}
-import com.uptech.windalerts.core.user.UserRepository
+import com.uptech.windalerts.core.user.{PasswordNotifier, UserRepository}
 
 
 class UserCredentialService[F[_] : Sync](
@@ -17,8 +17,8 @@ class UserCredentialService[F[_] : Sync](
                                           credentialsRepository: CredentialsRepository[F],
                                           userRepository: UserRepository[F],
                                           userSessionsRepository: UserSessionRepository[F],
-                                          userNotifier: UserNotifier[F]) {
-  def findByCredentials(
+                                          passwordNotifier: PasswordNotifier[F]) {
+  def findByEmailAndPassword(
                          email: String, password: String, deviceType: String
                        )(implicit FR: Raise[F, UserAuthenticationFailedError]): F[Credentials] =
     for {
@@ -39,13 +39,13 @@ class UserCredentialService[F[_] : Sync](
       _ <- credentialsRepository.updatePassword(credentials.id, newPassword.bcrypt)
       _ <- userSessionsRepository.deleteForUserId(credentials.id)
       user <- userRepository.getByUserId(credentials.id)
-      _ <- userNotifier.notifyNewPassword(user.firstName(), email, newPassword)
+      _ <- passwordNotifier.notifyNewPassword(user.firstName(), email, newPassword)
     } yield credentials
 
 
   def changePassword(request: ChangePasswordRequest)(implicit FR: Raise[F, UserAlreadyExistsRegistered], UAF: Raise[F, UserAuthenticationFailedError]): F[Unit] = {
     for {
-      credentials <- findByCredentials(request.email, request.oldPassword, request.deviceType)
+      credentials <- findByEmailAndPassword(request.email, request.oldPassword, request.deviceType)
       result <- credentialsRepository.updatePassword(credentials.id, request.newPassword.bcrypt)
     } yield result
   }
