@@ -10,7 +10,7 @@ import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.beaches.domain._
 import com.uptech.windalerts.core.notifications.NotificationsSender.NotificationDetails
-import com.uptech.windalerts.core.refresh.tokens.UserSessionRepository
+import com.uptech.windalerts.core.user.sessions.UserSessionRepository
 import com.uptech.windalerts.core.user.{UserId, UserRepository, UserT}
 import com.uptech.windalerts.logger
 

@@ -5,8 +5,8 @@ import cats.effect.Sync
 import cats.implicits._
 import cats.mtl.Raise
 import com.uptech.windalerts.core.credentials.{SocialCredentials, SocialCredentialsRepository, UserCredentialService}
-import com.uptech.windalerts.core.refresh.tokens.UserSessions
 import com.uptech.windalerts.core.social.SocialPlatformType
+import com.uptech.windalerts.core.user.sessions.UserSessions
 import com.uptech.windalerts.core.user.{TokensWithUser, UserRepository, UserService, UserT}
 import com.uptech.windalerts.core.{UserAlreadyExistsRegistered, UserNotFoundError}
 

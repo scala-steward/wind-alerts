@@ -6,9 +6,9 @@ import cats.mtl.Raise
 import cats.{Applicative, Monad}
 import com.github.t3hnar.bcrypt._
 import com.uptech.windalerts.core._
-import com.uptech.windalerts.core.refresh.tokens.UserSessionRepository
 import com.uptech.windalerts.core.social.SocialPlatformType
 import com.uptech.windalerts.core.types.{ChangePasswordRequest, RegisterRequest}
+import com.uptech.windalerts.core.user.sessions.UserSessionRepository
 import com.uptech.windalerts.core.user.{PasswordNotifier, UserRepository}
 
 
