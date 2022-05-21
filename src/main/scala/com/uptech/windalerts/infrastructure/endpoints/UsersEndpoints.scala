@@ -9,6 +9,7 @@ import cats.mtl.implicits.toHandleOps
 import com.uptech.windalerts.config._
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.otp.OTPService
+import com.uptech.windalerts.core.refresh.tokens.UserSessions
 import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.social.subscriptions.SocialPlatformSubscriptionsProviders
 import com.uptech.windalerts.core.types._
@@ -24,6 +25,7 @@ import org.typelevel.ci.CIString
 
 class UsersEndpoints[F[_] : Effect]
 (userCredentialsService: UserCredentialService[F],
+ userSessions: UserSessions[F],
  userService: UserService[F],
  socialLoginService: SocialLoginService[F],
  userRolesService: UserRolesService[F],
@@ -51,18 +53,17 @@ class UsersEndpoints[F[_] : Effect]
       case req@POST -> Root / "login" =>
         (for {
           credentials <- req.as[LoginRequest]
-          user <- userService.login(credentials)
+          user <- userSessions.login(credentials)
         } yield user).flatMap(Ok(_)
         ).handle[Throwable](mapError(_))
 
       case req@POST -> Root / "refresh" =>
         (for {
           refreshToken <- req.as[AccessTokenRequest]
-          user <- userService.refresh(refreshToken)
+          user <- userSessions.refresh(refreshToken)
         } yield user).flatMap(
           Ok(_)
         ).handle[Throwable](mapError(_))
-
 
 
       case req@POST -> Root / "changePassword" =>
@@ -76,7 +77,7 @@ class UsersEndpoints[F[_] : Effect]
         (for {
           resetPasswordRequest <- req.as[ResetPasswordRequest]
           user <- userCredentialsService.resetPassword(resetPasswordRequest.email, resetPasswordRequest.deviceType)
-        } yield user).flatMap(_=>Ok())
+        } yield user).flatMap(_ => Ok())
           .handle[Throwable](mapError(_))
 
       case req@POST -> Root / "purchase" / "android" / "update" =>
@@ -85,7 +86,7 @@ class UsersEndpoints[F[_] : Effect]
           decoded = new String(java.util.Base64.getDecoder.decode(update.message.data))
           subscription <- asSubscription(decoded)
           user <- userRolesService.handleUpdate("Google", subscription.subscriptionNotification.purchaseToken)
-        } yield user).flatMap(_=>Ok())
+        } yield user).flatMap(_ => Ok())
           .handle[Throwable](mapError(_))
     }
 
@@ -106,7 +107,7 @@ class UsersEndpoints[F[_] : Effect]
           request =>
             (for {
               response <- userService.updateUserProfile(u.userId.id, request.name, request.snoozeTill, request.disableAllAlerts, request.notificationsPerHour)
-            } yield response).flatMap(_=>Ok())
+            } yield response).flatMap(_ => Ok())
               .handle[Throwable](mapError(_))
         })
 
@@ -114,7 +115,7 @@ class UsersEndpoints[F[_] : Effect]
         OptionT.liftF(
           (for {
             response <- userService.getUser(user.userId.id)
-          } yield response).flatMap(_=>Ok())
+          } yield response).flatMap(_ => Ok())
             .handle[Throwable](mapError(_))
         )
 
@@ -122,8 +123,8 @@ class UsersEndpoints[F[_] : Effect]
         OptionT.liftF(authReq.req.decode[UpdateUserDeviceTokenRequest] {
           req =>
             (for {
-              response <- userService.updateDeviceToken(user.userId.id, req.deviceToken)
-            } yield response).flatMap(_=>Ok())
+              response <- userSessions.updateDeviceToken(user.userId.id, req.deviceToken)
+            } yield response).flatMap(_ => Ok())
               .handle[Throwable](mapError(_))
         })
 
@@ -147,8 +148,8 @@ class UsersEndpoints[F[_] : Effect]
       case _@POST -> Root / "logout" as user =>
         OptionT.liftF({
           (for {
-            response <- userService.logoutUser(user.userId.id)
-          } yield response).flatMap(_=>Ok())
+            response <- userSessions.logout(user.userId.id)
+          } yield response).flatMap(_ => Ok())
             .handle[Throwable](mapError(_))
         })
 
@@ -157,7 +158,7 @@ class UsersEndpoints[F[_] : Effect]
           (for {
             response <- userRolesService.updateUserPurchase(user.userId)
           } yield response).flatMap(Ok(_))
-          .handle[Throwable](mapError(_))
+            .handle[Throwable](mapError(_))
         )
 
       case authReq@POST -> Root / "purchase" / "android" as user =>
@@ -165,7 +166,7 @@ class UsersEndpoints[F[_] : Effect]
           req =>
             (for {
               response <- socialPlatformSubscriptionsProviders.findByType(Google).handleNewPurchase(user.userId, req)
-            } yield response).flatMap(_=>Ok())
+            } yield response).flatMap(_ => Ok())
               .handle[Throwable](mapError(_))
         })
 
@@ -174,7 +175,7 @@ class UsersEndpoints[F[_] : Effect]
           (for {
             response <- userRolesService.updateUserPurchase(user.userId)
           } yield response).flatMap(Ok(_))
-          .handle[Throwable](mapError(_))
+            .handle[Throwable](mapError(_))
         )
 
       case authReq@POST -> Root / "purchase" / "apple" as user =>
@@ -182,7 +183,7 @@ class UsersEndpoints[F[_] : Effect]
           req =>
             (for {
               response <- socialPlatformSubscriptionsProviders.findByType(Apple).handleNewPurchase(user.userId, req)
-            } yield response).flatMap(_=>Ok())
+            } yield response).flatMap(_ => Ok())
               .handle[Throwable](mapError(_))
         })
     }

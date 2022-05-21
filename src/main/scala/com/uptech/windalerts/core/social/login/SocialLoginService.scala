@@ -5,12 +5,13 @@ import cats.effect.Sync
 import cats.implicits._
 import cats.mtl.Raise
 import com.uptech.windalerts.core.credentials.{SocialCredentials, SocialCredentialsRepository, UserCredentialService}
+import com.uptech.windalerts.core.refresh.tokens.UserSessions
 import com.uptech.windalerts.core.social.SocialPlatformType
 import com.uptech.windalerts.core.user.{TokensWithUser, UserRepository, UserService, UserT}
 import com.uptech.windalerts.core.{UserAlreadyExistsRegistered, UserNotFoundError}
 
 class SocialLoginService[F[_] : Sync](userRepository: UserRepository[F],
-                                      userService: UserService[F],
+                                      userSessions: UserSessions[F],
                                       credentialService: UserCredentialService[F],
                                       socialCredentialsRepositories: Map[SocialPlatformType, SocialCredentialsRepository[F]],
                                       socialLoginProviders: SocialLoginProviders[F]) {
@@ -26,7 +27,7 @@ class SocialLoginService[F[_] : Sync](userRepository: UserRepository[F],
       credentialsRepository = socialCredentialsRepositories(socialPlatform)
       existingCredential <- credentialsRepository.find(socialUser.email, socialUser.deviceType)
       tokens <- existingCredential
-        .map(_ => userService.resetUserSession(socialUser.email, socialUser.deviceType, socialUser.deviceToken))
+        .map(credentials => userSessions.reset(credentials.id, socialUser.deviceToken))
         .getOrElse(tokensForNewUser(credentialsRepository, socialUser))
     } yield (tokens, existingCredential.isEmpty)
   }
@@ -35,7 +36,7 @@ class SocialLoginService[F[_] : Sync](userRepository: UserRepository[F],
     for {
       _ <- credentialService.notRegistered(socialUser.email, socialUser.deviceType)
       result <- createUser(credentialsRepository, socialUser)
-      tokens <- userService.generateNewTokens(result._1, socialUser.deviceToken)
+      tokens <- userSessions.generateNewTokens(result._1, socialUser.deviceToken)
     } yield tokens
   }
 
