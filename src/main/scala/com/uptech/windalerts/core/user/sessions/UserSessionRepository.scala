@@ -1,8 +1,10 @@
-package com.uptech.windalerts.core.refresh.tokens
+package com.uptech.windalerts.core.user.sessions
 
 import cats.data.OptionT
 import cats.mtl.Raise
 import com.uptech.windalerts.core.RefreshTokenNotFoundError
+import UserSessions.UserSession
+import com.uptech.windalerts.core.user.sessions.UserSessions.UserSession
 
 trait UserSessionRepository[F[_]] {
   def create(refreshToken: String, expiry: Long, userId: String, deviceToken: String): F[UserSession]

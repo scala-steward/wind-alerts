@@ -6,8 +6,8 @@ import cats.implicits._
 import cats.mtl.Raise
 import com.uptech.windalerts.core._
 import com.uptech.windalerts.core.credentials.{Credentials, UserCredentialService}
-import com.uptech.windalerts.core.refresh.tokens.UserSessions
 import com.uptech.windalerts.core.types._
+import com.uptech.windalerts.core.user.sessions.UserSessions
 
 
 class UserService[F[_] : Sync](userRepository: UserRepository[F],

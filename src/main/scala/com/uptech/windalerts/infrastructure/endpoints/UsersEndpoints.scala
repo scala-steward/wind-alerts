@@ -9,10 +9,10 @@ import cats.mtl.implicits.toHandleOps
 import com.uptech.windalerts.config._
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.otp.OTPService
-import com.uptech.windalerts.core.refresh.tokens.UserSessions
 import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.social.subscriptions.SocialPlatformSubscriptionsProviders
 import com.uptech.windalerts.core.types._
+import com.uptech.windalerts.core.user.sessions.UserSessions
 import com.uptech.windalerts.core.user.{TokensWithUser, UserIdMetadata, UserRolesService, UserService}
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
 import com.uptech.windalerts.infrastructure.endpoints.errors.mapError

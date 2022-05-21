@@ -5,7 +5,8 @@ import cats.data.OptionT
 import cats.effect.{Async, ContextShift}
 import cats.mtl.Raise
 import com.uptech.windalerts.core.RefreshTokenNotFoundError
-import com.uptech.windalerts.core.refresh.tokens.{UserSession, UserSessionRepository}
+import com.uptech.windalerts.core.user.sessions.UserSessionRepository
+import com.uptech.windalerts.core.user.sessions.UserSessions.UserSession
 import io.scalaland.chimney.dsl._
 import org.bson.types.ObjectId
 import org.mongodb.scala.MongoCollection

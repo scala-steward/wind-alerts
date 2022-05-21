@@ -13,9 +13,9 @@ import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.otp.OTPService
-import com.uptech.windalerts.core.refresh.tokens.UserSessions
 import com.uptech.windalerts.core.social.login.SocialLoginService
-import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
+import com.uptech.windalerts.core.user.sessions.UserSessions
+import com.uptech.windalerts.core.user.{UserRolesService, UserService}
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints._
 import com.uptech.windalerts.infrastructure.repositories.mongo._
@@ -60,13 +60,13 @@ object UsersServer extends IOApp {
         new WWBackedWindsService[F](willyWeatherAPIKey),
         new WWBackedTidesService[F](willyWeatherAPIKey, beaches.toMap()),
         new WWBackedSwellsService[F](willyWeatherAPIKey, swellAdjustments))
-      auth = new AuthenticationService[F](sys.env("JWT_KEY"), usersRepository)
+      auth = new AuthenticationMiddleware[F](sys.env("JWT_KEY"), usersRepository)
       emailSender = new SendInBlueEmailSender[F](sys.env("EMAIL_KEY"))
       otpService = new OTPService(otpRepositoy, emailSender)
       socialCredentialsRepositories = Map(Facebook -> facebookCredentialsRepository, Apple -> appleCredentialsRepository)
 
       userCredentialsService = new UserCredentialService[F](socialCredentialsRepositories, credentialsRepository, usersRepository, userSessionsRepository, emailSender)
-      userSessions = new UserSessions[F](auth, userCredentialsService, usersRepository, userSessionsRepository)
+      userSessions = new UserSessions[F](sys.env("JWT_KEY"), userCredentialsService, usersRepository, userSessionsRepository)
       usersService = new UserService[F](usersRepository, userCredentialsService,  userSessions, googlePublisher)
       socialLoginPlatforms = new AllSocialLoginProviders[F](applePlatform, facebookPlatform)
       socialLoginService = new SocialLoginService[F](usersRepository, userSessions, userCredentialsService, socialCredentialsRepositories, socialLoginPlatforms)
