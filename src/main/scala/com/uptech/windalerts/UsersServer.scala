@@ -13,6 +13,7 @@ import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.otp.OTPService
+import com.uptech.windalerts.core.refresh.tokens.UserSessions
 import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.user.{AuthenticationService, UserRolesService, UserService}
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
@@ -65,16 +66,17 @@ object UsersServer extends IOApp {
       socialCredentialsRepositories = Map(Facebook -> facebookCredentialsRepository, Apple -> appleCredentialsRepository)
 
       userCredentialsService = new UserCredentialService[F](socialCredentialsRepositories, credentialsRepository, usersRepository, userSessionsRepository, emailSender)
-      usersService = new UserService[F](usersRepository, userCredentialsService, auth, userSessionsRepository, googlePublisher)
+      userSessions = new UserSessions[F](auth, userCredentialsService, usersRepository, userSessionsRepository)
+      usersService = new UserService[F](usersRepository, userCredentialsService,  userSessions, googlePublisher)
       socialLoginPlatforms = new AllSocialLoginProviders[F](applePlatform, facebookPlatform)
-      socialLoginService = new SocialLoginService[F](usersRepository, usersService, userCredentialsService, socialCredentialsRepositories, socialLoginPlatforms)
+      socialLoginService = new SocialLoginService[F](usersRepository, userSessions, userCredentialsService, socialCredentialsRepositories, socialLoginPlatforms)
 
       appleSubscription = new AppleSubscription[F](sys.env("APPLE_APP_SECRET"))
       androidSubscription = new AndroidSubscription[F](androidPublisher)
       subscriptionsService = new AllSocialPlatformSubscriptionsProviders[F](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
       userRolesService = new UserRolesService[F](alertsRepository, usersRepository, otpRepositoy, subscriptionsService)
       socialPlatformSubscriptionsProviders = new AllSocialPlatformSubscriptionsProviders[F](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
-      endpoints = new UsersEndpoints[F](userCredentialsService, usersService, socialLoginService, userRolesService, socialPlatformSubscriptionsProviders, otpService)
+      endpoints = new UsersEndpoints[F](userCredentialsService, userSessions, usersService, socialLoginService, userRolesService, socialPlatformSubscriptionsProviders, otpService)
       alertService = new AlertsService[F](alertsRepository)
       alertsEndPoints = new AlertsEndpoints[F](alertService)
       blocker <- Blocker[F]
