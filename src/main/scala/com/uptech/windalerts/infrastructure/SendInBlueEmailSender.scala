@@ -1,14 +1,14 @@
 package com.uptech.windalerts.infrastructure
 
+import cats.effect.Sync
 import cats.{Applicative, Monad}
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
-import com.uptech.windalerts.core.UserNotifier
+import com.uptech.windalerts.core.otp.OTPNotifier
+import com.uptech.windalerts.core.user.PasswordNotifier
 import com.uptech.windalerts.logger
 
-import scala.util.Try
 
-
-class SendInBlueEmailSender[F[_]](apiKey: String) extends UserNotifier[F] {
+class SendInBlueEmailSender[F[_] : Sync](apiKey: String) extends OTPNotifier[F] with PasswordNotifier[F] {
   override def notifyOTP(to: String, otp: String)(implicit F: Monad[F]): F[String] = {
     send(to, 1l,
       s"""
@@ -17,7 +17,7 @@ class SendInBlueEmailSender[F[_]](apiKey: String) extends UserNotifier[F] {
        """.stripMargin)
   }
 
-  override def notifyNewPassword(firstName: String, to: String, password: String)(implicit F: Monad[F]) = {
+  override def notifyNewPassword(firstName: String, to: String, password: String) = {
     send(to, 3l,
       s"""
             "password": "${password}",
@@ -26,10 +26,9 @@ class SendInBlueEmailSender[F[_]](apiKey: String) extends UserNotifier[F] {
        """.stripMargin)
   }
 
-  def send(to: String, templateId: Long, params: String)(implicit F: Monad[F]) = {
-
-      val requestBody =
-        s"""{
+  def send(to: String, templateId: Long, params: String) = {
+    val requestBody =
+      s"""{
            "to": [
                {
                    "email": "$to"
@@ -41,17 +40,17 @@ class SendInBlueEmailSender[F[_]](apiKey: String) extends UserNotifier[F] {
            }
        }"""
 
-      val req = sttp.body(
-        requestBody.stripMargin).header("api-key", apiKey)
-        .contentType("application/json")
-        .post(uri"https://api.sendinblue.com/v3/smtp/email")
+    val req = sttp.body(
+      requestBody.stripMargin).header("api-key", apiKey)
+      .contentType("application/json")
+      .post(uri"https://api.sendinblue.com/v3/smtp/email")
 
-      implicit val backend = HttpURLConnectionBackend()
+    implicit val backend = HttpURLConnectionBackend()
 
-      val body = req.send().body
-      logger.info(s"Response from sendinblue ${body.toString}")
+    val body = req.send().body
+    logger.info(s"Response from sendinblue ${body.toString}")
 
-      F.pure(body.toOption.get)
+    Applicative[F].pure(body.toOption.get)
   }
 }
 
