@@ -17,38 +17,28 @@ import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim}
 
 import java.util.concurrent.TimeUnit
 
-class UserSessions[F[_] : Sync](jwtKey: String, userCredentialsService: UserCredentialService[F], userRepository: UserRepository[F], userSessionsRepository: UserSessionRepository[F])(implicit A:Applicative[F]) {
+class UserSessions[F[_] : Sync](jwtKey: String,  userSessionsRepository: UserSessionRepository[F])(implicit A: Applicative[F]) {
 
-  def login(credentials: LoginRequest)(implicit FR: Raise[F, UserNotFoundError], UAF: Raise[F, UserAuthenticationFailedError]): F[TokensWithUser] = {
-    for {
-      persistedCredentials <- userCredentialsService.findByEmailAndPassword(credentials.email, credentials.password, credentials.deviceType)
-      tokens <- reset(persistedCredentials.id, credentials.deviceToken)
-    } yield tokens
-  }
 
-  def reset(id: String, newDeviceToken: String)(implicit FR: Raise[F, UserNotFoundError]): F[TokensWithUser] = {
+  def reset(id: String, newDeviceToken: String)(implicit FR: Raise[F, UserNotFoundError]): F[Tokens] = {
     for {
       _ <- userSessionsRepository.deleteForUserId(id)
       tokens <- generateNewTokens(id, newDeviceToken)
     } yield tokens
   }
 
-  private def generateNewTokens(id: String, deviceToken: String)(implicit FR: Raise[F, UserNotFoundError]): F[TokensWithUser] = {
+  def generateNewTokens(id: String, deviceToken: String): F[Tokens] = {
+    val accessToken = createAccessToken(UserId(id))
     for {
-      user <- userRepository.getByUserId(id)
-      session <- generateNewTokens(user, deviceToken)
-    } yield session
+      newRefreshToken <- userSessionsRepository.create(utils.generateRandomString(40), System.currentTimeMillis() + REFRESH_TOKEN_EXPIRY, id, deviceToken)
+      tokens = Tokens(accessToken.accessToken, newRefreshToken, accessToken.expiredAt)
+    } yield tokens
   }
 
-  def generateNewTokens(user: UserT, deviceToken: String): F[TokensWithUser] = {
-    val token = createToken(UserId(user.id))
-    userSessionsRepository.create(utils.generateRandomString(40), System.currentTimeMillis() + REFRESH_TOKEN_EXPIRY, user.id, deviceToken)
-      .map(newRefreshToken => TokensWithUser(token.accessToken, newRefreshToken.refreshToken, token.expiredAt, user))
-  }
 
-  def createToken(userId: UserId): AccessTokenWithExpiry = AccessTokenWithExpiry(JwtSecretKey(jwtKey), userId)
+  def createAccessToken(userId: UserId): AccessTokenWithExpiry = AccessTokenWithExpiry(JwtSecretKey(jwtKey), userId)
 
-  def refresh(accessTokenRequest: AccessTokenRequest)(implicit FR: Raise[F, UserNotFoundError], RTNF: Raise[F, RefreshTokenNotFoundError], RTE: Raise[F, RefreshTokenExpiredError]): F[TokensWithUser] = {
+  def refresh(accessTokenRequest: AccessTokenRequest)(implicit FR: Raise[F, UserNotFoundError], RTNF: Raise[F, RefreshTokenNotFoundError], RTE: Raise[F, RefreshTokenExpiredError]): F[Tokens] = {
     for {
       oldRefreshToken <- userSessionsRepository.getByRefreshToken(accessTokenRequest.refreshToken)
       _ <- checkNotExpired(oldRefreshToken)
@@ -68,8 +58,10 @@ class UserSessions[F[_] : Sync](jwtKey: String, userCredentialsService: UserCred
     userSessionsRepository.updateDeviceToken(id, deviceToken)
   }
 
-  def logout(userId: String): F[Unit] =
+
+  def deleteForUserId(userId: String): F[Unit] =
     userSessionsRepository.deleteForUserId(userId)
+
 
 }
 

@@ -1,6 +1,6 @@
 package com.uptech.windalerts.core.user
 
-import cats.{FlatMap, Monad}
+import cats.Monad
 import cats.effect.Sync
 import cats.implicits._
 import cats.mtl.Raise
@@ -12,15 +12,53 @@ import com.uptech.windalerts.core.user.sessions.UserSessions
 
 class UserService[F[_] : Sync](userRepository: UserRepository[F],
                                userCredentialsService: UserCredentialService[F],
-                               userSessions:UserSessions[F],
-                               eventPublisher: EventPublisher[F]) {
-  def register(registerRequest: RegisterRequest)(implicit FR: Raise[F, UserAlreadyExistsRegistered], M:Monad[F]): F[TokensWithUser] = {
+                               userSessions: UserSessions[F],
+                               eventPublisher: EventPublisher[F],
+                               passwordNotifier: PasswordNotifier[F]) {
+  def register(registerRequest: RegisterRequest)(implicit FR: Raise[F, UserAlreadyExistsRegistered], M: Monad[F]): F[TokensWithUser] = {
     for {
       createUserResponse <- persistUserAndCredentials(registerRequest)
-      tokens <- userSessions.generateNewTokens(createUserResponse._1, registerRequest.deviceToken)
+      tokens <- userSessions.generateNewTokens(createUserResponse._1.id, registerRequest.deviceToken)
+      tokensWithUser = TokensWithUser(tokens.accessToken, tokens.refreshToken.refreshToken, tokens.expiredAt, createUserResponse._1)
       _ <- eventPublisher.publishUserRegistered("userRegistered", UserRegistered(UserIdDTO(createUserResponse._1.id), EmailId(createUserResponse._1.email)))
-    } yield tokens
+    } yield tokensWithUser
   }
+
+  def login(credentials: LoginRequest)(implicit FR: Raise[F, UserNotFoundError], UAF: Raise[F, UserAuthenticationFailedError]): F[TokensWithUser] = {
+    for {
+      persistedCredentials <- userCredentialsService.findByEmailAndPassword(credentials.email, credentials.password, credentials.deviceType)
+      tokens <- userSessions.reset(persistedCredentials.id, credentials.deviceToken)
+      tokensWithUser <- getTokensWithUser(persistedCredentials.id, tokens)
+    } yield tokensWithUser
+  }
+
+  def refresh(accessTokenRequest: AccessTokenRequest)(implicit FR: Raise[F, UserNotFoundError], RTNF: Raise[F, RefreshTokenNotFoundError], RTE: Raise[F, RefreshTokenExpiredError]): F[TokensWithUser] = {
+    for {
+      tokens <- userSessions.refresh(accessTokenRequest)
+      tokensWithUser <- getTokensWithUser(tokens.refreshToken.userId, tokens)
+    } yield tokensWithUser
+  }
+
+  def getTokensWithUser(id: String, tokens: Tokens)(implicit FR: Raise[F, UserNotFoundError]): F[TokensWithUser] = {
+    for {
+      user <- getUser(id)
+      tokensWithUser = TokensWithUser(tokens.accessToken, tokens.refreshToken.refreshToken, tokens.expiredAt, user)
+    } yield tokensWithUser
+  }
+
+  def resetPassword(
+                     email: String, deviceType: String
+                   )(implicit F: Monad[F], UAF: Raise[F, UserAuthenticationFailedError], UNF: Raise[F, UserNotFoundError]): F[Unit] =
+    for {
+      credentials <- userCredentialsService.resetPassword(email, deviceType)
+      _ <- userSessions.deleteForUserId(credentials.id)
+      user <- userRepository.getByUserId(credentials.id)
+      _ <- passwordNotifier.notifyNewPassword(user.firstName(), email, credentials.password)
+    } yield ()
+
+
+  def logout(userId: String): F[Unit] =
+    userSessions.deleteForUserId(userId)
 
   def persistUserAndCredentials(rr: RegisterRequest)(implicit FR: Raise[F, UserAlreadyExistsRegistered]): F[(UserT, Credentials)] = {
     for {

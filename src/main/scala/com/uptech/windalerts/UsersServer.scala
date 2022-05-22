@@ -65,9 +65,9 @@ object UsersServer extends IOApp {
       otpService = new OTPService(otpRepositoy, emailSender)
       socialCredentialsRepositories = Map(Facebook -> facebookCredentialsRepository, Apple -> appleCredentialsRepository)
 
-      userCredentialsService = new UserCredentialService[F](socialCredentialsRepositories, credentialsRepository, usersRepository, userSessionsRepository, emailSender)
-      userSessions = new UserSessions[F](sys.env("JWT_KEY"), userCredentialsService, usersRepository, userSessionsRepository)
-      usersService = new UserService[F](usersRepository, userCredentialsService,  userSessions, googlePublisher)
+      userCredentialsService = new UserCredentialService[F](socialCredentialsRepositories, credentialsRepository)
+      userSessions = new UserSessions[F](sys.env("JWT_KEY"), userSessionsRepository)
+      usersService = new UserService[F](usersRepository, userCredentialsService,  userSessions, googlePublisher, emailSender)
       socialLoginPlatforms = new AllSocialLoginProviders[F](applePlatform, facebookPlatform)
       socialLoginService = new SocialLoginService[F](usersRepository, userSessions, userCredentialsService, socialCredentialsRepositories, socialLoginPlatforms)
 

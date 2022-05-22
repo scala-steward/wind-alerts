@@ -53,14 +53,14 @@ class UsersEndpoints[F[_] : Effect]
       case req@POST -> Root / "login" =>
         (for {
           credentials <- req.as[LoginRequest]
-          user <- userSessions.login(credentials)
+          user <- userService.login(credentials)
         } yield user).flatMap(Ok(_)
         ).handle[Throwable](mapError(_))
 
       case req@POST -> Root / "refresh" =>
         (for {
           refreshToken <- req.as[AccessTokenRequest]
-          user <- userSessions.refresh(refreshToken)
+          user <- userService.refresh(refreshToken)
         } yield user).flatMap(
           Ok(_)
         ).handle[Throwable](mapError(_))
@@ -76,7 +76,7 @@ class UsersEndpoints[F[_] : Effect]
       case req@POST -> Root / "resetPassword" =>
         (for {
           resetPasswordRequest <- req.as[ResetPasswordRequest]
-          user <- userCredentialsService.resetPassword(resetPasswordRequest.email, resetPasswordRequest.deviceType)
+          user <- userService.resetPassword(resetPasswordRequest.email, resetPasswordRequest.deviceType)
         } yield user).flatMap(_ => Ok())
           .handle[Throwable](mapError(_))
 
@@ -148,7 +148,7 @@ class UsersEndpoints[F[_] : Effect]
       case _@POST -> Root / "logout" as user =>
         OptionT.liftF({
           (for {
-            response <- userSessions.logout(user.userId.id)
+            response <- userService.logout(user.userId.id)
           } yield response).flatMap(_ => Ok())
             .handle[Throwable](mapError(_))
         })
