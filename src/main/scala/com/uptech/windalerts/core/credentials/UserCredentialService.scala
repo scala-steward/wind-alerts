@@ -8,19 +8,14 @@ import com.github.t3hnar.bcrypt._
 import com.uptech.windalerts.core._
 import com.uptech.windalerts.core.social.SocialPlatformType
 import com.uptech.windalerts.core.types.{ChangePasswordRequest, RegisterRequest}
-import com.uptech.windalerts.core.user.sessions.UserSessionRepository
-import com.uptech.windalerts.core.user.{PasswordNotifier, UserRepository}
 
 
 class UserCredentialService[F[_] : Sync](
                                           socialCredentialsRepositories: Map[SocialPlatformType, SocialCredentialsRepository[F]],
-                                          credentialsRepository: CredentialsRepository[F],
-                                          userRepository: UserRepository[F],
-                                          userSessionsRepository: UserSessionRepository[F],
-                                          passwordNotifier: PasswordNotifier[F]) {
+                                          credentialsRepository: CredentialsRepository[F]) {
   def findByEmailAndPassword(
-                         email: String, password: String, deviceType: String
-                       )(implicit FR: Raise[F, UserAuthenticationFailedError]): F[Credentials] =
+                              email: String, password: String, deviceType: String
+                            )(implicit FR: Raise[F, UserAuthenticationFailedError]): F[Credentials] =
     for {
       credentials <- credentialsRepository.findByEmailAndDeviceType(email, deviceType).getOrElseF(FR.raise(UserAuthenticationFailedError(email)))
       passwordMatched <- isPasswordMatch(password, credentials)
@@ -32,16 +27,12 @@ class UserCredentialService[F[_] : Sync](
 
   def resetPassword(
                      email: String, deviceType: String
-                   )(implicit F: Monad[F], UAF: Raise[F, UserAuthenticationFailedError], UNF: Raise[F, UserNotFoundError]): F[Credentials] =
+                   )(implicit F: Monad[F], UAF: Raise[F, UserAuthenticationFailedError]): F[Credentials] =
     for {
       credentials <- credentialsRepository.findByEmailAndDeviceType(email, deviceType).getOrElseF(UAF.raise(UserAuthenticationFailedError(email)))
       newPassword = utils.generateRandomString(10)
       _ <- credentialsRepository.updatePassword(credentials.id, newPassword.bcrypt)
-      _ <- userSessionsRepository.deleteForUserId(credentials.id)
-      user <- userRepository.getByUserId(credentials.id)
-      _ <- passwordNotifier.notifyNewPassword(user.firstName(), email, newPassword)
-    } yield credentials
-
+    } yield credentials.copy(password = newPassword)
 
   def changePassword(request: ChangePasswordRequest)(implicit FR: Raise[F, UserAlreadyExistsRegistered], UAF: Raise[F, UserAuthenticationFailedError]): F[Unit] = {
     for {

@@ -7,7 +7,7 @@ import cats.mtl.Raise
 import com.uptech.windalerts.core.credentials.{SocialCredentials, SocialCredentialsRepository, UserCredentialService}
 import com.uptech.windalerts.core.social.SocialPlatformType
 import com.uptech.windalerts.core.user.sessions.UserSessions
-import com.uptech.windalerts.core.user.{TokensWithUser, UserRepository, UserService, UserT}
+import com.uptech.windalerts.core.user.{Tokens, TokensWithUser, UserRepository, UserService, UserT}
 import com.uptech.windalerts.core.{UserAlreadyExistsRegistered, UserNotFoundError}
 
 class SocialLoginService[F[_] : Sync](userRepository: UserRepository[F],
@@ -26,18 +26,27 @@ class SocialLoginService[F[_] : Sync](userRepository: UserRepository[F],
         .fetchUserFromPlatform(accessToken, deviceType, deviceToken, name)
       credentialsRepository = socialCredentialsRepositories(socialPlatform)
       existingCredential <- credentialsRepository.find(socialUser.email, socialUser.deviceType)
-      tokens <- existingCredential
-        .map(credentials => userSessions.reset(credentials.id, socialUser.deviceToken))
+      tokens = existingCredential
+        .map(credentials => userSessions.reset(credentials.id, socialUser.deviceToken).flatMap(getTokensWithUser(credentials.id, _)))
+      tokensWithUser <- tokens
         .getOrElse(tokensForNewUser(credentialsRepository, socialUser))
-    } yield (tokens, existingCredential.isEmpty)
+    } yield (tokensWithUser, existingCredential.isEmpty)
+  }
+
+  def getTokensWithUser(id: String, tokens: Tokens)(implicit FR: Raise[F, UserNotFoundError]): F[TokensWithUser] = {
+    for {
+      user <- userRepository.getByUserId(id)
+      tokensWithUser = TokensWithUser(tokens.accessToken, tokens.refreshToken.refreshToken, tokens.expiredAt, user)
+    } yield tokensWithUser
   }
 
   private def tokensForNewUser[T <: SocialCredentials](credentialsRepository: SocialCredentialsRepository[F], socialUser: SocialUser)(implicit FR: Raise[F, UserAlreadyExistsRegistered]): F[TokensWithUser] = {
     for {
       _ <- credentialService.notRegistered(socialUser.email, socialUser.deviceType)
       result <- createUser(credentialsRepository, socialUser)
-      tokens <- userSessions.generateNewTokens(result._1, socialUser.deviceToken)
-    } yield tokens
+      tokens <- userSessions.generateNewTokens(result._1.id, socialUser.deviceToken)
+      tokensWithUser = TokensWithUser(tokens.accessToken, tokens.refreshToken.refreshToken, tokens.expiredAt, result._1)
+    } yield tokensWithUser
   }
 
   def createUser[T <: SocialCredentials](credentialsRepository: SocialCredentialsRepository[F], user: SocialUser)
