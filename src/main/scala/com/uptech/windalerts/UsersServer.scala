@@ -33,55 +33,43 @@ import org.http4s.{Response, Status}
 object UsersServer extends IOApp {
   implicit val configEnv = new EnvironmentIOAsk(Environment(Repos.acquireDb(sys.env("MONGO_DB_URL"))))
 
-  def createServer[F[_] : EnvironmentAsk : ContextShift : ConcurrentEffect : Timer : Parallel]()(implicit M: Monad[F], H: Handle[F, Throwable]): Resource[F, H4Server] =
+  def createServer[F[_] : EnvironmentAsk : ContextShift : ConcurrentEffect : Timer : Parallel]()(implicit M: Monad[F], H: Handle[F, Throwable]): Resource[F, H4Server] = {
+    val projectId = sys.env("projectId")
+    val googlePublisher = new GooglePubSubEventpublisher[F](projectId)
+    val androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
 
+
+    val otpRepository = new MongoOtpRepository[F]()
+    val usersRepository = new MongoUserRepository[F]()
+    val androidPurchaseRepository = new MongoPurchaseTokenRepository[F]("androidPurchases")
+    val applePurchaseRepository = new MongoPurchaseTokenRepository[F]("applePurchases")
+
+    val alertsRepository = new MongoAlertsRepository[F]()
+    val auth = new AuthenticationMiddleware[F](sys.env("JWT_KEY"), usersRepository)
+    val emailSender = new SendInBlueEmailSender[F](sys.env("EMAIL_KEY"))
+    val otpService = new OTPService(otpRepository, emailSender)
+    val socialCredentialsRepositories = Map(
+      Facebook -> new MongoSocialCredentialsRepository[F]("facebookCredentials"),
+      Apple -> new MongoSocialCredentialsRepository[F]("appleCredentials"))
+
+    val userCredentialsService = new UserCredentialService[F](socialCredentialsRepositories, new MongoCredentialsRepository[F]())
+    val userSessions = new UserSessions[F](sys.env("JWT_KEY"), new MongoUserSessionRepository[F]())
+    val usersService = new UserService[F](usersRepository, userCredentialsService, userSessions, googlePublisher, emailSender)
+    val socialLoginPlatforms = new AllSocialLoginProviders[F](
+      new AppleLoginProvider[F](config.getSecretsFile(s"apple/Apple.p8")),
+      new FacebookLoginProvider[F](sys.env("FACEBOOK_KEY")))
+    val socialLoginService = new SocialLoginService[F](usersRepository, userSessions, userCredentialsService, socialCredentialsRepositories, socialLoginPlatforms)
+
+    val appleSubscription = new AppleSubscription[F](sys.env("APPLE_APP_SECRET"))
+    val androidSubscription = new AndroidSubscription[F](androidPublisher)
+    val subscriptionsService = new AllSocialPlatformSubscriptionsProviders[F](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
+    val userRolesService = new UserRolesService[F](alertsRepository, usersRepository, otpRepository, subscriptionsService)
+    val socialPlatformSubscriptionsProviders = new AllSocialPlatformSubscriptionsProviders[F](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
+    val endpoints = new UsersEndpoints[F](userCredentialsService, userSessions, usersService, socialLoginService, userRolesService, socialPlatformSubscriptionsProviders, otpService)
+    val alertService = new AlertsService[F](alertsRepository)
+    val alertsEndPoints = new AlertsEndpoints[F](alertService)
     for {
-      beaches <- eval(decodePathF[F, Beaches](parseFileAnySyntax(config.getConfigFile("beaches.json")), "surfsUp"))
-      swellAdjustments <- eval(decodePathF[F, Adjustments](parseFileAnySyntax(config.getConfigFile("swellAdjustments.json")), "surfsUp"))
-      willyWeatherAPIKey = sys.env("WILLY_WEATHER_KEY")
-
-
-      projectId = sys.env("projectId")
-
-      googlePublisher = new GooglePubSubEventpublisher[F](projectId)
-      androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
-
-
-      userSessionsRepository = new MongoUserSessionRepository[F]()
-      otpRepositoy = new MongoOtpRepository[F]()
-      usersRepository = new MongoUserRepository[F]()
-      credentialsRepository = new MongoCredentialsRepository[F]()
-      facebookCredentialsRepository = new MongoSocialCredentialsRepository[F]("facebookCredentials")
-      appleCredentialsRepository = new MongoSocialCredentialsRepository[F]("appleCredentials")
-      androidPurchaseRepository = new MongoPurchaseTokenRepository[F]("androidPurchases")
-      applePurchaseRepository = new MongoPurchaseTokenRepository[F]("applePurchases")
-
-      alertsRepository = new MongoAlertsRepository[F]()
-      applePlatform = new AppleLoginProvider[F](config.getSecretsFile(s"apple/Apple.p8"))
-      facebookPlatform = new FacebookLoginProvider[F](sys.env("FACEBOOK_KEY"))
-      beachService = new BeachService[F](
-        new WWBackedWindsService[F](willyWeatherAPIKey),
-        new WWBackedTidesService[F](willyWeatherAPIKey, beaches.toMap()),
-        new WWBackedSwellsService[F](willyWeatherAPIKey, swellAdjustments))
-      auth = new AuthenticationMiddleware[F](sys.env("JWT_KEY"), usersRepository)
-      emailSender = new SendInBlueEmailSender[F](sys.env("EMAIL_KEY"))
-      otpService = new OTPService(otpRepositoy, emailSender)
-      socialCredentialsRepositories = Map(Facebook -> facebookCredentialsRepository, Apple -> appleCredentialsRepository)
-
-      userCredentialsService = new UserCredentialService[F](socialCredentialsRepositories, credentialsRepository)
-      userSessions = new UserSessions[F](sys.env("JWT_KEY"), userSessionsRepository)
-      usersService = new UserService[F](usersRepository, userCredentialsService, userSessions, googlePublisher, emailSender)
-      socialLoginPlatforms = new AllSocialLoginProviders[F](applePlatform, facebookPlatform)
-      socialLoginService = new SocialLoginService[F](usersRepository, userSessions, userCredentialsService, socialCredentialsRepositories, socialLoginPlatforms)
-
-      appleSubscription = new AppleSubscription[F](sys.env("APPLE_APP_SECRET"))
-      androidSubscription = new AndroidSubscription[F](androidPublisher)
-      subscriptionsService = new AllSocialPlatformSubscriptionsProviders[F](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
-      userRolesService = new UserRolesService[F](alertsRepository, usersRepository, otpRepositoy, subscriptionsService)
-      socialPlatformSubscriptionsProviders = new AllSocialPlatformSubscriptionsProviders[F](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
-      endpoints = new UsersEndpoints[F](userCredentialsService, userSessions, usersService, socialLoginService, userRolesService, socialPlatformSubscriptionsProviders, otpService)
-      alertService = new AlertsService[F](alertsRepository)
-      alertsEndPoints = new AlertsEndpoints[F](alertService)
+      beachService <- com.uptech.windalerts.infrastructure.beaches.BeachService[F]()
       blocker <- Blocker[F]
       httpApp = Router(
         "/v1/users" -> auth.middleware(endpoints.authedService()),
@@ -102,6 +90,7 @@ object UsersServer extends IOApp {
         })
         .resource
     } yield server
+  }
 
 
   def run(args: List[String]): IO[ExitCode] = {

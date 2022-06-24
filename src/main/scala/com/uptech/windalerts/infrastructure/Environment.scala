@@ -7,6 +7,8 @@ import org.mongodb.scala.MongoDatabase
 case class Environment(db: MongoDatabase)
 
 object Environment {
+
+
   trait ApplicativeAsk[F[_], E] extends Serializable {
     val applicative: Applicative[F]
 

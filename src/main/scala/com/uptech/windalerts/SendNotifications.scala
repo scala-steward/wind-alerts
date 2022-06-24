@@ -7,16 +7,13 @@ import cats.{Monad, Parallel}
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
-import com.softwaremill.sttp.quick.backend
 import com.typesafe.config.ConfigFactory.parseFileAnySyntax
 import com.uptech.windalerts.config._
 import com.uptech.windalerts.config.beaches.{Beaches, _}
-import com.uptech.windalerts.config.swellAdjustments.Adjustments
-import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.notifications.NotificationsService
 import com.uptech.windalerts.infrastructure.Environment
 import com.uptech.windalerts.infrastructure.Environment.{EnvironmentAsk, EnvironmentIOAsk}
-import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
+import com.uptech.windalerts.infrastructure.beaches.BeachService
 import com.uptech.windalerts.infrastructure.endpoints.NotificationEndpoints
 import com.uptech.windalerts.infrastructure.notifications.FirebaseBasedNotificationsSender
 import com.uptech.windalerts.infrastructure.repositories.mongo._
@@ -42,13 +39,9 @@ object SendNotifications extends IOApp {
       notifications = FirebaseMessaging.getInstance
 
       beaches <- eval(decodePathF[F, Beaches](parseFileAnySyntax(config.getConfigFile("beaches.json")), "surfsUp"))
-      swellAdjustments <- eval(decodePathF[F, Adjustments](parseFileAnySyntax(config.getConfigFile("swellAdjustments.json")), "surfsUp"))
-      willyWeatherAPIKey = sys.env("WILLY_WEATHER_KEY")
 
-      beachService = new BeachService[F](
-        new WWBackedWindsService[F](willyWeatherAPIKey),
-        new WWBackedTidesService[F](willyWeatherAPIKey, beaches.toMap()),
-        new WWBackedSwellsService[F](willyWeatherAPIKey, swellAdjustments))
+
+      beachService <-  BeachService()
 
       usersRepository = new MongoUserRepository[F]()
       alertsRepository = new MongoAlertsRepository[F]()
