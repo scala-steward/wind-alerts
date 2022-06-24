@@ -15,38 +15,58 @@ import org.mongodb.scala.bson.ObjectId
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.{and, equal, lt}
 import cats.implicits._
+import com.uptech.windalerts.infrastructure.Environment.EnvironmentAsk
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class MongoUserRepository[F[_]](collection: MongoCollection[DBUser])(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends UserRepository[F] {
+class MongoUserRepository[F[_] : EnvironmentAsk](implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends UserRepository[F] {
+  private val env = implicitly[EnvironmentAsk[F]]
+
+  def getCollection(): F[MongoCollection[DBUser]] = {
+    MongoRepository.getCollection("users")
+  }
 
   override def getByUserId(userId: String)(implicit FR: Raise[F, UserNotFoundError]): F[UserT] = {
     getByUserIdOption(userId).getOrElseF(FR.raise(UserNotFoundError()))
   }
+
   override def getByUserIdOption(userId: String) = {
     findByCriteria(equal("_id", new ObjectId(userId)))
   }
+
   override def getByEmailAndDeviceType(email: String, deviceType: String)(implicit FR: Raise[F, UserNotFoundError]) = {
     findByCriteria(and(equal("email", email), equal("deviceType", deviceType))).getOrElseF(FR.raise(UserNotFoundError()))
   }
 
   override def create(userRequest: UserT): F[UserT] = {
     val dbUser = DBUser(userRequest)
-    Async.fromFuture(M.pure(collection.insertOne(dbUser).toFuture().map(_ => dbUser.toUser())))
+    for {
+      collection <- getCollection()
+      user <- Async.fromFuture(M.pure(collection.insertOne(dbUser).toFuture().map(_ => dbUser.toUser())))
+    } yield user
   }
 
   override def update(user: UserT)(implicit FR: Raise[F, UserNotFoundError]): F[UserT] = {
     for {
+      collection <- getCollection()
       _ <- Async.fromFuture(M.pure(collection.replaceOne(equal("_id", new ObjectId(user.id)), DBUser(user)).toFuture()))
       updatedUser <- getByUserId(user.id)
     } yield updatedUser
   }
 
   private def findByCriteria(criteria: Bson) = {
-    OptionT(Async.fromFuture(M.pure(collection.find(criteria).toFuture().map(_.headOption.map(_.toUser())))))
+    OptionT(for {
+      collection <- getCollection()
+      user <- Async.fromFuture(M.pure(collection.find(criteria).toFuture().map(_.headOption.map(_.toUser()))))
+    } yield user)
   }
 
-  private def findAllByCriteria(criteria: Bson)(implicit M: Monad[F]) =
-    Async.fromFuture(M.pure(collection.find(criteria).toFuture())).map(_.map(_.toUser()))
+  private def findAllByCriteria(criteria: Bson)(implicit M: Monad[F]) = {
+    for {
+      collection <- getCollection()
+      all <- Async.fromFuture(M.pure(collection.find(criteria).toFuture())).map(_.map(_.toUser()))
+    } yield all
+  }
 
   override def findTrialExpiredUsers(): F[Seq[UserT]] = {
     findAllByCriteria(and(equal("userType", Trial.value),

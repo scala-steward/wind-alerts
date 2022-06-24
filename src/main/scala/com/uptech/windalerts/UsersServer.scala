@@ -11,18 +11,19 @@ import com.uptech.windalerts.config.beaches.{Beaches, _}
 import com.uptech.windalerts.config.swellAdjustments.Adjustments
 import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.beaches.BeachService
-import com.uptech.windalerts.core.credentials.UserCredentialService
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.social.login.SocialLoginService
+import com.uptech.windalerts.core.user.credentials.UserCredentialService
 import com.uptech.windalerts.core.user.sessions.UserSessions
 import com.uptech.windalerts.core.user.{UserRolesService, UserService}
+import com.uptech.windalerts.infrastructure.Environment.{EnvironmentAsk, EnvironmentIOAsk}
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints._
 import com.uptech.windalerts.infrastructure.repositories.mongo._
 import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Facebook}
 import com.uptech.windalerts.infrastructure.social.login.{AllSocialLoginProviders, AppleLoginProvider, FacebookLoginProvider}
 import com.uptech.windalerts.infrastructure.social.subscriptions._
-import com.uptech.windalerts.infrastructure.{GooglePubSubEventpublisher, SendInBlueEmailSender}
+import com.uptech.windalerts.infrastructure.{Environment, GooglePubSubEventpublisher, SendInBlueEmailSender}
 import io.circe.config.parser.decodePathF
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.implicits._
@@ -30,7 +31,9 @@ import org.http4s.server.{Router, Server => H4Server}
 import org.http4s.{Response, Status}
 
 object UsersServer extends IOApp {
-  def createServer[F[_] : ContextShift : ConcurrentEffect : Timer : Parallel]()(implicit M: Monad[F], H: Handle[F, Throwable]): Resource[F, H4Server] =
+  implicit val configEnv = new EnvironmentIOAsk(Environment(Repos.acquireDb(sys.env("MONGO_DB_URL"))))
+
+  def createServer[F[_] : EnvironmentAsk : ContextShift : ConcurrentEffect : Timer : Parallel]()(implicit M: Monad[F], H: Handle[F, Throwable]): Resource[F, H4Server] =
 
     for {
       beaches <- eval(decodePathF[F, Beaches](parseFileAnySyntax(config.getConfigFile("beaches.json")), "surfsUp"))
@@ -43,17 +46,17 @@ object UsersServer extends IOApp {
       googlePublisher = new GooglePubSubEventpublisher[F](projectId)
       androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
 
-      db = Repos.acquireDb(sys.env("MONGO_DB_URL"))
-      userSessionsRepository = new MongoUserSessionRepository[F](db.getCollection[DBUserSession]("userSessions"))
-      otpRepositoy = new MongoOtpRepository[F](db.getCollection[DBOTPWithExpiry]("otp"))
-      usersRepository = new MongoUserRepository[F](db.getCollection[DBUser]("users"))
-      credentialsRepository = new MongoCredentialsRepository[F](db.getCollection[DBCredentials]("credentials"))
-      facebookCredentialsRepository = new MongoSocialCredentialsRepository[F](db.getCollection[DBSocialCredentials]("facebookCredentials"))
-      appleCredentialsRepository = new MongoSocialCredentialsRepository[F](db.getCollection[DBSocialCredentials]("appleCredentials"))
-      androidPurchaseRepository = new MongoPurchaseTokenRepository[F](db.getCollection[DBPurchaseToken]("androidPurchases"))
-      applePurchaseRepository = new MongoPurchaseTokenRepository[F](db.getCollection[DBPurchaseToken]("applePurchases"))
 
-      alertsRepository = new MongoAlertsRepository[F](db.getCollection[DBAlert]("alerts"))
+      userSessionsRepository = new MongoUserSessionRepository[F]()
+      otpRepositoy = new MongoOtpRepository[F]()
+      usersRepository = new MongoUserRepository[F]()
+      credentialsRepository = new MongoCredentialsRepository[F]()
+      facebookCredentialsRepository = new MongoSocialCredentialsRepository[F]("facebookCredentials")
+      appleCredentialsRepository = new MongoSocialCredentialsRepository[F]("appleCredentials")
+      androidPurchaseRepository = new MongoPurchaseTokenRepository[F]("androidPurchases")
+      applePurchaseRepository = new MongoPurchaseTokenRepository[F]("applePurchases")
+
+      alertsRepository = new MongoAlertsRepository[F]()
       applePlatform = new AppleLoginProvider[F](config.getSecretsFile(s"apple/Apple.p8"))
       facebookPlatform = new FacebookLoginProvider[F](sys.env("FACEBOOK_KEY"))
       beachService = new BeachService[F](
@@ -67,7 +70,7 @@ object UsersServer extends IOApp {
 
       userCredentialsService = new UserCredentialService[F](socialCredentialsRepositories, credentialsRepository)
       userSessions = new UserSessions[F](sys.env("JWT_KEY"), userSessionsRepository)
-      usersService = new UserService[F](usersRepository, userCredentialsService,  userSessions, googlePublisher, emailSender)
+      usersService = new UserService[F](usersRepository, userCredentialsService, userSessions, googlePublisher, emailSender)
       socialLoginPlatforms = new AllSocialLoginProviders[F](applePlatform, facebookPlatform)
       socialLoginService = new SocialLoginService[F](usersRepository, userSessions, userCredentialsService, socialCredentialsRepositories, socialLoginPlatforms)
 

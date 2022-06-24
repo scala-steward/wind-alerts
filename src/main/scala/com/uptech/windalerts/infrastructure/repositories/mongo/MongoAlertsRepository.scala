@@ -9,6 +9,7 @@ import cats.{Applicative, Monad}
 import com.uptech.windalerts.core.AlertNotFoundError
 import com.uptech.windalerts.core.alerts.domain.Alert
 import com.uptech.windalerts.core.alerts.{AlertRequest, AlertsRepository, TimeRange}
+import com.uptech.windalerts.infrastructure.Environment.EnvironmentAsk
 import io.scalaland.chimney.dsl._
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.ObjectId
@@ -17,7 +18,12 @@ import org.mongodb.scala.model.Filters.{and, equal}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class MongoAlertsRepository[F[_]](collection: MongoCollection[DBAlert])(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends AlertsRepository[F] {
+class MongoAlertsRepository[F[_] : EnvironmentAsk : Monad : Async : ContextShift](implicit M: Monad[F]) extends AlertsRepository[F] {
+  private val env = implicitly[EnvironmentAsk[F]]
+
+  def getCollection(): F[MongoCollection[DBAlert]] = {
+    MongoRepository.getCollection("alerts")
+  }
 
   override def disableAllButFirstAlerts(userId: String): F[Unit] = {
     for {
@@ -34,21 +40,32 @@ class MongoAlertsRepository[F[_]](collection: MongoCollection[DBAlert])(implicit
   }
 
   private def update(alertId: String, alert: Alert): F[Alert] = {
-    Async.fromFuture(M.pure(collection.replaceOne(equal("_id", new ObjectId(alertId)), DBAlert(alert)).toFuture().map(_ => alert)))
+    for {
+      collection <- getCollection()
+      alert <- Async.fromFuture(M.pure(collection.replaceOne(equal("_id", new ObjectId(alertId)), DBAlert(alert)).toFuture().map(_ => alert)))
+    } yield alert
   }
 
-  def getById(id: String) = {
-    OptionT(Async.fromFuture(M.pure(collection.find(equal("_id", new ObjectId(id))).toFuture().map(_.headOption.map(_.toAlert())))))
+  def getById(id: String): OptionT[F, Alert] = {
+    OptionT(for {
+      collection <- getCollection()
+      alert <- Async.fromFuture(M.pure(collection.find(equal("_id", new ObjectId(id))).toFuture().map(_.headOption.map(_.toAlert()))))
+    } yield alert)
   }
 
   override def getAllEnabled(): F[Seq[Alert]] = {
-    Async.fromFuture(M.pure(collection.find(equal("enabled", true)).toFuture())).map(_.map(_.toAlert()))
+    for {
+      collection <- getCollection()
+      all <- Async.fromFuture(M.pure(collection.find(equal("enabled", true)).toFuture())).map(_.map(_.toAlert()))
+    } yield all
   }
 
   override def create(alertRequest: AlertRequest, user: String): F[Alert] = {
     val dBAlert = DBAlert(alertRequest, user)
-
-    Async.fromFuture(M.pure(collection.insertOne(dBAlert).toFuture().map(_ => dBAlert.toAlert())))
+    for {
+      collection <- getCollection()
+      alert <- Async.fromFuture(M.pure(collection.insertOne(dBAlert).toFuture().map(_ => dBAlert.toAlert())))
+    } yield alert
   }
 
   override def delete(requester: String, alertId: String)(implicit FR: Raise[F, AlertNotFoundError]): F[Unit] = {
@@ -57,13 +74,16 @@ class MongoAlertsRepository[F[_]](collection: MongoCollection[DBAlert])(implicit
 
   def delete_(requester: String, alertId: String)(implicit A: Applicative[F], FR: Raise[F, AlertNotFoundError]): F[Unit] = {
     for {
+      collection <- getCollection()
       dbAlert <- getById(alertId).getOrElseF(FR.raise(AlertNotFoundError()))
       _ <- if (dbAlert.owner != requester) FR.raise(AlertNotFoundError()) else A.pure(dbAlert)
       deleted <- Async.fromFuture(M.pure(collection.deleteOne(equal("_id", new ObjectId(alertId))).toFuture().map(_ => ())))
     } yield deleted
   }
+
   override def update(requester: String, alertId: String, updateAlertRequest: AlertRequest)(implicit FR: Raise[F, AlertNotFoundError]): F[Alert] = {
     for {
+      collection <- getCollection()
       oldAlert <- getById(alertId).getOrElseF(FR.raise(AlertNotFoundError()))
       alertUpdated = DBAlert(updateAlertRequest, requester, alertId, oldAlert.createdAt)
       _ <- M.pure(collection.replaceOne(equal("_id", new ObjectId(alertId)), alertUpdated).toFuture())
@@ -83,8 +103,12 @@ class MongoAlertsRepository[F[_]](collection: MongoCollection[DBAlert])(implicit
       ))
   }
 
-  private def findByCriteria(criteria: Bson) =
-    Async.fromFuture(M.pure(collection.find(criteria).toFuture())).map(_.map(_.toAlert()))
+  private def findByCriteria(criteria: Bson) = {
+    for {
+      collection <- getCollection()
+      all <- Async.fromFuture(M.pure(collection.find(criteria).toFuture())).map(_.map(_.toAlert()))
+    } yield all
+  }
 
 }
 

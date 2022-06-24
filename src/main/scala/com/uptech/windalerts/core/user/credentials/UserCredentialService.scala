@@ -1,4 +1,4 @@
-package com.uptech.windalerts.core.credentials
+package com.uptech.windalerts.core.user.credentials
 
 import cats.effect.Sync
 import cats.implicits._

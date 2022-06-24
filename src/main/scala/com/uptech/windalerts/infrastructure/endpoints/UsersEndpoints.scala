@@ -7,7 +7,7 @@ import cats.implicits._
 import cats.mtl.Handle
 import cats.mtl.implicits.toHandleOps
 import com.uptech.windalerts.config._
-import com.uptech.windalerts.core.credentials.UserCredentialService
+import com.uptech.windalerts.core.user.credentials.UserCredentialService
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.social.subscriptions.SocialPlatformSubscriptionsProviders

@@ -21,7 +21,7 @@ import org.http4s.{Response, Status}
 import scala.concurrent.ExecutionContext
 
 object BeachesServer extends IOApp {
-  def createServer[F[_]](implicit Sync: Sync[F], H: Handle[F, Throwable], AS: Async[F], CE: ConcurrentEffect[F], CS: ContextShift[F], T: Timer[F], P:Parallel[F]): Resource[F, H4Server] = {
+  def createServer[F[_]](implicit Sync: Sync[F], H: Handle[F, Throwable], AS: Async[F], CE: ConcurrentEffect[F], CS: ContextShift[F], T: Timer[F], P: Parallel[F]): Resource[F, H4Server] = {
 
     for {
       beaches <- eval(decodePathF[F, Beaches](parseFileAnySyntax(config.getConfigFile("beaches.json")), "surfsUp"))
@@ -52,8 +52,6 @@ object BeachesServer extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = {
     createServer[IO].use(_ => IO.never).as(ExitCode.Success)
   }
-
-
 
 }
 
