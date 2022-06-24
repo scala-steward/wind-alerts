@@ -4,7 +4,7 @@ import cats.Applicative
 import cats.effect.Sync
 import cats.implicits._
 import cats.mtl.Raise
-import com.uptech.windalerts.core.credentials.{SocialCredentials, SocialCredentialsRepository, UserCredentialService}
+import com.uptech.windalerts.core.user.credentials.{SocialCredentials, SocialCredentialsRepository, UserCredentialService}
 import com.uptech.windalerts.core.social.SocialPlatformType
 import com.uptech.windalerts.core.user.sessions.UserSessions
 import com.uptech.windalerts.core.user.{Tokens, TokensWithUser, UserRepository, UserService, UserT}
@@ -36,7 +36,7 @@ class SocialLoginService[F[_] : Sync](userRepository: UserRepository[F],
   def getTokensWithUser(id: String, tokens: Tokens)(implicit FR: Raise[F, UserNotFoundError]): F[TokensWithUser] = {
     for {
       user <- userRepository.getByUserId(id)
-      tokensWithUser = TokensWithUser(tokens.accessToken, tokens.refreshToken.refreshToken, tokens.expiredAt, user)
+      tokensWithUser = TokensWithUser(tokens, user)
     } yield tokensWithUser
   }
 
@@ -45,7 +45,7 @@ class SocialLoginService[F[_] : Sync](userRepository: UserRepository[F],
       _ <- credentialService.notRegistered(socialUser.email, socialUser.deviceType)
       result <- createUser(credentialsRepository, socialUser)
       tokens <- userSessions.generateNewTokens(result._1.id, socialUser.deviceToken)
-      tokensWithUser = TokensWithUser(tokens.accessToken, tokens.refreshToken.refreshToken, tokens.expiredAt, result._1)
+      tokensWithUser = TokensWithUser(tokens, result._1)
     } yield tokensWithUser
   }
 

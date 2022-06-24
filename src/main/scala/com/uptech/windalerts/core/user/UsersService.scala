@@ -5,7 +5,7 @@ import cats.effect.Sync
 import cats.implicits._
 import cats.mtl.Raise
 import com.uptech.windalerts.core._
-import com.uptech.windalerts.core.credentials.{Credentials, UserCredentialService}
+import com.uptech.windalerts.core.user.credentials.{Credentials, UserCredentialService}
 import com.uptech.windalerts.core.types._
 import com.uptech.windalerts.core.user.sessions.UserSessions
 
@@ -17,17 +17,17 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
                                passwordNotifier: PasswordNotifier[F]) {
   def register(registerRequest: RegisterRequest)(implicit FR: Raise[F, UserAlreadyExistsRegistered], M: Monad[F]): F[TokensWithUser] = {
     for {
-      createUserResponse <- persistUserAndCredentials(registerRequest)
+      createUserResponse <- register_(registerRequest)
       tokens <- userSessions.generateNewTokens(createUserResponse._1.id, registerRequest.deviceToken)
-      tokensWithUser = TokensWithUser(tokens.accessToken, tokens.refreshToken.refreshToken, tokens.expiredAt, createUserResponse._1)
+      tokensWithUser = TokensWithUser(tokens, createUserResponse._1)
       _ <- eventPublisher.publishUserRegistered("userRegistered", UserRegistered(UserIdDTO(createUserResponse._1.id), EmailId(createUserResponse._1.email)))
     } yield tokensWithUser
   }
 
-  def login(credentials: LoginRequest)(implicit FR: Raise[F, UserNotFoundError], UAF: Raise[F, UserAuthenticationFailedError]): F[TokensWithUser] = {
+  def login(loginRequest: LoginRequest)(implicit FR: Raise[F, UserNotFoundError], UAF: Raise[F, UserAuthenticationFailedError]): F[TokensWithUser] = {
     for {
-      persistedCredentials <- userCredentialsService.findByEmailAndPassword(credentials.email, credentials.password, credentials.deviceType)
-      tokens <- userSessions.reset(persistedCredentials.id, credentials.deviceToken)
+      persistedCredentials <- userCredentialsService.findByEmailAndPassword(loginRequest.email, loginRequest.password, loginRequest.deviceType)
+      tokens <- userSessions.reset(persistedCredentials.id, loginRequest.deviceToken)
       tokensWithUser <- getTokensWithUser(persistedCredentials.id, tokens)
     } yield tokensWithUser
   }
@@ -42,7 +42,7 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
   def getTokensWithUser(id: String, tokens: Tokens)(implicit FR: Raise[F, UserNotFoundError]): F[TokensWithUser] = {
     for {
       user <- getUser(id)
-      tokensWithUser = TokensWithUser(tokens.accessToken, tokens.refreshToken.refreshToken, tokens.expiredAt, user)
+      tokensWithUser = TokensWithUser(tokens, user)
     } yield tokensWithUser
   }
 
@@ -56,11 +56,10 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
       _ <- passwordNotifier.notifyNewPassword(user.firstName(), email, credentials.password)
     } yield ()
 
-
   def logout(userId: String): F[Unit] =
     userSessions.deleteForUserId(userId)
 
-  def persistUserAndCredentials(rr: RegisterRequest)(implicit FR: Raise[F, UserAlreadyExistsRegistered]): F[(UserT, Credentials)] = {
+  def register_(rr: RegisterRequest)(implicit FR: Raise[F, UserAlreadyExistsRegistered]): F[(UserT, Credentials)] = {
     for {
       savedCreds <- userCredentialsService.register(rr)
       saved <- userRepository.create(UserT.createEmailUser(savedCreds.id, rr.email, rr.name, rr.deviceType))
@@ -74,9 +73,8 @@ class UserService[F[_] : Sync](userRepository: UserRepository[F],
     } yield operationResult
   }
 
-  private def updateUser(name: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, user: UserT)(implicit FR: Raise[F, UserNotFoundError]) = {
+  private def updateUser(name: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, user: UserT)(implicit FR: Raise[F, UserNotFoundError]) =
     userRepository.update(user.copy(name = name, snoozeTill = snoozeTill, disableAllAlerts = disableAllAlerts, notificationsPerHour = notificationsPerHour))
-  }
 
   def getUser(email: String, deviceType: String)(implicit FR: Raise[F, UserNotFoundError]): F[UserT] =
     userRepository.getByEmailAndDeviceType(email, deviceType)

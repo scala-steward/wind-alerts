@@ -6,22 +6,34 @@ import cats.effect.{Async, ContextShift}
 import cats.mtl.Raise
 import com.uptech.windalerts.core.TokenNotFoundError
 import com.uptech.windalerts.core.social.subscriptions.{PurchaseToken, PurchaseTokenRepository}
+import com.uptech.windalerts.infrastructure.Environment.EnvironmentAsk
 import io.scalaland.chimney.dsl._
 import org.bson.types.ObjectId
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.equal
-import org.mongodb.scala.model.Sorts._
+import org.mongodb.scala.model.Sorts.{descending, orderBy, _}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import cats.implicits._
 
-class MongoPurchaseTokenRepository[F[_]](collection: MongoCollection[DBPurchaseToken])(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends PurchaseTokenRepository[F] {
+class MongoPurchaseTokenRepository[F[_] : EnvironmentAsk](collectionName: String)(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends PurchaseTokenRepository[F] {
+  private val env = implicitly[EnvironmentAsk[F]]
+
+  def getCollection(): F[MongoCollection[DBPurchaseToken]] = {
+    MongoRepository.getCollection(collectionName)
+  }
 
   override def create(userId: String,
                       purchaseToken: String,
-                      creationTime: Long)(implicit FR: Raise[F, TokenNotFoundError]):F[PurchaseToken] = {
+                      creationTime: Long)(implicit FR: Raise[F, TokenNotFoundError]): F[PurchaseToken] = {
     val dbPurchaseToken = DBPurchaseToken(userId, purchaseToken, creationTime)
-    Async.fromFuture(M.pure(collection.insertOne(dbPurchaseToken).toFuture().map(_ => dbPurchaseToken.toPurchaseToken())))
+
+    for {
+      collection <- getCollection()
+      purchaseToken <- Async.fromFuture(M.pure(collection.insertOne(dbPurchaseToken).toFuture().map(_ => dbPurchaseToken.toPurchaseToken())))
+    } yield purchaseToken
+
   }
 
   override def getLastForUser(userId: String)(implicit FR: Raise[F, TokenNotFoundError]): F[PurchaseToken] = {
@@ -33,9 +45,13 @@ class MongoPurchaseTokenRepository[F[_]](collection: MongoCollection[DBPurchaseT
   }
 
   private def findLastCreationTime(criteria: Bson)(implicit FR: Raise[F, TokenNotFoundError]): F[PurchaseToken] = {
-    val result = Async.fromFuture(M.pure(collection.find(
-      criteria
-    ).sort(orderBy(descending("creationTime"))).collect().toFuture().map(_.headOption.map(_.toPurchaseToken()))))
+    val result = for {
+      collection <- getCollection()
+      token <- Async.fromFuture(M.pure(collection.find(
+        criteria
+      ).sort(orderBy(descending("creationTime"))).collect().toFuture().map(_.headOption.map(_.toPurchaseToken()))))
+    } yield token
+
 
     OptionT(result).getOrElseF(FR.raise(TokenNotFoundError()))
   }

@@ -1,4 +1,4 @@
-package com.uptech.windalerts.core.credentials
+package com.uptech.windalerts.core.user.credentials
 
 import cats.data.OptionT
 

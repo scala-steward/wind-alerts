@@ -6,7 +6,7 @@ import cats.effect.Sync
 import cats.implicits._
 import cats.mtl.Raise
 import com.uptech.windalerts.core._
-import com.uptech.windalerts.core.credentials.UserCredentialService
+import com.uptech.windalerts.core.user.credentials.UserCredentialService
 import UserSessions._
 import UserSessions.AccessTokenWithExpiry
 import UserSessions.UserSession.REFRESH_TOKEN_EXPIRY
@@ -18,7 +18,6 @@ import pdi.jwt.{Jwt, JwtAlgorithm, JwtClaim}
 import java.util.concurrent.TimeUnit
 
 class UserSessions[F[_] : Sync](jwtKey: String,  userSessionsRepository: UserSessionRepository[F])(implicit A: Applicative[F]) {
-
 
   def reset(id: String, newDeviceToken: String)(implicit FR: Raise[F, UserNotFoundError]): F[Tokens] = {
     for {

@@ -26,8 +26,5 @@ case class OperationNotAllowed(msg: String) extends SurfsUpError(msg)
 
 case class UnknownError(msg: String) extends SurfsUpError(msg)
 
-case class WWError(msg: String = "Error from WillyWeather") extends SurfsUpError(msg)
-
 case class PlatformNotSupported(msg: String = "Platform not supported") extends SurfsUpError(msg)
 
-case class NotificationNotSentError(msg: String = "Error while sending notification") extends SurfsUpError(msg)

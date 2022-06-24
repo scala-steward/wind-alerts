@@ -4,6 +4,7 @@ import cats.Monad
 import cats.effect.{Async, ContextShift}
 import cats.implicits._
 import com.uptech.windalerts.core.notifications.{Notification, NotificationRepository, UserWithNotificationsCount}
+import com.uptech.windalerts.infrastructure.Environment.EnvironmentAsk
 import io.scalaland.chimney.dsl._
 import org.bson.types.ObjectId
 import org.mongodb.scala.MongoCollection
@@ -11,15 +12,25 @@ import org.mongodb.scala.model.Filters._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class MongoNotificationsRepository[F[_]](notifications: MongoCollection[DBNotification])(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends NotificationRepository[F] {
+class MongoNotificationsRepository[F[_] : EnvironmentAsk](implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends NotificationRepository[F] {
+
+  def getCollection(): F[MongoCollection[DBNotification]] = {
+    MongoRepository.getCollection("notifications")
+  }
+
   def create(alertId: String, userId: String, deviceToken: String, sentAt: Long) = {
     val dbNotification = DBNotification(alertId, userId, deviceToken, sentAt)
-    Async.fromFuture(M.pure(notifications.insertOne(dbNotification).toFuture().map(_ => dbNotification.toNotification)))
+    for {
+      collection <- getCollection()
+      alert <- Async.fromFuture(M.pure(collection.insertOne(dbNotification).toFuture().map(_ => dbNotification.toNotification)))
+    } yield alert
   }
+
 
   def countNotificationsInLastHour(userId: String): F[UserWithNotificationsCount] = {
     (for {
-      all <- Async.fromFuture(M.pure(notifications.find(and(equal("userId", userId), gte("sentAt", System.currentTimeMillis() - (60 * 60 * 1000)))).collect().toFuture()))
+      collection <- getCollection()
+      all <- Async.fromFuture(M.pure(collection.find(and(equal("userId", userId), gte("sentAt", System.currentTimeMillis() - (60 * 60 * 1000)))).collect().toFuture()))
     } yield UserWithNotificationsCount(userId, all.size))
   }
 }
