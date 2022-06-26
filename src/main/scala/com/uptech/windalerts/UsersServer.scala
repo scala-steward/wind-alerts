@@ -1,30 +1,23 @@
 package com.uptech.windalerts
 
-import cats.effect.Resource.eval
 import cats.effect.{IO, _}
 import cats.mtl.Handle
 import cats.{Monad, Parallel}
-import com.softwaremill.sttp.quick.backend
-import com.typesafe.config.ConfigFactory.parseFileAnySyntax
 import com.uptech.windalerts.config._
-import com.uptech.windalerts.config.beaches.{Beaches, _}
-import com.uptech.windalerts.config.swellAdjustments.Adjustments
 import com.uptech.windalerts.core.alerts.AlertsService
-import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.social.login.SocialLoginService
+import com.uptech.windalerts.core.social.subscriptions.SubscriptionService
 import com.uptech.windalerts.core.user.credentials.UserCredentialService
 import com.uptech.windalerts.core.user.sessions.UserSessions
 import com.uptech.windalerts.core.user.{UserRolesService, UserService}
 import com.uptech.windalerts.infrastructure.Environment.{EnvironmentAsk, EnvironmentIOAsk}
-import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
 import com.uptech.windalerts.infrastructure.endpoints._
 import com.uptech.windalerts.infrastructure.repositories.mongo._
-import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Facebook}
+import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Facebook, Google}
 import com.uptech.windalerts.infrastructure.social.login.{AllSocialLoginProviders, AppleLoginProvider, FacebookLoginProvider}
-import com.uptech.windalerts.infrastructure.social.subscriptions._
+import com.uptech.windalerts.infrastructure.social.subscriptions.{_}
 import com.uptech.windalerts.infrastructure.{Environment, GooglePubSubEventpublisher, SendInBlueEmailSender}
-import io.circe.config.parser.decodePathF
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.implicits._
 import org.http4s.server.{Router, Server => H4Server}
@@ -37,7 +30,6 @@ object UsersServer extends IOApp {
     val projectId = sys.env("projectId")
     val googlePublisher = new GooglePubSubEventpublisher[F](projectId)
     val androidPublisher = AndroidPublisherHelper.init(ApplicationConfig.APPLICATION_NAME, ApplicationConfig.SERVICE_ACCOUNT_EMAIL)
-
 
     val otpRepository = new MongoOtpRepository[F]()
     val usersRepository = new MongoUserRepository[F]()
@@ -62,10 +54,16 @@ object UsersServer extends IOApp {
 
     val appleSubscription = new AppleSubscription[F](sys.env("APPLE_APP_SECRET"))
     val androidSubscription = new AndroidSubscription[F](androidPublisher)
-    val subscriptionsService = new AllSocialPlatformSubscriptionsProviders[F](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
-    val userRolesService = new UserRolesService[F](alertsRepository, usersRepository, otpRepository, subscriptionsService)
-    val socialPlatformSubscriptionsProviders = new AllSocialPlatformSubscriptionsProviders[F](applePurchaseRepository, androidPurchaseRepository, appleSubscription, androidSubscription)
-    val endpoints = new UsersEndpoints[F](userCredentialsService, userSessions, usersService, socialLoginService, userRolesService, socialPlatformSubscriptionsProviders, otpService)
+    val subscriptionService = new SubscriptionService(Map(
+      Apple -> appleSubscription,
+      Google -> androidSubscription
+    ), Map(
+      Apple -> applePurchaseRepository,
+      Google -> androidPurchaseRepository
+    ))
+    val userRolesService = new UserRolesService[F](alertsRepository, usersRepository, otpRepository,
+      subscriptionService)
+    val endpoints = new UsersEndpoints[F](userCredentialsService, userSessions, usersService, socialLoginService, userRolesService, subscriptionService, otpService)
     val alertService = new AlertsService[F](alertsRepository)
     val alertsEndPoints = new AlertsEndpoints[F](alertService)
     for {

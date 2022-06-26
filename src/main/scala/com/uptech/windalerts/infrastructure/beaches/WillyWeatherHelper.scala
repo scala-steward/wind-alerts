@@ -1,9 +1,12 @@
 package com.uptech.windalerts.infrastructure.beaches
 
 import cats.Applicative
+import cats.implicits.toBifunctorOps
 import cats.mtl.Raise
 import com.uptech.windalerts.core.{BeachNotFoundError, SurfsUpError, UnknownError}
 import io.circe.parser
+
+import scala.util.Try
 
 object WillyWeatherHelper {
 
@@ -22,6 +25,7 @@ object WillyWeatherHelper {
 
   def leftOnBeachNotFoundError[F[_]:Applicative,T](result: Either[SurfsUpError, T], default: T)(implicit  FR: Raise[F, BeachNotFoundError]):F[T] = {
     if (result.isLeft) {
+
       result.left.get match {
         case e@BeachNotFoundError(_) => FR.raise(e)
         case _ => Applicative[F].pure(default)

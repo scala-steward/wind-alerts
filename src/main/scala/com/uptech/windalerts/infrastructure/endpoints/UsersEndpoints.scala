@@ -7,11 +7,11 @@ import cats.implicits._
 import cats.mtl.Handle
 import cats.mtl.implicits.toHandleOps
 import com.uptech.windalerts.config._
-import com.uptech.windalerts.core.user.credentials.UserCredentialService
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.social.login.SocialLoginService
-import com.uptech.windalerts.core.social.subscriptions.SocialPlatformSubscriptionsProviders
+import com.uptech.windalerts.core.social.subscriptions.SubscriptionService
 import com.uptech.windalerts.core.types._
+import com.uptech.windalerts.core.user.credentials.UserCredentialService
 import com.uptech.windalerts.core.user.sessions.UserSessions
 import com.uptech.windalerts.core.user.{TokensWithUser, UserIdMetadata, UserRolesService, UserService}
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
@@ -24,13 +24,7 @@ import org.http4s.dsl.Http4sDsl
 import org.typelevel.ci.CIString
 
 class UsersEndpoints[F[_] : Effect]
-(userCredentialsService: UserCredentialService[F],
- userSessions: UserSessions[F],
- userService: UserService[F],
- socialLoginService: SocialLoginService[F],
- userRolesService: UserRolesService[F],
- socialPlatformSubscriptionsProviders: SocialPlatformSubscriptionsProviders[F],
- otpService: OTPService[F])(implicit FR: Handle[F, Throwable])
+(userCredentialsService: UserCredentialService[F], userSessions: UserSessions[F], userService: UserService[F], socialLoginService: SocialLoginService[F], userRolesService: UserRolesService[F], subscriptionService: SubscriptionService[F], otpService: OTPService[F])(implicit FR: Handle[F, Throwable])
   extends Http4sDsl[F] {
 
   def openEndpoints(): HttpRoutes[F] =
@@ -165,7 +159,7 @@ class UsersEndpoints[F[_] : Effect]
         OptionT.liftF(authReq.req.decode[PurchaseReceiptValidationRequest] {
           req =>
             (for {
-              response <- socialPlatformSubscriptionsProviders.findByType(Google).handleNewPurchase(user.userId, req)
+              response <- subscriptionService.handleNewPurchase(user.userId, req, Google)
             } yield response).flatMap(_ => Ok())
               .handle[Throwable](mapError(_))
         })
@@ -182,7 +176,7 @@ class UsersEndpoints[F[_] : Effect]
         OptionT.liftF(authReq.req.decode[PurchaseReceiptValidationRequest] {
           req =>
             (for {
-              response <- socialPlatformSubscriptionsProviders.findByType(Apple).handleNewPurchase(user.userId, req)
+              response <- subscriptionService.handleNewPurchase(user.userId, req, Apple)
             } yield response).flatMap(_ => Ok())
               .handle[Throwable](mapError(_))
         })

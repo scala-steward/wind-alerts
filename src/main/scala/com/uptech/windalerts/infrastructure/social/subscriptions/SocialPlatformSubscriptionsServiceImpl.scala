@@ -1,6 +1,6 @@
 package com.uptech.windalerts.infrastructure.social.subscriptions
 
-import cats.Applicative
+import cats.{Applicative, Monad}
 import cats.data.OptionT
 import cats.effect.Sync
 import cats.implicits._
@@ -16,11 +16,11 @@ import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, G
 class SocialPlatformSubscriptionsServiceImpl[F[_] : Sync](
                                                            applePurchaseRepository: PurchaseTokenRepository[F],
                                                            androidPurchaseRepository: PurchaseTokenRepository[F],
-                                                           appleSubscription: SocialSubscription[F],
-                                                           androidSubscription: SocialSubscription[F]) {
-  def find(userId: String, deviceType: String)(implicit A: Applicative[F],  FR: Raise[F, TokenNotFoundError], PNS: Raise[F, PlatformNotSupported]): F[SubscriptionPurchase] = {
+                                                           appleSubscription: SocialSubscriptionProvider[F],
+                                                           androidSubscription: SocialSubscriptionProvider[F]) {
+  def find(userId: String, deviceType: String)(implicit M: Monad[F],  FR: Raise[F, TokenNotFoundError], PNS: Raise[F, PlatformNotSupported]): F[SubscriptionPurchase] = {
     for {
-      platformType <- OptionT.fromOption[F](SocialPlatformTypes(deviceType)).getOrElseF(PNS.raise(PlatformNotSupported()))
+      platformType <- SocialPlatformTypes[F](deviceType)
       purchase <- find(userId, platformType)
     } yield purchase
   }
@@ -40,7 +40,7 @@ class SocialPlatformSubscriptionsServiceImpl[F[_] : Sync](
     }
   }
 
-  private def handleNewPurchase(user: UserId, req: PurchaseReceiptValidationRequest, repository: PurchaseTokenRepository[F], subscription: SocialSubscription[F])(implicit FR: Raise[F, TokenNotFoundError]) = {
+  private def handleNewPurchase(user: UserId, req: PurchaseReceiptValidationRequest, repository: PurchaseTokenRepository[F], subscription: SocialSubscriptionProvider[F])(implicit FR: Raise[F, TokenNotFoundError]) = {
     for {
       _ <- getPurchase(subscription, req.token)
       savedToken <- repository.create(user.id, req.token, System.currentTimeMillis())
@@ -54,8 +54,8 @@ class SocialPlatformSubscriptionsServiceImpl[F[_] : Sync](
     }
   }
 
-  def getPurchase(subscription: SocialSubscription[F], receiptData: String): F[SubscriptionPurchase] =
-    subscription.getPurchase(receiptData)
+  def getPurchase(subscription: SocialSubscriptionProvider[F], receiptData: String): F[SubscriptionPurchase] =
+    subscription.getPurchaseFromPlatform(receiptData)
 
   private def findRepo(platformType: SocialPlatformType) = {
     platformType match {

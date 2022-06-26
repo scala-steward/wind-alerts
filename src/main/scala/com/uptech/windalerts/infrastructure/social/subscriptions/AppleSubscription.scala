@@ -4,7 +4,7 @@ import cats.effect.Async
 import cats.implicits._
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.uptech.windalerts.core.UnknownError
-import com.uptech.windalerts.core.social.subscriptions.{SocialSubscription, SubscriptionPurchase}
+import com.uptech.windalerts.core.social.subscriptions.{SocialSubscriptionProvider, SubscriptionPurchase}
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
 import com.uptech.windalerts.core.types.{ApplePurchaseVerificationRequest, AppleSubscriptionPurchase}
 import com.uptech.windalerts.logger
@@ -12,9 +12,9 @@ import io.circe.optics.JsonPath.root
 import io.circe.parser
 import io.circe.syntax._
 
-class AppleSubscription[F[_] : Async](appSecret: String)(implicit F: Async[F]) extends SocialSubscription[F] {
+class AppleSubscription[F[_] : Async](appSecret: String)(implicit F: Async[F]) extends SocialSubscriptionProvider[F] {
 
-  override def getPurchase(receiptData: String): F[SubscriptionPurchase] = {
+  override def getPurchaseFromPlatform(receiptData: String): F[SubscriptionPurchase] = {
     implicit val backend = HttpURLConnectionBackend()
 
     val json = ApplePurchaseVerificationRequest(receiptData, appSecret, true).asJson.toString()
