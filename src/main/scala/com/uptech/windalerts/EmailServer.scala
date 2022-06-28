@@ -5,7 +5,7 @@ import cats.effect._
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.infrastructure.Environment.{EnvironmentAsk, EnvironmentIOAsk}
 import com.uptech.windalerts.infrastructure.{Environment, SendInBlueEmailSender}
-import com.uptech.windalerts.infrastructure.endpoints.EmailEndpoints
+import com.uptech.windalerts.infrastructure.endpoints.{EmailEndpoints, errors}
 import com.uptech.windalerts.infrastructure.repositories.mongo.{DBOTPWithExpiry, MongoOtpRepository, Repos}
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.implicits._
@@ -28,6 +28,7 @@ object EmailServer extends IOApp {
       server <- BlazeServerBuilder[F]
         .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
         .withHttpApp(httpApp)
+        .withHttpApp(new errors[F].errorMapper(httpApp))
         .withServiceErrorHandler(_ => {
           case e: Throwable =>
             logger.error("Exception ", e)

@@ -33,19 +33,6 @@ object errors {
       Response(status = Status.InternalServerError).withBodyStream(Stream.emits(s"${e.getMessage()}".getBytes()))
   }
 
-  def errorMapper(service: HttpApp[IO]): HttpApp[IO] = Kleisli { req =>
-    service(req).map {
-      case Status.Successful(resp) => {
-        resp
-      }
-      case resp => {
-        resp.withEntity(resp.bodyText.map(s => {
-          logger.warn(s)
-          if (s.equals("not found")) "Invalid access token" else s
-        }))
-      }
-    }
-  }
 }
 
 class errors[F[_] : Sync]() extends Http4sDsl[F] {
@@ -54,7 +41,7 @@ class errors[F[_] : Sync]() extends Http4sDsl[F] {
       case Status.Successful(resp) => resp
       case resp => {
         resp.withEntity(resp.bodyText.map(s => {
-          logger.warn(s)
+          logger.warn(s"Request : $req, Response :${resp}")
           if (s.equals("not found")) "Invalid access token" else s
         }))
       }

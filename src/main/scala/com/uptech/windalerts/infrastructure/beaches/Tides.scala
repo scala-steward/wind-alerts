@@ -37,9 +37,6 @@ class WWBackedTidesService[F[_] : Sync](apiKey: String, beachesConfig: Map[Long,
     "NT" -> "Australia/Darwin")
 
   override def get(beachId: BeachId)(implicit FR: Raise[F, BeachNotFoundError]): F[domain.TideHeight] = {
-    logger.info(s"Fetching tides status for $beachId")
-
-
     if (!beachesConfig.contains(beachId.id)) {
       FR.raise(BeachNotFoundError(s"Beach not found $beachId"))
     } else {
@@ -56,7 +53,6 @@ class WWBackedTidesService[F[_] : Sync](apiKey: String, beachesConfig: Map[Long,
     val future: Future[Id[Response[String]]] =
       resilience.willyWeatherRequestsDecorator(() => {
         val response = sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecastGraphs=tides&days=3&startDate=$startDateFormatted").send()
-        logger.info(s"Response from WW $response")
         response
       })
 

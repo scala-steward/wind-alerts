@@ -11,7 +11,7 @@ import com.uptech.windalerts.config.beaches.{Beaches, _}
 import com.uptech.windalerts.config.swellAdjustments.Adjustments
 import com.uptech.windalerts.core.beaches.BeachService
 import com.uptech.windalerts.infrastructure.beaches.{WWBackedSwellsService, WWBackedTidesService, WWBackedWindsService}
-import com.uptech.windalerts.infrastructure.endpoints.BeachesEndpoints
+import com.uptech.windalerts.infrastructure.endpoints.{BeachesEndpoints, errors}
 import io.circe.config.parser.decodePathF
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.implicits._
@@ -40,6 +40,7 @@ object BeachesServer extends IOApp {
       server <- BlazeServerBuilder(ExecutionContext.global)
         .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
         .withHttpApp(httpApp)
+        .withHttpApp(new errors[F].errorMapper(httpApp))
         .withServiceErrorHandler(_ => {
           case e: Throwable =>
             logger.error("Exception ", e)

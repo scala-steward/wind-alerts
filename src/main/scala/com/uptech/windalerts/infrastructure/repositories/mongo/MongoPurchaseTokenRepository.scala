@@ -26,7 +26,7 @@ class MongoPurchaseTokenRepository[F[_] : EnvironmentAsk](collectionName: String
 
   override def create(userId: String,
                       purchaseToken: String,
-                      creationTime: Long)(implicit FR: Raise[F, TokenNotFoundError]): F[PurchaseToken] = {
+                      creationTime: Long): F[PurchaseToken] = {
     val dbPurchaseToken = DBPurchaseToken(userId, purchaseToken, creationTime)
 
     for {
@@ -40,7 +40,7 @@ class MongoPurchaseTokenRepository[F[_] : EnvironmentAsk](collectionName: String
     findLastCreationTime(equal("userId", userId))
   }
 
-  override def getPurchaseByToken(purchaseToken: String)(implicit FR: Raise[F, TokenNotFoundError]): F[PurchaseToken] = {
+  override def getByToken(purchaseToken: String)(implicit FR: Raise[F, TokenNotFoundError]): F[PurchaseToken] = {
     findLastCreationTime(equal("purchaseToken", purchaseToken))
   }
 
