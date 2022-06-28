@@ -23,4 +23,8 @@ object logger {
   def error(error: String, e: Throwable): Unit = {
     log.error(error, e)
   }
+
+  def error(error: String, o: Object): Unit = {
+    log.error(error, o)
+  }
 }

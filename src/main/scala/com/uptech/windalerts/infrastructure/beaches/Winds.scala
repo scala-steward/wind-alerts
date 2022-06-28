@@ -40,9 +40,7 @@ class WWBackedWindsService[F[_] : FlatMap : Sync](apiKey: String)(implicit backe
 
     val future: Future[Id[Response[String]]] =
       resilience.willyWeatherRequestsDecorator(() => {
-        logger.info(s"Fetching wind status for $beachId")
         val response = sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?observational=true").send()
-        logger.info(s"Response from WW $response")
         response
       })
 

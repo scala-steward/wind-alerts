@@ -14,7 +14,7 @@ import com.uptech.windalerts.core.notifications.NotificationsService
 import com.uptech.windalerts.infrastructure.Environment
 import com.uptech.windalerts.infrastructure.Environment.{EnvironmentAsk, EnvironmentIOAsk}
 import com.uptech.windalerts.infrastructure.beaches.BeachService
-import com.uptech.windalerts.infrastructure.endpoints.NotificationEndpoints
+import com.uptech.windalerts.infrastructure.endpoints.{NotificationEndpoints, errors}
 import com.uptech.windalerts.infrastructure.notifications.FirebaseBasedNotificationsSender
 import com.uptech.windalerts.infrastructure.repositories.mongo._
 import io.circe.config.parser.decodePathF
@@ -56,6 +56,7 @@ object SendNotifications extends IOApp {
       server <- BlazeServerBuilder[F]
         .bindHttp(sys.env("PORT").toInt, "0.0.0.0")
         .withHttpApp(httpApp)
+        .withHttpApp(new errors[F].errorMapper(httpApp))
         .withServiceErrorHandler(_ => {
           case e: Throwable =>
             logger.error("Exception ", e)

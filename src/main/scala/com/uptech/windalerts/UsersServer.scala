@@ -15,13 +15,15 @@ import com.uptech.windalerts.infrastructure.Environment.{EnvironmentAsk, Environ
 import com.uptech.windalerts.infrastructure.endpoints._
 import com.uptech.windalerts.infrastructure.repositories.mongo._
 import com.uptech.windalerts.infrastructure.social.SocialPlatformTypes.{Apple, Facebook, Google}
-import com.uptech.windalerts.infrastructure.social.login.{AllSocialLoginProviders, AppleLoginProvider, FacebookLoginProvider}
-import com.uptech.windalerts.infrastructure.social.subscriptions.{_}
+import com.uptech.windalerts.infrastructure.social.login.{AppleLoginProvider, FacebookLoginProvider}
+import com.uptech.windalerts.infrastructure.social.subscriptions._
 import com.uptech.windalerts.infrastructure.{Environment, GooglePubSubEventpublisher, SendInBlueEmailSender}
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.implicits._
 import org.http4s.server.{Router, Server => H4Server}
 import org.http4s.{Response, Status}
+
+import scala.language.postfixOps
 
 object UsersServer extends IOApp {
   implicit val configEnv = new EnvironmentIOAsk(Environment(Repos.acquireDb(sys.env("MONGO_DB_URL"))))
@@ -47,10 +49,13 @@ object UsersServer extends IOApp {
     val userCredentialsService = new UserCredentialService[F](socialCredentialsRepositories, new MongoCredentialsRepository[F]())
     val userSessions = new UserSessions[F](sys.env("JWT_KEY"), new MongoUserSessionRepository[F]())
     val usersService = new UserService[F](usersRepository, userCredentialsService, userSessions, googlePublisher, emailSender)
-    val socialLoginPlatforms = new AllSocialLoginProviders[F](
-      new AppleLoginProvider[F](config.getSecretsFile(s"apple/Apple.p8")),
-      new FacebookLoginProvider[F](sys.env("FACEBOOK_KEY")))
-    val socialLoginService = new SocialLoginService[F](usersRepository, userSessions, userCredentialsService, socialCredentialsRepositories, socialLoginPlatforms)
+
+    val socialLoginService = new SocialLoginService[F](usersRepository, userSessions, userCredentialsService, socialCredentialsRepositories,
+      Map(
+        Apple -> new AppleLoginProvider[F](config.getSecretsFile(s"apple/Apple.p8")),
+        Facebook -> new FacebookLoginProvider[F](sys.env("FACEBOOK_KEY")))
+    )
+
 
     val appleSubscription = new AppleSubscription[F](sys.env("APPLE_APP_SECRET"))
     val androidSubscription = new AndroidSubscription[F](androidPublisher)

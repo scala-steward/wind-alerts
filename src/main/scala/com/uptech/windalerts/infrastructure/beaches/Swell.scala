@@ -28,10 +28,8 @@ class WWBackedSwellsService[F[_] : Sync](apiKey: String, adjustments: Adjustment
   override def get(beachId: BeachId)(implicit FR: Raise[F, BeachNotFoundError]): F[domain.Swell] = {
     val future: Future[Id[Response[String]]] =
       resilience.willyWeatherRequestsDecorator(callable = () => {
-        logger.info(s"Fetching swell status for $beachId")
         val response = sttp.get(uri"https://api.willyweather.com.au/v2/$apiKey/locations/${beachId.id}/weather.json?forecasts=swell&days=1")
           .send()
-        logger.info(s"Response from WW $response")
         response
       })
 

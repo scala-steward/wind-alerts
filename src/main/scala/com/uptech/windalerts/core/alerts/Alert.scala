@@ -1,12 +1,10 @@
 package com.uptech.windalerts.core.alerts
 
 import com.uptech.windalerts.core.beaches.domain.Beach
-import com.uptech.windalerts.core.social.subscriptions.PurchaseToken
-import com.uptech.windalerts.logger
+import io.scalaland.chimney.dsl._
 
 import java.util.Calendar.{DAY_OF_WEEK, HOUR_OF_DAY, MINUTE}
 import java.util.{Calendar, TimeZone}
-import io.scalaland.chimney.dsl._
 
 object domain {
   case class Alert(
@@ -24,8 +22,6 @@ object domain {
                     timeZone: String = "Australia/Sydney",
                     createdAt: Long) {
     def isToBeNotified(beachStatus: Beach): Boolean = {
-      logger.info(s"beach to check $beachStatus")
-      logger.info(s"self $swellDirections $waveHeightFrom $waveHeightTo $windDirections")
       swellDirections.contains(beachStatus.tide.swell.directionText) &&
         waveHeightFrom <= beachStatus.tide.swell.height && waveHeightTo >= beachStatus.tide.swell.height &&
         windDirections.contains(beachStatus.wind.directionText) &&

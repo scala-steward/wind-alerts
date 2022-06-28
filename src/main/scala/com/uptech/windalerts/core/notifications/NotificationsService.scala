@@ -79,7 +79,6 @@ class NotificationsService[F[_] : Sync : Parallel](N: NotificationRepository[F],
       alertsForUsers <- users.map(u => alertsRepository.getAllEnabledForUser(u.userId)).sequence.map(_.flatten)
       alertsForUsersWithMatchingTime = alertsForUsers.toList.filter(_.isTimeMatch())
       alertsByBeaches = alertsForUsersWithMatchingTime.groupBy(_.beachId).map(kv => (BeachId(kv._1), kv._2))
-      _ <- F.delay(logger.info(s"alertsForUsersWithMathcingTime : ${alertsForUsersWithMatchingTime.map(_.id).mkString(", ")}"))
     } yield alertsByBeaches
   }
 

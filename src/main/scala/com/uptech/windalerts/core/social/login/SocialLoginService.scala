@@ -1,28 +1,30 @@
 package com.uptech.windalerts.core.social.login
 
 import cats.Applicative
+import cats.data.OptionT
 import cats.effect.Sync
 import cats.implicits._
 import cats.mtl.Raise
 import com.uptech.windalerts.core.user.credentials.{SocialCredentials, SocialCredentialsRepository, UserCredentialService}
 import com.uptech.windalerts.core.social.SocialPlatformType
+import com.uptech.windalerts.core.social.subscriptions.SocialSubscriptionProvider
 import com.uptech.windalerts.core.user.sessions.UserSessions
 import com.uptech.windalerts.core.user.{Tokens, TokensWithUser, UserRepository, UserService, UserT}
-import com.uptech.windalerts.core.{UserAlreadyExistsRegistered, UserNotFoundError}
+import com.uptech.windalerts.core.{PlatformNotSupported, UserAlreadyExistsRegistered, UserNotFoundError}
 
-class SocialLoginService[F[_] : Sync](userRepository: UserRepository[F],
-                                      userSessions: UserSessions[F],
-                                      credentialService: UserCredentialService[F],
+class SocialLoginService[F[_] : Sync](userRepository: UserRepository[F], userSessions: UserSessions[F], credentialService: UserCredentialService[F],
                                       socialCredentialsRepositories: Map[SocialPlatformType, SocialCredentialsRepository[F]],
-                                      socialLoginProviders: SocialLoginProviders[F]) {
+                                      socialLoginProviders: Map[SocialPlatformType, SocialLoginProvider[F]]) {
   def registerOrLoginSocialUser(
                                  socialPlatform: SocialPlatformType,
                                  accessToken: String,
                                  deviceType: String,
                                  deviceToken: String,
-                                 name: Option[String])(implicit A: Applicative[F], FR: Raise[F, UserAlreadyExistsRegistered], UNF: Raise[F, UserNotFoundError]) = {
+                                 name: Option[String])(implicit A: Applicative[F],
+                                                       FR: Raise[F, UserAlreadyExistsRegistered], UNF: Raise[F, UserNotFoundError], PNS: Raise[F, PlatformNotSupported]) = {
     for {
-      socialUser <- socialLoginProviders.findByType(socialPlatform)
+      loginProvider <- getLoginProviderFor(socialPlatform)
+      socialUser <- loginProvider
         .fetchUserFromPlatform(accessToken, deviceType, deviceToken, name)
       credentialsRepository = socialCredentialsRepositories(socialPlatform)
       existingCredential <- credentialsRepository.find(socialUser.email, socialUser.deviceType)
@@ -58,4 +60,8 @@ class SocialLoginService[F[_] : Sync](userRepository: UserRepository[F],
     } yield (savedUser, savedCreds)
   }
 
+  private def getLoginProviderFor(platformType: SocialPlatformType)(implicit PNS: Raise[F, PlatformNotSupported])
+  : F[SocialLoginProvider[F]] = {
+    OptionT.fromOption[F](socialLoginProviders.get(platformType)).getOrElseF(PNS.raise(PlatformNotSupported(s"Platform not found $platformType")))
+  }
 }

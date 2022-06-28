@@ -70,7 +70,7 @@ class SocialPlatformSubscriptionsServiceImpl[F[_] : Sync](
 
   def getLatestForToken(platformType: SocialPlatformType, repository: PurchaseTokenRepository[F], purchaseToken: String)(implicit FR: Raise[F, TokenNotFoundError]):F[SubscriptionPurchaseWithUser] = {
     for {
-      purchaseToken <- repository.getPurchaseByToken(purchaseToken)
+      purchaseToken <- repository.getByToken(purchaseToken)
       subscriptionPurchase <- getPurchase(platformType, purchaseToken.purchaseToken)
     } yield SubscriptionPurchaseWithUser(UserId(purchaseToken.userId), subscriptionPurchase)
   }

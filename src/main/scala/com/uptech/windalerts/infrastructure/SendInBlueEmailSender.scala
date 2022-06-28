@@ -48,7 +48,6 @@ class SendInBlueEmailSender[F[_] : Sync](apiKey: String) extends OTPNotifier[F] 
     implicit val backend = HttpURLConnectionBackend()
 
     val body = req.send().body
-    logger.info(s"Response from sendinblue ${body.toString}")
 
     Applicative[F].pure(body.toOption.get)
   }
