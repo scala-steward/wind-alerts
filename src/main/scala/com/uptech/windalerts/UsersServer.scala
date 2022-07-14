@@ -4,6 +4,7 @@ import cats.effect.{IO, _}
 import cats.mtl.Handle
 import cats.{Monad, Parallel}
 import com.uptech.windalerts.config._
+import com.uptech.windalerts.core.Infrastructure
 import com.uptech.windalerts.core.alerts.AlertsService
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.social.login.SocialLoginService
@@ -35,6 +36,8 @@ object UsersServer extends IOApp {
 
     val otpRepository = new MongoOtpRepository[F]()
     val usersRepository = new MongoUserRepository[F]()
+    val usersSessionRepository = new MongoUserSessionRepository[F]()
+    val credentialsRepository = new MongoCredentialsRepository[F]()
     val androidPurchaseRepository = new MongoPurchaseTokenRepository[F]("androidPurchases")
     val applePurchaseRepository = new MongoPurchaseTokenRepository[F]("applePurchases")
 
@@ -46,16 +49,14 @@ object UsersServer extends IOApp {
       Facebook -> new MongoSocialCredentialsRepository[F]("facebookCredentials"),
       Apple -> new MongoSocialCredentialsRepository[F]("appleCredentials"))
 
-    val userCredentialsService = new UserCredentialService[F](socialCredentialsRepositories, new MongoCredentialsRepository[F]())
-    val userSessions = new UserSessions[F](sys.env("JWT_KEY"), new MongoUserSessionRepository[F]())
-    val usersService = new UserService[F](usersRepository, userCredentialsService, userSessions, googlePublisher, emailSender)
+    val socialLoginProviders = Map(
+      Apple -> new AppleLoginProvider[F](config.getSecretsFile(s"apple/Apple.p8")),
+      Facebook -> new FacebookLoginProvider[F](sys.env("FACEBOOK_KEY")))
 
-    val socialLoginService = new SocialLoginService[F](usersRepository, userSessions, userCredentialsService, socialCredentialsRepositories,
-      Map(
-        Apple -> new AppleLoginProvider[F](config.getSecretsFile(s"apple/Apple.p8")),
-        Facebook -> new FacebookLoginProvider[F](sys.env("FACEBOOK_KEY")))
-    )
 
+    implicit val infrastructure = Infrastructure(sys.env("JWT_KEY"),
+      usersRepository, usersSessionRepository, socialCredentialsRepositories, socialLoginProviders,
+      credentialsRepository, googlePublisher,  emailSender  )
 
     val appleSubscription = new AppleSubscription[F](sys.env("APPLE_APP_SECRET"))
     val androidSubscription = new AndroidSubscription[F](androidPublisher)
@@ -68,7 +69,7 @@ object UsersServer extends IOApp {
     ))
     val userRolesService = new UserRolesService[F](alertsRepository, usersRepository, otpRepository,
       subscriptionService)
-    val endpoints = new UsersEndpoints[F](userCredentialsService, userSessions, usersService, socialLoginService, userRolesService, subscriptionService, otpService)
+    val endpoints = new UsersEndpoints[F]( userRolesService, subscriptionService, otpService)
     val alertService = new AlertsService[F](alertsRepository)
     val alertsEndPoints = new AlertsEndpoints[F](alertService)
     for {

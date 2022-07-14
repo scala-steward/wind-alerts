@@ -7,6 +7,7 @@ import cats.implicits._
 import cats.mtl.Handle
 import cats.mtl.implicits.toHandleOps
 import com.uptech.windalerts.config._
+import com.uptech.windalerts.core.Infrastructure
 import com.uptech.windalerts.core.otp.OTPService
 import com.uptech.windalerts.core.social.login.SocialLoginService
 import com.uptech.windalerts.core.social.subscriptions.SubscriptionService
@@ -23,8 +24,7 @@ import org.http4s._
 import org.http4s.dsl.Http4sDsl
 import org.typelevel.ci.CIString
 
-class UsersEndpoints[F[_] : Effect]
-(userCredentialsService: UserCredentialService[F], userSessions: UserSessions[F], userService: UserService[F], socialLoginService: SocialLoginService[F], userRolesService: UserRolesService[F], subscriptionService: SubscriptionService[F], otpService: OTPService[F])(implicit FR: Handle[F, Throwable])
+class UsersEndpoints[F[_] : Effect](  userRolesService: UserRolesService[F], subscriptionService: SubscriptionService[F], otpService: OTPService[F])(implicit infrastructure: Infrastructure[F], FR: Handle[F, Throwable])
   extends Http4sDsl[F] {
 
   def openEndpoints(): HttpRoutes[F] =
@@ -40,21 +40,21 @@ class UsersEndpoints[F[_] : Effect]
       case req@POST -> Root =>
         (for {
           rr <- req.as[RegisterRequest]
-          user <- userService.register(rr)
+          user <- UserService.register(rr)
         } yield user).flatMap(Ok(_)
         ).handle[Throwable](mapError(_))
 
       case req@POST -> Root / "login" =>
         (for {
           credentials <- req.as[LoginRequest]
-          user <- userService.login(credentials)
+          user <- UserService.login(credentials)
         } yield user).flatMap(Ok(_)
         ).handle[Throwable](mapError(_))
 
       case req@POST -> Root / "refresh" =>
         (for {
           refreshToken <- req.as[AccessTokenRequest]
-          user <- userService.refresh(refreshToken)
+          user <- UserService.refresh(refreshToken)
         } yield user).flatMap(
           Ok(_)
         ).handle[Throwable](mapError(_))
@@ -63,14 +63,14 @@ class UsersEndpoints[F[_] : Effect]
       case req@POST -> Root / "changePassword" =>
         (for {
           changePasswordRequest <- req.as[ChangePasswordRequest]
-          user <- userCredentialsService.changePassword(changePasswordRequest)
+          user <- UserCredentialService.changePassword(changePasswordRequest)
         } yield user).flatMap(Ok(_)
         ).handle[Throwable](mapError(_))
 
       case req@POST -> Root / "resetPassword" =>
         (for {
           resetPasswordRequest <- req.as[ResetPasswordRequest]
-          user <- userService.resetPassword(resetPasswordRequest.email, resetPasswordRequest.deviceType)
+          user <- UserService.resetPassword(resetPasswordRequest.email, resetPasswordRequest.deviceType)
         } yield user).flatMap(_ => Ok())
           .handle[Throwable](mapError(_))
 
@@ -100,7 +100,7 @@ class UsersEndpoints[F[_] : Effect]
         OptionT.liftF(authReq.req.decode[UpdateUserRequest] {
           request =>
             (for {
-              response <- userService.updateUserProfile(u.userId.id, request.name, request.snoozeTill, request.disableAllAlerts, request.notificationsPerHour)
+              response <- UserService.updateUserProfile(u.userId.id, request.name, request.snoozeTill, request.disableAllAlerts, request.notificationsPerHour)
             } yield response).flatMap(_ => Ok())
               .handle[Throwable](mapError(_))
         })
@@ -108,7 +108,7 @@ class UsersEndpoints[F[_] : Effect]
       case _@GET -> Root / "profile" as user =>
         OptionT.liftF(
           (for {
-            response <- userService.getUser(user.userId.id)
+            response <- UserService.getUser(user.userId.id)
           } yield response).flatMap(_ => Ok())
             .handle[Throwable](mapError(_))
         )
@@ -117,7 +117,7 @@ class UsersEndpoints[F[_] : Effect]
         OptionT.liftF(authReq.req.decode[UpdateUserDeviceTokenRequest] {
           req =>
             (for {
-              response <- userSessions.updateDeviceToken(user.userId.id, req.deviceToken)
+              response <- UserSessions.updateDeviceToken(user.userId.id, req.deviceToken)
             } yield response).flatMap(_ => Ok())
               .handle[Throwable](mapError(_))
         })
@@ -142,7 +142,7 @@ class UsersEndpoints[F[_] : Effect]
       case _@POST -> Root / "logout" as user =>
         OptionT.liftF({
           (for {
-            response <- userService.logout(user.userId.id)
+            response <- UserService.logout(user.userId.id)
           } yield response).flatMap(_ => Ok())
             .handle[Throwable](mapError(_))
         })
@@ -189,7 +189,7 @@ class UsersEndpoints[F[_] : Effect]
       case req@POST -> Root =>
         (for {
           facebookRegisterRequest <- req.as[FacebookRegisterRequest]
-          tokensWithUser <- socialLoginService.registerOrLoginSocialUser(
+          tokensWithUser <- SocialLoginService.registerOrLoginSocialUser(
             Facebook,
             facebookRegisterRequest.accessToken,
             facebookRegisterRequest.deviceType,
@@ -202,7 +202,7 @@ class UsersEndpoints[F[_] : Effect]
       case req@POST -> Root / "login" => {
         (for {
           facebookRegisterRequest <- req.as[FacebookRegisterRequest]
-          tokensWithUser <- socialLoginService.registerOrLoginSocialUser(
+          tokensWithUser <- SocialLoginService.registerOrLoginSocialUser(
             Facebook,
             facebookRegisterRequest.accessToken,
             facebookRegisterRequest.deviceType,
@@ -219,7 +219,7 @@ class UsersEndpoints[F[_] : Effect]
       case req@POST -> Root => {
         (for {
           appleRegisterRequest <- req.as[AppleRegisterRequest]
-          tokensWithUser <- socialLoginService.registerOrLoginSocialUser(
+          tokensWithUser <- SocialLoginService.registerOrLoginSocialUser(
             Apple,
             appleRegisterRequest.authorizationCode,
             appleRegisterRequest.deviceType,
@@ -233,7 +233,7 @@ class UsersEndpoints[F[_] : Effect]
       case req@POST -> Root / "login" =>
         (for {
           appleRegisterRequest <- req.as[AppleRegisterRequest]
-          tokensWithUser <- socialLoginService.registerOrLoginSocialUser(
+          tokensWithUser <- SocialLoginService.registerOrLoginSocialUser(
             Apple, appleRegisterRequest.authorizationCode,
             appleRegisterRequest.deviceType,
             appleRegisterRequest.deviceToken,
