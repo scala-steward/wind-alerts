@@ -43,6 +43,7 @@ class SendInBlueEmailSender[F[_] : Sync](apiKey: String) extends OTPNotifier[F] 
     val req = sttp.body(
       requestBody.stripMargin).header("api-key", apiKey)
       .contentType("application/json")
+      .acceptEncoding("application/json")
       .post(uri"https://api.sendinblue.com/v3/smtp/email")
 
     implicit val backend = HttpURLConnectionBackend()
