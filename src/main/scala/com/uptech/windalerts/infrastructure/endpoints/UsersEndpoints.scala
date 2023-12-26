@@ -113,6 +113,14 @@ class UsersEndpoints[F[_] : Effect](  userRolesService: UserRolesService[F], sub
             .handle[Throwable](mapError(_))
         )
 
+      case _@DELETE -> Root / "deleteUser" as user =>
+        OptionT.liftF(
+          (for {
+            response <- UserService.deleteUserByUserId(user.userId.id)
+          } yield response).flatMap(_ => Ok())
+            .handle[Throwable](mapError(_))
+        )
+
       case authReq@PUT -> Root / "deviceToken" as user =>
         OptionT.liftF(authReq.req.decode[UpdateUserDeviceTokenRequest] {
           req =>
