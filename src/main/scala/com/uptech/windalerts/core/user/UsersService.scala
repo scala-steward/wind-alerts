@@ -76,4 +76,8 @@ object UserService {
 
   def getUser[F[_]](userId: String)(implicit  infrastructure: Infrastructure[F],  FR: Raise[F, UserNotFoundError]): F[UserT] =
     infrastructure.userRepository.getByUserId(userId)
+
+  def deleteUserByUserId[F[_]](userId: String)(implicit infrastructure: Infrastructure[F], FR: Raise[F, UserNotFoundError]) =
+    infrastructure.userRepository.deleteUserById(userId)
+
 }

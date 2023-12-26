@@ -20,4 +20,7 @@ trait UserRepository[F[_]] {
   def findPremiumExpiredUsers(): F[Seq[UserT]]
 
   def findUsersWithNotificationsEnabledAndNotSnoozed(): F[Seq[UserT]]
+
+  def deleteUserById(userId: String)(implicit FR: Raise[F, UserNotFoundError]): F[Long]
+
 }

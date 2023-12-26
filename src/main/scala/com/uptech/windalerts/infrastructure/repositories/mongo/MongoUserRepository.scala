@@ -89,6 +89,13 @@ class MongoUserRepository[F[_] : EnvironmentAsk](implicit cs: ContextShift[F], s
         lt("nextPaymentAt", System.currentTimeMillis())
       ))
   }
+
+  override def deleteUserById(userId: String)(implicit FR: Raise[F, UserNotFoundError]): F[Long] = {
+    for {
+      collection <- getCollection()
+      deleteCount <- Async.fromFuture(M.pure(collection.deleteOne(equal("_id", new ObjectId(userId))).toFuture())).map(x => x.getDeletedCount)
+    } yield deleteCount
+  }
 }
 
 case class DBUser(_id: ObjectId, email: String, name: String, deviceType: String, startTrialAt: Long, endTrialAt: Long, userType: String, snoozeTill: Long, disableAllAlerts: Boolean, notificationsPerHour: Long, lastPaymentAt: Long, nextPaymentAt: Long) {
