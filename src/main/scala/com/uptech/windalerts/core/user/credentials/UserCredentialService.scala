@@ -66,4 +66,8 @@ object UserCredentialService {
       .sequence
       .map(!_.exists(_ == true))
   }
+
+  def deleteByEmailId[F[_]](emailId: String)(implicit infrastructure: Infrastructure[F], M: Monad[F]) = {
+    infrastructure.credentialsRepository.deleteByEmailId(emailId)
+  }
 }

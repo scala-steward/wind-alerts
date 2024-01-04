@@ -45,6 +45,14 @@ class MongoCredentialsRepository[F[_] : EnvironmentAsk : Monad : Async : Context
   def getCollection(): F[MongoCollection[DBCredentials]] = {
     MongoRepository.getCollection("credentials")
   }
+
+  override def deleteByEmailId(emailId: String): F[Unit] = {
+    for {
+      collection <- getCollection()
+      _ <- Async.fromFuture(
+        Monad[F].pure(collection.deleteOne(equal("email", emailId)).toFuture().map(_ => ())))
+    } yield ()
+  }
 }
 
 
