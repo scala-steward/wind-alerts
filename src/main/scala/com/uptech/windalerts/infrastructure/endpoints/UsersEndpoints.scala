@@ -117,6 +117,7 @@ class UsersEndpoints[F[_] : Effect](  userRolesService: UserRolesService[F], sub
         OptionT.liftF(
           (for {
             response <- UserService.deleteUserByUserId(user.userId.id)
+            _  <- UserCredentialService.deleteByEmailId(user.emailId.email)
           } yield response).flatMap(_ => Ok())
             .handle[Throwable](mapError(_))
         )

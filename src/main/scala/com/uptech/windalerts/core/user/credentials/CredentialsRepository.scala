@@ -9,4 +9,6 @@ trait CredentialsRepository[F[_]] {
   def findByEmailAndDeviceType(email: String, deviceType: String): OptionT[F, Credentials]
 
   def updatePassword(userId: String, password: String): F[Unit]
+
+  def deleteByEmailId(emailId: String): F[Unit]
 }
