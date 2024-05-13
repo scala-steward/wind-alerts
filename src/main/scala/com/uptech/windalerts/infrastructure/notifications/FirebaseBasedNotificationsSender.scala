@@ -28,7 +28,7 @@ class FirebaseBasedNotificationsSender[F[_] : Sync]
       .setNotification(Notification.builder().setTitle(title).setBody(body).build())
       .setToken(nd.deviceToken)
       .setApnsConfig(ApnsConfig.builder()
-        .setAps(Aps.builder().build())
+        .setAps(Aps.builder().setSound("default").build())
         .putHeader("apns-priority", "10").build())
       .setAndroidConfig(AndroidConfig.builder().setPriority(AndroidConfig.Priority.HIGH).build())
       .build()
