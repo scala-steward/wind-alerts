@@ -36,4 +36,4 @@ steps:
     args: [ 'run', 'services', 'update-traffic', 'wind-alerts-email', '--to-latest', '--region', 'asia-northeast1', ]
 
 options:
-  logging: 'NONE'
+  logging: 'CLOUD_LOGGING_ONLY'
