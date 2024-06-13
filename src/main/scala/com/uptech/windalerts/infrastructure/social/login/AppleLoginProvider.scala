@@ -5,6 +5,7 @@ import cats.effect.{Async, ContextShift}
 import cats.implicits._
 import com.softwaremill.sttp.{HttpURLConnectionBackend, sttp, _}
 import com.turo.pushy.apns.auth.ApnsSigningKey
+import com.uptech.windalerts.config.config
 import com.uptech.windalerts.core.social.login.{SocialLoginProvider, SocialUser}
 import com.uptech.windalerts.infrastructure.endpoints.codecs._
 import com.uptech.windalerts.core.types.{AppleUser, TokenResponse}
@@ -20,6 +21,7 @@ import scala.concurrent.Future
 
 class AppleLoginProvider[F[_]](file: File)(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends SocialLoginProvider[F] {
 
+  val secretFile: File = config.getSecretsFile(s"apple/Apple.p8")
   val jwt = generateJWT()
 
   override def fetchUserFromPlatform(accessToken: String,
@@ -44,7 +46,7 @@ class AppleLoginProvider[F[_]](file: File)(implicit cs: ContextShift[F], s: Asyn
 
     val responseBody = req.send().body
     logger.info(s"Login response from apple ${responseBody.toString}")
-    val tokenResponse = responseBody.flatMap(parser.parse(_)).flatMap(_.as[TokenResponse]).right.get
+    val tokenResponse = responseBody.flatMap(parser.parse).flatMap(_.as[TokenResponse]).right.get
     val claims = Jwt.decode(tokenResponse.id_token, JwtOptions(signature = false))
     val parsedEither = parser.parse(claims.toOption.get.content)
     parsedEither.flatMap(_.as[AppleUser]).toTry.get
@@ -60,7 +62,7 @@ class AppleLoginProvider[F[_]](file: File)(implicit cs: ContextShift[F], s: Asyn
       issuedAt = Some(current / 1000)
     )
     val header = JwtHeader(JwtAlgorithm.ES256).withType(null).withKeyId("A423X8QGF3")
-    val privateKey = getPrivateKey(file)
+    val privateKey = getPrivateKey(secretFile)
     Jwt.encode(header.toJson, claims.toJson, privateKey, JwtAlgorithm.ES256)
   }
 
