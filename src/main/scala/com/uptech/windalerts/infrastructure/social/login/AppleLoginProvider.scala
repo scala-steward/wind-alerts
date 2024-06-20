@@ -18,11 +18,9 @@ import java.io.File
 import java.security.PrivateKey
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.{Try,Using}
 
 class AppleLoginProvider[F[_]](file: File)(implicit cs: ContextShift[F], s: Async[F], M: Monad[F]) extends SocialLoginProvider[F] {
-
-  val secretFile: File = config.getSecretsFile("apple/Apple.p8")
-  val jwt = generateJWT()
 
   override def fetchUserFromPlatform(accessToken: String,
                                      deviceType: String,
@@ -32,11 +30,10 @@ class AppleLoginProvider[F[_]](file: File)(implicit cs: ContextShift[F], s: Asyn
       .map(appleUser => SocialUser(appleUser.sub, appleUser.email, deviceType, deviceToken, name.getOrElse("")))
   }
 
-
   private def getUser(authorizationCode: String): AppleUser = {
     val req = sttp.body(Map(
       "client_id" -> "com.passiondigital.surfsup.ios",
-      "client_secret" -> jwt,
+      "client_secret" -> generateJWT(),
       "grant_type" -> "authorization_code",
       "code" -> authorizationCode,
     ))
@@ -62,13 +59,27 @@ class AppleLoginProvider[F[_]](file: File)(implicit cs: ContextShift[F], s: Asyn
       issuedAt = Some(current / 1000)
     )
     val header = JwtHeader(JwtAlgorithm.ES256).withType(null).withKeyId("A423X8QGF3")
-    val privateKey = getPrivateKey(secretFile)
+    readP8File(file)
+    val privateKey = getPrivateKey(file)
     Jwt.encode(header.toJson, claims.toJson, privateKey, JwtAlgorithm.ES256)
   }
 
 
   private def getPrivateKey(file: File) = {
     ApnsSigningKey.loadFromPkcs8File(file, "W9WH7WV85S", "A423X8QGF3")
+  }
+
+  import scala.io.Source
+  def readP8File(filePath: File) = {
+    Using(Source.fromFile(filePath)) { source =>
+      source.mkString
+    } match {
+      case scala.util.Success(content) =>
+        logger.info("Content of the Apple.p8 file:")
+        logger.info(content.toString)
+      case scala.util.Failure(exception) =>
+        logger.info(s"Failed to read the Apple.p8 file: ${exception.getMessage}")
+    }
   }
 
 }
